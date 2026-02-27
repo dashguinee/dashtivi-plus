@@ -71,6 +71,24 @@ const featured: FeaturedItem[] = [
     type: 'lobby',
     url: `${GAMES_HUB}/#/games/ludo`,
   },
+  {
+    id: 'fanta',
+    name: 'Fanta 1+1',
+    tagline: 'D\u00E9fi math\u00E9matique contre Fanta!',
+    image: `${GAMES_CDN}/fanta.jpg`,
+    emoji: '\uD83E\uDDEE',
+    type: 'lobby',
+    url: `${GAMES_HUB}/#/games/fanta`,
+  },
+  {
+    id: 'bundess',
+    name: 'Bundess',
+    tagline: 'Football tactique tour par tour',
+    image: `${GAMES_CDN}/bundess.jpg`,
+    emoji: '\u26BD',
+    type: 'lobby',
+    url: `${GAMES_HUB}/#/games/bundess`,
+  },
 ];
 
 /* ─── Hero Card — Store / Lobby gateway with AI-generated backgrounds ─── */
