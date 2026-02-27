@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import {
   TrendingUp, Clock, Zap, Globe, Star, ChevronRight, Play,
-  Tv, Crown, Sparkles, ArrowRight, Shuffle
+  Tv, Crown, Sparkles, ArrowRight, Shuffle, Film, Gamepad2
 } from 'lucide-react';
 import { HeroBanner } from '@/components/home/HeroBanner';
 import { ChannelCard } from '@/components/home/ChannelCard';
@@ -98,32 +98,6 @@ const CategoryBannerCard: React.FC<{
 /* ─── Streaming Service Card ──────────────────────────── */
 const streamingServices = [
   {
-    id: 'tivi',
-    name: 'TIVI+',
-    tagline: 'Live TV, your way',
-    gradient: 'from-violet-600 to-purple-950',
-    glow: 'shadow-purple-500/30',
-    accent: '#9D4EDD',
-    logo3d: '',
-    logoText: 'T+',
-    count: '6,500+',
-    features: ['Live TV', 'Free Channels', 'Smart Collections'],
-    isDASH: true,
-  },
-  {
-    id: 'voyo',
-    name: 'VOYO Music',
-    tagline: 'African beats, global sound',
-    gradient: 'from-fuchsia-600 to-pink-950',
-    glow: 'shadow-fuchsia-500/30',
-    accent: '#E040FB',
-    logo3d: '',
-    logoText: 'V',
-    count: 'Coming Soon',
-    features: ['Afrobeats', 'Soussou Music', 'Playlists'],
-    isDASH: true,
-  },
-  {
     id: 'netflix',
     name: 'Netflix',
     tagline: 'Unlimited movies & TV',
@@ -157,7 +131,7 @@ const streamingServices = [
     logo3d: '/logos/spotify-3d.webp',
     logoText: 'S',
     count: '100M+',
-    features: ['Podcasts', 'AI DJ', 'Offline'],
+    features: ['Podcasts', 'Playlists', 'Offline'],
   },
   {
     id: 'crunchyroll',
@@ -185,6 +159,148 @@ const streamingServices = [
   },
 ];
 
+/* ─── Now Streaming — Blockbusters via DASH WebTV (TMDB posters) ─── */
+const nowStreaming = [
+  { id: 'oppenheimer', title: 'Oppenheimer', year: '2023', rating: '8.1', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg', source: 'Netflix' },
+  { id: 'barbie', title: 'Barbie', year: '2023', rating: '7.0', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg', source: 'Prime' },
+  { id: 'spiderman-nwh', title: 'Spider-Man: No Way Home', year: '2022', rating: '8.2', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/uJYYizSuA9Y3DCs0qS4qWvHfZg4.jpg', source: 'Disney+' },
+  { id: 'john-wick-4', title: 'John Wick 4', year: '2023', rating: '7.7', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg', source: 'Prime' },
+  { id: 'the-batman', title: 'The Batman', year: '2022', rating: '7.7', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/74xTEgt7R36Fpooo50r9T25onhq.jpg', source: 'HBO' },
+  { id: 'top-gun', title: 'Top Gun: Maverick', year: '2022', rating: '8.3', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/i0FHyNF9VvQTXOi4yKnZJ1zql1.jpg', source: 'Prime' },
+  { id: 'interstellar', title: 'Interstellar', year: '2014', rating: '8.7', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg', source: 'Netflix' },
+  { id: 'deadpool-wolverine', title: 'Deadpool & Wolverine', year: '2024', rating: '7.7', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg', source: 'Disney+' },
+  { id: 'inside-out-2', title: 'Inside Out 2', year: '2024', rating: '7.6', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/vpnVM9B6NMmQpWeZvzLvDESb2QY.jpg', source: 'Disney+' },
+  { id: 'beetlejuice-2', title: 'Beetlejuice Beetlejuice', year: '2024', rating: '6.9', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/kKgQzkUCnQmeTPkyIwHly2t6ZFI.jpg', source: 'HBO' },
+  { id: 'dune-2', title: 'Dune: Part Two', year: '2024', rating: '8.1', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg', source: 'HBO' },
+  { id: 'wild-robot', title: 'The Wild Robot', year: '2024', rating: '8.2', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/8RvwVVjYel1Ga0AmqbK15Q0llOy.jpg', source: 'Netflix' },
+  { id: 'furiosa', title: 'Furiosa', year: '2024', rating: '7.4', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/iADOJ8Zymht2JPMoy3R7xceZprc.jpg', source: 'HBO' },
+  { id: 'joker', title: 'Joker', year: '2019', rating: '8.2', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg', source: 'Netflix' },
+];
+
+const sourceColors: Record<string, string> = {
+  'Netflix': '#E50914',
+  'Prime': '#00A8E1',
+  'Disney+': '#113CCF',
+  'HBO': '#B535F6',
+};
+
+/* ─── Movie Poster Card ─── */
+const MoviePosterCard: React.FC<{ movie: typeof nowStreaming[0]; index: number }> = ({ movie, index }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
+      { threshold: 0.2 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`flex-shrink-0 w-[140px] sm:w-[160px] transition-all duration-500 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+      }`}
+      style={{ transitionDelay: `${index * 60}ms` }}
+    >
+      <div className="relative rounded-xl overflow-hidden cursor-pointer group transition-all duration-300 hover:scale-[1.05] hover:shadow-2xl hover:shadow-white/10">
+        <div className="aspect-[2/3]">
+          <img
+            src={movie.poster}
+            alt={movie.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            loading="lazy"
+          />
+        </div>
+        {/* Bottom fade overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+        {/* Source badge */}
+        <div className="absolute top-2 right-2">
+          <span
+            className="px-1.5 py-0.5 text-[9px] font-bold rounded-md text-white"
+            style={{ backgroundColor: sourceColors[movie.source] || '#666' }}
+          >
+            {movie.source}
+          </span>
+        </div>
+        {/* Rating */}
+        <div className="absolute top-2 left-2 flex items-center gap-0.5 px-1.5 py-0.5 bg-black/50 backdrop-blur-sm rounded-md">
+          <Star className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />
+          <span className="text-[10px] font-semibold text-white">{movie.rating}</span>
+        </div>
+        {/* Title */}
+        <div className="absolute bottom-0 left-0 right-0 p-2.5">
+          <h4 className="text-xs font-bold text-white leading-tight line-clamp-2">{movie.title}</h4>
+          <p className="text-[10px] text-white/50 mt-0.5">{movie.year}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─── Featured Game Card for Home ─── */
+const GAMES_HUB = 'https://games.dasuperhub.com';
+const GAMES_CDN = 'https://games.dasuperhub.com/icons';
+
+const homeGames = [
+  { id: 'gta-online', name: 'GTA Online', image: '/games/store-5.jpg', tagline: 'Open World Multiplayer', url: `https://wa.me/224611361300?text=${encodeURIComponent('Hi DASH, I want GTA Online')}`, type: 'store' as const },
+  { id: 'fanta', name: 'Fanta 1+1', image: `${GAMES_CDN}/fanta.jpg`, tagline: 'Defi mathematique', url: `${GAMES_HUB}/#/games/fanta`, type: 'lobby' as const },
+  { id: 'bundess', name: 'Bundess', image: `${GAMES_CDN}/bundess.jpg`, tagline: 'Football tactique', url: `${GAMES_HUB}/#/games/bundess`, type: 'lobby' as const },
+  { id: 'fm26', name: 'FM26', image: '/games/store-3.jpg', tagline: 'Build your dream squad', url: `https://wa.me/224611361300?text=${encodeURIComponent('Hi DASH, I want FM26')}`, type: 'store' as const },
+];
+
+const HomeGameCard: React.FC<{ game: typeof homeGames[0]; index: number }> = ({ game, index }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
+      { threshold: 0.2 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const isStore = game.type === 'store';
+  const overlayColor = isStore ? 'rgba(255,121,0,0.2)' : 'rgba(157,78,221,0.2)';
+  const badgeColor = isStore ? '#FF7900' : '#9D4EDD';
+  const badgeText = isStore ? 'STORE' : 'ORIGINAL';
+
+  return (
+    <div
+      ref={ref}
+      className={`flex-shrink-0 w-[200px] sm:w-[220px] transition-all duration-500 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+      }`}
+      style={{ transitionDelay: `${index * 80}ms` }}
+    >
+      <div
+        className="relative h-[140px] rounded-xl overflow-hidden cursor-pointer group transition-all duration-300 hover:scale-[1.05] hover:shadow-2xl"
+        onClick={() => window.open(game.url, '_blank')}
+      >
+        <img src={game.image} alt={game.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
+        <div className="absolute inset-0" style={{ background: overlayColor }} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+        {/* Badge */}
+        <div className="absolute top-2 right-2">
+          <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-md text-white" style={{ backgroundColor: badgeColor }}>
+            {badgeText}
+          </span>
+        </div>
+        {/* Title */}
+        <div className="absolute bottom-0 left-0 right-0 p-2.5">
+          <h4 className="text-sm font-bold text-white drop-shadow-lg">{game.name}</h4>
+          <p className="text-[10px] text-white/60">{game.tagline}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ServiceCard: React.FC<{ service: typeof streamingServices[0]; index: number }> = ({
   service,
   index,
@@ -203,11 +319,7 @@ const ServiceCard: React.FC<{ service: typeof streamingServices[0]; index: numbe
   }, []);
 
   const handleClick = () => {
-    if (service.isDASH) {
-      navigate('/services');
-    } else {
-      navigate('/services');
-    }
+    navigate('/services');
   };
 
   return (
@@ -233,7 +345,7 @@ const ServiceCard: React.FC<{ service: typeof streamingServices[0]; index: numbe
             <img
               src={service.logo3d}
               alt={service.name}
-              className="w-14 h-14 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3"
+              className="w-16 h-16 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 -mt-1"
               style={{ filter: `drop-shadow(0 4px 16px ${service.accent}60)` }}
             />
           ) : (
@@ -248,17 +360,8 @@ const ServiceCard: React.FC<{ service: typeof streamingServices[0]; index: numbe
 
         {/* Badge */}
         <div className="absolute top-4 right-4 flex items-center gap-1 px-2 py-1 bg-white/10 backdrop-blur-sm rounded-lg">
-          {service.isDASH ? (
-            <>
-              <Sparkles className="w-3 h-3 text-accent-gold" />
-              <span className="text-[10px] font-semibold text-accent-gold">DASH Original</span>
-            </>
-          ) : (
-            <>
-              <Crown className="w-3 h-3 text-amber-400" />
-              <span className="text-[10px] font-semibold text-white/80">via TIVI</span>
-            </>
-          )}
+          <Crown className="w-3 h-3 text-amber-400" />
+          <span className="text-[10px] font-semibold text-white/80">via DASH Lifestyle</span>
         </div>
 
         {/* Content */}
@@ -280,7 +383,7 @@ const ServiceCard: React.FC<{ service: typeof streamingServices[0]; index: numbe
 
           {/* CTA */}
           <div className="flex items-center justify-between">
-            <span className="text-xs text-white/50">{service.count} {service.isDASH ? '' : 'titles'}</span>
+            <span className="text-xs text-white/50">{service.count} titles</span>
             <div className="flex items-center gap-1.5 text-xs font-medium text-white group-hover:text-primary-light transition-colors">
               Explore
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -486,6 +589,60 @@ export const HomePage: React.FC<Props> = ({ onPlayChannel, isFavorite, onToggleF
         </ContentRow>
       )}
 
+      {/* ═══ 5b. NOW STREAMING — Blockbusters via DASH WebTV ═══ */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between px-4 lg:px-6 mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500/20 to-purple-500/20 flex items-center justify-center">
+              <Film className="w-4 h-4 text-red-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white">Now Streaming</h2>
+              <p className="text-xs text-text-muted mt-0.5">Blockbusters via DASH Lifestyle</p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/services')}
+            className="flex items-center gap-1 text-xs text-primary-light hover:text-primary transition-colors font-medium"
+          >
+            Browse All
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 lg:px-6 pb-2">
+          {nowStreaming.map((movie, i) => (
+            <MoviePosterCard key={movie.id} movie={movie} index={i} />
+          ))}
+        </div>
+      </section>
+
+      {/* ═══ 5c. DASH GAMES — Highlights ═══ */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between px-4 lg:px-6 mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-orange-500/20 flex items-center justify-center">
+              <Gamepad2 className="w-4 h-4 text-purple-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white">DASH Games</h2>
+              <p className="text-xs text-text-muted mt-0.5">Play or shop — your move</p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/games')}
+            className="flex items-center gap-1 text-xs text-primary-light hover:text-primary transition-colors font-medium"
+          >
+            All Games
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 lg:px-6 pb-2">
+          {homeGames.map((game, i) => (
+            <HomeGameCard key={game.id} game={game} index={i} />
+          ))}
+        </div>
+      </section>
+
       {/* ═══ 6. STREAMING SERVICES ═══ */}
       <section className="mb-10 mt-2">
         <div className="px-4 lg:px-6 mb-4">
@@ -596,10 +753,10 @@ export const HomePage: React.FC<Props> = ({ onPlayChannel, isFavorite, onToggleF
               <path d="M8 5v14l11-7z" />
             </svg>
           </div>
-          <span className="text-lg font-bold text-gradient">TIVI</span>
+          <span className="text-lg font-bold text-gradient">DASH Lifestyle</span>
         </div>
         <p className="text-xs text-text-muted mb-1">
-          Your streaming universe. Live TV, Netflix, Prime & more.
+          Your streaming universe. Live TV, Movies, Games & more.
         </p>
         <p className="text-[10px] text-text-muted/50">
           DASH Etation &copy; {new Date().getFullYear()}
