@@ -20,8 +20,8 @@ interface NavItem {
 const navItems: NavItem[] = [
   { path: '/', label: 'Home', icon: Home },
   { path: '/live', label: 'Live TV', icon: Tv, isLive: true },
-  { path: '/games', label: 'Games', icon: Gamepad2 },
   { path: '/services', label: 'DASH+', icon: Sparkles, isSpecial: true },
+  { path: '/games', label: 'Games', icon: Gamepad2 },
   { path: '/search', label: 'Search', icon: Search },
   { path: '/collections', label: 'Library', icon: Library, desktopOnly: true },
   { path: '/settings', label: 'Settings', icon: Settings, desktopOnly: true },

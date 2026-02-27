@@ -21,6 +21,18 @@ interface Game {
 
 const games: Game[] = [
   {
+    id: 'dash-hub',
+    name: 'DASH Game Store',
+    tagline: 'Any game, any platform — 3x cheaper',
+    gradient: 'from-orange-500 to-amber-900',
+    accent: '#FF7900',
+    emoji: '🎮',
+    status: 'playable',
+    url: 'https://games.dasuperhub.com',
+    players: 'All Platforms',
+    category: 'Store',
+  },
+  {
     id: 'snake',
     name: 'Neon Snake',
     tagline: 'Classic snake with a DASH twist',
