@@ -332,6 +332,15 @@ export const GamesPage: React.FC = () => {
             <FeaturedCard key={item.id} item={item} />
           ))}
         </div>
+
+        {/* More button */}
+        <button
+          onClick={() => window.open(GAMES_HUB, '_blank')}
+          className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/8 text-sm font-semibold text-primary-light hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-95"
+        >
+          More Games
+          <ArrowRight className="w-4 h-4" />
+        </button>
       </section>
 
       {/* ═══ GOT A GAME YOU WANT? CTA ═══ */}
