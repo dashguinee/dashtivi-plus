@@ -98,13 +98,40 @@ const CategoryBannerCard: React.FC<{
 /* ─── Streaming Service Card ──────────────────────────── */
 const streamingServices = [
   {
+    id: 'tivi',
+    name: 'TIVI+',
+    tagline: 'Live TV, your way',
+    gradient: 'from-violet-600 to-purple-950',
+    glow: 'shadow-purple-500/30',
+    accent: '#9D4EDD',
+    logo3d: '',
+    logoText: 'T+',
+    count: '6,500+',
+    features: ['Live TV', 'Free Channels', 'Smart Collections'],
+    isDASH: true,
+  },
+  {
+    id: 'voyo',
+    name: 'VOYO Music',
+    tagline: 'African beats, global sound',
+    gradient: 'from-fuchsia-600 to-pink-950',
+    glow: 'shadow-fuchsia-500/30',
+    accent: '#E040FB',
+    logo3d: '',
+    logoText: 'V',
+    count: 'Coming Soon',
+    features: ['Afrobeats', 'Soussou Music', 'Playlists'],
+    isDASH: true,
+  },
+  {
     id: 'netflix',
     name: 'Netflix',
     tagline: 'Unlimited movies & TV',
     gradient: 'from-red-600 to-red-900',
     glow: 'shadow-red-500/30',
     accent: '#E50914',
-    logo: 'N',
+    logo3d: '/logos/netflix-3d.png',
+    logoText: 'N',
     count: '15,000+',
     features: ['4K Ultra HD', 'Download & Go', 'Originals'],
   },
@@ -115,9 +142,22 @@ const streamingServices = [
     gradient: 'from-sky-500 to-blue-900',
     glow: 'shadow-sky-500/30',
     accent: '#00A8E1',
-    logo: '\u25B6',
+    logo3d: '/logos/prime-3d.webp',
+    logoText: '\u25B6',
     count: '24,000+',
     features: ['X-Ray', 'Live Sports', 'Channels'],
+  },
+  {
+    id: 'spotify',
+    name: 'Spotify',
+    tagline: 'Music for every moment',
+    gradient: 'from-green-500 to-emerald-900',
+    glow: 'shadow-green-500/30',
+    accent: '#1DB954',
+    logo3d: '/logos/spotify-3d.webp',
+    logoText: 'S',
+    count: '100M+',
+    features: ['Podcasts', 'AI DJ', 'Offline'],
   },
   {
     id: 'crunchyroll',
@@ -126,7 +166,8 @@ const streamingServices = [
     gradient: 'from-orange-500 to-orange-900',
     glow: 'shadow-orange-500/30',
     accent: '#F47521',
-    logo: 'CR',
+    logo3d: '/logos/crunchyroll-3d.webp',
+    logoText: 'CR',
     count: '1,200+',
     features: ['Simulcast', 'Manga', 'Dub & Sub'],
   },
@@ -137,7 +178,8 @@ const streamingServices = [
     gradient: 'from-blue-600 to-indigo-900',
     glow: 'shadow-blue-500/30',
     accent: '#113CCF',
-    logo: 'D+',
+    logo3d: '',
+    logoText: 'D+',
     count: '10,000+',
     features: ['IMAX Enhanced', 'GroupWatch', 'Extras'],
   },
@@ -147,6 +189,7 @@ const ServiceCard: React.FC<{ service: typeof streamingServices[0]; index: numbe
   service,
   index,
 }) => {
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -159,6 +202,14 @@ const ServiceCard: React.FC<{ service: typeof streamingServices[0]; index: numbe
     return () => observer.disconnect();
   }, []);
 
+  const handleClick = () => {
+    if (service.isDASH) {
+      navigate('/services');
+    } else {
+      navigate('/services');
+    }
+  };
+
   return (
     <div
       ref={ref}
@@ -169,24 +220,45 @@ const ServiceCard: React.FC<{ service: typeof streamingServices[0]; index: numbe
     >
       <div
         className={`relative h-[280px] bg-gradient-to-br ${service.gradient} rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl ${service.glow} border border-white/10`}
-        onClick={() => window.open('https://dasuperhub.com', '_blank')}
+        onClick={handleClick}
       >
         {/* Ambient glow */}
         <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-30"
           style={{ backgroundColor: service.accent }}
         />
 
-        {/* Logo */}
+        {/* Logo — 3D image or text fallback */}
         <div className="absolute top-4 left-4">
-          <span className="text-3xl font-black text-white/90 tracking-tighter">
-            {service.logo}
-          </span>
+          {service.logo3d ? (
+            <img
+              src={service.logo3d}
+              alt={service.name}
+              className="w-14 h-14 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3"
+              style={{ filter: `drop-shadow(0 4px 16px ${service.accent}60)` }}
+            />
+          ) : (
+            <span
+              className="text-3xl font-black tracking-tighter"
+              style={{ color: 'rgba(255,255,255,0.9)', textShadow: `0 0 20px ${service.accent}80` }}
+            >
+              {service.logoText}
+            </span>
+          )}
         </div>
 
-        {/* Premium badge */}
+        {/* Badge */}
         <div className="absolute top-4 right-4 flex items-center gap-1 px-2 py-1 bg-white/10 backdrop-blur-sm rounded-lg">
-          <Crown className="w-3 h-3 text-amber-400" />
-          <span className="text-[10px] font-semibold text-white/80">via TIVI</span>
+          {service.isDASH ? (
+            <>
+              <Sparkles className="w-3 h-3 text-accent-gold" />
+              <span className="text-[10px] font-semibold text-accent-gold">DASH Original</span>
+            </>
+          ) : (
+            <>
+              <Crown className="w-3 h-3 text-amber-400" />
+              <span className="text-[10px] font-semibold text-white/80">via TIVI</span>
+            </>
+          )}
         </div>
 
         {/* Content */}
@@ -208,7 +280,7 @@ const ServiceCard: React.FC<{ service: typeof streamingServices[0]; index: numbe
 
           {/* CTA */}
           <div className="flex items-center justify-between">
-            <span className="text-xs text-white/50">{service.count} titles</span>
+            <span className="text-xs text-white/50">{service.count} {service.isDASH ? '' : 'titles'}</span>
             <div className="flex items-center gap-1.5 text-xs font-medium text-white group-hover:text-primary-light transition-colors">
               Explore
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />

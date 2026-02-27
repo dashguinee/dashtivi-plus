@@ -1,8 +1,47 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Crown, ArrowRight, Sparkles, Play, Star, Globe, Tv, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Crown, ArrowRight, Sparkles, Play, Star, Globe, Tv, ExternalLink, Music, Radio } from 'lucide-react';
 
 /* ─── Service Data ────────────────────────────────────── */
 const services = [
+  {
+    id: 'tivi',
+    name: 'TIVI+',
+    tagline: '6,500+ live channels, completely free',
+    description: 'Your streaming universe. Live TV from around the world — sports, news, entertainment, music, kids, African channels and more. All free, all yours.',
+    gradient: 'from-violet-600 via-purple-800 to-purple-950',
+    accentColor: '#9D4EDD',
+    glowColor: 'rgba(157, 78, 221, 0.3)',
+    logo3d: '',
+    isDASH: true,
+    count: '6,500+',
+    highlights: [
+      { label: 'Free Live TV', icon: '📺' },
+      { label: '27 Collections', icon: '📚' },
+      { label: 'Smart Health', icon: '💡' },
+      { label: 'HD Streams', icon: '✨' },
+    ],
+    popular: ['African Channels', 'Sports Central', 'News 24/7', 'Kids Zone', 'French TV'],
+  },
+  {
+    id: 'voyo',
+    name: 'VOYO Music',
+    tagline: 'African beats meet global sound',
+    description: 'The first music platform built for West Africa. Afrobeats, Soussou music, Manding rhythms, and global hits — all in one place. By DASH, for the culture.',
+    gradient: 'from-fuchsia-600 via-pink-800 to-pink-950',
+    accentColor: '#E040FB',
+    glowColor: 'rgba(224, 64, 251, 0.3)',
+    logo3d: '',
+    isDASH: true,
+    count: 'Coming Soon',
+    highlights: [
+      { label: 'Afrobeats', icon: '🥁' },
+      { label: 'Soussou Music', icon: '🎵' },
+      { label: 'Playlists', icon: '📻' },
+      { label: 'Offline Mode', icon: '📥' },
+    ],
+    popular: ['Afrobeats Hits', 'Soussou Classics', 'Manding Mix', 'Guinean Stars', 'West Africa Top 50'],
+  },
   {
     id: 'netflix',
     name: 'Netflix',
@@ -95,6 +134,34 @@ const services = [
   },
 ];
 
+/* ─── DASH Original Button ───────────────────────────── */
+const DASHButton: React.FC<{ serviceId: string }> = ({ serviceId }) => {
+  const navigate = useNavigate();
+
+  if (serviceId === 'tivi') {
+    return (
+      <button
+        onClick={() => navigate('/live')}
+        className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white hover:scale-105 active:scale-95 transition-all border border-white/10"
+        style={{ background: 'linear-gradient(135deg, #9D4EDD 0%, #7B2CBF 100%)' }}
+      >
+        <Play className="w-4 h-4 fill-white" />
+        Watch Live TV
+        <ArrowRight className="w-3.5 h-3.5 ml-1" />
+      </button>
+    );
+  }
+
+  return (
+    <button
+      className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white/60 border border-white/10 bg-white/5 cursor-default"
+    >
+      <Music className="w-4 h-4" />
+      Coming Soon
+    </button>
+  );
+};
+
 /* ─── Service Section ─────────────────────────────────── */
 const ServiceSection: React.FC<{
   service: typeof services[0];
@@ -147,15 +214,30 @@ const ServiceSection: React.FC<{
                 />
               ) : (
                 <div
-                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-3xl font-black text-white/90"
-                  style={{ background: `${service.accentColor}30`, border: `2px solid ${service.accentColor}40` }}
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center"
+                  style={{ background: `${service.accentColor}25`, border: `2px solid ${service.accentColor}35` }}
                 >
-                  {service.name.charAt(0)}+
+                  {service.id === 'tivi' ? (
+                    <Tv className="w-8 h-8" style={{ color: service.accentColor }} />
+                  ) : service.id === 'voyo' ? (
+                    <Music className="w-8 h-8" style={{ color: service.accentColor }} />
+                  ) : (
+                    <span className="text-3xl font-black text-white/90">{service.name.charAt(0)}+</span>
+                  )}
                 </div>
               )}
               <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 backdrop-blur-sm rounded-lg">
-                <Crown className="w-3 h-3 text-amber-400" />
-                <span className="text-[10px] font-semibold text-white/80">Available via TIVI</span>
+                {service.isDASH ? (
+                  <>
+                    <Sparkles className="w-3 h-3 text-amber-400" />
+                    <span className="text-[10px] font-bold text-amber-300">DASH Original</span>
+                  </>
+                ) : (
+                  <>
+                    <Crown className="w-3 h-3 text-amber-400" />
+                    <span className="text-[10px] font-semibold text-white/80">Available via TIVI</span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -179,14 +261,18 @@ const ServiceSection: React.FC<{
             </div>
 
             {/* CTA */}
-            <button
-              onClick={() => window.open('https://dasuperhub.com', '_blank')}
-              className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-xl font-semibold text-white hover:bg-white/20 transition-all hover:scale-105 active:scale-95 border border-white/10"
-            >
-              <Play className="w-4 h-4 fill-white" />
-              Get Access via SuperHub
-              <ExternalLink className="w-3.5 h-3.5 ml-1 opacity-50" />
-            </button>
+            {service.isDASH ? (
+              <DASHButton serviceId={service.id} />
+            ) : (
+              <button
+                onClick={() => window.open('https://dasuperhub.com', '_blank')}
+                className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-xl font-semibold text-white hover:bg-white/20 transition-all hover:scale-105 active:scale-95 border border-white/10"
+              >
+                <Play className="w-4 h-4 fill-white" />
+                Get Access via SuperHub
+                <ExternalLink className="w-3.5 h-3.5 ml-1 opacity-50" />
+              </button>
+            )}
           </div>
 
           {/* Popular Titles Side */}
@@ -241,22 +327,26 @@ export const ServicesPage: React.FC = () => {
         </h1>
         <p className="text-sm text-text-secondary max-w-lg mx-auto">
           All your favorite streaming platforms, unified under TIVI.
-          Access Netflix, Prime Video, Crunchyroll, Disney+ and more.
+          TIVI+, VOYO Music, Netflix, Prime Video, Spotify, Crunchyroll, Disney+ and more.
         </p>
 
         {/* Platform pills */}
         <div className="flex items-center justify-center gap-3 mt-6 flex-wrap">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-bg-surface rounded-full border border-white/5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-xs text-text-secondary">2 DASH Originals</span>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-bg-surface rounded-full border border-white/5">
             <Globe className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs text-text-secondary">5 Platforms</span>
+            <span className="text-xs text-text-secondary">7 Platforms</span>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 bg-bg-surface rounded-full border border-white/5">
             <Tv className="w-3.5 h-3.5 text-accent" />
-            <span className="text-xs text-text-secondary">50,000+ Titles</span>
+            <span className="text-xs text-text-secondary">56,000+ Titles</span>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 bg-bg-surface rounded-full border border-white/5">
             <Crown className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-xs text-text-secondary">All via DASH SuperHub</span>
+            <span className="text-xs text-text-secondary">DASH SuperHub</span>
           </div>
         </div>
 
