@@ -36,6 +36,9 @@ const SettingsPage = lazy(() =>
 const ServicesPage = lazy(() =>
   import('@/pages/ServicesPage').then((m) => ({ default: m.ServicesPage }))
 );
+const GamesPage = lazy(() =>
+  import('@/pages/GamesPage').then((m) => ({ default: m.GamesPage }))
+);
 
 function AppContent() {
   const navigate = useNavigate();
@@ -126,6 +129,10 @@ function AppContent() {
               <Route
                 path="/collections/:key"
                 element={<CollectionDetailPage onPlayChannel={handlePlayChannel} />}
+              />
+              <Route
+                path="/games"
+                element={<GamesPage />}
               />
               <Route
                 path="/services"

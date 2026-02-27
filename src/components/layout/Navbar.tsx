@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Tv, Sparkles, Search, Library, Settings } from 'lucide-react';
+import { Home, Tv, Sparkles, Search, Library, Settings, Gamepad2 } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════
    TIVI+ Bottom Nav — OG DashWebTV DNA
@@ -20,9 +20,10 @@ interface NavItem {
 const navItems: NavItem[] = [
   { path: '/', label: 'Home', icon: Home },
   { path: '/live', label: 'Live TV', icon: Tv, isLive: true },
-  { path: '/services', label: 'Tivi+', icon: Sparkles, isSpecial: true },
+  { path: '/games', label: 'Games', icon: Gamepad2 },
+  { path: '/services', label: 'DASH+', icon: Sparkles, isSpecial: true },
   { path: '/search', label: 'Search', icon: Search },
-  { path: '/collections', label: 'Library', icon: Library },
+  { path: '/collections', label: 'Library', icon: Library, desktopOnly: true },
   { path: '/settings', label: 'Settings', icon: Settings, desktopOnly: true },
 ];
 
