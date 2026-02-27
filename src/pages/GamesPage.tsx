@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Gamepad2, Play, ShoppingBag, ArrowRight, ExternalLink, Zap, Trophy, Crown } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Gamepad2, Play, ShoppingBag, ArrowRight, ExternalLink, Zap, Trophy, Crown, ChevronRight } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════
    DASH Games — Crossroads Page
@@ -11,84 +11,78 @@ const GAMES_HUB = 'https://games.dasuperhub.com';
 const GAMES_SHOP = 'https://games.dasuperhub.com/#/shop';
 const GAMES_CDN = 'https://games.dasuperhub.com/icons';
 
-/* ─── Featured Items ─── */
+/* ─── Store Featured (orange) ─── */
 
 interface FeaturedItem {
   id: string;
   name: string;
   tagline: string;
   image: string;
-  emoji: string;
   type: 'store' | 'lobby';
   url: string;
+  objectPosition?: string;
 }
 
-const featured: FeaturedItem[] = [
-  // Store games (orange overlay)
+const storeFeatured: FeaturedItem[] = [
   {
-    id: 'fifa-25',
-    name: 'FIFA 25',
-    tagline: 'The beautiful game, latest edition',
-    image: `${GAMES_CDN}/football.jpg`,
-    emoji: '\u26BD',
+    id: 'fm26',
+    name: 'Football Manager 26',
+    tagline: 'Build your dream squad',
+    image: '/games/store-3.jpg',
     type: 'store',
-    url: `https://wa.me/224611361300?text=${encodeURIComponent('Hi DASH, I want to buy FIFA 25')}`,
+    url: `https://wa.me/224611361300?text=${encodeURIComponent('Hi DASH, I want to buy Football Manager 26')}`,
   },
   {
     id: 'gta-v',
     name: 'GTA V',
     tagline: 'Open world, endless possibilities',
-    image: `${GAMES_CDN}/rush.jpg`,
-    emoji: '\uD83C\uDFAE',
+    image: '/games/store-1.jpg',
     type: 'store',
     url: `https://wa.me/224611361300?text=${encodeURIComponent('Hi DASH, I want to buy GTA V')}`,
   },
-  // Lobby games (purple overlay) — best 3 from the real 15
   {
-    id: 'kalishoo',
-    name: 'Kalich\u26BDo',
-    tagline: 'Glow Hockey \u2014 frappe le palet!',
-    image: `${GAMES_CDN}/kalishoo.jpg`,
-    emoji: '\uD83C\uDFD2',
-    type: 'lobby',
-    url: `${GAMES_HUB}/#/games/kalishoo`,
+    id: 'astro-bot',
+    name: 'Astro Bot',
+    tagline: 'PS5 exclusive platformer',
+    image: '/games/store-2.jpg',
+    type: 'store',
+    url: `https://wa.me/224611361300?text=${encodeURIComponent('Hi DASH, I want to buy Astro Bot')}`,
   },
   {
-    id: 'rush',
-    name: 'Conakry Rush',
-    tagline: 'Esquive le trafic fou de Conakry!',
-    image: `${GAMES_CDN}/rush.jpg`,
-    emoji: '\uD83D\uDE95',
-    type: 'lobby',
-    url: `${GAMES_HUB}/#/games/rush`,
+    id: 'gta-vi',
+    name: 'GTA VI',
+    tagline: 'Pre-order the most anticipated game',
+    image: '/games/store-5.jpg',
+    type: 'store',
+    url: `https://wa.me/224611361300?text=${encodeURIComponent('Hi DASH, I want to pre-order GTA VI')}`,
   },
   {
-    id: 'ludo',
-    name: 'Ludo African',
-    tagline: 'Le classique africain r\u00E9invent\u00E9',
-    image: `${GAMES_CDN}/ludo.jpg`,
-    emoji: '\uD83C\uDFB2',
-    type: 'lobby',
-    url: `${GAMES_HUB}/#/games/ludo`,
+    id: 'fm26-alt',
+    name: 'FM26 Console',
+    tagline: 'Football Manager on PS5 & Xbox',
+    image: '/games/store-4.jpg',
+    type: 'store',
+    url: `https://wa.me/224611361300?text=${encodeURIComponent('Hi DASH, I want FM26 for console')}`,
   },
-  {
-    id: 'fanta',
-    name: 'Fanta 1+1',
-    tagline: 'D\u00E9fi math\u00E9matique contre Fanta!',
-    image: `${GAMES_CDN}/fanta.jpg`,
-    emoji: '\uD83E\uDDEE',
-    type: 'lobby',
-    url: `${GAMES_HUB}/#/games/fanta`,
-  },
-  {
-    id: 'bundess',
-    name: 'Bundess',
-    tagline: 'Football tactique tour par tour',
-    image: `${GAMES_CDN}/bundess.jpg`,
-    emoji: '\u26BD',
-    type: 'lobby',
-    url: `${GAMES_HUB}/#/games/bundess`,
-  },
+];
+
+/* ─── DASH Games Carousel (purple) — all 15 from the real hub ─── */
+
+const dashGames: FeaturedItem[] = [
+  { id: 'kalishoo', name: 'Kalich\u26BDo', tagline: 'Glow Hockey', image: `${GAMES_CDN}/kalishoo.jpg`, type: 'lobby', url: `${GAMES_HUB}/#/games/kalishoo` },
+  { id: 'rush', name: 'Conakry Rush', tagline: 'Esquive le trafic!', image: `${GAMES_CDN}/rush.jpg`, type: 'lobby', url: `${GAMES_HUB}/#/games/rush` },
+  { id: 'ludo', name: 'Ludo African', tagline: 'Le classique', image: `${GAMES_CDN}/ludo.jpg`, type: 'lobby', url: `${GAMES_HUB}/#/games/ludo` },
+  { id: 'fanta', name: 'Fanta 1+1', tagline: 'D\u00E9fi math\u00E9matique', image: `${GAMES_CDN}/fanta.jpg`, type: 'lobby', url: `${GAMES_HUB}/#/games/fanta` },
+  { id: 'bundess', name: 'Bundess', tagline: 'Football tactique', image: `${GAMES_CDN}/bundess.jpg`, type: 'lobby', url: `${GAMES_HUB}/#/games/bundess`, objectPosition: 'center 30%' },
+  { id: 'basketball', name: 'Basketball Street', tagline: 'Vise le panier', image: `${GAMES_CDN}/basketball.jpg`, type: 'lobby', url: `${GAMES_HUB}/#/games/basketball` },
+  { id: 'snake', name: 'Serpent', tagline: 'Mange et grandis!', image: `${GAMES_CDN}/snake.jpg`, type: 'lobby', url: `${GAMES_HUB}/#/games/snake` },
+  { id: 'archer', name: 'Archer', tagline: 'Vise la cible', image: `${GAMES_CDN}/archer.jpg`, type: 'lobby', url: `${GAMES_HUB}/#/games/archer` },
+  { id: 'traversee', name: 'Travers\u00E9e', tagline: 'Traverse Conakry!', image: `${GAMES_CDN}/traversee.jpg`, type: 'lobby', url: `${GAMES_HUB}/#/games/traversee` },
+  { id: 'bridge-shooter', name: 'Bridge Shooter', tagline: 'Tire ou perds tout', image: `${GAMES_CDN}/bridge-shooter.jpg`, type: 'lobby', url: `${GAMES_HUB}/#/games/bridge-shooter` },
+  { id: 'gbeli', name: 'Gbeli-Gbeli', tagline: 'Combat \u00E0 la fronde', image: `${GAMES_CDN}/gbeli.jpg`, type: 'lobby', url: `${GAMES_HUB}/#/games/gbeli` },
+  { id: 'colors', name: 'Color Bounce', tagline: 'Rebondis!', image: `${GAMES_CDN}/colors.jpg`, type: 'lobby', url: `${GAMES_HUB}/#/games/colors` },
+  { id: 'liane', name: 'Liane', tagline: 'Balance-toi!', image: `${GAMES_CDN}/liane.jpg`, type: 'lobby', url: `${GAMES_HUB}/#/games/liane` },
+  { id: 'football', name: 'Penoss', tagline: 'Penalty de rue', image: `${GAMES_CDN}/football.jpg`, type: 'lobby', url: `${GAMES_HUB}/#/games/football` },
 ];
 
 /* ─── Hero Card — Store / Lobby gateway with AI-generated backgrounds ─── */
@@ -119,45 +113,19 @@ const HeroCard: React.FC<{
       onMouseLeave={() => setHovering(false)}
       onClick={() => window.open(url, '_blank')}
     >
-      {/* Background image */}
-      <img
-        src={bgImage}
-        alt={title}
-        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-      />
-
-      {/* Color tint overlay */}
+      <img src={bgImage} alt={title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
       <div className="absolute inset-0" style={{ background: tintColor }} />
-
-      {/* OG bottom fade — ChannelTile DNA */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+      <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'linear-gradient(transparent 50%, rgba(0,0,0,0.3) 50%)', backgroundSize: '100% 4px' }} />
 
-      {/* Scanline overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.04] pointer-events-none"
-        style={{
-          backgroundImage: 'linear-gradient(transparent 50%, rgba(0,0,0,0.3) 50%)',
-          backgroundSize: '100% 4px',
-        }}
-      />
-
-      {/* Tag — top left */}
       <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
         {tag && (
-          <span
-            className="px-2.5 py-1 text-[10px] font-bold rounded-lg backdrop-blur-sm"
-            style={{
-              background: 'rgba(255,215,0,0.15)',
-              color: '#FFD700',
-              border: '1px solid rgba(255,215,0,0.25)',
-            }}
-          >
+          <span className="px-2.5 py-1 text-[10px] font-bold rounded-lg backdrop-blur-sm" style={{ background: 'rgba(255,215,0,0.15)', color: '#FFD700', border: '1px solid rgba(255,215,0,0.25)' }}>
             {tag}
           </span>
         )}
       </div>
 
-      {/* Icon — top right */}
       <div className="absolute top-3 right-3 z-10">
         <span className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/40 backdrop-blur-sm rounded-lg border border-white/10">
           {icon}
@@ -165,7 +133,6 @@ const HeroCard: React.FC<{
         </span>
       </div>
 
-      {/* Content — bottom, over the fade */}
       <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
         <h3 className="text-xl sm:text-2xl font-bold text-white mb-1 drop-shadow-lg">{title}</h3>
         <p className="text-sm text-white/70 drop-shadow-md">{subtitle}</p>
@@ -176,19 +143,21 @@ const HeroCard: React.FC<{
 
 /* ─── Featured Game Card — OG ChannelTile overlay style ─── */
 
-const FeaturedCard: React.FC<{ item: FeaturedItem }> = ({ item }) => {
+const FeaturedCard: React.FC<{ item: FeaturedItem; size?: 'normal' | 'carousel' }> = ({ item, size = 'normal' }) => {
   const [hovering, setHovering] = useState(false);
   const [imgError, setImgError] = useState(false);
   const isStore = item.type === 'store';
   const tintColor = isStore ? 'rgba(255,121,0,0.25)' : 'rgba(157,78,221,0.25)';
   const accentGlow = isStore ? 'rgba(255,121,0,0.3)' : 'rgba(157,78,221,0.3)';
   const borderColor = isStore ? 'rgba(255,121,0,0.2)' : 'rgba(157,78,221,0.2)';
+  const isCarousel = size === 'carousel';
 
   return (
     <div
-      className="group relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 card-shine card-glow"
+      className={`group relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 card-shine card-glow ${isCarousel ? 'flex-shrink-0' : ''}`}
       style={{
         aspectRatio: '16/9',
+        ...(isCarousel ? { width: 220 } : {}),
         border: `1px solid ${borderColor}`,
         boxShadow: hovering ? `0 12px 40px ${accentGlow}` : '0 4px 20px rgba(0,0,0,0.4)',
       }}
@@ -196,7 +165,6 @@ const FeaturedCard: React.FC<{ item: FeaturedItem }> = ({ item }) => {
       onMouseLeave={() => setHovering(false)}
       onClick={() => window.open(item.url, '_blank')}
     >
-      {/* Background image or emoji fallback */}
       {item.image && !imgError ? (
         <img
           src={item.image}
@@ -204,20 +172,15 @@ const FeaturedCard: React.FC<{ item: FeaturedItem }> = ({ item }) => {
           loading="lazy"
           onError={() => setImgError(true)}
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          style={{ objectPosition: item.objectPosition || 'center' }}
         />
       ) : (
-        <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-20">
-          {item.emoji}
-        </div>
+        <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-20">{'\uD83C\uDFAE'}</div>
       )}
 
-      {/* Color tint overlay — orange for store, purple for lobby */}
       <div className="absolute inset-0" style={{ background: tintColor }} />
-
-      {/* OG bottom fade */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
 
-      {/* Type badge — top right */}
       <div className="absolute top-2 right-2 z-10">
         <span
           className="px-2 py-0.5 text-[9px] font-bold rounded-md backdrop-blur-sm uppercase tracking-wider"
@@ -231,7 +194,6 @@ const FeaturedCard: React.FC<{ item: FeaturedItem }> = ({ item }) => {
         </span>
       </div>
 
-      {/* Bottom info — over the fade */}
       <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
         <h4 className="text-sm font-bold text-white leading-tight drop-shadow-lg">{item.name}</h4>
         <p className="text-[10px] text-white/60 mt-0.5 drop-shadow-md">{item.tagline}</p>
@@ -243,8 +205,7 @@ const FeaturedCard: React.FC<{ item: FeaturedItem }> = ({ item }) => {
 /* ─── Main Page ─── */
 
 export const GamesPage: React.FC = () => {
-  const storeItems = featured.filter((f) => f.type === 'store');
-  const lobbyItems = featured.filter((f) => f.type === 'lobby');
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="min-h-screen pt-16">
@@ -268,7 +229,6 @@ export const GamesPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats */}
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-bg-surface rounded-full border border-white/5">
             <ShoppingBag className="w-3.5 h-3.5 text-orange-400" />
@@ -285,7 +245,7 @@ export const GamesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ═══ PLAY NOW — Two Hero Cards with AI backgrounds ═══ */}
+      {/* ═══ PLAY NOW — Two Hero Cards ═══ */}
       <section className="px-4 lg:px-6 mb-8">
         <div className="flex items-center gap-2 mb-4">
           <Play className="w-5 h-5 text-green-400 fill-green-400" />
@@ -312,35 +272,64 @@ export const GamesPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ═══ FEATURED — Grid cards, real images, OG overlay ═══ */}
-      <section className="px-4 lg:px-6 mb-8">
-        <div className="flex items-center justify-between mb-4">
+      {/* ═══ DASH GAMES — Horizontal carousel (purple) ═══ */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between px-4 lg:px-6 mb-4">
           <div className="flex items-center gap-2">
-            <Crown className="w-5 h-5 text-amber-400" />
-            <h2 className="text-lg font-bold text-white">Featured</h2>
+            <Gamepad2 className="w-5 h-5 text-purple-400" />
+            <h2 className="text-lg font-bold text-white">DASH Games</h2>
+            <span className="px-2 py-0.5 text-[9px] font-bold rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/20">ORIGINAL</span>
           </div>
           <button
             onClick={() => window.open(GAMES_HUB, '_blank')}
             className="flex items-center gap-1 text-xs text-primary-light font-semibold hover:text-primary transition-colors"
           >
-            All Games
-            <ArrowRight className="w-3.5 h-3.5" />
+            All 15
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {[...storeItems, ...lobbyItems].map((item) => (
-            <FeaturedCard key={item.id} item={item} />
+        <div
+          ref={scrollRef}
+          className="flex gap-3 overflow-x-auto scrollbar-hide px-4 lg:px-6 pb-2"
+        >
+          {dashGames.map((game) => (
+            <FeaturedCard key={game.id} item={game} size="carousel" />
           ))}
         </div>
 
         {/* More button */}
-        <button
-          onClick={() => window.open(GAMES_HUB, '_blank')}
-          className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/8 text-sm font-semibold text-primary-light hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-95"
-        >
-          More Games
-          <ArrowRight className="w-4 h-4" />
-        </button>
+        <div className="px-4 lg:px-6">
+          <button
+            onClick={() => window.open(GAMES_HUB, '_blank')}
+            className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-purple-500/5 border border-purple-500/10 text-sm font-semibold text-purple-300 hover:bg-purple-500/10 transition-all hover:scale-[1.02] active:scale-95"
+          >
+            More Games
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </section>
+
+      {/* ═══ FEATURED STORE — Grid cards with real images (orange) ═══ */}
+      <section className="px-4 lg:px-6 mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Crown className="w-5 h-5 text-amber-400" />
+            <h2 className="text-lg font-bold text-white">Featured</h2>
+            <span className="px-2 py-0.5 text-[9px] font-bold rounded-md bg-orange-500/20 text-orange-300 border border-orange-500/20">STORE</span>
+          </div>
+          <button
+            onClick={() => window.open(GAMES_SHOP, '_blank')}
+            className="flex items-center gap-1 text-xs text-orange-400 font-semibold hover:text-orange-300 transition-colors"
+          >
+            Shop
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {storeFeatured.map((item) => (
+            <FeaturedCard key={item.id} item={item} />
+          ))}
+        </div>
       </section>
 
       {/* ═══ GOT A GAME YOU WANT? CTA ═══ */}
