@@ -11,7 +11,7 @@ const services = [
     gradient: 'from-red-600 via-red-700 to-red-950',
     accentColor: '#E50914',
     glowColor: 'rgba(229, 9, 20, 0.3)',
-    logo: 'N',
+    logo3d: '/logos/netflix-3d.png',
     count: '15,000+',
     highlights: [
       { label: '4K Ultra HD', icon: '📺' },
@@ -29,7 +29,7 @@ const services = [
     gradient: 'from-sky-500 via-blue-700 to-blue-950',
     accentColor: '#00A8E1',
     glowColor: 'rgba(0, 168, 225, 0.3)',
-    logo: '▶',
+    logo3d: '/logos/prime-3d.webp',
     count: '24,000+',
     highlights: [
       { label: 'X-Ray Features', icon: '🔍' },
@@ -47,7 +47,7 @@ const services = [
     gradient: 'from-orange-500 via-orange-700 to-amber-950',
     accentColor: '#F47521',
     glowColor: 'rgba(244, 117, 33, 0.3)',
-    logo: 'CR',
+    logo3d: '/logos/crunchyroll-3d.webp',
     count: '1,200+',
     highlights: [
       { label: 'Simulcast', icon: '⚡' },
@@ -58,6 +58,24 @@ const services = [
     popular: ['One Piece', 'Demon Slayer', 'Jujutsu Kaisen', 'Dragon Ball', 'Attack on Titan'],
   },
   {
+    id: 'spotify',
+    name: 'Spotify',
+    tagline: 'Music for every moment',
+    description: 'Millions of songs and podcasts. Discover new music, create playlists, and listen anywhere.',
+    gradient: 'from-green-500 via-green-700 to-emerald-950',
+    accentColor: '#1DB954',
+    glowColor: 'rgba(29, 185, 84, 0.3)',
+    logo3d: '/logos/spotify-3d.webp',
+    count: '100M+',
+    highlights: [
+      { label: 'Podcasts', icon: '🎙️' },
+      { label: 'AI DJ', icon: '🤖' },
+      { label: 'Offline Mode', icon: '📥' },
+      { label: 'Lyrics', icon: '🎵' },
+    ],
+    popular: ['Discover Weekly', 'Release Radar', 'Wrapped 2025', 'Daily Mix', 'Top Hits'],
+  },
+  {
     id: 'disney',
     name: 'Disney+',
     tagline: 'Marvel, Star Wars, Pixar & more',
@@ -65,7 +83,7 @@ const services = [
     gradient: 'from-blue-600 via-indigo-800 to-indigo-950',
     accentColor: '#113CCF',
     glowColor: 'rgba(17, 60, 207, 0.3)',
-    logo: 'D+',
+    logo3d: '',
     count: '10,000+',
     highlights: [
       { label: 'IMAX Enhanced', icon: '🎭' },
@@ -103,7 +121,7 @@ const ServiceSection: React.FC<{
       }`}
       style={{ transitionDelay: `${index * 100}ms` }}
     >
-      <div className={`relative bg-gradient-to-br ${service.gradient} rounded-3xl overflow-hidden border border-white/10`}>
+      <div className={`relative group bg-gradient-to-br ${service.gradient} rounded-3xl overflow-hidden border border-white/10`}>
         {/* Ambient glow orbs */}
         <div
           className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[100px] opacity-40"
@@ -117,10 +135,24 @@ const ServiceSection: React.FC<{
         <div className={`relative z-10 p-6 sm:p-8 lg:p-10 flex flex-col ${reversed ? 'lg:flex-row-reverse' : 'lg:flex-row'} gap-8 items-center`}>
           {/* Info Side */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-4xl font-black text-white/90 tracking-tighter">
-                {service.logo}
-              </span>
+            <div className="flex items-center gap-4 mb-4">
+              {service.logo3d ? (
+                <img
+                  src={service.logo3d}
+                  alt={service.name}
+                  className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3"
+                  style={{
+                    filter: `drop-shadow(0 8px 24px ${service.glowColor})`,
+                  }}
+                />
+              ) : (
+                <div
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center text-3xl font-black text-white/90"
+                  style={{ background: `${service.accentColor}30`, border: `2px solid ${service.accentColor}40` }}
+                >
+                  {service.name.charAt(0)}+
+                </div>
+              )}
               <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 backdrop-blur-sm rounded-lg">
                 <Crown className="w-3 h-3 text-amber-400" />
                 <span className="text-[10px] font-semibold text-white/80">Available via TIVI</span>
@@ -216,7 +248,7 @@ export const ServicesPage: React.FC = () => {
         <div className="flex items-center justify-center gap-3 mt-6 flex-wrap">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-bg-surface rounded-full border border-white/5">
             <Globe className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs text-text-secondary">4 Platforms</span>
+            <span className="text-xs text-text-secondary">5 Platforms</span>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 bg-bg-surface rounded-full border border-white/5">
             <Tv className="w-3.5 h-3.5 text-accent" />
@@ -226,6 +258,22 @@ export const ServicesPage: React.FC = () => {
             <Crown className="w-3.5 h-3.5 text-amber-400" />
             <span className="text-xs text-text-secondary">All via DASH SuperHub</span>
           </div>
+        </div>
+
+        {/* 3D Logo Showcase */}
+        <div className="flex items-center justify-center gap-6 sm:gap-10 mt-8">
+          {services.filter(s => s.logo3d).map((s) => (
+            <div key={s.id} className="group/logo cursor-pointer">
+              <img
+                src={s.logo3d}
+                alt={s.name}
+                className="w-14 h-14 sm:w-18 sm:h-18 object-contain transition-all duration-300 group-hover/logo:scale-125 group-hover/logo:-translate-y-2"
+                style={{
+                  filter: `drop-shadow(0 8px 20px ${s.glowColor})`,
+                }}
+              />
+            </div>
+          ))}
         </div>
       </div>
 

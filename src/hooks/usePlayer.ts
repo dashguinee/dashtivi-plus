@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { createHlsPlayer, setQuality } from '@/lib/hls';
+import { markDead, markAlive } from '@/hooks/useChannelHealth';
 import type { Channel, PlayerState } from '@/types';
 import type Hls from 'hls.js';
 
@@ -56,6 +57,7 @@ export function usePlayer() {
             setState((prev) => ({ ...prev, qualities: levels, isLoading: false }));
           },
           (error) => {
+            markDead(channel.id, error);
             setState((prev) => ({ ...prev, error, isLoading: false }));
           }
         );
@@ -63,7 +65,10 @@ export function usePlayer() {
         hlsRef.current = hls;
         destroyRef.current = destroy;
 
-        video.onplaying = () => setState((prev) => ({ ...prev, isPlaying: true, isLoading: false }));
+        video.onplaying = () => {
+          markAlive(channel.id);
+          setState((prev) => ({ ...prev, isPlaying: true, isLoading: false }));
+        };
         video.onpause = () => setState((prev) => ({ ...prev, isPlaying: false }));
         video.onwaiting = () => setState((prev) => ({ ...prev, isLoading: true }));
         video.oncanplay = () => setState((prev) => ({ ...prev, isLoading: false }));

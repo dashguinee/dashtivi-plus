@@ -1,6 +1,8 @@
 import type { Channel } from '@/types';
 import rawData from './africa_channels.json';
 import iptvRaw from './iptv_channels.json';
+import freeLiveRaw from './verified_streams.json';
+import newSourcesRaw from './new_sources.json';
 
 const data = rawData as {
   metadata: Record<string, unknown>;
@@ -118,6 +120,67 @@ function buildChannels(): Channel[] {
     });
   }
 
+  // OG free live channels (3,041 hard-verified — actual HLS streaming confirmed)
+  const freeChannels = freeLiveRaw as Array<{
+    id: string;
+    name: string;
+    url: string;
+    logo?: string;
+    country?: string;
+    category?: string;
+    quality?: string;
+    group?: string;
+    source?: string;
+    stream_type?: string;
+  }>;
+
+  for (const ch of freeChannels) {
+    if (seen.has(ch.id)) continue;
+    const urlKey = ch.url.split('?')[0];
+    if (seen.has(urlKey)) continue;
+    seen.add(ch.id);
+    seen.add(urlKey);
+    channels.push({
+      id: ch.id,
+      name: ch.name,
+      url: ch.url,
+      logo: ch.logo,
+      country: ch.country || 'International',
+      category: ch.category || 'general',
+      quality: ch.quality,
+      group: ch.group,
+    });
+  }
+
+  // New sources: Free-TV, Pluto TV, Plex, Tubi, Roku (1,300+ verified alive)
+  const newSources = newSourcesRaw as Array<{
+    id: string;
+    name: string;
+    url: string;
+    logo?: string;
+    country?: string;
+    category?: string;
+    group?: string;
+    source?: string;
+  }>;
+
+  for (const ch of newSources) {
+    if (seen.has(ch.id)) continue;
+    const urlKey = ch.url.split('?')[0];
+    if (seen.has(urlKey)) continue;
+    seen.add(ch.id);
+    seen.add(urlKey);
+    channels.push({
+      id: ch.id,
+      name: ch.name,
+      url: ch.url,
+      logo: ch.logo,
+      country: ch.country || 'International',
+      category: ch.category || mapGroup(ch.group || ''),
+      group: ch.group || ch.source,
+    });
+  }
+
   return channels;
 }
 
@@ -145,6 +208,7 @@ export function getChannelsByCategory(category: string): Channel[] {
         'Guinea', 'Senegal', 'Ivory Coast', 'Cameroon', 'South Africa', 'Nigeria',
         'Ghana', 'DRC', 'DR Congo', 'Mali', 'Burkina Faso', 'Benin', 'Togo',
         'Niger', 'Gabon', 'Congo', 'Kenya', 'Algeria', 'Morocco', 'Tunisia',
+        'Egypt', 'Somalia', 'Chad',
       ].includes(ch.country || '')
     );
   }

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import {
   Settings, Trash2, Info, Shield, Tv, Globe,
-  ChevronRight, ExternalLink, Zap, Heart
+  ChevronRight, ExternalLink, Zap, Heart, AlertCircle, RefreshCw
 } from 'lucide-react';
 import { totalChannelCount, countries } from '@/data/channels';
 import { allCollections } from '@/data/collections';
+import { useChannelHealth } from '@/hooks/useChannelHealth';
 
 interface Props {
   onClearHistory: () => void;
@@ -12,6 +13,7 @@ interface Props {
 
 export const SettingsPage: React.FC<Props> = ({ onClearHistory }) => {
   const [showConfirm, setShowConfirm] = useState(false);
+  const { deadCount, clearDead } = useChannelHealth();
 
   const handleClear = () => {
     onClearHistory();
@@ -138,6 +140,27 @@ export const SettingsPage: React.FC<Props> = ({ onClearHistory }) => {
                 <span className="text-sm text-white">Picture-in-Picture</span>
               </div>
               <span className="text-xs text-success font-medium">Supported</span>
+            </div>
+            <div className="px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-4 h-4 text-text-muted" />
+                <div>
+                  <span className="text-sm text-white">Dead Channels Hidden</span>
+                  <div className="text-[11px] text-text-muted">Auto-excluded when they fail to play</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-warning font-medium">{deadCount}</span>
+                {deadCount > 0 && (
+                  <button
+                    onClick={clearDead}
+                    className="p-1.5 rounded-lg bg-bg-elevated hover:bg-white/10 transition-colors"
+                    title="Reset dead list — re-test all channels"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-text-muted" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </section>

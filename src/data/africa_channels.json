@@ -29,7 +29,8 @@
       "country": "France",
       "category": "news",
       "url": "https://live.eu-north-1a.cf.dmcdn.net/sec2(lZBIiQCW1Z9S5GM5VC1XsIXiQZJEyF3Un7Sw-LwNz7ym_HGsm7i4hmsAZlqBZ57kkwOvoisnunLvGCMjLGT45bmZQq8yQcsVfq6FCa-myo3DkVHI2o06H5fjy6OyJzrf)/dm/3/x3b68jn/d/live-1080@60.m3u8",
-      "quality": "1080p@60fps"
+      "quality": "1080p@60fps",
+      "logo": "https://i.imgur.com/sSNhk2g.png"
     },
     {
       "id": "cstar",
@@ -45,7 +46,8 @@
       "country": "Guinea",
       "category": "entertainment",
       "url": "https://edge11.vedge.infomaniak.com/livecast/ik:espacetv/manifest.m3u8",
-      "quality": "1080p"
+      "quality": "1080p",
+      "logo": "https://i.imgur.com/R5tbzFI.png"
     },
     {
       "id": "kalac-tv",
@@ -53,7 +55,8 @@
       "country": "Guinea",
       "category": "entertainment",
       "url": "https://edge13.vedge.infomaniak.com/livecast/ik:kalactv/chunklist_w280736538.m3u8",
-      "quality": "1080p"
+      "quality": "1080p",
+      "logo": "https://i.imgur.com/FgKJiHZ.png"
     },
     {
       "id": "canal-2-intl",
@@ -62,7 +65,8 @@
       "category": "entertainment",
       "url": "http://69.64.57.208/canal2international/playlist.m3u8",
       "quality": "720p",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/BzA2z7m.png"
     }
   ],
   "guinea_channels": [
@@ -71,7 +75,8 @@
       "name": "RTG 1",
       "url": "http://69.64.57.208/rtg/playlist.m3u8",
       "quality": "480p",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/E1sMcXz.png"
     },
     {
       "id": "atv-guinea",
@@ -86,28 +91,32 @@
       "name": "RTS 1",
       "url": "http://69.64.57.208/rts1/playlist.m3u8",
       "quality": "720p",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/HHGktpF.png"
     },
     {
       "id": "2stv",
       "name": "2STV",
       "url": "http://69.64.57.208/2stv/playlist.m3u8",
       "quality": "720p",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/WByVBZf.png"
     },
     {
       "id": "tfm",
       "name": "TFM",
       "url": "http://69.64.57.208/tfm/playlist.m3u8",
       "quality": "720p",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/TQWBlXn.png"
     },
     {
       "id": "walf-tv",
       "name": "Walf TV",
       "url": "http://69.64.57.208/walftv/playlist.m3u8",
       "quality": "720p",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/IrBAqIJ.png"
     }
   ],
   "ivory_coast_channels": [
@@ -116,21 +125,24 @@
       "name": "RTI 1",
       "url": "http://69.64.57.208:8080/rti1/playlist.m3u8",
       "quality": "1080p",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/TybQZQS.png"
     },
     {
       "id": "rti-2",
       "name": "RTI 2",
       "url": "http://69.64.57.208:8080/rti2/playlist.m3u8",
       "quality": "720p",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/73ueXrp.png"
     },
     {
       "id": "a-plus-ivoire",
       "name": "A+ Ivoire",
       "url": "http://69.64.57.208/atv/playlist.m3u8",
       "quality": "720p",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/yOW0vyP.png"
     }
   ],
   "cameroon_channels": [],
@@ -157,19 +169,22 @@
       "id": "soweto-tv",
       "name": "Soweto TV",
       "url": "https://cdn.freevisiontv.co.za/sttv/smil:soweto.stream.smil/playlist.m3u8",
-      "quality": "576p"
+      "quality": "576p",
+      "logo": "https://admango.cdn.mangomolo.com/analytics/uploads/188/654228e5b5.jpg"
     },
     {
       "id": "1kzn-tv",
       "name": "1KZN TV",
       "url": "https://cdn.freevisiontv.co.za/sttv/smil:1kzn.stream.smil/playlist.m3u8",
-      "quality": "576p"
+      "quality": "576p",
+      "logo": "https://admango.cdn.mangomolo.com/analytics/uploads/188/6544bebaae.jpg"
     },
     {
       "id": "tshwane-tv",
       "name": "Tshwane TV",
       "url": "https://cdn.freevisiontv.co.za/sttv/smil:tshwane.stream.smil/playlist.m3u8",
-      "quality": "576p"
+      "quality": "576p",
+      "logo": "https://admango.cdn.mangomolo.com/analytics/uploads/188/654a3ec660.png"
     }
   ],
   "international_french": [],
@@ -219,7 +234,8 @@
       "name": "2M Monde +1 (1080p)",
       "url": "https://d2qh3gh0k5vp3v.cloudfront.net/v1/master/3722c60a815c199d9c0ef36c5b73da68a62b09d1/cc-n6pess5lwbghr/2M_ES.m3u8",
       "group": "General",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/MvpntzA.png"
     },
     {
       "id": "mena-2",
@@ -233,21 +249,24 @@
       "name": "4 Kurd",
       "url": "https://4kuhls.persiana.live/hls/stream.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://www.aparatchi.com/images/chanells-logo/4kurd.svg"
     },
     {
       "id": "mena-5",
       "name": "4U TV (720p)",
       "url": "https://hls.4utv.live/hls/stream.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/PexhKwp.png"
     },
     {
       "id": "mena-9",
       "name": "360 TV (720p) [Not 24/7]",
       "url": "https://turkmedya-live.ercdn.net/tv360/tv360.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/agn47sQ.png"
     },
     {
       "id": "mena-10",
@@ -275,14 +294,16 @@
       "name": "ABC News (720p)",
       "url": "https://content.uplynk.com/channel/3324f2467c414329b3b0cc5cd987b6be.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/BrW7gk8.png"
     },
     {
       "id": "mena-17",
       "name": "Abdulmajeed Abdullah (1080p)",
       "url": "https://d2hng5r56zpsbw.cloudfront.net/out/v1/9c4c990f44bb4767bb46271f326dd574/index.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://assets.mbcmood.com/channels/1720184087Abdullah%20Majeed%20Abdullah%20banner.png"
     },
     {
       "id": "mena-18",
@@ -310,14 +331,16 @@
       "name": "Abu Dhabi Sports 1 (1080p)",
       "url": "https://admn-live-cdn-lb.starzplayarabia.com/out/v1/admn_tv_enc/abudhabi_sports_1/abudhabi_sports_1_hls_nd/index.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/6BVWk8z.png"
     },
     {
       "id": "mena-22",
       "name": "Abu Dhabi Sports 2 (1080p)",
       "url": "https://admn-live-cdn-lb.starzplayarabia.com/out/v1/admn_tv_enc/abudhabi_sports_2/abudhabi_sports_2_hls_nd/index.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/y1I2jFK.png"
     },
     {
       "id": "mena-23",
@@ -338,14 +361,16 @@
       "name": "Afarin Baxcha (1080p)",
       "url": "https://5dcabf026b188.streamlock.net/afarinTV/livestream/playlist.m3u8",
       "group": "Kids",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.postimg.cc/4xRkBDRx/Afarin-Baxcha-200.png"
     },
     {
       "id": "mena-27",
       "name": "Afarin TV (720p) [Not 24/7]",
       "url": "https://65f16f0fdfc51.streamlock.net/afarinTV/livestream/playlist.m3u8",
       "group": "Kids",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/6MnXD7g.png"
     },
     {
       "id": "mena-28",
@@ -366,7 +391,8 @@
       "name": "AFN TV",
       "url": "https://bozztv.com/1gbw5/tintv2/tintv2/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/LctanF8.png"
     },
     {
       "id": "mena-31",
@@ -387,7 +413,8 @@
       "name": "Africa 24 English (1080p)",
       "url": "https://edge20.vedge.infomaniak.com/livecast/ik:africa24english/manifest.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://africa24tv.com/wp-content/uploads/2023/12/logo-Africa24TVEnglish.png"
     },
     {
       "id": "mena-36",
@@ -401,14 +428,16 @@
       "name": "Africanews French",
       "url": "https://cdn-euronews.akamaized.net/live/eds/africanews-fr/25050/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/5UxU4zc.png"
     },
     {
       "id": "mena-38",
       "name": "Afroturk TV (1080p)",
       "url": "https://edge.socialsmart.tv/naturaltv/bant1/playlist.m3u8",
       "group": "General",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/fWlLvRA.png"
     },
     {
       "id": "mena-39",
@@ -422,14 +451,16 @@
       "name": "Aghani Aghani TV (1080p) [Not 24/7]",
       "url": "https://streaming-a-1035.cdn.nextologies.com/6zj8y5nemi8a32vyjjbkv0oqx/77pcakd8reik3g8qdqnexlkmq/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/o6HSfNg.png"
     },
     {
       "id": "mena-41",
       "name": "Aghapy TV (1080p) [Not 24/7]",
       "url": "https://5b622f07944df.streamlock.net/aghapy.tv/aghapy.smil/playlist.m3u8",
       "group": "Religious",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/8ariztD.png"
     },
     {
       "id": "mena-42",
@@ -443,7 +474,8 @@
       "name": "Akit TV (720p)",
       "url": "https://akittv-live.ercdn.net/akittv/akittv.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/oGto929.png"
     },
     {
       "id": "mena-45",
@@ -457,7 +489,8 @@
       "name": "AL24 News (1080p)",
       "url": "https://cdn.live.easybroadcast.io/abr_corp/66_al24_u4yga6h/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/vyVEXYL.png"
     },
     {
       "id": "mena-47",
@@ -471,7 +504,8 @@
       "name": "Al Alam (360p)",
       "url": "https://live2.alalam.ir/alalam.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/Zdi31dy.png"
     },
     {
       "id": "mena-49",
@@ -492,42 +526,48 @@
       "name": "Al Arabiya (1080p)",
       "url": "https://live.alarabiya.net/alarabiapublish/alarabiya.smil/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/NXFkYFj.png"
     },
     {
       "id": "mena-52",
       "name": "Al Arabiya Al Hadath (1080p) [Not 24/7]",
       "url": "https://av.alarabiya.net/alarabiapublish/alhadath.smil/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/De4SEWE.png"
     },
     {
       "id": "mena-53",
       "name": "Al Arabiya Business (1080p)",
       "url": "https://live.alarabiya.net/alarabiapublish/aswaaq.smil/playlist.m3u8",
       "group": "Business",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/eEV4r6J.jpg"
     },
     {
       "id": "mena-54",
       "name": "Al Arabiya Programs (1080p)",
       "url": "https://d1j4r34gq3qw9y.cloudfront.net/out/v1/96804f3a14864641a21c25e8ca9afb74/index.m3u8",
       "group": "Documentary;News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/Hoc3cfO.png"
     },
     {
       "id": "mena-55",
       "name": "Al Araby TV (1080p)",
       "url": "https://live.kwikmotion.com/alaraby1live/alaraby_abr/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/YMqWEe4.png"
     },
     {
       "id": "mena-56",
       "name": "Al Araby TV 2 (1080p)",
       "url": "https://live.kwikmotion.com/alaraby2live/alaraby2.smil/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/Gp5mNea.png"
     },
     {
       "id": "mena-57",
@@ -548,7 +588,8 @@
       "name": "Al Ekhbariya (1080p)",
       "url": "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-al-ekhbaria/297b3ef1cd0633ad9cfba7473a686a06/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/WcRlHQm.png"
     },
     {
       "id": "mena-60",
@@ -576,14 +617,16 @@
       "name": "Al Iraqia (720p)",
       "url": "https://cdn.catiacast.video/abr/8d2ffb0aba244e8d9101a9488a7daa05/playlist.m3u8",
       "group": "General",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/feQTXeZ.jpg"
     },
     {
       "id": "mena-65",
       "name": "Al Iraqia News (720p)",
       "url": "https://cdn.catiacast.video/abr/78054972db7708422595bc96c6e024ac/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/feQTXeZ.jpg"
     },
     {
       "id": "mena-66",
@@ -611,7 +654,8 @@
       "name": "Al Jazeera (1080p)",
       "url": "https://live-hls-apps-aja-fa.getaj.net/AJA/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/7bRVpnu.png"
     },
     {
       "id": "mena-71",
@@ -625,21 +669,24 @@
       "name": "Al Jazeera Mubasher (1080p)",
       "url": "https://live-hls-apps-ajm-fa.getaj.net/AJM/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://yt3.googleusercontent.com/h0_bBdVgCAXIPJFnQ4hZtE87cDY_qO7rkDAue8qXdmOFxZ5NaO3AFD1uCUcst-EsBcGJ8zl8EQ=s160-c-k-c0x00ffffff-no-rj"
     },
     {
       "id": "mena-73",
       "name": "Al Jazeera Mubasher 24 (1080p)",
       "url": "https://live-hls-apps-ajm24-fa.getaj.net/AJM24/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://yt3.googleusercontent.com/h0_bBdVgCAXIPJFnQ4hZtE87cDY_qO7rkDAue8qXdmOFxZ5NaO3AFD1uCUcst-EsBcGJ8zl8EQ=s160-c-k-c0x00ffffff-no-rj"
     },
     {
       "id": "mena-74",
       "name": "Al Jazeera Mubasher Broadcast 2 (1080p)",
       "url": "https://live-hls-apps-ajm2-fa.getaj.net/AJM2/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://yt3.googleusercontent.com/h0_bBdVgCAXIPJFnQ4hZtE87cDY_qO7rkDAue8qXdmOFxZ5NaO3AFD1uCUcst-EsBcGJ8zl8EQ=s160-c-k-c0x00ffffff-no-rj"
     },
     {
       "id": "mena-75",
@@ -660,28 +707,32 @@
       "name": "Al Mamlaka TV (1080p)",
       "url": "https://bcovlive-a.akamaihd.net/4109c7ba30fd4a44ad9afe917c67a8c8/eu-central-1/6415809151001/playlist_dvr.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/UeTseMV.png"
     },
     {
       "id": "mena-79",
       "name": "Al Manar (576p) [Not 24/7]",
       "url": "https://edge.fastpublish.me/live/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/sOQLV7L.png"
     },
     {
       "id": "mena-80",
       "name": "Al Masar TV (576p)",
       "url": "https://starmenajo.com/hls/almasar/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://play-lh.googleusercontent.com/FHPrsr391mPFqKfTq6ZdvWPZNVfsZeTAVQ8rjQF-NosnRdNipUy5xa43RWkiF4tGcQU"
     },
     {
       "id": "mena-81",
       "name": "Al Masirah (720p) [Not 24/7]",
       "url": "https://live.cdnbridge.tv/Almasirah/Almasirah_all/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/V055t5e.png"
     },
     {
       "id": "mena-82",
@@ -695,14 +746,16 @@
       "name": "Al Mayadeen (576p)",
       "url": "https://mdnlv.cdn.octivid.com/almdn/smil:mpegts.stream.smil/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/GtQOKeW.png"
     },
     {
       "id": "mena-85",
       "name": "Al Najah News (720p)",
       "url": "https://streaming.najah.edu:8443/hls/AlNajah.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/c2bwn4G.png"
     },
     {
       "id": "mena-86",
@@ -716,14 +769,16 @@
       "name": "Al Qamar TV (1080p)",
       "url": "https://streamer3.premio.link/alqamar/playlist.m3u8",
       "group": "Undefined",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/zkBT0C8.png"
     },
     {
       "id": "mena-88",
       "name": "Al Quran Al Kareem TV (360p)",
       "url": "https://cdn-globecast.akamaized.net/live/eds/saudi_quran/hls_roku/index.m3u8",
       "group": "Religious",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/A2fJysM.png"
     },
     {
       "id": "mena-91",
@@ -751,7 +806,8 @@
       "name": "Al Riyadh Radio (1080p)",
       "url": "https://live.kwikmotion.com/sbrksariyadhradiolive/srpksariyadhradio/playlist.m3u8",
       "group": "Undefined",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/8PH1Lak.png"
     },
     {
       "id": "mena-96",
@@ -765,7 +821,8 @@
       "name": "Al Saudiya Alaan (1080p)",
       "url": "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-ksa-now/71ed3aa814c643306c0a8bc4fcc7d17f/index.m3u8",
       "group": "Undefined",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/sEOjApe.png"
     },
     {
       "id": "mena-98",
@@ -786,7 +843,8 @@
       "name": "Al Sunnah Al Nabawiyah TV (360p)",
       "url": "https://cdn-globecast.akamaized.net/live/eds/saudi_sunnah/hls_roku/index.m3u8",
       "group": "Religious",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/S6LcTJv.png"
     },
     {
       "id": "mena-101",
@@ -807,7 +865,8 @@
       "name": "Al Yaum TV (1080p)",
       "url": "https://iko-live.akamaized.net/AlyuamTV/master.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/rBixF3P.png"
     },
     {
       "id": "mena-104",
@@ -842,14 +901,16 @@
       "name": "Al-Sharqiya (1080p)",
       "url": "https://5d94523502c2d.streamlock.net/home/mystream/playlist.m3u8",
       "group": "General",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/PeAcXB9.png"
     },
     {
       "id": "mena-110",
       "name": "Al-Sharqiya News (1080p)",
       "url": "https://5d94523502c2d.streamlock.net/alsharqiyalive/mystream/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/PeAcXB9.png"
     },
     {
       "id": "mena-111",
@@ -898,21 +959,24 @@
       "name": "Alhaqeqa Aldawlia (1080p)",
       "url": "https://ghaasiflu.online/alhqeqa/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://www.lyngsat.com/logo/tv/aa/alhaqeqa-aldawlia-jo.png"
     },
     {
       "id": "mena-120",
       "name": "Alhurra (720p)",
       "url": "https://mbn-ingest-worldsafe.akamaized.net/hls/live/2038900/MBN_Alhurra_Worldsafe_HLS/master.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/tiQp2sR.png"
     },
     {
       "id": "mena-121",
       "name": "Alhurra Iraq (720p)",
       "url": "https://mbn-ingest-worldsafe.akamaized.net/hls/live/2038899/MBN_Iraq_Worldsafe_HLS/master.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/fsgQDcN.png"
     },
     {
       "id": "mena-122",
@@ -933,21 +997,24 @@
       "name": "Alkass Four HD (720p)",
       "url": "https://streamer3.qna.org.qa/148164621_live/148164621_296.sdp/playlist.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/iDL65Wu.png"
     },
     {
       "id": "mena-125",
       "name": "Alkass Three (720p)",
       "url": "https://streamer2.qna.org.qa/148161470_live/148161470_296.sdp/playlist.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/d57BdFh.png"
     },
     {
       "id": "mena-126",
       "name": "Alkass Two (720p)",
       "url": "https://streamer3.qna.org.qa/148164528_live/148164528_296.sdp/playlist.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/8w61kFX.png"
     },
     {
       "id": "mena-127",
@@ -968,7 +1035,8 @@
       "name": "Almahriah TV (576p)",
       "url": "https://starmenajo.com/hls/almahriah/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/GgEeTNr.png"
     },
     {
       "id": "mena-130",
@@ -989,7 +1057,8 @@
       "name": "Altaghier TV (1080p)",
       "url": "https://jmc-live.ercdn.net/altaghier/altaghier.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/YTyCBvB.png"
     },
     {
       "id": "mena-133",
@@ -1010,7 +1079,8 @@
       "name": "ALWifak News TV (720p)",
       "url": "http://alwifaklive.info:1935/live/myStream/playlist.m3u8",
       "group": "News",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/1vqhmNz.png"
     },
     {
       "id": "mena-137",
@@ -1024,7 +1094,8 @@
       "name": "Amou Yazid TV (576p)",
       "url": "http://mkstream.servehttp.com:1940/AmouYazid/ay1/playlist.m3u8",
       "group": "Kids",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/L8UPGPC.png"
     },
     {
       "id": "mena-139",
@@ -1073,14 +1144,16 @@
       "name": "ANT1 Cyprus (1080p)",
       "url": "http://l2.cloudskep.com/ant1cm2/abr/playlist.m3u8",
       "group": "Entertainment",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/2KAObBt.png"
     },
     {
       "id": "mena-148",
       "name": "Arabica TV (720p)",
       "url": "http://istream.binarywaves.com:8081/hls/arabica/playlist.m3u8",
       "group": "Music",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/sTOoDy1.png"
     },
     {
       "id": "mena-149",
@@ -1108,7 +1181,8 @@
       "name": "Arirang TV UN (1080p)",
       "url": "https://amdlive-ch02-ctnd-com.akamaized.net/arirang_2ch/smil:arirang_2ch.smil/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/Jdy3WNm.png"
     },
     {
       "id": "mena-153",
@@ -1129,21 +1203,24 @@
       "name": "Asharq Discovery (1080p)",
       "url": "https://svs.itworkscdn.net/asharqdiscoverylive/asharqd.smil/playlist_dvr.m3u8",
       "group": "Documentary;Education",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/Czxi7yk.png"
     },
     {
       "id": "mena-156",
       "name": "Asharq Documentary (1080p)",
       "url": "https://svs.itworkscdn.net/asharqdocumentarylive/asharqdocumentary.smil/playlist_dvr.m3u8",
       "group": "Documentary",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/v6VsFEt.png"
     },
     {
       "id": "mena-157",
       "name": "Asharq News (1080p)",
       "url": "https://bcovlive-a.akamaihd.net/0b75ef0a49e24704a4ca023d3a82c2df/ap-south-1/6203311941001/playlist.m3u8",
       "group": "Business;News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/bqRC3sl.png"
     },
     {
       "id": "mena-158",
@@ -1157,7 +1234,8 @@
       "name": "Asharq Radio (1080p)",
       "url": "https://svs.itworkscdn.net/asharqradiovlive/asharqradiov/playlist.m3u8",
       "group": "Business;News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/M6K8cD3.jpeg"
     },
     {
       "id": "mena-160",
@@ -1178,7 +1256,8 @@
       "name": "Atfal & Mawaheb TV (1080p)",
       "url": "https://5aafcc5de91f1.streamlock.net/atfal1.com/atfal2/playlist.m3u8",
       "group": "Kids",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/Y2BqP9m.png"
     },
     {
       "id": "mena-164",
@@ -1192,7 +1271,8 @@
       "name": "ATV (360p)",
       "url": "http://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/atv/atv_360p.m3u8",
       "group": "General",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/YkJPCfR.jpeg"
     },
     {
       "id": "mena-167",
@@ -1227,7 +1307,8 @@
       "name": "Avang TV (1080p)",
       "url": "https://hls.avang.live/hls/stream.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/3I1n7fO.png"
     },
     {
       "id": "mena-172",
@@ -1248,7 +1329,8 @@
       "name": "Bab Al Hara (1080p)",
       "url": "https://shls-live-enc.edgenextcdn.net/out/v1/948c54279b594944adde578c95f1d7d1/index.m3u8",
       "group": "Series",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/QtlnZbq.png"
     },
     {
       "id": "mena-176",
@@ -1269,14 +1351,16 @@
       "name": "Bahrain Sports 1 (720p) [Not 24/7]",
       "url": "https://5c7b683162943.streamlock.net/live/ngrp:sportsone_all/playlist.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/fBpLsbC.png"
     },
     {
       "id": "mena-179",
       "name": "Bahrain Sports 2 (720p) [Not 24/7]",
       "url": "https://5c7b683162943.streamlock.net/live/ngrp:bahrainsportstwo_all/playlist.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/ZkuZmIo.png"
     },
     {
       "id": "mena-180",
@@ -1346,7 +1430,8 @@
       "name": "Bigtime",
       "url": "https://103f01c3ff79408e83c9212f8a374ecc.mediatailor.us-east-1.amazonaws.com/v1/master/0fb304b2320b25f067414d481a779b77db81760d/RakutenTV-eu_BjgtjmeDarmoweFilmy/playlist.m3u8",
       "group": "Undefined",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://tvpnlogopeu.samsungcloud.tv/platform/image/sourcelogo/vc/00/02/34/ESBC2700003T8_20241022T050457SQUARE.png"
     },
     {
       "id": "mena-195",
@@ -1367,7 +1452,8 @@
       "name": "Bravo Farsi TV (360p)",
       "url": "https://bravoohls.wns.live/hls/stream.m3u8",
       "group": "Movies",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://image.xumo.com/v1/channels/channel/99951242/168x168.png?type=color_onBlack"
     },
     {
       "id": "mena-204",
@@ -1409,21 +1495,24 @@
       "name": "Can TV (720p)",
       "url": "http://canbroadcast.com:7000/canlican/tv.m3u8",
       "group": "News",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/oIMtuwB.png"
     },
     {
       "id": "mena-214",
       "name": "Canaf54 TV",
       "url": "https://5caf24a595d94.streamlock.net:1937/pvyugfkzkc/pvyugfkzkc/playlist.m3u8",
       "group": "General",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/viB0FS2.png"
     },
     {
       "id": "mena-215",
       "name": "Canal 2 International",
       "url": "http://69.64.57.208/canal2international/playlist.m3u8",
       "group": "General",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/BzA2z7m.png"
     },
     {
       "id": "mena-217",
@@ -1444,7 +1533,8 @@
       "name": "Cartoon Classics",
       "url": "https://daiconnect.com/live/hls/tvup/rk-cartoonclassics/578f4b7eb725168349ec0af81b21d388/index.m3u8",
       "group": "Animation;Kids",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://images-3.rakuten.tv/storage/global-live-channel/translation/artwork/3227c06e-333b-4b1b-b657-3e3ab99ebd06-width200-quality90.jpeg"
     },
     {
       "id": "mena-220",
@@ -1458,42 +1548,48 @@
       "name": "CGTN (1080p)",
       "url": "https://amg00405-rakutentv-cgtn-rakuten-i9tar.amagi.tv/master.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/CGTN.svg/512px-CGTN.svg.png"
     },
     {
       "id": "mena-223",
       "name": "CGTN Arabic (1080p) [Not 24/7]",
       "url": "https://arabic-livews.cgtn.com/hls/LSveq57bErWLinBnxosqjisZ220802LSTefTAS9zc9mpU08y3np9TH220802cd/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/AkFFrS7.png"
     },
     {
       "id": "mena-224",
       "name": "CGTN Documentary (1080p)",
       "url": "https://amg00405-rakutentv-cgtndocumentary-rakuten-0ql8j.amagi.tv/master.m3u8",
       "group": "Documentary",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/JHv0WxM.png"
     },
     {
       "id": "mena-225",
       "name": "CGTN Documentary",
       "url": "https://mn-nl.mncdn.com/dogusdyg_drone/cgtn/playlist.m3u8",
       "group": "Documentary",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/JHv0WxM.png"
     },
     {
       "id": "mena-226",
       "name": "CGTN Europe",
       "url": "https://raw.githubusercontent.com/Sibprod/streams/main/ressources/dm/py/hls/cgtneurope.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/oz0FQsE.png"
     },
     {
       "id": "mena-227",
       "name": "CGTN Français (1080p) [Not 24/7]",
       "url": "https://francais-livews.cgtn.com/hls/LSvev95OuFZtKLc6CeKEFYXj220802LSTeV6PO0Ut9r71Uq3k5goCA220802cd/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/BwhledK.png"
     },
     {
       "id": "mena-228",
@@ -1507,7 +1603,8 @@
       "name": "Channel 8 Kurdish (720p)",
       "url": "https://live.channel8.com/Channel8-Kurdish/index.fmp4.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Channel8corp.png/480px-Channel8corp.png"
     },
     {
       "id": "mena-232",
@@ -1535,14 +1632,16 @@
       "name": "CNA (Chaîne Nord Africaine) (360p) [Not 24/7]",
       "url": "https://live.creacast.com/cna/smil:cna.smil/playlist.m3u8",
       "group": "Religious",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/Ki3ySUE.png"
     },
     {
       "id": "mena-241",
       "name": "CNBC Arabiya (1080p)",
       "url": "https://cnbc-live.akamaized.net/cnbc/master.m3u8",
       "group": "Business",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/opBXx1K.png"
     },
     {
       "id": "mena-243",
@@ -1556,7 +1655,8 @@
       "name": "Dabanga TV (1080p)",
       "url": "https://hls.dabangasudan.org/hls/stream.m3u8",
       "group": "Education;News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/BH1N6TA.png"
     },
     {
       "id": "mena-246",
@@ -1577,14 +1677,16 @@
       "name": "DHA (720p) [Not 24/7]",
       "url": "https://603c568fccdf5.streamlock.net/live/dhaweb1_C5efC/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/VZhag2x.png"
     },
     {
       "id": "mena-253",
       "name": "Dijlah TV (1080p)",
       "url": "https://ghaasiflu.online/Dijlah/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/kyzH3G5.png"
     },
     {
       "id": "mena-254",
@@ -1626,7 +1728,8 @@
       "name": "Dream Türk (720p)",
       "url": "https://live.duhnet.tv/S2/HLS_LIVE/dreamturknp/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/vJ8VaZi.png"
     },
     {
       "id": "mena-262",
@@ -1696,14 +1799,16 @@
       "name": "DW Arabic (1080p)",
       "url": "https://dwamdstream103.akamaized.net/hls/live/2015526/dwstream103/master.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/8MRNFb9.png"
     },
     {
       "id": "mena-274",
       "name": "DW English (1080p)",
       "url": "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/master.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/8MRNFb9.png"
     },
     {
       "id": "mena-276",
@@ -1717,7 +1822,8 @@
       "name": "El Radio 9090 FM (480p)",
       "url": "https://9090video.mobtada.com/hls/stream.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://www.9090.fm/images/logo.png"
     },
     {
       "id": "mena-280",
@@ -1738,7 +1844,8 @@
       "name": "EMCI TV Europe",
       "url": "https://raw.githubusercontent.com/Sibprod/streams/main/ressources/dm/py/hls/emcieurope.m3u8",
       "group": "Religious",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/KagDKKB.png"
     },
     {
       "id": "mena-284",
@@ -1808,14 +1915,16 @@
       "name": "Euro Indie Music Chart TV (360p)",
       "url": "http://178.33.224.197:1935/euroindiemusic/euroindiemusic/playlist.m3u8",
       "group": "Music",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/lF0iofX.png"
     },
     {
       "id": "mena-298",
       "name": "Euronews English (720p)",
       "url": "https://a-cdn.klowdtv.com/live3/euronews_720p/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://jiotvimages.cdn.jio.com/dare_images/images/Euro_News.png"
     },
     {
       "id": "mena-300",
@@ -1843,14 +1952,16 @@
       "name": "Fairuz (1080p)",
       "url": "https://shls-live-enc.edgenextcdn.net/out/v1/bba3ef00b71b470fa955d93a9ca8c277/index.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://shahid.mbc.net/mediaObject/f809d51c-e83d-43c9-8236-78731c2216ad?type=png"
     },
     {
       "id": "mena-307",
       "name": "Falastini TV (1080p)",
       "url": "https://rp.tactivemedia.com/palestiniantv_source/live/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/6B3Cims.png"
     },
     {
       "id": "mena-308",
@@ -1871,35 +1982,40 @@
       "name": "FB TV",
       "url": "http://1hskrdto.rocketcdn.com/fenerbahcetv.smil/playlist.m3u8",
       "group": "Sports",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/qBVqtYd.png"
     },
     {
       "id": "mena-312",
       "name": "February Channel (1080p)",
       "url": "https://b01c02nl.mediatriple.net/videoonlylive/mtfknklgwrlive/broadcast_5dc818c793576.smil/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/WdMIpsA.png"
     },
     {
       "id": "mena-313",
       "name": "FIFA+",
       "url": "https://a62dad94.wurl.com/master/f36d25e7e52f1ba8d7e56eb859c636563214f541/UmFrdXRlblRWLWV1X0ZJRkFQbHVzRW5nbGlzaF9ITFM/playlist.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/FIFA%2B_(2025).svg/700px-FIFA%2B_(2025).svg.png"
     },
     {
       "id": "mena-314",
       "name": "FIFA+ Spain (720p)",
       "url": "https://d63fabad.wurl.com/master/f36d25e7e52f1ba8d7e56eb859c636563214f541/UmFrdXRlblRWLWVzX0ZJRkFQbHVzU3BhbmlzaF9ITFM/playlist.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/FIFA%2B_(2025).svg/700px-FIFA%2B_(2025).svg.png"
     },
     {
       "id": "mena-315",
       "name": "Finans Turk TV (720p)",
       "url": "https://yayin30.haber100.com/live/finansturk/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.ibb.co/wBwmB1T/iY0osc7.png"
     },
     {
       "id": "mena-318",
@@ -1913,7 +2029,8 @@
       "name": "France 24 Arabic (1080p)",
       "url": "https://live.france24.com/hls/live/2037222-b/F24_AR_HI_HLS/master_5000.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/c/c1/France_24_logo_%282013%29.svg"
     },
     {
       "id": "mena-321",
@@ -1927,14 +2044,16 @@
       "name": "FUEL TV (1080p)",
       "url": "https://amg01074-fueltv-fueltvemeaen-rakuten-b6j62.amagi.tv/hls/amagi_hls_data_rakutenAA-fueltvemeaen/CDN/master.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/I8mviBy.png"
     },
     {
       "id": "mena-323",
       "name": "Fujairah TV (720p)",
       "url": "https://live.kwikmotion.com/fujairahlive/fujairah.smil/playlist.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/D2tOhbE.png"
     },
     {
       "id": "mena-324",
@@ -1948,14 +2067,16 @@
       "name": "FX TV 1",
       "url": "https://fxtvhls.wns.live/hls/stream.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://www.lyngsat.com/logo/tv/ff/fx-1.png"
     },
     {
       "id": "mena-327",
       "name": "FX TV 2",
       "url": "https://toonixhls.wns.live/hls/stream.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://www.lyngsat.com/logo/tv/ff/fx-two-fr.png"
     },
     {
       "id": "mena-328",
@@ -2004,7 +2125,8 @@
       "name": "GEM Fit",
       "url": "https://still-mud-3642.nqanzvyuupxwcahtfq.workers.dev/?url=https://ca-rt.onetv.app/gemfit/index-0.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/7FQxaII.png"
     },
     {
       "id": "mena-335",
@@ -2018,14 +2140,16 @@
       "name": "GEM Junior",
       "url": "https://wild-dawn-81ef.srmhoburfqyupzwxbu.workers.dev/?url=https://ca-rt.onetv.app/gemjunior/index-0.m3u8",
       "group": "Kids",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/jK8yzj2.png"
     },
     {
       "id": "mena-337",
       "name": "GEM Kids",
       "url": "https://wild-dawn-81ef.srmhoburfqyupzwxbu.workers.dev/?url=https://ca-rt.onetv.app/gemkids/index-0.m3u8",
       "group": "Kids",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/ArkjaFk.png"
     },
     {
       "id": "mena-338",
@@ -2039,21 +2163,24 @@
       "name": "GEM Mifa",
       "url": "https://wild-dawn-81ef.srmhoburfqyupzwxbu.workers.dev/?url=https://ca-rt.onetv.app/gemmifa/index-0.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/qlI7o7V.png"
     },
     {
       "id": "mena-340",
       "name": "GEM Mifa Plus",
       "url": "https://still-mud-3642.nqanzvyuupxwcahtfq.workers.dev/?url=https://ca-rt.onetv.app/gemmifaplus/index-0.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/8FIAqR5.png"
     },
     {
       "id": "mena-341",
       "name": "GEM Nature",
       "url": "https://still-mud-3642.nqanzvyuupxwcahtfq.workers.dev/?url=https://ca-rt.onetv.app/gemnature/index-0.m3u8",
       "group": "Documentary",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/ENvOMDQ.png"
     },
     {
       "id": "mena-342",
@@ -2074,14 +2201,16 @@
       "name": "GEM River",
       "url": "https://wild-dawn-81ef.srmhoburfqyupzwxbu.workers.dev/?url=https://ca-rt.onetv.app/gemriver/index-0.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/yJ6f1B6.png"
     },
     {
       "id": "mena-345",
       "name": "GEM River Plus",
       "url": "https://still-mud-3642.nqanzvyuupxwcahtfq.workers.dev/?url=https://ca-rt.onetv.app/gemriverplus/index-0.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://gemgroup.tv/assets/images/channels/icon_29.png"
     },
     {
       "id": "mena-346",
@@ -2116,7 +2245,8 @@
       "name": "GLORY Kickboxing",
       "url": "https://6f972d29.wurl.com/master/f36d25e7e52f1ba8d7e56eb859c636563214f541/UmFrdXRlblRWLWV1X0dsb3J5S2lja2JveGluZ19ITFM/playlist.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/tS7Ub7i.png"
     },
     {
       "id": "mena-352",
@@ -2151,7 +2281,8 @@
       "name": "Guneydogu TV (720p)",
       "url": "https://edge1.socialsmart.tv/gtv/bant1/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/JT5pp3Y.png"
     },
     {
       "id": "mena-361",
@@ -2165,14 +2296,16 @@
       "name": "Haber61 TV (720p) [Not 24/7]",
       "url": "https://cdn-haber61tv.yayin.com.tr/haber61tv/smil:haber61tv.smil/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/2a2XUKl.png"
     },
     {
       "id": "mena-363",
       "name": "Haber Global (720p) [Not 24/7]",
       "url": "https://tv.ensonhaber.com/haberglobal/haberglobal.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/fu6XeGS.png"
     },
     {
       "id": "mena-366",
@@ -2221,7 +2354,8 @@
       "name": "Halk TV (1080p)",
       "url": "https://halktv-live.daioncdn.net/halktv/halktv.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/xM0HA30.png"
     },
     {
       "id": "mena-377",
@@ -2242,7 +2376,8 @@
       "name": "High Vision (1080p)",
       "url": "https://streamer1.connectto.com/HIGHVISION_WEB_1205/index.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/zhCgoru.png"
     },
     {
       "id": "mena-380",
@@ -2256,7 +2391,8 @@
       "name": "HTSpor TV (1080p)",
       "url": "https://ciner.daioncdn.net/ht-spor/ht-spor.m3u8?app=web",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://www.htspor.com/images/manifest/social-share-logo.png"
     },
     {
       "id": "mena-383",
@@ -2298,7 +2434,8 @@
       "name": "i24NEWS Hebrew",
       "url": "https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://www.i24news.tv/images/favicon.png"
     },
     {
       "id": "mena-390",
@@ -2389,21 +2526,24 @@
       "name": "iNEWS TV (1080p)",
       "url": "https://live.i-news.tv/hls/stream.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/9lOuzHQ.png"
     },
     {
       "id": "mena-406",
       "name": "Insight TV (720p)",
       "url": "https://insighttv-samsung-canada.amagi.tv/playlist.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://medianet.mv/media/channel/189x0-icon.png"
     },
     {
       "id": "mena-407",
       "name": "Iqraa Africa & Europe (1080p)",
       "url": "https://playlist.fasttvcdn.com/pl/dlkqw1ftuvuuzkcb4pxdcg/Iqraafasttv1/playlist.m3u8",
       "group": "Religious",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/nUlZvSe.png"
     },
     {
       "id": "mena-408",
@@ -2417,14 +2557,16 @@
       "name": "Iqraa Quran (1080p)",
       "url": "https://playlist.fasttvcdn.com/pl/dlkqw1ftuvuuzkcb4pxdcg/Iqraafasttv2/playlist.m3u8",
       "group": "Religious",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/HPVsIa4.png"
     },
     {
       "id": "mena-410",
       "name": "Iran International (720p)",
       "url": "https://dev-live.livetvstream.co.uk/LS-63503-4/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/55RpaF3.png"
     },
     {
       "id": "mena-411",
@@ -2445,7 +2587,8 @@
       "name": "IraneFarda TV (720p)",
       "url": "https://hls.iranfarda.live/hls/stream.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/ixgcgZY.png"
     },
     {
       "id": "mena-416",
@@ -2494,14 +2637,16 @@
       "name": "IRINN",
       "url": "https://lenz.splus.ir/PLTV/88888888/224/3221226142/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/8tzsC9h.png"
     },
     {
       "id": "mena-424",
       "name": "IRINN2",
       "url": "https://lenz.splus.ir/PLTV/88888888/224/3221227020/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/8tzsC9h.png"
     },
     {
       "id": "mena-425",
@@ -2515,7 +2660,8 @@
       "name": "ITN [Not 24/7]",
       "url": "https://ca-rt.onetv.app:8443/ITN/index-0.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/U4sKHWy.png"
     },
     {
       "id": "mena-428",
@@ -2536,7 +2682,8 @@
       "name": "Jail",
       "url": "https://e85541db4ae943d9b5a09477d6b1d8ab.mediatailor.us-east-1.amazonaws.com/v1/master/44f73ba4d03e9607dcd9bebdcb8494d86964f1d8/RakutenTV-eu_Jail/playlist.m3u8",
       "group": "Comedy",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://img.platform.wurl.dev/channel/1201/lg/371c00/LG-400x225_v1.png"
     },
     {
       "id": "mena-432",
@@ -2550,7 +2697,8 @@
       "name": "Jawhara TV (720p) [Not 24/7]",
       "url": "http://streaming.toutech.net:1935/live/mp4:jawharafm.sdp/playlist.m3u8",
       "group": "Music",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/mRSQ5bP.png"
     },
     {
       "id": "mena-434",
@@ -2564,49 +2712,56 @@
       "name": "Jordan Archive (1080p)",
       "url": "https://playlist.fasttvcdn.com/pl/cc0blorawy1ibohhrupraa/Archive/playlist.m3u8",
       "group": "Undefined",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/1DE7Gmw.png"
     },
     {
       "id": "mena-436",
       "name": "Jordan Comedy (1080p)",
       "url": "https://playlist.fasttvcdn.com/pl/cc0blorawy1ibohhrupraa/Comedy/playlist.m3u8",
       "group": "Comedy",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/1DE7Gmw.png"
     },
     {
       "id": "mena-437",
       "name": "Jordan Drama (1080p)",
       "url": "https://playlist.fasttvcdn.com/pl/cc0blorawy1ibohhrupraa/Drama/playlist.m3u8",
       "group": "Undefined",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/1DE7Gmw.png"
     },
     {
       "id": "mena-438",
       "name": "Jordan Kitchen (1080p)",
       "url": "https://playlist.fasttvcdn.com/pl/cc0blorawy1ibohhrupraa/cooking/playlist.m3u8",
       "group": "Cooking",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/1DE7Gmw.png"
     },
     {
       "id": "mena-439",
       "name": "Jordan Satellite Channel (1080p)",
       "url": "https://jrtv-live.ercdn.net/jordanhd/jordanhd.m3u8",
       "group": "General",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/1DE7Gmw.png"
     },
     {
       "id": "mena-440",
       "name": "Jordan Songs (1080p)",
       "url": "https://playlist.fasttvcdn.com/pl/cc0blorawy1ibohhrupraa/Song/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/1DE7Gmw.png"
     },
     {
       "id": "mena-443",
       "name": "Jordan Tourism (1080p)",
       "url": "https://playlist.fasttvcdn.com/pl/cc0blorawy1ibohhrupraa/Tourism/playlist.m3u8",
       "group": "Undefined",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/1DE7Gmw.png"
     },
     {
       "id": "mena-444",
@@ -2648,14 +2803,16 @@
       "name": "Kanal 7 (1080p) [Not 24/7]",
       "url": "https://kanal7-live.daioncdn.net/kanal7/kanal7.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/0gq9xOm.png"
     },
     {
       "id": "mena-450",
       "name": "Kanal 7 Avrupa (720p) [Not 24/7]",
       "url": "https://livetv.radyotvonline.net/kanal7live/kanal7avr/playlist.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/wlfyj5l.png"
     },
     {
       "id": "mena-451",
@@ -2788,7 +2945,8 @@
       "name": "Koogi TV (1080p)",
       "url": "https://5d658d7e9f562.streamlock.net/koogi.tv/koogi.smil/playlist.m3u8",
       "group": "Kids;Religious",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/zojMTP9.png"
     },
     {
       "id": "mena-488",
@@ -2809,7 +2967,8 @@
       "name": "KRAL Pop TV (720p)",
       "url": "https://dogus-live.daioncdn.net/kralpoptv/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/ch365lh.png"
     },
     {
       "id": "mena-493",
@@ -2823,7 +2982,8 @@
       "name": "KTV 2 (1080p)",
       "url": "https://kwtktv2ta.cdn.mangomolo.com/ktv2/smil:ktv2.stream.smil/chunklist.m3u8",
       "group": "Culture;News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/hB57mNh.png"
     },
     {
       "id": "mena-495",
@@ -2851,70 +3011,80 @@
       "name": "KTV News (1080p)",
       "url": "https://kwtkbta.cdn.mangomolo.com/kb/smil:kb.stream.smil/chunklist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/erZ0Ol1.png"
     },
     {
       "id": "mena-499",
       "name": "KTV Sport (1080p)",
       "url": "https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/R1hGX1d.png"
     },
     {
       "id": "mena-500",
       "name": "KTV Sport Plus (1080p)",
       "url": "https://kwtsplta.cdn.mangomolo.com/spl/smil:spl.stream.smil/chunklist.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/l4oX0gf.png"
     },
     {
       "id": "mena-502",
       "name": "Kurdistan 24 (720p)",
       "url": "https://d1x82nydcxndze.cloudfront.net/live/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/9QWs2ms.png"
     },
     {
       "id": "mena-503",
       "name": "Kurdistan TV (720p) [Not 24/7]",
       "url": "https://5a3ed7a72ed4b.streamlock.net/live/SMIL:myStream.smil/playlist.m3u8",
       "group": "General",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/9QWs2ms.png"
     },
     {
       "id": "mena-504",
       "name": "KurdMax Music (720p)",
       "url": "https://6476e46b58f91.streamlock.net/music/MUSIC2402/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/otnIdEu.png"
     },
     {
       "id": "mena-505",
       "name": "KurdMax Show (720p)",
       "url": "https://6476e46b58f91.streamlock.net/liveTrans/SHOWS123/playlist.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/XTmyGmL.png"
     },
     {
       "id": "mena-506",
       "name": "KurdMax Sorani (1080p)",
       "url": "https://6476e46b58f91.streamlock.net/liveTrans/KURDS2211/playlist.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/JkK8HG8.png"
     },
     {
       "id": "mena-507",
       "name": "Kurdsat (1080p)",
       "url": "https://iko-live.akamaized.net/KurdsatTV/master.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/UAbSwYA.png"
     },
     {
       "id": "mena-508",
       "name": "Kurdsat News (1080p)",
       "url": "https://hlspackager.akamaized.net/live/DB/KURDSAT_NEWS/HLS/KURDSAT_NEWS.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/F3XRwkt.png"
     },
     {
       "id": "mena-510",
@@ -2942,14 +3112,16 @@
       "name": "Libya Al Wataniya (360p)",
       "url": "https://cdn-globecast.akamaized.net/live/eds/libya_al_watanya/hls_roku/index.m3u8",
       "group": "General",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/xkQKVGi.png"
     },
     {
       "id": "mena-515",
       "name": "Life TV (720p) [Not 24/7]",
       "url": "https://live.artidijitalmedya.com/artidijital_lifetv/lifetv/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/iz9qHZk.png"
     },
     {
       "id": "mena-516",
@@ -2970,7 +3142,8 @@
       "name": "M+ (1080p)",
       "url": "https://d35j504z0x2vu2.cloudfront.net/v1/master/0bc8e8376bd8417a1b6761138aa41c26c7309312/m-plus/master.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/Ho8N310.png"
     },
     {
       "id": "mena-519",
@@ -2984,42 +3157,48 @@
       "name": "Majid (1080p)",
       "url": "https://admn-live-cdn-lb.starzplayarabia.com/out/v1/admn_tv_enc/majid/majid_hls_nd/index.m3u8",
       "group": "Kids",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/TzOKMMy.png"
     },
     {
       "id": "mena-522",
       "name": "Majid Al Mohandis (1080p)",
       "url": "https://shls-live-mood-ak.akamaized.net/out/v1/8e2419c6c7494dbba478be025af490ee/index.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.discogs.com/Fk9Bm8gTYJYeVXIJKX-EOGmYQ90sVQPtkIW5ZK4fydo/rs:fit/g:sm/q:90/h:372/w:412/czM6Ly9kaXNjb2dz/LWRhdGFiYXNlLWlt/YWdlcy9MLTE2OTY4/MzMtMTU2ODk0NjI5/MC01Njk2LmpwZWc.jpeg"
     },
     {
       "id": "mena-523",
       "name": "Makan 33 (1080p)",
       "url": "https://makan.media.kan.org.il/hls/live/2024680/2024680/master.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/RVtQTed.png"
     },
     {
       "id": "mena-524",
       "name": "Makkah TV (576p)",
       "url": "https://media2.streambrothers.com:1936/8122/8122/playlist.m3u8",
       "group": "Religious",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/PRPcOi0.png"
     },
     {
       "id": "mena-526",
       "name": "Maraya (1080p)",
       "url": "https://shls-live-enc.edgenextcdn.net/out/v1/a4a39d8e92e34b0780ca602270a59512/index.m3u8",
       "group": "Series",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://shahid.mbc.net/mediaObject/d089a559-4f41-4def-a786-f98fcfbf0464?height=auto&width=288&croppingPoint=&version=1&type=png"
     },
     {
       "id": "mena-527",
       "name": "Marina TV (1080p)",
       "url": "https://ffs.gulfsat.com/Marina-TV-HD/index.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/F2PzEaw.png"
     },
     {
       "id": "mena-528",
@@ -3075,21 +3254,24 @@
       "name": "MBC 4 (1080p)",
       "url": "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-4/24f134f1cd63db9346439e96b86ca6ed/index.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/BcXASJp.png"
     },
     {
       "id": "mena-536",
       "name": "MBC 5 (1080p)",
       "url": "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-5/ee6b000cee0629411b666ab26cb13e9b/index.m3u8",
       "group": "Family",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://raw.githubusercontent.com/tv-logo/tv-logos/refs/heads/main/countries/united-arab-emirates/mbc-5-ae.png"
     },
     {
       "id": "mena-537",
       "name": "MBC Bollywood (1080p) [Geo-blocked]",
       "url": "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-bollywood/546eb40d7dcf9a209255dd2496903764/index.m3u8",
       "group": "Movies",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries/united-arab-emirates/mbc-bollywood-ae.png"
     },
     {
       "id": "mena-538",
@@ -3103,35 +3285,40 @@
       "name": "MBC FM (1080p)",
       "url": "https://dbbv9umqcd7cs.cloudfront.net/out/v1/db15b75c3cc0400c91961468d6a232ac/index.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/lF8UxvR.png"
     },
     {
       "id": "mena-540",
       "name": "MBC Iraq (1080p)",
       "url": "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-iraq/e38c44b1b43474e1c39cb5b90203691e/index.m3u8",
       "group": "General",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/D0LxiPE.png"
     },
     {
       "id": "mena-541",
       "name": "MBC Loud (1080p)",
       "url": "https://d2lfa0y84k5bwn.cloudfront.net/out/v1/86dd4506a70c4d7fb35e2ab50296d9a3/index.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/mptwwLs.png"
     },
     {
       "id": "mena-542",
       "name": "MBC Masr (1080p)",
       "url": "https://mbc1-enc.edgenextcdn.net/out/v1/d5036cabf11e45bf9d0db410ca135c18/index.m3u8",
       "group": "General",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/o2elx0u.png"
     },
     {
       "id": "mena-543",
       "name": "MBC Masr 2 (1080p)",
       "url": "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-masr-2/754931856515075b0aabf0e583495c68/index.m3u8",
       "group": "General",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/KHo7Gtn.png"
     },
     {
       "id": "mena-544",
@@ -3145,7 +3332,8 @@
       "name": "MBC Persia (1080p)",
       "url": "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-mbc-persia/818ee8e4b592dc497608f066d825bfb4/index.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/4FXiyjn.png"
     },
     {
       "id": "mena-546",
@@ -3159,42 +3347,48 @@
       "name": "Med Muzik (1080p)",
       "url": "http://54.36.110.140/live3/live3.m3u8",
       "group": "Music",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.imgur.com/gtUFmCD.png"
     },
     {
       "id": "mena-548",
       "name": "Medi1TV Afrique (1080p)",
       "url": "https://cdn.live.easybroadcast.io/abr_corp/83_medi1tv-afrique_tm7tu45/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/a20DHnj.png"
     },
     {
       "id": "mena-549",
       "name": "Medi 1 TV Arabic (1080p)",
       "url": "https://cdn.live.easybroadcast.io/abr_corp/83_medi1tv-arabic_g90v4ec/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/3YsZPY6.jpeg"
     },
     {
       "id": "mena-550",
       "name": "Medi 1 TV Maghreb (1080p)",
       "url": "https://cdn.live.easybroadcast.io/abr_corp/83_medi1tv-maghreb_jnbspmg/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/F5OFQsp.jpeg"
     },
     {
       "id": "mena-551",
       "name": "Mekameleen TV (1080p)",
       "url": "https://mn-nl.mncdn.com/mekameleen/smil:mekameleentv.smil/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/q7iVchl.png"
     },
     {
       "id": "mena-552",
       "name": "Melody FM Jordan (720p) [Not 24/7]",
       "url": "https://cdn3.wowza.com/1/OVRrOWxXUEswS2Yv/eGVxSWZy/hls/live/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/J8omcNz.png"
     },
     {
       "id": "mena-553",
@@ -3222,14 +3416,16 @@
       "name": "Metro Globe Network (1080p) [Not 24/7]",
       "url": "https://edge.medcom.id/live-edge/smil:mgnch.smil/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/aiiinzg.png"
     },
     {
       "id": "mena-557",
       "name": "Mihan TV",
       "url": "https://iptv.mihantv.com/mihantv/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/XEMsM7w.png"
     },
     {
       "id": "mena-561",
@@ -3264,14 +3460,16 @@
       "name": "Mohammed Abdo (1080p)",
       "url": "https://d2ow8h651gs7dx.cloudfront.net/out/v1/371fb663da604e659a2fb99bf89d92d4/index.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://assets.mbcmood.com/channels/1720184012Mohammed%20Abdo%20banner.png"
     },
     {
       "id": "mena-566",
       "name": "Mosaique FM (1080p)",
       "url": "https://webcam.mosaiquefm.net/mosatv/_definst_/studio/playlist.m3u8?DVR",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/GDUykah.png"
     },
     {
       "id": "mena-567",
@@ -3285,21 +3483,24 @@
       "name": "Motorvision TV (720p)",
       "url": "https://stream.ads.ottera.tv/playlist.m3u8?network_id=535",
       "group": "Auto",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://provider-static.plex.tv/epg/images/ott_channels/logos/motorvision_logo_dark_v2.png"
     },
     {
       "id": "mena-569",
       "name": "Movies Action (1080p)",
       "url": "https://shls-live-enc.edgenextcdn.net/out/v1/46079e838e65490c8299f902a7731168/index.m3u8",
       "group": "Movies",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/NIVhISa.png"
     },
     {
       "id": "mena-570",
       "name": "Movies Thriller (1080p)",
       "url": "https://shls-live-enc.edgenextcdn.net/out/v1/f6d718e841f8442f8374de47f18c93a7/index.m3u8",
       "group": "Movies",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/JWihdcl.png"
     },
     {
       "id": "mena-572",
@@ -3313,7 +3514,8 @@
       "name": "MTV (1080p)",
       "url": "https://hms.pfs.gdn/v1/broadcast/mtv/playlist.m3u8",
       "group": "General",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/MTV_2021_%28brand_version%29.svg/512px-MTV_2021_%28brand_version%29.svg.png"
     },
     {
       "id": "mena-574",
@@ -3327,7 +3529,8 @@
       "name": "Namayesh",
       "url": "https://lenz.splus.ir/PLTV/88888888/224/3221226148/index.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Namayesh_TV_logo.svg/300px-Namayesh_TV_logo.svg.png"
     },
     {
       "id": "mena-580",
@@ -3341,7 +3544,8 @@
       "name": "National Geographic Abu Dhabi HD (1080p)",
       "url": "https://admn-live-cdn-lb.starzplayarabia.com/out/v1/admn_tv_enc/national_geo/national_geo_hls_nd/index.m3u8",
       "group": "Documentary",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/fNA00VF.png"
     },
     {
       "id": "mena-586",
@@ -3369,7 +3573,8 @@
       "name": "Nidae AlIslam Radio (1080p)",
       "url": "https://live.kwikmotion.com/sbrksanedaradiolive/srpksanedaradio/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/laEk64E.png"
     },
     {
       "id": "mena-597",
@@ -3439,14 +3644,16 @@
       "name": "NOW TV (720p)",
       "url": "https://uycyyuuzyh.turknet.ercdn.net/nphindgytw/nowtv/nowtv.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/5EYjWK7.png"
     },
     {
       "id": "mena-608",
       "name": "NRT TV (720p) [Not 24/7]",
       "url": "https://media.streambrothers.com:1936/8226/8226/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/uGKGtbW.png"
     },
     {
       "id": "mena-609",
@@ -3467,35 +3674,40 @@
       "name": "NUBAR Plus TV (720p)",
       "url": "http://stream.nubar.tv:1935/private/NUBARPlus/playlist.m3u8",
       "group": "Entertainment",
-      "needsProxy": true
+      "needsProxy": true,
+      "logo": "https://i.ibb.co/XpgWb6B/IMG-20230628-140407.jpg"
     },
     {
       "id": "mena-613",
       "name": "Number 1 Ask (720p)",
       "url": "https://b01c02nl.mediatriple.net/videoonlylive/mtkgeuihrlfwlive/u_stream_5c9e18f9cea15_1/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/slwbux7.png"
     },
     {
       "id": "mena-614",
       "name": "Number 1 Damar (720p)",
       "url": "https://b01c02nl.mediatriple.net/videoonlylive/mtkgeuihrlfwlive/u_stream_5c9e198784bdc_1/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/rYtbAGZ.png"
     },
     {
       "id": "mena-615",
       "name": "Number 1 Dance (720p)",
       "url": "https://b01c02nl.mediatriple.net/videoonlylive/mtkgeuihrlfwlive/u_stream_5c9e2aa8acf44_1/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/ZM4PSyq.png"
     },
     {
       "id": "mena-617",
       "name": "Number 1 TV (720p)",
       "url": "https://b01c02nl.mediatriple.net/videoonlylive/mtkgeuihrlfwlive/broadcast_5c9e17cd59e8b.smil/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/02cDIBi.png"
     },
     {
       "id": "mena-618",
@@ -3523,14 +3735,16 @@
       "name": "Oman Mubashir (1080p)",
       "url": "https://partwota.cdn.mgmlcdn.com/omlive/smil:omlive.stream.smil/chunklist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/UkQTR5b.png"
     },
     {
       "id": "mena-622",
       "name": "Oman Sports TV (1080p) [Not 24/7]",
       "url": "https://partneta.cdn.mgmlcdn.com/omsport/smil:omsport.stream.smil/chunklist.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/1omi7p8.png"
     },
     {
       "id": "mena-623",
@@ -3551,7 +3765,8 @@
       "name": "Omide Iran",
       "url": "https://oitnhls.wns.live/hls/stream.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/CeMf68L.png"
     },
     {
       "id": "mena-627",
@@ -3572,35 +3787,40 @@
       "name": "One TV (720p)",
       "url": "https://hms.pfs.gdn/v1/broadcast/one/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/O4DuR9G.png"
     },
     {
       "id": "mena-632",
       "name": "OneFM (720p) [Not 24/7]",
       "url": "https://hms.pfs.gdn/v1/broadcast/onefm/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.ibb.co/Vp2G9wTz/onefmlb.png"
     },
     {
       "id": "mena-633",
       "name": "OTV (1080p)",
       "url": "https://otv.hibridcdn.net/otv/tv_abr/playlist.m3u8",
       "group": "General",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/toxFMeY.png"
     },
     {
       "id": "mena-634",
       "name": "OXIR TV",
       "url": "https://hls.oxir.live/hls/stream.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/MGMhUDx.png"
     },
     {
       "id": "mena-636",
       "name": "Palestine Al Yawm (720p)",
       "url": "https://live.paltodaytv.com/paltv/live/playlist_sfm4s.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/n8dSgx4.png"
     },
     {
       "id": "mena-637",
@@ -3635,7 +3855,8 @@
       "name": "Panorama FM (1080p)",
       "url": "https://d6izdil55uftn.cloudfront.net/out/v1/0a06d1d6377c47edbd48721ed724bd08/index.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/JkDD3bK.png"
     },
     {
       "id": "mena-643",
@@ -3656,21 +3877,24 @@
       "name": "Payam Javan TV (720p) [Not 24/7]",
       "url": "https://uni01rtmp.tulix.tv/kensecure/pjtv.stream/playlist.m3u8",
       "group": "Education",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/qySEibb.png"
     },
     {
       "id": "mena-646",
       "name": "Payam TV (720p) [Not 24/7]",
       "url": "https://media2.streambrothers.com:1936/8218/8218/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/qySEibb.png"
     },
     {
       "id": "mena-647",
       "name": "Payvand TV [Not 24/7]",
       "url": "https://uni6rtmp.tulix.tv/ucur1/Payvand/playlist.m3u8",
       "group": "Religious",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/A4gqEmG.png"
     },
     {
       "id": "mena-648",
@@ -3719,7 +3943,8 @@
       "name": "Persiana Docs",
       "url": "https://scihls.persiana.live/hls/stream.m3u8",
       "group": "Documentary",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://www.lyngsat.com/logo/tv/pp/persiana-docs-fr.png"
     },
     {
       "id": "mena-659",
@@ -3733,14 +3958,16 @@
       "name": "Persiana Fight",
       "url": "https://fighthls.persiana.live/hls/stream.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://www.lyngsat.com/logo/tv/pp/persiana-fight-fr.png"
     },
     {
       "id": "mena-661",
       "name": "Persiana Folk",
       "url": "https://sonhls.persiana.live/hls/stream.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://www.lyngsat.com/logo/tv/pp/persiana-folk-fr.png"
     },
     {
       "id": "mena-662",
@@ -3754,14 +3981,16 @@
       "name": "Persiana Junior",
       "url": "https://junhls.persiana.live/hls/stream.m3u8",
       "group": "Kids",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/zeKHZYG.png"
     },
     {
       "id": "mena-664",
       "name": "Persiana Korea",
       "url": "https://korhls.persiana.live/hls/stream.m3u8",
       "group": "Movies",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://s3.aynaott.com/storage/f24e50516ccf6b3e94a4ca749ccb3533"
     },
     {
       "id": "mena-666",
@@ -3782,7 +4011,8 @@
       "name": "Persiana Nostalgia",
       "url": "https://noshls.persiana.live/hls/stream.m3u8",
       "group": "Classic;Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/SWO9CKA.png"
     },
     {
       "id": "mena-669",
@@ -3796,7 +4026,8 @@
       "name": "Persiana Reality",
       "url": "https://twohls.persiana.live/hls/stream.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://www.lyngsat.com/logo/tv/pp/persiana-reality-fr.png"
     },
     {
       "id": "mena-672",
@@ -3838,28 +4069,32 @@
       "name": "Persiana Travel",
       "url": "https://ptravelhls.persiana.live/hls/stream.m3u8",
       "group": "Documentary",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://s3.aynaott.com/storage/be9b48d87dcd7711cac19c17d8e01b27"
     },
     {
       "id": "mena-679",
       "name": "Persiana Turkiye",
       "url": "https://turkhls.persiana.live/hls/stream.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://www.lyngsat.com/logo/tv/pp/persiana-turkiye-fr.png"
     },
     {
       "id": "mena-680",
       "name": "Persiana Vibe",
       "url": "https://raphls.persiana.live/hls/stream.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://www.lyngsat.com/logo/tv/pp/persiana-vibe-fr.png"
     },
     {
       "id": "mena-681",
       "name": "PMC Royale (1080p)",
       "url": "https://pmcrohls.wns.live/hls/stream.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://www.lyngsat.com/logo/tv/pp/pmc-royale-ch.png"
     },
     {
       "id": "mena-682",
@@ -3880,42 +4115,48 @@
       "name": "Power Dance (1080p)",
       "url": "https://livetv.powerapp.com.tr/dance/dance.smil/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/QpPteBO.png"
     },
     {
       "id": "mena-686",
       "name": "Power Love (1080p)",
       "url": "https://livetv.powerapp.com.tr/plove/love.smil/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/0RzUswR.png"
     },
     {
       "id": "mena-688",
       "name": "Power Turk (1080p) [Not 24/7]",
       "url": "https://livetv.powerapp.com.tr/powerturkTV/powerturkhd.smil/playlist.m3u8",
       "group": "Undefined",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://s3.aynaott.com/storage/c4f27e64c99b50629e7021b99ac9387a"
     },
     {
       "id": "mena-689",
       "name": "Power Türk Akustik (1080p)",
       "url": "https://livetv.powerapp.com.tr/pturkakustik/akustik.smil/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/driabBO.png"
     },
     {
       "id": "mena-691",
       "name": "Power Türk Slow (1080p)",
       "url": "https://livetv.powerapp.com.tr/pturkslow/slow.smil/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/tQSoQXW.png"
     },
     {
       "id": "mena-692",
       "name": "Power Türk Taptaze (1080p)",
       "url": "https://livetv.powerapp.com.tr/pturktaptaze/taptaze.smil/playlist.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/a5nW3HU.png"
     },
     {
       "id": "mena-693",
@@ -3978,21 +4219,24 @@
       "name": "Quran",
       "url": "https://lenz.splus.ir/PLTV/88888888/224/3221226144/index.m3u8",
       "group": "Religious",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/A2fJysM.png"
     },
     {
       "id": "mena-703",
       "name": "Quran Radio (1080p)",
       "url": "https://live.kwikmotion.com/sbrksaquranradiolive/srpksaquranradio/playlist.m3u8",
       "group": "Undefined",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/A2fJysM.png"
     },
     {
       "id": "mena-705",
       "name": "Rabeh Saqer (1080p)",
       "url": "https://shls-live-enc.edgenextcdn.net/out/v1/ea4275b6dc0840c198c17f6dc6f1ec49/index.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://shahid.mbc.net/mediaObject/b98b0635-c8ed-4a7c-9efa-5856e278f54b?type=png"
     },
     {
       "id": "mena-708",
@@ -4013,7 +4257,8 @@
       "name": "Radio Javan TV (1080p)",
       "url": "https://rjtvhls.wns.live/hls/stream.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/a1zuW2C.png"
     },
     {
       "id": "mena-711",
@@ -4041,7 +4286,8 @@
       "name": "Rashid AlMajed (1080p)",
       "url": "https://dphwv2ufgnfsq.cloudfront.net/out/v1/59cd80dfe93a479eb8b4d79bc6f225ca/index.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://assets.mbcmood.com/channels/1720177618Rashid%20AlMajed.webp"
     },
     {
       "id": "mena-715",
@@ -4055,21 +4301,24 @@
       "name": "Red Bull TV (1080p)",
       "url": "https://3ea22335.wurl.com/master/f36d25e7e52f1ba8d7e56eb859c636563214f541/UmFrdXRlblRWLWdiX1JlZEJ1bGxUVl9ITFM/playlist.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://jiotvimages.cdn.jio.com/dare_images/images/Red_Bull_TV.png"
     },
     {
       "id": "mena-719",
       "name": "Red TV Lebanon (1080p)",
       "url": "https://live.kwikmotion.com/redtvlive/redtv.smil/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/bWwY885.png"
     },
     {
       "id": "mena-720",
       "name": "REFLET TV (1080p)",
       "url": "https://edge-a3.evrideo.tv/8f37c9f0-fe22-44f4-b64a-76ad11730daf_1000026630_HLS/manifest.m3u8",
       "group": "General",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/EauXR22.png"
     },
     {
       "id": "mena-724",
@@ -4125,14 +4374,16 @@
       "name": "Roya Kids",
       "url": "https://playlist.fasttvcdn.com/pl/ptllxjd03j6g9oxxjdfapg/roya-kids/playlist.m3u8",
       "group": "Kids",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/acuCGF8.png"
     },
     {
       "id": "mena-741",
       "name": "Roya Kids Originals (1080p)",
       "url": "https://playlist.fasttvcdn.com/pl/ptllxjd03j6g9oxxjdfapg/roya-kids-originals/playlist.m3u8",
       "group": "Kids",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/acuCGF8.png"
     },
     {
       "id": "mena-742",
@@ -4153,21 +4404,24 @@
       "name": "RT Arabic (1080p) [Geo-blocked]",
       "url": "https://rt-arb.rttv.com/dvr/rtarab/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/G8vGrn1.png"
     },
     {
       "id": "mena-747",
       "name": "RT News (1080p) [Geo-blocked]",
       "url": "https://rt-glb.rttv.com/live/rtnews/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/QY4B8Hg.png"
     },
     {
       "id": "mena-752",
       "name": "Rudaw TV (1080p)",
       "url": "https://svs.itworkscdn.net/rudawlive/rudawlive.smil/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/Zo3IWOn.png"
     },
     {
       "id": "mena-753",
@@ -4209,7 +4463,8 @@
       "name": "Sat 7 Kids (1080p)",
       "url": "https://svs.itworkscdn.net/sat7kidslive/sat7kids.smil/playlist_dvr.m3u8",
       "group": "Kids;Religious",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/M0ik0i2.png"
     },
     {
       "id": "mena-767",
@@ -4237,7 +4492,8 @@
       "name": "Saudia Radio (1080p)",
       "url": "https://live.kwikmotion.com/sbrksasaudiaradiolive/srpksasaudiaradio/playlist.m3u8",
       "group": "Undefined",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://s3.aynaott.com/storage/76d7d7446ee57ec14ff67c1678725d19"
     },
     {
       "id": "mena-771",
@@ -4300,42 +4556,48 @@
       "name": "Shams TV (1080p)",
       "url": "https://stream.shams.tv/hls/stream.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://www.semakurd.net/sites/default/files/imagecache/400xY/shemis-tv.jpg"
     },
     {
       "id": "mena-782",
       "name": "Sharjah 2 (1080p)",
       "url": "https://svs.itworkscdn.net/smc2live/smc2tv.smil/playlist.m3u8",
       "group": "Religious",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://s3.aynaott.com/storage/1f08174ace89c73d3d4d8b72dd4601a4"
     },
     {
       "id": "mena-783",
       "name": "Sharjah Radio (1080p)",
       "url": "https://svs.itworkscdn.net/smcradiolive/smcradiolive/playlist.m3u8",
       "group": "General",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://s3.aynaott.com/storage/1f08174ace89c73d3d4d8b72dd4601a4"
     },
     {
       "id": "mena-784",
       "name": "Sharjah Radio Quran (1080p)",
       "url": "https://live.kwikmotion.com/smcquranlive/quranradiolive/playlist.m3u8",
       "group": "Religious",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://s3.aynaott.com/storage/1f08174ace89c73d3d4d8b72dd4601a4"
     },
     {
       "id": "mena-785",
       "name": "Sharjah Sports (1080p) [Geo-blocked]",
       "url": "https://svs.itworkscdn.net/smc4sportslive/smc4.smil/playlist.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://s3.aynaott.com/storage/1f08174ace89c73d3d4d8b72dd4601a4"
     },
     {
       "id": "mena-786",
       "name": "Sharjah TV (1080p)",
       "url": "https://live.kwikmotion.com/smc1live/smc1tv.smil/playlist.m3u8",
       "group": "Religious",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://s3.aynaott.com/storage/1f08174ace89c73d3d4d8b72dd4601a4"
     },
     {
       "id": "mena-787",
@@ -4363,28 +4625,32 @@
       "name": "Sky News Arabia (1080p)",
       "url": "https://live-stream.skynewsarabia.com/c-horizontal-channel/horizontal-stream/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/SvjU4h6.png"
     },
     {
       "id": "mena-795",
       "name": "Sky News Arabia (1080p) [Not 24/7]",
       "url": "https://stream.skynewsarabia.com/ott/ott.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/SvjU4h6.png"
     },
     {
       "id": "mena-796",
       "name": "Sky News Arabia (Portrait) (1280p) [Not 24/7]",
       "url": "https://stream.skynewsarabia.com/vertical/vertical.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/FjtzQQs.png"
     },
     {
       "id": "mena-797",
       "name": "Sky News Arabia Vertical (1080p)",
       "url": "https://live-stream.skynewsarabia.com/c-vertical-channel/vertical-stream/index.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/FjtzQQs.png"
     },
     {
       "id": "mena-798",
@@ -4405,21 +4671,24 @@
       "name": "Spacetoon Arabic (1080p)",
       "url": "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-spacetoon/d8382fb9ab4b2307058f12c7ea90db54/index.m3u8",
       "group": "Animation;Kids",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://upload.wikimedia.org/wikipedia/en/2/2b/Spacetoon_logo.png"
     },
     {
       "id": "mena-802",
       "name": "Sports TV (720p) [Geo-blocked]",
       "url": "https://live.sportstv.com.tr/hls/low/sportstv.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://file.garden/aN9J-XbDsxz3RbSu/sports/sportstv.jpg?raw=true"
     },
     {
       "id": "mena-804",
       "name": "StoryChannel TV (720p)",
       "url": "https://136044159.r.cdnsun.net/storychannel.m3u8",
       "group": "Culture",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/ZBV6xph.png"
     },
     {
       "id": "mena-805",
@@ -4447,7 +4716,8 @@
       "name": "Syria TV (1080p)",
       "url": "https://live.kwikmotion.com/syriatvlive/syriatv.smil/playlist_dvr.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/FjuVuXF.jpeg"
     },
     {
       "id": "mena-809",
@@ -4461,14 +4731,16 @@
       "name": "T2 TV",
       "url": "https://t2hls.wns.live/hls/stream.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/Wu8MBb7.png"
     },
     {
       "id": "mena-812",
       "name": "Taha TV",
       "url": "https://media1.livaat.com/static/TAHA_TV/playlist.m3u8",
       "group": "Kids",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/hdsrxvX.png"
     },
     {
       "id": "mena-813",
@@ -4489,7 +4761,8 @@
       "name": "Tarab (1080p)",
       "url": "https://shls-live-enc.edgenextcdn.net/out/v1/90143f040feb40589d18c57863d9e829/index.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://assets.mbcmood.com/channels/1738059679TARAB_Logo.png"
     },
     {
       "id": "mena-817",
@@ -4538,14 +4811,16 @@
       "name": "Telesur English (480p)",
       "url": "https://mblenmain01.telesur.ultrabase.net/mblivev3/480p/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/P50VjRX.png"
     },
     {
       "id": "mena-828",
       "name": "Telesur English HD (1080p)",
       "url": "https://mblenmain01.telesur.ultrabase.net/mblivev3/hd/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/P50VjRX.png"
     },
     {
       "id": "mena-829",
@@ -4573,21 +4848,24 @@
       "name": "Tempo TV (720p)",
       "url": "https://live.artidijitalmedya.com/artidijital_tempotv/tempotv/playlist.m3u8",
       "group": "Undefined",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/mggN4mS.jpg"
     },
     {
       "id": "mena-834",
       "name": "TGRT Belgesel TV (576p) [Not 24/7]",
       "url": "https://b01c02nl.mediatriple.net/videoonlylive/mtsxxkzwwuqtglive/broadcast_5fe462afc6a0e.smil/playlist.m3u8",
       "group": "General",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/PrxwKDw.png"
     },
     {
       "id": "mena-836",
       "name": "TGRT Haber (720p)",
       "url": "https://canli.tgrthaber.com/tgrt.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/PrxwKDw.png"
     },
     {
       "id": "mena-837",
@@ -4601,7 +4879,8 @@
       "name": "TJK TV (1080p)",
       "url": "https://tjktv-live.tjk.org/tjktv.m3u8",
       "group": "Sports",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/3zHdkYG.png"
     },
     {
       "id": "mena-840",
@@ -4678,7 +4957,8 @@
       "name": "TRT Arabi (1080p) [Not 24/7]",
       "url": "https://tv-trtarabi.medya.trt.com.tr/master.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/dEfI2M9.png"
     },
     {
       "id": "mena-852",
@@ -4699,7 +4979,8 @@
       "name": "TRT Diyanet Çocuk (720p)",
       "url": "https://tv-trtdiyanetcocuk.medya.trt.com.tr/master.m3u8",
       "group": "Kids",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/8PmXz9t.png"
     },
     {
       "id": "mena-856",
@@ -4741,14 +5022,16 @@
       "name": "TürkHaber (720p)",
       "url": "https://edge1.socialsmart.tv/turkhaber/bant1/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/2AcRKdL.png"
     },
     {
       "id": "mena-866",
       "name": "TV 1 (720p)",
       "url": "https://edge1.socialsmart.tv/tv1/bant1/playlist.m3u8",
       "group": "Undefined",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/QShk1BV.png"
     },
     {
       "id": "mena-868",
@@ -4860,7 +5143,8 @@
       "name": "Viasat Explore Classic",
       "url": "https://da9c49fa.wurl.com/master/f36d25e7e52f1ba8d7e56eb859c636563214f541/UmFrdXRlblRWLXBsX1ZpYXNhdEV4cGxvcmVfSExT/playlist.m3u8",
       "group": "Undefined",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/DyT5pKB.png"
     },
     {
       "id": "mena-904",
@@ -4874,7 +5158,8 @@
       "name": "Voice of Lebanon (1080p)",
       "url": "https://svs.itworkscdn.net/vdltvlive/vdltv.smil/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/f8WcqRY.png"
     },
     {
       "id": "mena-908",
@@ -4888,7 +5173,8 @@
       "name": "Wanasah (1080p)",
       "url": "https://shd-gcp-live.edgenextcdn.net/live/bitmovin-wanasah/13e82ea6232fa647c43b26e8a41f173d/index.m3u8",
       "group": "Music",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/nLtiXNf.png"
     },
     {
       "id": "mena-910",
@@ -4916,14 +5202,16 @@
       "name": "Welat TV (1080i)",
       "url": "https://stream.badinan.xyz/welat/tv/playlist.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://avatars.githubusercontent.com/u/213803648?s=400&u=e27c09d39f813b9698de9c6559cbf7f196bf6fce&v=4"
     },
     {
       "id": "mena-916",
       "name": "WION (1080p)",
       "url": "https://d7x8z4yuq42qn.cloudfront.net/index_7.m3u8",
       "group": "News",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/Wc5Z3iS.png"
     },
     {
       "id": "mena-917",
@@ -4965,14 +5253,16 @@
       "name": "YourTime TV",
       "url": "https://hls.yourtime.live/hls/stream.m3u8",
       "group": "Entertainment",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/X38vWJ1.png"
     },
     {
       "id": "mena-925",
       "name": "Z Nation",
       "url": "https://d39g1vxj2ef6in.cloudfront.net/v1/master/3fec3e5cac39a52b2132f9c66c83dae043dc17d4/prod-rakuten-stitched/master.m3u8?ads.xumo_channelId=88883098",
       "group": "Undefined",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://provider-static.plex.tv/epg/cms/production/63687b98-1b80-4b25-80b4-4de7fd243311/ZNation_Channel_Logo_White.png"
     },
     {
       "id": "mena-926",
@@ -5000,14 +5290,16 @@
       "name": "Zoo Moo (Australia) (1080p)",
       "url": "https://zoomoo-samsungau.amagi.tv/playlist.m3u8",
       "group": "Kids",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://i.imgur.com/ciTJrnl.png"
     },
     {
       "id": "mena-931",
       "name": "Zoom Global (720p)",
       "url": "https://d35j504z0x2vu2.cloudfront.net/v1/master/0bc8e8376bd8417a1b6761138aa41c26c7309312/zoom-tv/master.m3u8",
       "group": "Undefined",
-      "needsProxy": false
+      "needsProxy": false,
+      "logo": "https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_ZOOM/images/LOGO_HD/image.png"
     },
     {
       "id": "mena-932",

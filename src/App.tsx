@@ -84,7 +84,7 @@ function AppContent() {
       <Header />
       <Navbar />
 
-      <main className="lg:pl-16 xl:pl-52">
+      <main className="pb-20 lg:pb-0 lg:pl-[72px]">
         <ErrorBoundary>
           <Suspense fallback={<FullPageLoader />}>
             <Routes>
@@ -125,7 +125,7 @@ function AppContent() {
               />
               <Route
                 path="/collections/:key"
-                element={<CollectionDetailPage />}
+                element={<CollectionDetailPage onPlayChannel={handlePlayChannel} />}
               />
               <Route
                 path="/services"
@@ -179,7 +179,7 @@ function AppContent() {
   );
 }
 
-function CollectionDetailPage() {
+function CollectionDetailPage({ onPlayChannel }: { onPlayChannel?: (channel: Channel) => void }) {
   const { key } = useParams<{ key: string }>();
   const navigate = useNavigate();
   const collection = key ? getCollectionByKey(key) : undefined;
@@ -200,7 +200,7 @@ function CollectionDetailPage() {
     );
   }
 
-  return <CollectionDetail collection={collection} onBack={() => navigate('/collections')} />;
+  return <CollectionDetail collection={collection} onBack={() => navigate('/collections')} onPlayChannel={onPlayChannel} />;
 }
 
 export default function App() {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Library, Lock } from 'lucide-react';
-import { allCollections, getCollectionGradient, getCollectionEmoji } from '@/data/collections';
+import { allCollections, getCollectionGradient, getCollectionEmoji, getCollectionChannelCount } from '@/data/collections';
 import type { Collection } from '@/types';
 
 interface Props {
@@ -32,8 +32,9 @@ export const CollectionBrowser: React.FC<Props> = ({ onSelect }) => {
             .map((collection) => {
               const gradient = getCollectionGradient(collection.key);
               const emoji = getCollectionEmoji(collection.icon);
-              const totalItems = collection.movies.length + (collection.series?.length || 0);
-              const isPremium = collection.movies.some((m) => typeof m === 'number' && m > 0);
+              const channelCount = getCollectionChannelCount(collection.key);
+              const totalItems = channelCount || (collection.movies.length + (collection.series?.length || 0));
+              const isLive = !!collection.channelFilter;
 
               return (
                 <div
@@ -46,10 +47,10 @@ export const CollectionBrowser: React.FC<Props> = ({ onSelect }) => {
                     {emoji}
                   </span>
 
-                  {isPremium && (
-                    <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 bg-amber-500/80 rounded-md text-[10px] font-bold uppercase">
-                      <Lock className="w-2.5 h-2.5" />
-                      Premium
+                  {isLive && (
+                    <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 bg-emerald-500/80 rounded-md text-[10px] font-bold uppercase">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                      Live
                     </div>
                   )}
 
@@ -58,7 +59,7 @@ export const CollectionBrowser: React.FC<Props> = ({ onSelect }) => {
                     <h3 className="text-lg font-bold text-white mb-1">{collection.title}</h3>
                     <p className="text-sm text-white/60 line-clamp-2 mb-3">{collection.description}</p>
                     <span className="text-xs text-primary-light font-medium">
-                      {totalItems} titles
+                      {totalItems} {isLive ? 'channels' : 'titles'}
                     </span>
                   </div>
                 </div>
@@ -74,8 +75,9 @@ export const CollectionBrowser: React.FC<Props> = ({ onSelect }) => {
           {allCollections.map((collection) => {
             const gradient = getCollectionGradient(collection.key);
             const emoji = getCollectionEmoji(collection.icon);
-            const totalItems = collection.movies.length + (collection.series?.length || 0);
-            const isPremium = collection.movies.some((m) => typeof m === 'number' && m > 0);
+            const channelCount = getCollectionChannelCount(collection.key);
+            const totalItems = channelCount || (collection.movies.length + (collection.series?.length || 0));
+            const isLive = !!collection.channelFilter;
 
             return (
               <div
@@ -92,15 +94,15 @@ export const CollectionBrowser: React.FC<Props> = ({ onSelect }) => {
                     </span>
                   </div>
 
-                  {isPremium && (
+                  {isLive && totalItems > 0 && (
                     <div className="absolute top-2 right-2">
-                      <Lock className="w-3.5 h-3.5 text-amber-400" />
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse" />
                     </div>
                   )}
 
                   <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
                     <h3 className="text-sm font-semibold text-white truncate">{collection.title}</h3>
-                    <span className="text-[10px] text-primary-light">{totalItems} titles</span>
+                    <span className="text-[10px] text-primary-light">{totalItems} {isLive ? 'channels' : 'titles'}</span>
                   </div>
                 </div>
               </div>

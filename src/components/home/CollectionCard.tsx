@@ -1,7 +1,7 @@
 import React from 'react';
 import { Lock } from 'lucide-react';
 import type { Collection } from '@/types';
-import { getCollectionGradient, getCollectionEmoji } from '@/data/collections';
+import { getCollectionGradient, getCollectionEmoji, getCollectionChannelCount } from '@/data/collections';
 
 interface Props {
   collection: Collection;
@@ -11,8 +11,9 @@ interface Props {
 export const CollectionCard: React.FC<Props> = ({ collection, onClick }) => {
   const gradient = getCollectionGradient(collection.key);
   const emoji = getCollectionEmoji(collection.icon);
-  const itemCount = collection.movies.length + (collection.series?.length || 0);
-  const isPremium = collection.movies.some((m) => typeof m === 'number' && m > 0);
+  const channelCount = getCollectionChannelCount(collection.key);
+  const itemCount = channelCount || (collection.movies.length + (collection.series?.length || 0));
+  const isPremium = !collection.channelFilter && collection.movies.some((m) => typeof m === 'number' && m > 0);
 
   return (
     <div
@@ -44,7 +45,7 @@ export const CollectionCard: React.FC<Props> = ({ collection, onClick }) => {
           </p>
           <div className="flex items-center gap-2 mt-1.5">
             <span className="text-[10px] text-primary-light font-medium">
-              {itemCount} titles
+              {itemCount} {collection.channelFilter ? 'channels' : 'titles'}
             </span>
           </div>
         </div>

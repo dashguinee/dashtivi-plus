@@ -1,18 +1,21 @@
-import React from 'react';
-import { ArrowLeft, Lock, Play, Star, Film } from 'lucide-react';
-import { getCollectionGradient, getCollectionEmoji } from '@/data/collections';
-import type { Collection } from '@/types';
+import React, { useMemo } from 'react';
+import { ArrowLeft, Lock, Play, Star, Film, Radio } from 'lucide-react';
+import { getCollectionGradient, getCollectionEmoji, getCollectionChannels } from '@/data/collections';
+import type { Channel, Collection } from '@/types';
 
 interface Props {
   collection: Collection;
   onBack: () => void;
+  onPlayChannel?: (channel: Channel) => void;
 }
 
-export const CollectionDetail: React.FC<Props> = ({ collection, onBack }) => {
+export const CollectionDetail: React.FC<Props> = ({ collection, onBack, onPlayChannel }) => {
   const gradient = getCollectionGradient(collection.key);
   const emoji = getCollectionEmoji(collection.icon);
-  const totalItems = collection.movies.length + (collection.series?.length || 0);
-  const isPremium = collection.movies.some((m) => typeof m === 'number' && m > 0);
+  const isLive = !!collection.channelFilter;
+  const channels = useMemo(() => isLive ? getCollectionChannels(collection) : [], [collection, isLive]);
+  const totalItems = isLive ? channels.length : (collection.movies.length + (collection.series?.length || 0));
+  const isPremium = !isLive && collection.movies.some((m) => typeof m === 'number' && m > 0);
 
   return (
     <div className="min-h-screen pt-14">
@@ -64,8 +67,8 @@ export const CollectionDetail: React.FC<Props> = ({ collection, onBack }) => {
               </p>
               <div className="flex items-center gap-3 text-xs">
                 <span className="flex items-center gap-1 text-primary-light font-medium">
-                  <Film className="w-3.5 h-3.5" />
-                  {totalItems} titles
+                  {isLive ? <Radio className="w-3.5 h-3.5" /> : <Film className="w-3.5 h-3.5" />}
+                  {totalItems} {isLive ? 'live channels' : 'titles'}
                 </span>
                 {isPremium && (
                   <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded-md font-medium">
@@ -81,7 +84,61 @@ export const CollectionDetail: React.FC<Props> = ({ collection, onBack }) => {
 
       {/* Content Area */}
       <div className="px-4 lg:px-6 py-6">
-        {isPremium ? (
+        {isLive ? (
+          /* Live Channel Grid */
+          <>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold text-text-secondary">
+                {channels.length} Live Channels
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              {channels.slice(0, 60).map((ch) => (
+                <div
+                  key={ch.id}
+                  onClick={() => onPlayChannel?.(ch)}
+                  className={`bg-gradient-to-br ${gradient} rounded-xl h-40 sm:h-48 relative overflow-hidden group cursor-pointer transition-all hover:scale-105 card-shine`}
+                >
+                  {ch.logo ? (
+                    <div className="absolute inset-0 flex items-center justify-center p-4">
+                      <img
+                        src={ch.logo}
+                        alt={ch.name}
+                        className="max-w-full max-h-full object-contain opacity-60 group-hover:opacity-90 transition-opacity"
+                        loading="lazy"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-4xl opacity-15">{emoji}</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100 shadow-lg shadow-primary/40">
+                      <Play className="w-5 h-5 fill-white text-white ml-0.5" />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+                    <h4 className="text-xs font-semibold text-white truncate">{ch.name}</h4>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-[10px] text-text-secondary">
+                        {ch.country || 'International'}
+                        {ch.quality ? ` \u00B7 ${ch.quality}` : ''}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {channels.length > 60 && (
+              <p className="text-xs text-text-muted text-center mt-6">
+                Showing 60 of {channels.length} channels
+              </p>
+            )}
+          </>
+        ) : isPremium ? (
           /* Premium Gate */
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center mb-6 border border-amber-500/20">
@@ -95,7 +152,7 @@ export const CollectionDetail: React.FC<Props> = ({ collection, onBack }) => {
               Get access to the full catalog with a premium subscription.
             </p>
             <button className="px-8 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl font-semibold text-white hover:shadow-lg hover:shadow-amber-500/25 transition-all hover:scale-105 active:scale-95">
-              Upgrade to Premium — 40,000 GNF/month
+              Upgrade to Premium \u2014 40,000 GNF/month
             </button>
             <p className="text-[11px] text-text-muted mt-3">
               Cancel anytime. Stream on any device.

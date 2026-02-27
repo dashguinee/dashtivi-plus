@@ -10,6 +10,14 @@ export interface Channel {
   logo?: string;
 }
 
+export interface ChannelFilter {
+  countries?: string[];
+  categories?: string[];
+  groupIncludes?: string[];
+  qualities?: string[];
+  nameIncludes?: string[];
+}
+
 export interface Collection {
   key: string;
   title: string;
@@ -28,6 +36,7 @@ export interface Collection {
     extensions?: string[];
   };
   keywords?: string[];
+  channelFilter?: ChannelFilter;
 }
 
 export type CategoryId =
