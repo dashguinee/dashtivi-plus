@@ -105,8 +105,8 @@ export const SplashScreen: React.FC<Props> = ({ onComplete }) => {
               : 'opacity-100 translate-y-0 scale-100'
           }`}
         >
-          <span className="text-gradient">TIVI</span>
-          <span className="text-accent font-black">+</span>
+          <span className="text-gradient">DASH</span>
+          <span className="text-white/50 text-3xl font-medium ml-2">Lifestyle</span>
         </h1>
 
         {/* Tagline */}
@@ -117,7 +117,7 @@ export const SplashScreen: React.FC<Props> = ({ onComplete }) => {
               : 'opacity-0 translate-y-3'
           }`}
         >
-          Your Streaming Universe
+          Stream &bull; Play &bull; Live
         </p>
 
         {/* Powered by */}
@@ -128,7 +128,7 @@ export const SplashScreen: React.FC<Props> = ({ onComplete }) => {
               : 'opacity-0'
           }`}
         >
-          by DASH Lifestyle
+          by DASH
         </p>
       </div>
     </div>

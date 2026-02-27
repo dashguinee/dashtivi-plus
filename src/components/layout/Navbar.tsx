@@ -165,8 +165,8 @@ export const Navbar: React.FC = () => {
             style={{ width: sidebarHover ? 'auto' : 0, opacity: sidebarHover ? 1 : 0 }}
           >
             <span className="text-lg font-bold whitespace-nowrap tracking-tight">
-              <span className="text-gradient">TIVI</span>
-              <span className="text-accent-gold text-sm font-black ml-0.5">+</span>
+              <span className="text-gradient">DASH</span>
+              <span className="text-white/50 text-sm font-medium ml-1">Lifestyle</span>
             </span>
           </div>
         </div>

@@ -45,7 +45,7 @@ export const WatchGate: React.FC<WatchGateProps> = ({
 
           {/* Headline */}
           <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
-            You're Loving TIVI+
+            You're Loving DASH Lifestyle
           </h2>
           <p className="text-sm text-white/60 mb-6 leading-relaxed">
             Create a free account to keep watching unlimited channels

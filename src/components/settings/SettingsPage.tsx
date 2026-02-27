@@ -111,7 +111,7 @@ export const SettingsPage: React.FC<Props> = ({ onClearHistory }) => {
             <div className="px-4 py-3 flex items-start gap-3">
               <Info className="w-4 h-4 text-text-muted mt-0.5 flex-shrink-0" />
               <p className="text-[11px] text-text-muted leading-relaxed">
-                All data is stored locally on your device. TIVI does not collect personal
+                All data is stored locally on your device. DASH Lifestyle does not collect personal
                 information or send analytics. Your watch history and favorites never leave your device.
               </p>
             </div>
@@ -180,7 +180,7 @@ export const SettingsPage: React.FC<Props> = ({ onClearHistory }) => {
             </div>
             <div className="px-4 py-3 flex items-center justify-between">
               <span className="text-sm text-text-secondary">Platform</span>
-              <span className="text-xs text-white">TIVI by DASH</span>
+              <span className="text-xs text-white">DASH Lifestyle</span>
             </div>
             <div className="px-4 py-3">
               <div className="flex items-center gap-2 text-xs text-text-muted">

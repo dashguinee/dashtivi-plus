@@ -6,7 +6,7 @@ export const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/';
-  const isTiviPage = location.pathname === '/services';
+  const isTiviPage = location.pathname === '/services' || location.pathname === '/live';
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 safe-top">

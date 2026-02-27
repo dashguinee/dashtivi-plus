@@ -26,7 +26,7 @@ export const LoadingSpinner: React.FC<Props> = ({ size = 'md', text }) => {
 export const FullPageLoader: React.FC = () => (
   <div className="fixed inset-0 bg-bg flex items-center justify-center z-50">
     <div className="flex flex-col items-center gap-6">
-      <div className="text-4xl font-bold text-gradient">TIVI</div>
+      <div className="text-4xl font-bold text-gradient">DASH</div>
       <LoadingSpinner size="lg" text="Loading..." />
     </div>
   </div>

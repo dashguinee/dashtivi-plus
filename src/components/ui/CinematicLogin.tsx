@@ -57,10 +57,10 @@ export const CinematicLogin: React.FC<Props> = ({ onLogin }) => {
               ⚡
             </div>
             <h1 className="text-[42px] font-extrabold tracking-[6px] mb-2 text-gradient-cosmic title-shimmer">
-              TIVI<span className="text-accent text-3xl">+</span>
+              DASH<span className="text-white/50 text-2xl font-medium ml-2">Lifestyle</span>
             </h1>
             <p className="text-text-secondary text-sm tracking-[3px] uppercase opacity-80">
-              Your Streaming Universe
+              Stream &bull; Play &bull; Live
             </p>
           </div>
 
@@ -102,7 +102,7 @@ export const CinematicLogin: React.FC<Props> = ({ onLogin }) => {
                   Entering...
                 </span>
               ) : (
-                'Enter TIVI+'
+                'Enter'
               )}
             </button>
           </form>

@@ -794,7 +794,7 @@ export const HomePage: React.FC<Props> = ({ onPlayChannel, isFavorite, onToggleF
       {popularRightNow.length > 0 && (
         <ContentRow
           title="Popular Right Now"
-          subtitle="On TIVI"
+          subtitle="On DASH Lifestyle"
           icon={<Shuffle className="w-5 h-5" />}
           onSeeAll={() => navigate('/live')}
         >
