@@ -4,11 +4,12 @@ import { Gamepad2, Play, ShoppingBag, ArrowRight, ExternalLink, Zap, Trophy, Cro
 /* ═══════════════════════════════════════════════════════════
    DASH Games — Crossroads Page
    Gateway to Game Store (orange) + Game Lobby (purple)
-   Card overlay style: OG TIVI Live section DNA
+   OG ChannelTile overlay DNA: image → bottom fade → text
    ═══════════════════════════════════════════════════════════ */
 
 const GAMES_HUB = 'https://games.dasuperhub.com';
 const GAMES_SHOP = 'https://games.dasuperhub.com/#/shop';
+const GAMES_CDN = 'https://games.dasuperhub.com/icons';
 
 /* ─── Featured Items ─── */
 
@@ -16,18 +17,19 @@ interface FeaturedItem {
   id: string;
   name: string;
   tagline: string;
-  image?: string;
+  image: string;
   emoji: string;
   type: 'store' | 'lobby';
   url: string;
 }
 
 const featured: FeaturedItem[] = [
-  // Store games (orange) — popular titles people want to buy
+  // Store games (orange overlay)
   {
     id: 'fifa-25',
     name: 'FIFA 25',
     tagline: 'The beautiful game, latest edition',
+    image: `${GAMES_CDN}/football.jpg`,
     emoji: '\u26BD',
     type: 'store',
     url: `https://wa.me/224611361300?text=${encodeURIComponent('Hi DASH, I want to buy FIFA 25')}`,
@@ -36,15 +38,17 @@ const featured: FeaturedItem[] = [
     id: 'gta-v',
     name: 'GTA V',
     tagline: 'Open world, endless possibilities',
+    image: `${GAMES_CDN}/rush.jpg`,
     emoji: '\uD83C\uDFAE',
     type: 'store',
     url: `https://wa.me/224611361300?text=${encodeURIComponent('Hi DASH, I want to buy GTA V')}`,
   },
-  // Lobby games (purple) — best 3 from the real 15
+  // Lobby games (purple overlay) — best 3 from the real 15
   {
     id: 'kalishoo',
     name: 'Kalich\u26BDo',
     tagline: 'Glow Hockey \u2014 frappe le palet!',
+    image: `${GAMES_CDN}/kalishoo.jpg`,
     emoji: '\uD83C\uDFD2',
     type: 'lobby',
     url: `${GAMES_HUB}/#/games/kalishoo`,
@@ -53,6 +57,7 @@ const featured: FeaturedItem[] = [
     id: 'rush',
     name: 'Conakry Rush',
     tagline: 'Esquive le trafic fou de Conakry!',
+    image: `${GAMES_CDN}/rush.jpg`,
     emoji: '\uD83D\uDE95',
     type: 'lobby',
     url: `${GAMES_HUB}/#/games/rush`,
@@ -61,13 +66,14 @@ const featured: FeaturedItem[] = [
     id: 'ludo',
     name: 'Ludo African',
     tagline: 'Le classique africain r\u00E9invent\u00E9',
+    image: `${GAMES_CDN}/ludo.jpg`,
     emoji: '\uD83C\uDFB2',
     type: 'lobby',
     url: `${GAMES_HUB}/#/games/ludo`,
   },
 ];
 
-/* ─── Hero Card (Store / Lobby gateway) ─── */
+/* ─── Hero Card — Store / Lobby gateway with AI-generated backgrounds ─── */
 
 const HeroCard: React.FC<{
   title: string;
@@ -76,127 +82,129 @@ const HeroCard: React.FC<{
   type: 'store' | 'lobby';
   tag?: string;
   url: string;
-}> = ({ title, subtitle, icon, type, tag, url }) => {
+  bgImage: string;
+}> = ({ title, subtitle, icon, type, tag, url, bgImage }) => {
   const [hovering, setHovering] = useState(false);
   const isStore = type === 'store';
+  const tintColor = isStore ? 'rgba(255,121,0,0.35)' : 'rgba(157,78,221,0.35)';
 
   return (
     <div
       className="group relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 card-shine card-glow"
       style={{
+        aspectRatio: '16/9',
         boxShadow: hovering
-          ? `0 20px 60px ${isStore ? 'rgba(255,121,0,0.25)' : 'rgba(157,78,221,0.25)'}`
+          ? `0 20px 60px ${isStore ? 'rgba(255,121,0,0.3)' : 'rgba(157,78,221,0.3)'}`
           : '0 8px 32px rgba(0,0,0,0.5)',
       }}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
       onClick={() => window.open(url, '_blank')}
     >
+      {/* Background image */}
+      <img
+        src={bgImage}
+        alt={title}
+        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+      />
+
+      {/* Color tint overlay */}
+      <div className="absolute inset-0" style={{ background: tintColor }} />
+
+      {/* OG bottom fade — ChannelTile DNA */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+      {/* Scanline overlay */}
       <div
-        className="relative h-48 sm:h-56 p-5 flex flex-col justify-between"
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
         style={{
-          background: isStore
-            ? 'linear-gradient(135deg, #FF7900 0%, #cc5500 50%, #1a0800 100%)'
-            : 'linear-gradient(135deg, #9D4EDD 0%, #7B2CBF 50%, #1a0030 100%)',
+          backgroundImage: 'linear-gradient(transparent 50%, rgba(0,0,0,0.3) 50%)',
+          backgroundSize: '100% 4px',
         }}
-      >
-        {/* Ambient glow */}
-        <div
-          className="absolute -top-16 -right-16 w-48 h-48 rounded-full blur-3xl opacity-30 group-hover:opacity-50 transition-opacity duration-300"
-          style={{ backgroundColor: isStore ? '#FF7900' : '#C77DFF' }}
-        />
+      />
 
-        {/* Scanline overlay — OG DNA */}
-        <div
-          className="absolute inset-0 opacity-[0.04] pointer-events-none"
-          style={{
-            backgroundImage: 'linear-gradient(transparent 50%, rgba(0,0,0,0.3) 50%)',
-            backgroundSize: '100% 4px',
-          }}
-        />
-
-        {/* Tag */}
-        <div className="flex items-center justify-between relative z-10">
-          {tag && (
-            <span
-              className="px-2.5 py-1 text-[10px] font-bold rounded-lg backdrop-blur-sm"
-              style={{
-                background: isStore ? 'rgba(255,121,0,0.2)' : 'rgba(255,215,0,0.15)',
-                color: isStore ? '#FFD700' : '#FFD700',
-                border: `1px solid ${isStore ? 'rgba(255,215,0,0.2)' : 'rgba(255,215,0,0.2)'}`,
-              }}
-            >
-              {tag}
-            </span>
-          )}
-          <span className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 backdrop-blur-sm rounded-lg">
-            {icon}
-            <ExternalLink className="w-3 h-3 text-white/50" />
+      {/* Tag — top left */}
+      <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
+        {tag && (
+          <span
+            className="px-2.5 py-1 text-[10px] font-bold rounded-lg backdrop-blur-sm"
+            style={{
+              background: 'rgba(255,215,0,0.15)',
+              color: '#FFD700',
+              border: '1px solid rgba(255,215,0,0.25)',
+            }}
+          >
+            {tag}
           </span>
-        </div>
+        )}
+      </div>
 
-        {/* Content */}
-        <div className="relative z-10">
-          <h3 className="text-2xl font-bold text-white mb-1">{title}</h3>
-          <p className="text-sm text-white/70">{subtitle}</p>
-        </div>
+      {/* Icon — top right */}
+      <div className="absolute top-3 right-3 z-10">
+        <span className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/40 backdrop-blur-sm rounded-lg border border-white/10">
+          {icon}
+          <ExternalLink className="w-3 h-3 text-white/50" />
+        </span>
+      </div>
+
+      {/* Content — bottom, over the fade */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+        <h3 className="text-xl sm:text-2xl font-bold text-white mb-1 drop-shadow-lg">{title}</h3>
+        <p className="text-sm text-white/70 drop-shadow-md">{subtitle}</p>
       </div>
     </div>
   );
 };
 
-/* ─── Featured Game Card (OG Live overlay style) ─── */
+/* ─── Featured Game Card — OG ChannelTile overlay style ─── */
 
 const FeaturedCard: React.FC<{ item: FeaturedItem }> = ({ item }) => {
   const [hovering, setHovering] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const isStore = item.type === 'store';
-  const accentColor = isStore ? '#FF7900' : '#9D4EDD';
+  const tintColor = isStore ? 'rgba(255,121,0,0.25)' : 'rgba(157,78,221,0.25)';
   const accentGlow = isStore ? 'rgba(255,121,0,0.3)' : 'rgba(157,78,221,0.3)';
+  const borderColor = isStore ? 'rgba(255,121,0,0.2)' : 'rgba(157,78,221,0.2)';
 
   return (
     <div
-      className="group relative flex-shrink-0 rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.04] hover:-translate-y-1 card-shine card-glow"
+      className="group relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:-translate-y-1 card-shine card-glow"
       style={{
-        width: 200,
         aspectRatio: '16/9',
-        background: `linear-gradient(135deg, ${accentColor}20 0%, ${accentColor}40 100%)`,
-        border: `1px solid ${accentColor}30`,
+        border: `1px solid ${borderColor}`,
         boxShadow: hovering ? `0 12px 40px ${accentGlow}` : '0 4px 20px rgba(0,0,0,0.4)',
       }}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
       onClick={() => window.open(item.url, '_blank')}
     >
-      {/* Gradient overlay */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: isStore
-            ? 'linear-gradient(135deg, rgba(255,121,0,0.15), rgba(204,85,0,0.3))'
-            : 'linear-gradient(135deg, rgba(157,78,221,0.15), rgba(123,44,191,0.3))',
-        }}
-      />
+      {/* Background image or emoji fallback */}
+      {item.image && !imgError ? (
+        <img
+          src={item.image}
+          alt={item.name}
+          loading="lazy"
+          onError={() => setImgError(true)}
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-20">
+          {item.emoji}
+        </div>
+      )}
 
-      {/* Scanline overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.03] pointer-events-none"
-        style={{
-          backgroundImage: 'linear-gradient(transparent 50%, rgba(0,0,0,0.4) 50%)',
-          backgroundSize: '100% 3px',
-        }}
-      />
+      {/* Color tint overlay — orange for store, purple for lobby */}
+      <div className="absolute inset-0" style={{ background: tintColor }} />
 
-      {/* Big emoji */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl opacity-20 group-hover:opacity-35 group-hover:scale-110 transition-all duration-500">
-        {item.emoji}
-      </div>
+      {/* OG bottom fade */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
 
-      {/* Type badge */}
+      {/* Type badge — top right */}
       <div className="absolute top-2 right-2 z-10">
         <span
-          className="px-2 py-0.5 text-[8px] font-bold rounded-md backdrop-blur-sm uppercase tracking-wider"
+          className="px-2 py-0.5 text-[9px] font-bold rounded-md backdrop-blur-sm uppercase tracking-wider"
           style={{
-            background: isStore ? 'rgba(255,121,0,0.25)' : 'rgba(157,78,221,0.25)',
+            background: isStore ? 'rgba(255,121,0,0.3)' : 'rgba(157,78,221,0.3)',
             color: isStore ? '#FFB74D' : '#CE93D8',
             border: `1px solid ${isStore ? 'rgba(255,121,0,0.3)' : 'rgba(157,78,221,0.3)'}`,
           }}
@@ -205,10 +213,10 @@ const FeaturedCard: React.FC<{ item: FeaturedItem }> = ({ item }) => {
         </span>
       </div>
 
-      {/* Bottom info */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 z-10 bg-gradient-to-t from-black/70 to-transparent">
-        <h4 className="text-sm font-bold text-white leading-tight">{item.name}</h4>
-        <p className="text-[10px] text-white/50 mt-0.5">{item.tagline}</p>
+      {/* Bottom info — over the fade */}
+      <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
+        <h4 className="text-sm font-bold text-white leading-tight drop-shadow-lg">{item.name}</h4>
+        <p className="text-[10px] text-white/60 mt-0.5 drop-shadow-md">{item.tagline}</p>
       </div>
     </div>
   );
@@ -259,7 +267,7 @@ export const GamesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ═══ PLAY NOW — Two Hero Cards ═══ */}
+      {/* ═══ PLAY NOW — Two Hero Cards with AI backgrounds ═══ */}
       <section className="px-4 lg:px-6 mb-8">
         <div className="flex items-center gap-2 mb-4">
           <Play className="w-5 h-5 text-green-400 fill-green-400" />
@@ -272,6 +280,7 @@ export const GamesPage: React.FC = () => {
             icon={<ShoppingBag className="w-4 h-4 text-white" />}
             type="store"
             url={GAMES_SHOP}
+            bgImage="/games/store-hero.jpg"
           />
           <HeroCard
             title="DASH Games"
@@ -280,13 +289,14 @@ export const GamesPage: React.FC = () => {
             type="lobby"
             tag="DASH Original"
             url={GAMES_HUB}
+            bgImage="/games/lobby-hero.jpg"
           />
         </div>
       </section>
 
-      {/* ═══ FEATURED — Horizontal scroll, OG card overlay ═══ */}
-      <section className="mb-8">
-        <div className="flex items-center justify-between px-4 lg:px-6 mb-4">
+      {/* ═══ FEATURED — Grid cards, real images, OG overlay ═══ */}
+      <section className="px-4 lg:px-6 mb-8">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Crown className="w-5 h-5 text-amber-400" />
             <h2 className="text-lg font-bold text-white">Featured</h2>
@@ -299,15 +309,14 @@ export const GamesPage: React.FC = () => {
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 lg:px-6 pb-2">
-          {/* Store picks first (orange), then lobby picks (purple) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[...storeItems, ...lobbyItems].map((item) => (
             <FeaturedCard key={item.id} item={item} />
           ))}
         </div>
       </section>
 
-      {/* ═══ GOT A GAME IDEA? CTA ═══ */}
+      {/* ═══ GOT A GAME YOU WANT? CTA ═══ */}
       <div className="px-4 lg:px-6 pb-24">
         <div className="relative bg-gradient-to-r from-primary/10 via-bg-surface to-accent/10 rounded-2xl p-6 border border-white/5 overflow-hidden text-center">
           <div className="absolute -right-10 -top-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl" />
