@@ -31,18 +31,44 @@ export function createHlsPlayer(
     lowLatencyMode: false,
     progressive: true,
     testBandwidth: true,
-    startLevel: -1,
+
+    // Start at lowest quality — upgrade fast, never buffer on load
+    startLevel: 0,
     capLevelToPlayerSize: true,
     startFragPrefetch: true,
-    abrEwmaDefaultEstimate: 500000,
-    maxBufferLength: 15,
-    maxMaxBufferLength: 60,
-    backBufferLength: 30,
-    maxBufferHole: 0.5,
-    maxStarvationDelay: 4,
-    maxLoadingDelay: 4,
-    manifestLoadingTimeOut: 10000,
-    fragLoadingTimeOut: 8000,
+
+    // Conservative bandwidth estimate for West Africa (300kbps baseline)
+    abrEwmaDefaultEstimate: 300_000,
+    // Faster ABR reaction — drop quality quickly when bandwidth dips
+    abrEwmaFastLive: 2.0,
+    abrEwmaSlowLive: 6.0,
+    abrEwmaFastVoD: 2.0,
+    abrEwmaSlowVoD: 6.0,
+    // Drop quality fast on bandwidth drops, recover slow
+    abrBandWidthUpFactor: 0.7,
+    abrBandWidthFactor: 0.8,
+
+    // Large buffer = resilience against network jitter
+    maxBufferLength: 30,
+    maxMaxBufferLength: 120,
+    // Minimal back-buffer to save memory on low-end devices
+    backBufferLength: 10,
+    // Tolerate bigger gaps without stalling
+    maxBufferHole: 1.5,
+    // React fast to starvation — drop quality after 2s, not 4s
+    maxStarvationDelay: 2,
+    maxLoadingDelay: 2,
+
+    // Generous timeouts for slow African networks
+    manifestLoadingTimeOut: 15000,
+    manifestLoadingMaxRetry: 4,
+    manifestLoadingRetryDelay: 1000,
+    fragLoadingTimeOut: 20000,
+    fragLoadingMaxRetry: 6,
+    fragLoadingRetryDelay: 1000,
+    levelLoadingTimeOut: 15000,
+    levelLoadingMaxRetry: 4,
+    levelLoadingRetryDelay: 1000,
   });
 
   hls.loadSource(url);
@@ -65,8 +91,9 @@ export function createHlsPlayer(
 
     switch (data.type) {
       case Hls.ErrorTypes.NETWORK_ERROR:
-        if (retryCount < 3) {
-          const delay = Math.pow(2, retryCount) * 1000;
+        // 6 retries with exponential backoff (1s → 2s → 4s → 8s → 16s → 32s)
+        if (retryCount < 6) {
+          const delay = Math.min(Math.pow(2, retryCount) * 1000, 30000);
           retryCount++;
           setTimeout(() => {
             if (!destroyed) hls.startLoad();
@@ -84,14 +111,34 @@ export function createHlsPlayer(
           mediaErrorRecoveryAttempt++;
           hls.swapAudioCodec();
           hls.recoverMediaError();
+        } else if (mediaErrorRecoveryAttempt === 2) {
+          // Last resort: full reload from scratch
+          mediaErrorRecoveryAttempt++;
+          hls.destroy();
+          if (!destroyed) {
+            const fresh = new Hls(hls.config);
+            fresh.loadSource(url);
+            fresh.attachMedia(videoEl);
+          }
         } else {
           onError?.('Media error - unable to recover');
         }
         break;
 
       default:
-        onError?.('Channel is currently unavailable');
-        hls.destroy();
+        // Try one full reload before giving up
+        if (retryCount === 0) {
+          retryCount++;
+          setTimeout(() => {
+            if (!destroyed) {
+              hls.loadSource(url);
+              hls.startLoad();
+            }
+          }, 2000);
+        } else {
+          onError?.('Channel is currently unavailable');
+          hls.destroy();
+        }
         break;
     }
   });

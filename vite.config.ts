@@ -16,9 +16,10 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'hls': ['hls.js'],
-          'router': ['react-router-dom'],
+        manualChunks(id) {
+          if (id.includes('hls.js')) return 'hls';
+          if (id.includes('react-router-dom')) return 'router';
+          if (id.includes('health_verified.json')) return 'data-channels';
         },
       },
     },

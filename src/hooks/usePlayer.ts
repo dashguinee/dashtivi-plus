@@ -72,6 +72,12 @@ export function usePlayer() {
         video.onpause = () => setState((prev) => ({ ...prev, isPlaying: false }));
         video.onwaiting = () => setState((prev) => ({ ...prev, isLoading: true }));
         video.oncanplay = () => setState((prev) => ({ ...prev, isLoading: false }));
+        // Stall recovery — if stuck buffering for 8s, force quality drop or reload
+        video.onstalled = () => {
+          if (hls && hls.currentLevel > 0) {
+            hls.currentLevel = 0; // force lowest quality
+          }
+        };
       });
     },
     [cleanup]
