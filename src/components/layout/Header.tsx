@@ -6,6 +6,7 @@ export const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/';
+  const isTiviPage = location.pathname === '/services';
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 safe-top">
@@ -16,7 +17,7 @@ export const Header: React.FC = () => {
             : 'glass-strong'
         }`}
       >
-        {/* Logo — TIVI+ brand */}
+        {/* Logo — TIVI+ on services page, DASH Lifestyle everywhere else */}
         <button
           onClick={() => navigate('/')}
           className="flex items-center gap-2.5 group"
@@ -26,10 +27,17 @@ export const Header: React.FC = () => {
               <polygon points="8,5 8,19 19,12" />
             </svg>
           </div>
-          <span className="text-xl font-bold tracking-wide hidden sm:flex items-baseline gap-0.5">
-            <span className="text-gradient">TIVI</span>
-            <span className="text-accent text-sm font-black">+</span>
-          </span>
+          {isTiviPage ? (
+            <span className="text-xl font-bold tracking-wide hidden sm:flex items-baseline gap-0.5">
+              <span className="text-gradient">TIVI</span>
+              <span className="text-accent text-sm font-black">+</span>
+            </span>
+          ) : (
+            <span className="text-lg font-bold tracking-wide hidden sm:block">
+              <span className="text-gradient">DASH</span>
+              <span className="text-white/60 text-sm font-medium ml-1">Lifestyle</span>
+            </span>
+          )}
         </button>
 
         {/* Desktop Nav */}
