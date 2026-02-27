@@ -12,6 +12,7 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { usePlayer } from '@/hooks/usePlayer';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useWatchHistory } from '@/hooks/useWatchHistory';
+import { useWatchGate } from '@/hooks/useWatchGate';
 import { getCollectionByKey } from '@/data/collections';
 import { getItem, setItem } from '@/lib/storage';
 import type { Channel, Collection } from '@/types';
@@ -39,16 +40,21 @@ const ServicesPage = lazy(() =>
 const GamesPage = lazy(() =>
   import('@/pages/GamesPage').then((m) => ({ default: m.GamesPage }))
 );
+const WatchGate = lazy(() =>
+  import('@/components/gate/WatchGate').then((m) => ({ default: m.WatchGate }))
+);
 
 function AppContent() {
   const navigate = useNavigate();
   const player = usePlayer();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { addToHistory, clearHistory } = useWatchHistory();
+  const [gateState, gateActions] = useWatchGate();
 
   const [showFullPlayer, setShowFullPlayer] = useState(false);
+  const [pendingChannel, setPendingChannel] = useState<Channel | null>(null);
 
-  const handlePlayChannel = useCallback(
+  const playChannelNow = useCallback(
     (channel: Channel) => {
       player.playChannel(channel);
       addToHistory(channel.id);
@@ -56,6 +62,38 @@ function AppContent() {
     },
     [player, addToHistory]
   );
+
+  const handlePlayChannel = useCallback(
+    (channel: Channel) => {
+      const shouldGate = gateActions.recordSwitch();
+      if (shouldGate) {
+        setPendingChannel(channel);
+        return;
+      }
+      playChannelNow(channel);
+    },
+    [gateActions, playChannelNow]
+  );
+
+  const handleGateDismiss = useCallback(() => {
+    gateActions.dismiss();
+    if (pendingChannel) {
+      playChannelNow(pendingChannel);
+      setPendingChannel(null);
+    }
+  }, [gateActions, pendingChannel, playChannelNow]);
+
+  const handleGateCreateAccount = useCallback(() => {
+    gateActions.createAccount();
+    if (pendingChannel) {
+      playChannelNow(pendingChannel);
+      setPendingChannel(null);
+    }
+  }, [gateActions, pendingChannel, playChannelNow]);
+
+  const handleGateSubscribe = useCallback(() => {
+    gateActions.subscribe();
+  }, [gateActions]);
 
   const handleClosePlayer = useCallback(() => {
     setShowFullPlayer(false);
@@ -162,6 +200,17 @@ function AppContent() {
           onRetry={handlePlayChannel}
           onBack={handleClosePlayer}
         />
+      )}
+
+      {gateState.isGated && (
+        <Suspense fallback={null}>
+          <WatchGate
+            canDismiss={gateState.canDismiss}
+            onDismiss={handleGateDismiss}
+            onCreateAccount={handleGateCreateAccount}
+            onSubscribe={handleGateSubscribe}
+          />
+        </Suspense>
       )}
 
       <MiniPlayer

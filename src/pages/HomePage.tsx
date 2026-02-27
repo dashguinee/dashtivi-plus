@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import {
   TrendingUp, Clock, Zap, Globe, Star, ChevronRight, Play,
-  Tv, Crown, Sparkles, ArrowRight, Shuffle, Film, Gamepad2
+  Tv, Crown, Sparkles, ArrowRight, Shuffle, Film, Gamepad2, Lock
 } from 'lucide-react';
 import { HeroBanner } from '@/components/home/HeroBanner';
 import { ChannelCard } from '@/components/home/ChannelCard';
@@ -685,6 +685,107 @@ export const HomePage: React.FC<Props> = ({ onPlayChannel, isFavorite, onToggleF
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ 6b. PREMIUM CHANNELS — Social proof ═══ */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between px-4 lg:px-6 mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center">
+              <Crown className="w-4 h-4 text-amber-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white">Premium Channels</h2>
+              <p className="text-xs text-text-muted mt-0.5">Subscribe for full access</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 lg:px-6 pb-2">
+          {[
+            { name: 'beIN Sports 1', logo: 'http://img-cdn.curl.pk:8880/channels_icon_api/02f7017975ea2ee46ceec077fd2407a9.png' },
+            { name: 'beIN Sports 2', logo: 'http://img-cdn.curl.pk:8880/channels_icon/53396148581.png' },
+            { name: 'beIN Sports 3', logo: 'http://img-cdn.curl.pk:8880/channels_icon_api/19e4acf04fb09ef5ab4d3eec9cbf98fa.png' },
+            { name: 'Canal+ Sport 1', logo: 'http://webtv360.org:2578/images/ebce02181d6817fc3c5070e477a6fe5a.png' },
+            { name: 'Canal+ Sport 2', logo: 'http://starshare.live:8080/images/b2ccce432dd1f51ecb3abd51acc5865c.png' },
+            { name: 'Canal+ Cinema', logo: 'http://starshare.live:8080/images/a53ab0f26b378f4098efb051f775a974.png' },
+            { name: 'Canal+ Premiere', logo: 'http://starshare.live:8080/images/cb184fd9e3561a85a1fc4648a429002e.png' },
+            { name: 'SuperSport', logo: 'https://supersport-cms-prod.azureedge.net/media/q24jrjac/supersport-ott-7.png' },
+            { name: 'Sky Cinema', logo: 'http://img-cdn.curl.pk:8880/channels_icon/5600193553.png' },
+            { name: 'FOX Movies', logo: 'http://img-cdn.curl.pk:8880/channels_icon_api/408f7e979f699607d01d30b767a1f3b8.png' },
+          ].map((ch, i) => (
+            <div key={ch.name} className="flex-shrink-0 w-[120px]">
+              <div className="relative rounded-xl overflow-hidden border border-amber-500/10 bg-gradient-to-br from-amber-900/20 to-amber-950/30 group cursor-pointer transition-all duration-300 hover:scale-[1.05] hover:border-amber-500/30">
+                <div className="aspect-square flex items-center justify-center p-3 relative">
+                  <img
+                    src={ch.logo}
+                    alt={ch.name}
+                    className="w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-opacity grayscale group-hover:grayscale-0"
+                    loading="lazy"
+                  />
+                  {/* Lock overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-60 group-hover:opacity-0 transition-opacity">
+                    <div className="w-7 h-7 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm">
+                      <Lock className="w-3.5 h-3.5 text-amber-400/70" />
+                    </div>
+                  </div>
+                  {/* PREMIUM badge */}
+                  <div className="absolute top-1.5 right-1.5">
+                    <span className="px-1.5 py-0.5 text-[8px] font-bold rounded bg-amber-500/20 text-amber-400 border border-amber-500/20">
+                      PREMIUM
+                    </span>
+                  </div>
+                </div>
+                <div className="px-2 pb-2.5 text-center">
+                  <p className="text-[11px] font-medium text-white/60 leading-tight truncate">{ch.name}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══ 6c. LOCKED SERVICES — Upgrade CTA ═══ */}
+      <section className="mb-10 px-4 lg:px-6">
+        <div className="relative bg-bg-surface rounded-2xl border border-white/5 p-6 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-1">
+              <Lock className="w-4 h-4 text-text-muted" />
+              <h3 className="text-base font-bold text-white">Unlock Premium Streaming</h3>
+            </div>
+            <p className="text-xs text-text-muted mb-5">
+              Netflix, Prime Video, Disney+, Spotify & Crunchyroll — all via DASH Lifestyle
+            </p>
+            <div className="grid grid-cols-5 gap-3 mb-5">
+              {streamingServices.map((service) => (
+                <div key={service.id} className="relative group">
+                  <div className="aspect-square rounded-xl bg-white/[0.03] border border-white/5 flex flex-col items-center justify-center gap-1.5 opacity-40 group-hover:opacity-60 transition-opacity">
+                    {service.logo3d ? (
+                      <img src={service.logo3d} alt={service.name} className="w-8 h-8 object-contain grayscale" />
+                    ) : (
+                      <span className="text-xl font-black text-white/60">{service.logoText}</span>
+                    )}
+                    <span className="text-[9px] text-white/40 font-medium">{service.name}</span>
+                  </div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full bg-black/60 flex items-center justify-center">
+                      <Lock className="w-3 h-3 text-white/50" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => window.open('https://dasuperhub.com', '_blank')}
+              className="w-full py-3 rounded-xl font-semibold text-sm text-white flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
+              style={{ background: 'linear-gradient(135deg, #7C3AED, #6D28D9)' }}
+            >
+              <Crown className="w-4 h-4" />
+              Unlock with DASH Lifestyle
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </section>
