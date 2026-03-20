@@ -580,9 +580,6 @@ export function seedProbeCacheFromServer(data: ServerProbeData): void {
   serverAliveSet = new Set(data.alive_set);
 }
 
-export function hasServerProbeData(): boolean {
-  return serverAliveSet !== null && serverAliveSet.size > 0;
-}
 
 // --- VPS Health Data (server-side hourly scan) ---
 // The VPS checks every category hourly and writes /channels.json
