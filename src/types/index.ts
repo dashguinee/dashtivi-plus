@@ -10,55 +10,6 @@ export interface Channel {
   logo?: string;
 }
 
-export interface ChannelFilter {
-  countries?: string[];
-  categories?: string[];
-  groupIncludes?: string[];
-  qualities?: string[];
-  nameIncludes?: string[];
-}
-
-export interface Collection {
-  key: string;
-  title: string;
-  description: string;
-  icon: string;
-  type?: string;
-  featured?: boolean;
-  priority?: number;
-  dynamic?: boolean;
-  movies: (number | string)[];
-  series?: number[];
-  filter?: {
-    categories?: string[];
-    series_categories?: string[];
-    movie_categories?: string[];
-    extensions?: string[];
-  };
-  keywords?: string[];
-  channelFilter?: ChannelFilter;
-}
-
-export type CategoryId =
-  | 'all'
-  | 'africa'
-  | 'news'
-  | 'sports'
-  | 'entertainment'
-  | 'kids'
-  | 'music'
-  | 'documentary'
-  | 'religious'
-  | 'movies'
-  | 'france'
-  | 'general';
-
-export interface CategoryDef {
-  id: CategoryId;
-  label: string;
-  icon: string;
-}
-
 export interface PlayerState {
   channel: Channel | null;
   isPlaying: boolean;
@@ -70,6 +21,8 @@ export interface PlayerState {
   qualities: string[];
   isLoading: boolean;
   error: string | null;
+  currentTime: number;
+  duration: number;
 }
 
 export interface FavoriteEntry {
@@ -81,4 +34,9 @@ export interface WatchHistoryEntry {
   channelId: string;
   watchedAt: number;
   duration: number;
+  /** Channel metadata for "Continue Watching" — stored alongside history */
+  name?: string;
+  logo?: string;
+  url?: string;
+  category?: string;
 }

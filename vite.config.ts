@@ -14,12 +14,13 @@ export default defineConfig({
     host: true,
   },
   build: {
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes('hls.js')) return 'hls';
+          if (id.includes('mpegts.js')) return 'mpegts';
           if (id.includes('react-router-dom')) return 'router';
-          if (id.includes('health_verified.json')) return 'data-channels';
         },
       },
     },

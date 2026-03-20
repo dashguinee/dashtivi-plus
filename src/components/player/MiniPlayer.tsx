@@ -11,6 +11,16 @@ interface Props {
   visible: boolean;
 }
 
+/** Format seconds into H:MM:SS or M:SS */
+function formatTime(seconds: number): string {
+  if (!seconds || !isFinite(seconds)) return '0:00';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+}
+
 export const MiniPlayer: React.FC<Props> = ({
   state,
   onTogglePlay,
@@ -19,6 +29,9 @@ export const MiniPlayer: React.FC<Props> = ({
   visible,
 }) => {
   if (!state.channel || !visible) return null;
+
+  const category = state.channel.category?.toLowerCase() ?? '';
+  const isVod = category === 'movie' || category === 'series';
 
   return (
     <div className="fixed bottom-20 lg:bottom-4 right-4 z-40 animate-slide-up">
@@ -38,8 +51,17 @@ export const MiniPlayer: React.FC<Props> = ({
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-medium text-white truncate">{state.channel.name}</h4>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="live-pulse !w-1.5 !h-1.5" />
-              <span className="text-[10px] text-success font-medium">LIVE</span>
+              {isVod ? (
+                <span className="text-[10px] text-text-muted font-mono">
+                  {formatTime(state.currentTime)}
+                  {state.duration > 0 && ` / ${formatTime(state.duration)}`}
+                </span>
+              ) : (
+                <>
+                  <span className="live-pulse !w-1.5 !h-1.5" />
+                  <span className="text-[10px] text-success font-medium">LIVE</span>
+                </>
+              )}
               {state.isLoading && (
                 <span className="text-[10px] text-warning">Buffering...</span>
               )}
@@ -73,9 +95,16 @@ export const MiniPlayer: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Progress bar (visual only for live) */}
+        {/* Progress bar — actual progress for VOD, animated pulse for live */}
         <div className="h-0.5 bg-bg-elevated">
-          <div className="h-full bg-primary w-full animate-pulse" />
+          {isVod && state.duration > 0 ? (
+            <div
+              className="h-full bg-primary transition-[width] duration-500"
+              style={{ width: `${(state.currentTime / state.duration) * 100}%` }}
+            />
+          ) : (
+            <div className="h-full bg-primary w-full animate-pulse" />
+          )}
         </div>
       </div>
     </div>

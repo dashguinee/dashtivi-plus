@@ -19,6 +19,8 @@ export const SplashScreen: React.FC<Props> = ({ onComplete }) => {
       setTimeout(() => setPhase('tagline'), 1600),
       setTimeout(() => setPhase('exit'), 3000),
       setTimeout(() => onComplete(), 3600),
+      // Max-timeout fallback: force-dismiss after 8s regardless of animation state
+      setTimeout(() => onComplete(), 8000),
     ];
     return () => timers.forEach(clearTimeout);
   }, [onComplete]);
@@ -105,8 +107,8 @@ export const SplashScreen: React.FC<Props> = ({ onComplete }) => {
               : 'opacity-100 translate-y-0 scale-100'
           }`}
         >
-          <span className="text-gradient">DASH</span>
-          <span className="text-white/50 text-3xl font-medium ml-2">Lifestyle</span>
+          <span className="text-gradient">DashTivi</span>
+          <span className="text-primary-light text-3xl font-black ml-1">+</span>
         </h1>
 
         {/* Tagline */}
@@ -117,7 +119,7 @@ export const SplashScreen: React.FC<Props> = ({ onComplete }) => {
               : 'opacity-0 translate-y-3'
           }`}
         >
-          Stream &bull; Play &bull; Live
+          Premium Streaming
         </p>
 
         {/* Powered by */}
@@ -128,7 +130,7 @@ export const SplashScreen: React.FC<Props> = ({ onComplete }) => {
               : 'opacity-0'
           }`}
         >
-          by DASH
+          by DASH Etation
         </p>
       </div>
     </div>

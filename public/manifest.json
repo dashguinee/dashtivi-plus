@@ -1,7 +1,7 @@
 {
-  "name": "Tivi - Stream Africa",
-  "short_name": "Tivi",
-  "description": "Premium African Streaming. Live TV, Movies, Series. Free.",
+  "name": "DashTivi+",
+  "short_name": "Tivi+",
+  "description": "Premium Streaming. Live TV, Movies, Series.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
@@ -29,8 +29,8 @@
       "icons": [{ "src": "/tivi-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Collections",
-      "url": "/collections",
+      "name": "Movies",
+      "url": "/movies",
       "icons": [{ "src": "/tivi-192.png", "sizes": "192x192" }]
     }
   ]

@@ -1,8 +1,55 @@
 import Hls from 'hls.js';
+import mpegts from 'mpegts.js';
 
 export interface HlsInstance {
   hls: Hls | null;
   destroy: () => void;
+}
+
+/**
+ * Create an MPEG-TS player for raw .ts streams (proxied from Starshare)
+ * Used for Live TV where streams come as raw transport stream via CF Worker proxy
+ */
+export function createMpegTsPlayer(
+  videoEl: HTMLVideoElement,
+  url: string,
+  onError?: (msg: string) => void
+): HlsInstance {
+  if (!mpegts.isSupported()) {
+    onError?.('MPEG-TS playback is not supported in this browser');
+    return { hls: null, destroy: () => {} };
+  }
+
+  const player = mpegts.createPlayer({
+    type: 'mpegts',
+    url,
+    isLive: true,
+  }, {
+    enableWorker: true,
+    enableStashBuffer: false,
+    stashInitialSize: 128,
+    liveBufferLatencyChasing: true,
+    liveBufferLatencyMaxLatency: 3.0,
+    liveBufferLatencyMinRemain: 0.5,
+  });
+
+  player.attachMediaElement(videoEl);
+  player.load();
+  try { player.play(); } catch { /* autoplay may be blocked */ }
+
+  player.on(mpegts.Events.ERROR, () => {
+    onError?.('Stream error — channel may be offline');
+  });
+
+  return {
+    hls: null,
+    destroy: () => {
+      player.pause();
+      player.unload();
+      player.detachMediaElement();
+      player.destroy();
+    },
+  };
 }
 
 export function createHlsPlayer(

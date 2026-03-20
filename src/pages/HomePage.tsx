@@ -1,868 +1,518 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
-import {
-  TrendingUp, Clock, Zap, Globe, Star, ChevronRight, Play,
-  Tv, Crown, Sparkles, ArrowRight, Shuffle, Film, Gamepad2, Lock
-} from 'lucide-react';
-import { HeroBanner } from '@/components/home/HeroBanner';
-import { ChannelCard } from '@/components/home/ChannelCard';
-import { CollectionCard } from '@/components/home/CollectionCard';
-import { useHomeRows } from '@/hooks/useChannels';
-import { useWatchHistory } from '@/hooks/useWatchHistory';
-import {
-  getFeaturedChannels, getChannelById, allChannels, totalChannelCount,
-  categoryCounts, getChannelsByCategory
-} from '@/data/channels';
-import { featuredCollections, allCollections } from '@/data/collections';
+import React, { useEffect, useState } from 'react';
+import { Play, ChevronRight, Tv, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import type { Channel, Collection } from '@/types';
+import type { XtreamCredentials, LiveStream, VodStream, SeriesItem } from '@/lib/xtream';
+import {
+  getLiveStreams,
+  getVodStreams,
+  getSeries,
+  buildLiveUrl,
+  buildVodUrl,
+  fetchVpsHealth,
+} from '@/lib/xtream';
+import {
+  HOMEPAGE_COLLECTIONS,
+  COLLECTION_CARDS,
+  getFeaturedHero,
+} from '@/lib/collections';
+import type { Collection } from '@/lib/collections';
+import { useWatchHistory } from '@/hooks/useWatchHistory';
+import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
+import { ChannelIcon } from '@/components/ui/ChannelIcon';
+import { PosterCard } from '@/components/ui/PosterCard';
+import { SkeletonRow } from '@/components/ui/LoadingSpinner';
+import type { Channel, WatchHistoryEntry } from '@/types';
 
 interface Props {
-  onPlayChannel: (channel: Channel) => void;
-  isFavorite: (id: string) => boolean;
-  onToggleFavorite: (id: string) => void;
+  credentials: XtreamCredentials;
+  onPlay: (channel: Channel) => void;
 }
 
-/* ─── Category Banner Data ───────────────────────────── */
-const categoryBanners = [
-  { id: 'sports', label: 'Sports', emoji: '\u26BD', gradient: 'from-green-600 to-emerald-900' },
-  { id: 'news', label: 'News 24/7', emoji: '\uD83D\uDCF0', gradient: 'from-blue-600 to-indigo-900' },
-  { id: 'kids', label: 'Kids Zone', emoji: '\uD83E\uDDF8', gradient: 'from-pink-500 to-rose-900' },
-  { id: 'music', label: 'Music', emoji: '\uD83C\uDFB5', gradient: 'from-purple-600 to-violet-900' },
-  { id: 'entertainment', label: 'Entertainment', emoji: '\uD83C\uDFAC', gradient: 'from-amber-600 to-orange-900' },
-  { id: 'africa', label: 'Africa', emoji: '\uD83C\uDF0D', gradient: 'from-yellow-600 to-red-900' },
-  { id: 'france', label: 'France', emoji: '\uD83C\uDDEB\uD83C\uDDF7', gradient: 'from-blue-500 to-red-800' },
-  { id: 'documentary', label: 'Documentary', emoji: '\uD83D\uDD2C', gradient: 'from-teal-600 to-cyan-900' },
-];
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
-/* ─── Category Banner Card ───────────────────────────── */
-const CategoryBannerCard: React.FC<{
-  banner: typeof categoryBanners[0];
-  count: number;
-  index: number;
-  onClick: () => void;
-}> = ({ banner, count, index, onClick }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+function timeAgo(ts: number): string {
+  if (!ts || !isFinite(ts) || isNaN(ts)) return 'Recently';
+  const diff = Date.now() - ts;
+  if (!isFinite(diff) || isNaN(diff)) return 'Recently';
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
-      { threshold: 0.2 }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
+// ── Data loaders for each collection type ─────────────────────────
 
-  return (
-    <div
-      ref={ref}
-      className={`flex-shrink-0 transition-all duration-500 ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-      }`}
-      style={{ transitionDelay: `${index * 80}ms` }}
-    >
-      <div
-        onClick={onClick}
-        className={`relative w-64 h-32 bg-gradient-to-br ${banner.gradient} rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.05] hover:shadow-2xl hover:shadow-white/10 border border-white/10 group`}
-      >
-        {/* Ambient glow */}
-        <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-20 bg-white" />
-
-        {/* Emoji top-left */}
-        <div className="absolute top-3 left-4">
-          <span className="text-3xl">{banner.emoji}</span>
-        </div>
-
-        {/* Large background emoji */}
-        <div className="absolute -bottom-2 -right-2 text-7xl opacity-10 group-hover:opacity-20 transition-opacity duration-300 transform group-hover:scale-110">
-          {banner.emoji}
-        </div>
-
-        {/* Content bottom-left */}
-        <div className="absolute bottom-3 left-4">
-          <h3 className="text-xl font-bold text-white leading-tight">{banner.label}</h3>
-          <p className="text-xs text-white/60 mt-0.5">
-            {count.toLocaleString()} channels
-          </p>
-        </div>
-
-        {/* Arrow on hover */}
-        <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <ArrowRight className="w-5 h-5 text-white/70" />
-        </div>
-      </div>
-    </div>
+async function loadLiveCollection(
+  credentials: XtreamCredentials,
+  collection: Collection,
+  healthCatIds: string[]
+): Promise<LiveStream[]> {
+  // Only load categories that are actually live
+  const activeCats = collection.categoryIds.filter(
+    (id) => healthCatIds.length === 0 || healthCatIds.includes(id)
   );
-};
+  if (activeCats.length === 0) return [];
 
-/* ─── Streaming Service Card ──────────────────────────── */
-const streamingServices = [
-  {
-    id: 'netflix',
-    name: 'Netflix',
-    tagline: 'Unlimited movies & TV',
-    gradient: 'from-red-600 to-red-900',
-    glow: 'shadow-red-500/30',
-    accent: '#E50914',
-    logo3d: '/logos/netflix-3d.png',
-    logoText: 'N',
-    count: '15,000+',
-    features: ['4K Ultra HD', 'Download & Go', 'Originals'],
-  },
-  {
-    id: 'prime',
-    name: 'Prime Video',
-    tagline: 'Movies, TV & more',
-    gradient: 'from-sky-500 to-blue-900',
-    glow: 'shadow-sky-500/30',
-    accent: '#00A8E1',
-    logo3d: '/logos/prime-3d.webp',
-    logoText: '\u25B6',
-    count: '24,000+',
-    features: ['X-Ray', 'Live Sports', 'Channels'],
-  },
-  {
-    id: 'spotify',
-    name: 'Spotify',
-    tagline: 'Music for every moment',
-    gradient: 'from-green-500 to-emerald-900',
-    glow: 'shadow-green-500/30',
-    accent: '#1DB954',
-    logo3d: '/logos/spotify-3d.webp',
-    logoText: 'S',
-    count: '100M+',
-    features: ['Podcasts', 'Playlists', 'Offline'],
-  },
-  {
-    id: 'crunchyroll',
-    name: 'Crunchyroll',
-    tagline: 'The home of anime',
-    gradient: 'from-orange-500 to-orange-900',
-    glow: 'shadow-orange-500/30',
-    accent: '#F47521',
-    logo3d: '/logos/crunchyroll-3d.webp',
-    logoText: 'CR',
-    count: '1,200+',
-    features: ['Simulcast', 'Manga', 'Dub & Sub'],
-  },
-  {
-    id: 'disney',
-    name: 'Disney+',
-    tagline: 'Marvel, Star Wars & more',
-    gradient: 'from-blue-600 to-indigo-900',
-    glow: 'shadow-blue-500/30',
-    accent: '#113CCF',
-    logo3d: '',
-    logoText: 'D+',
-    count: '10,000+',
-    features: ['IMAX Enhanced', 'GroupWatch', 'Extras'],
-  },
-];
-
-/* ─── Now Streaming — Blockbusters via DASH WebTV (TMDB posters) ─── */
-const nowStreaming = [
-  { id: 'oppenheimer', title: 'Oppenheimer', year: '2023', rating: '8.1', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg', source: 'Netflix' },
-  { id: 'barbie', title: 'Barbie', year: '2023', rating: '7.0', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg', source: 'Prime' },
-  { id: 'spiderman-nwh', title: 'Spider-Man: No Way Home', year: '2022', rating: '8.2', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/uJYYizSuA9Y3DCs0qS4qWvHfZg4.jpg', source: 'Disney+' },
-  { id: 'john-wick-4', title: 'John Wick 4', year: '2023', rating: '7.7', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg', source: 'Prime' },
-  { id: 'the-batman', title: 'The Batman', year: '2022', rating: '7.7', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/74xTEgt7R36Fpooo50r9T25onhq.jpg', source: 'HBO' },
-  { id: 'top-gun', title: 'Top Gun: Maverick', year: '2022', rating: '8.3', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/i0FHyNF9VvQTXOi4yKnZJ1zql1.jpg', source: 'Prime' },
-  { id: 'interstellar', title: 'Interstellar', year: '2014', rating: '8.7', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg', source: 'Netflix' },
-  { id: 'deadpool-wolverine', title: 'Deadpool & Wolverine', year: '2024', rating: '7.7', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg', source: 'Disney+' },
-  { id: 'inside-out-2', title: 'Inside Out 2', year: '2024', rating: '7.6', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/vpnVM9B6NMmQpWeZvzLvDESb2QY.jpg', source: 'Disney+' },
-  { id: 'beetlejuice-2', title: 'Beetlejuice Beetlejuice', year: '2024', rating: '6.9', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/kKgQzkUCnQmeTPkyIwHly2t6ZFI.jpg', source: 'HBO' },
-  { id: 'dune-2', title: 'Dune: Part Two', year: '2024', rating: '8.1', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg', source: 'HBO' },
-  { id: 'wild-robot', title: 'The Wild Robot', year: '2024', rating: '8.2', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/8RvwVVjYel1Ga0AmqbK15Q0llOy.jpg', source: 'Netflix' },
-  { id: 'furiosa', title: 'Furiosa', year: '2024', rating: '7.4', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/iADOJ8Zymht2JPMoy3R7xceZprc.jpg', source: 'HBO' },
-  { id: 'joker', title: 'Joker', year: '2019', rating: '8.2', poster: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg', source: 'Netflix' },
-];
-
-const sourceColors: Record<string, string> = {
-  'Netflix': '#E50914',
-  'Prime': '#00A8E1',
-  'Disney+': '#113CCF',
-  'HBO': '#B535F6',
-};
-
-/* ─── Movie Poster Card ─── */
-const MoviePosterCard: React.FC<{ movie: typeof nowStreaming[0]; index: number }> = ({ movie, index }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
-      { threshold: 0.2 }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      className={`flex-shrink-0 w-[140px] sm:w-[160px] transition-all duration-500 ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-      }`}
-      style={{ transitionDelay: `${index * 60}ms` }}
-    >
-      <div className="relative rounded-xl overflow-hidden cursor-pointer group transition-all duration-300 hover:scale-[1.05] hover:shadow-2xl hover:shadow-white/10">
-        <div className="aspect-[2/3]">
-          <img
-            src={movie.poster}
-            alt={movie.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            loading="lazy"
-          />
-        </div>
-        {/* Bottom fade overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-        {/* Source badge */}
-        <div className="absolute top-2 right-2">
-          <span
-            className="px-1.5 py-0.5 text-[9px] font-bold rounded-md text-white"
-            style={{ backgroundColor: sourceColors[movie.source] || '#666' }}
-          >
-            {movie.source}
-          </span>
-        </div>
-        {/* Rating */}
-        <div className="absolute top-2 left-2 flex items-center gap-0.5 px-1.5 py-0.5 bg-black/50 backdrop-blur-sm rounded-md">
-          <Star className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />
-          <span className="text-[10px] font-semibold text-white">{movie.rating}</span>
-        </div>
-        {/* Title */}
-        <div className="absolute bottom-0 left-0 right-0 p-2.5">
-          <h4 className="text-xs font-bold text-white leading-tight line-clamp-2">{movie.title}</h4>
-          <p className="text-[10px] text-white/50 mt-0.5">{movie.year}</p>
-        </div>
-      </div>
-    </div>
+  const results = await Promise.allSettled(
+    activeCats.slice(0, 4).map((catId) => getLiveStreams(credentials, catId))
   );
-};
+  const all: LiveStream[] = [];
+  for (const r of results) {
+    if (r.status === 'fulfilled') all.push(...r.value);
+  }
+  return shuffle(all).slice(0, collection.limit);
+}
 
-/* ─── Featured Game Card for Home ─── */
-const GAMES_HUB = 'https://games.dasuperhub.com';
-const GAMES_CDN = 'https://games.dasuperhub.com/icons';
-
-const homeGames = [
-  { id: 'gta-online', name: 'GTA Online', image: '/games/store-5.jpg', tagline: 'Open World Multiplayer', url: `https://wa.me/224611361300?text=${encodeURIComponent('Hi DASH, I want GTA Online')}`, type: 'store' as const },
-  { id: 'fanta', name: 'Fanta 1+1', image: `${GAMES_CDN}/fanta.jpg`, tagline: 'Defi mathematique', url: `${GAMES_HUB}/#/games/fanta`, type: 'lobby' as const },
-  { id: 'bundess', name: 'Bundess', image: `${GAMES_CDN}/bundess.jpg`, tagline: 'Football tactique', url: `${GAMES_HUB}/#/games/bundess`, type: 'lobby' as const },
-  { id: 'fm26', name: 'FM26', image: '/games/store-3.jpg', tagline: 'Build your dream squad', url: `https://wa.me/224611361300?text=${encodeURIComponent('Hi DASH, I want FM26')}`, type: 'store' as const },
-];
-
-const HomeGameCard: React.FC<{ game: typeof homeGames[0]; index: number }> = ({ game, index }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
-      { threshold: 0.2 }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
-
-  const isStore = game.type === 'store';
-  const overlayColor = isStore ? 'rgba(255,121,0,0.2)' : 'rgba(157,78,221,0.2)';
-  const badgeColor = isStore ? '#FF7900' : '#9D4EDD';
-  const badgeText = isStore ? 'STORE' : 'ORIGINAL';
-
-  return (
-    <div
-      ref={ref}
-      className={`flex-shrink-0 w-[200px] sm:w-[220px] transition-all duration-500 ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-      }`}
-      style={{ transitionDelay: `${index * 80}ms` }}
-    >
-      <div
-        className="relative h-[140px] rounded-xl overflow-hidden cursor-pointer group transition-all duration-300 hover:scale-[1.05] hover:shadow-2xl"
-        onClick={() => window.open(game.url, '_blank')}
-      >
-        <img src={game.image} alt={game.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
-        <div className="absolute inset-0" style={{ background: overlayColor }} />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-        {/* Badge */}
-        <div className="absolute top-2 right-2">
-          <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-md text-white" style={{ backgroundColor: badgeColor }}>
-            {badgeText}
-          </span>
-        </div>
-        {/* Title */}
-        <div className="absolute bottom-0 left-0 right-0 p-2.5">
-          <h4 className="text-sm font-bold text-white drop-shadow-lg">{game.name}</h4>
-          <p className="text-[10px] text-white/60">{game.tagline}</p>
-        </div>
-      </div>
-    </div>
+async function loadVodCollection(
+  credentials: XtreamCredentials,
+  collection: Collection
+): Promise<VodStream[]> {
+  const results = await Promise.allSettled(
+    collection.categoryIds.map((catId) => getVodStreams(credentials, catId))
   );
-};
+  const all: VodStream[] = [];
+  const seen = new Set<number>();
+  for (const r of results) {
+    if (r.status === 'fulfilled') {
+      for (const m of r.value) {
+        if (!seen.has(m.stream_id)) {
+          seen.add(m.stream_id);
+          all.push(m);
+        }
+      }
+    }
+  }
+  return shuffle(all).slice(0, collection.limit);
+}
 
-const ServiceCard: React.FC<{ service: typeof streamingServices[0]; index: number }> = ({
-  service,
-  index,
-}) => {
+async function loadSeriesCollection(
+  credentials: XtreamCredentials,
+  collection: Collection
+): Promise<SeriesItem[]> {
+  const results = await Promise.allSettled(
+    collection.categoryIds.map((catId) => getSeries(credentials, catId))
+  );
+  const all: SeriesItem[] = [];
+  const seen = new Set<number>();
+  for (const r of results) {
+    if (r.status === 'fulfilled') {
+      for (const s of r.value) {
+        if (!seen.has(s.series_id)) {
+          seen.add(s.series_id);
+          all.push(s);
+        }
+      }
+    }
+  }
+  return shuffle(all).slice(0, collection.limit);
+}
+
+// ── Types for loaded row data ─────────────────────────────────────
+
+interface RowData {
+  collection: Collection;
+  liveStreams?: LiveStream[];
+  vodStreams?: VodStream[];
+  seriesItems?: SeriesItem[];
+}
+
+// ── Main Component ────────────────────────────────────────────────
+
+export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const navigate = useNavigate();
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const { getRecent } = useWatchHistory();
+  const [rows, setRows] = useState<RowData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
+
+  const recentHistory = getRecent(10).filter(
+    (h): h is WatchHistoryEntry & { name: string; url: string } =>
+      !!h.name && !!h.url
+  );
+
+  const hero = getFeaturedHero();
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
-      { threshold: 0.2 }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
+    let mounted = true;
 
-  const handleClick = () => {
-    navigate('/services');
+    async function load() {
+      setError(false);
+      try {
+        // Fetch health data for live category filtering
+        const health = await fetchVpsHealth();
+        const liveCatIds: string[] = health.liveCategories || [];
+
+        // Load all collections in parallel
+        const rowPromises = HOMEPAGE_COLLECTIONS.map(async (collection) => {
+          const rowData: RowData = { collection };
+          try {
+            if (collection.type === 'live') {
+              rowData.liveStreams = await loadLiveCollection(credentials, collection, liveCatIds);
+            } else if (collection.type === 'vod') {
+              rowData.vodStreams = await loadVodCollection(credentials, collection);
+            } else if (collection.type === 'series') {
+              rowData.seriesItems = await loadSeriesCollection(credentials, collection);
+            }
+          } catch {
+            // Individual row failure is OK — just show empty
+          }
+          return rowData;
+        });
+
+        const results = await Promise.allSettled(rowPromises);
+        if (!mounted) return;
+
+        const loadedRows: RowData[] = [];
+        for (const r of results) {
+          if (r.status === 'fulfilled') {
+            const row = r.value;
+            // Only include rows that have content
+            const hasContent =
+              (row.liveStreams && row.liveStreams.length > 0) ||
+              (row.vodStreams && row.vodStreams.length > 0) ||
+              (row.seriesItems && row.seriesItems.length > 0);
+            if (hasContent) loadedRows.push(row);
+          }
+        }
+
+        if (loadedRows.length === 0) {
+          setError(true);
+        } else {
+          setRows(loadedRows);
+        }
+      } catch {
+        if (mounted) setError(true);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    load();
+    return () => { mounted = false; };
+  }, [credentials, retryKey]);
+
+  // ── Play handlers ───────────────────────────────────────────────
+
+  const playLive = (stream: LiveStream, allStreams?: LiveStream[]) => {
+    if (allStreams && allStreams.length > 1) {
+      const channels = allStreams.map(s => ({
+        id: `live-${s.stream_id}`,
+        name: s.name,
+        url: buildLiveUrl(credentials, s.stream_id),
+        logo: s.stream_icon,
+        category: 'live' as const,
+      }));
+      setPlaylist(channels);
+    }
+    const channel = {
+      id: `live-${stream.stream_id}`,
+      name: stream.name,
+      url: buildLiveUrl(credentials, stream.stream_id),
+      logo: stream.stream_icon,
+      category: 'live' as const,
+    };
+    setCurrentChannel(channel.id);
+    onPlay(channel);
   };
 
+  const playMovie = (movie: VodStream) => {
+    onPlay({
+      id: `vod-${movie.stream_id}`,
+      name: movie.name,
+      url: buildVodUrl(credentials, movie.stream_id, movie.container_extension || 'mp4'),
+      logo: movie.stream_icon,
+      category: 'movie',
+    });
+  };
+
+  const playHistoryItem = (entry: WatchHistoryEntry & { name: string; url: string }) => {
+    onPlay({
+      id: entry.channelId,
+      name: entry.name,
+      url: entry.url,
+      logo: entry.logo,
+      category: entry.category,
+    });
+  };
+
+  // ── Render ──────────────────────────────────────────────────────
+
   return (
-    <div
-      ref={ref}
-      className={`relative group flex-shrink-0 w-72 sm:w-80 transition-all duration-700 ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-      }`}
-      style={{ transitionDelay: `${index * 150}ms` }}
-    >
-      <div
-        className={`relative h-[280px] bg-gradient-to-br ${service.gradient} rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl ${service.glow} border border-white/10`}
-        onClick={handleClick}
-      >
-        {/* Ambient glow */}
-        <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-30"
-          style={{ backgroundColor: service.accent }}
-        />
+    <div className="pt-16 pb-4">
+      {/* ── Hero Banner (time-aware) ─────────────────────────── */}
+      <div className="relative h-[42vh] min-h-[300px] max-h-[460px] mb-2 overflow-hidden">
+        <div className={`absolute inset-0 bg-gradient-to-br ${hero.gradient}`} />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent" />
 
-        {/* Logo — 3D image or text fallback */}
-        <div className="absolute top-4 left-4">
-          {service.logo3d ? (
-            <img
-              src={service.logo3d}
-              alt={service.name}
-              className="w-16 h-16 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 -mt-1"
-              style={{ filter: `drop-shadow(0 4px 16px ${service.accent}60)` }}
-            />
-          ) : (
-            <span
-              className="text-3xl font-black tracking-tighter"
-              style={{ color: 'rgba(255,255,255,0.9)', textShadow: `0 0 20px ${service.accent}80` }}
-            >
-              {service.logoText}
-            </span>
-          )}
-        </div>
-
-        {/* Badge */}
-        <div className="absolute top-4 right-4 flex items-center gap-1 px-2 py-1 bg-white/10 backdrop-blur-sm rounded-lg">
-          <Crown className="w-3 h-3 text-amber-400" />
-          <span className="text-[10px] font-semibold text-white/80">via DASH Lifestyle</span>
-        </div>
-
-        {/* Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-          <h3 className="text-xl font-bold text-white mb-0.5">{service.name}</h3>
-          <p className="text-sm text-white/60 mb-3">{service.tagline}</p>
-
-          {/* Features */}
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {service.features.map((f) => (
-              <span
-                key={f}
-                className="px-2 py-0.5 text-[10px] font-medium bg-white/10 backdrop-blur-sm rounded-md text-white/70"
-              >
-                {f}
-              </span>
-            ))}
-          </div>
-
-          {/* CTA */}
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-white/50">{service.count} titles</span>
-            <div className="flex items-center gap-1.5 text-xs font-medium text-white group-hover:text-primary-light transition-colors">
-              Explore
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+        <div className="relative z-10 flex flex-col justify-end h-full px-5 pb-8 max-w-2xl">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+              <Tv className="w-5 h-5 text-white" />
             </div>
+            <h1 className="text-3xl font-extrabold tracking-wide">
+              <span className="text-gradient">DashTivi</span>
+              <span className="text-primary-light text-xl font-black">+</span>
+            </h1>
           </div>
+          <h2 className="text-xl font-bold text-white mb-1">{hero.title}</h2>
+          <p className="text-text-secondary text-sm mb-4 max-w-md">
+            {recentHistory.length > 0
+              ? hero.subtitle
+              : 'Premium live TV, movies, and series. Thousands of channels from around the world.'}
+          </p>
+          <button
+            onClick={() => navigate(hero.navigateTo)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors shadow-lg shadow-primary/20 w-fit"
+          >
+            <Play className="w-4 h-4" />
+            {hero.cta}
+          </button>
         </div>
       </div>
+
+      {/* ── Quick Collection Cards (vibes) ───────────────────── */}
+      <div className="px-4 mb-6">
+        <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-1">
+          {COLLECTION_CARDS.map((card) => (
+            <button
+              key={card.id}
+              onClick={() => navigate(card.navigateTo)}
+              className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r ${card.gradient} border border-white/10 hover:border-white/20 transition-all hover:scale-[1.02] active:scale-[0.98]`}
+            >
+              <span className="text-base">{card.emoji}</span>
+              <span className="text-sm font-semibold text-white whitespace-nowrap">{card.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Continue Watching ─────────────────────────────────── */}
+      {recentHistory.length > 0 && (
+        <section className="mb-6">
+          <SectionHeader emoji="" title="Continue Watching" icon={<Clock className="w-4 h-4 text-primary-light" />} />
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2">
+            {recentHistory.map((entry) => (
+              <button
+                key={entry.channelId}
+                onClick={() => playHistoryItem(entry)}
+                className="flex-shrink-0 w-40 group"
+              >
+                <div className="relative aspect-video rounded-xl overflow-hidden bg-white/5 border border-white/10 mb-2 group-hover:border-primary/30 transition-colors">
+                  <ChannelIcon
+                    src={entry.logo}
+                    name={entry.name}
+                    size="lg"
+                    className="!w-full !h-full !rounded-xl"
+                  />
+                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Play className="w-8 h-8 text-white" />
+                  </div>
+                  {entry.category && (
+                    <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-primary/80 backdrop-blur-sm rounded text-[10px] font-bold text-white uppercase">
+                      {entry.category === 'live' ? 'Live' : entry.category === 'movie' ? 'Movie' : entry.category}
+                    </div>
+                  )}
+                  <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm rounded text-[10px] text-white/70">
+                    {timeAgo(entry.watchedAt)}
+                  </div>
+                </div>
+                <p className="text-xs text-text-secondary truncate group-hover:text-white transition-colors">
+                  {entry.name}
+                </p>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Dynamic Collection Rows ──────────────────────────── */}
+      {loading ? (
+        <div className="space-y-8 px-1">
+          <SkeletonRow />
+          <SkeletonRow />
+          <SkeletonRow />
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <p className="text-text-muted text-sm">Unable to load — tap to retry</p>
+          <button
+            onClick={() => { setLoading(true); setRetryKey((k) => k + 1); }}
+            className="px-5 py-2.5 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {rows.map((row) => (
+            <CollectionRow
+              key={row.collection.id}
+              row={row}
+              onPlayLive={playLive}
+              onPlayMovie={playMovie}
+              onNavigate={navigate}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
-/* ─── Content Row ─────────────────────────────────────── */
-const ContentRow: React.FC<{
+// ── Section Header ────────────────────────────────────────────────
+
+function SectionHeader({
+  emoji,
+  title,
+  icon,
+  seeAllTo,
+  onNavigate,
+}: {
+  emoji: string;
   title: string;
-  subtitle?: string;
   icon?: React.ReactNode;
-  children: React.ReactNode;
-  onSeeAll?: () => void;
-}> = ({ title, subtitle, icon, children, onSeeAll }) => (
-  <section className="mb-8">
-    <div className="flex items-center justify-between px-4 lg:px-6 mb-3">
-      <div className="flex items-center gap-2.5">
-        {icon && <div className="text-primary">{icon}</div>}
-        <div>
-          <h2 className="text-lg font-bold text-white">{title}</h2>
-          {subtitle && <p className="text-xs text-text-muted mt-0.5">{subtitle}</p>}
-        </div>
+  seeAllTo?: string;
+  onNavigate?: (path: string) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between px-4 mb-3">
+      <div className="flex items-center gap-2">
+        {emoji && <span className="text-base">{emoji}</span>}
+        {icon}
+        <h2 className="text-lg font-bold text-white">{title}</h2>
       </div>
-      {onSeeAll && (
+      {seeAllTo && onNavigate && (
         <button
-          onClick={onSeeAll}
-          className="flex items-center gap-1 text-xs text-primary-light hover:text-primary transition-colors font-medium"
+          onClick={() => onNavigate(seeAllTo)}
+          className="flex items-center gap-1 text-xs text-primary-light hover:text-white transition-colors"
         >
           See All
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       )}
     </div>
-    <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 lg:px-6 pb-2 gradient-mask-r">
-      {children}
-    </div>
-  </section>
-);
-
-/* ─── Home Page ───────────────────────────────────────── */
-export const HomePage: React.FC<Props> = ({ onPlayChannel, isFavorite, onToggleFavorite }) => {
-  const navigate = useNavigate();
-  const rows = useHomeRows();
-  const { history } = useWatchHistory();
-  const heroChannels = useMemo(() => getFeaturedChannels(), []);
-
-  const continueWatching = useMemo(() => {
-    return history
-      .slice(0, 12)
-      .map((h) => getChannelById(h.channelId))
-      .filter(Boolean) as Channel[];
-  }, [history]);
-
-  const trending = useMemo(() => {
-    return allChannels
-      .filter((ch) => ch.quality?.includes('1080'))
-      .slice(0, 20);
-  }, []);
-
-  // Popular Right Now - 20 random channels, shuffled on mount
-  const popularRightNow = useMemo(() => {
-    const pool = [...allChannels];
-    // Fisher-Yates shuffle
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
-    return pool.slice(0, 20);
-  }, []);
-
-  // Category banner counts (dynamic)
-  const bannerCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const banner of categoryBanners) {
-      if (banner.id === 'africa' || banner.id === 'france') {
-        counts[banner.id] = getChannelsByCategory(banner.id).length;
-      } else {
-        counts[banner.id] = categoryCounts[banner.id] || 0;
-      }
-    }
-    return counts;
-  }, []);
-
-  // Count unique categories for stats
-  const categoryCount = useMemo(() => {
-    return Object.keys(categoryCounts).length;
-  }, []);
-
-  // Featured collections with channel counts > 0
-  const validCollections = useMemo(() => {
-    return featuredCollections.filter(
-      (c) => c.movies.length + (c.series?.length || 0) > 0
-    );
-  }, []);
-
-  const handleSelectCollection = (collection: Collection) => {
-    navigate(`/collections/${collection.key}`);
-  };
-
-  return (
-    <div className="min-h-screen pt-14">
-      {/* ═══ 1. HERO BANNER ═══ */}
-      <HeroBanner channels={heroChannels} onPlay={onPlayChannel} />
-
-      {/* ═══ 2. QUICK STATS (updated counts) ═══ */}
-      <div className="px-4 lg:px-6 py-4">
-        <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide">
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-bg-surface rounded-xl border border-white/5 flex-shrink-0">
-            <Zap className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-white">{totalChannelCount.toLocaleString()}</span>
-            <span className="text-xs text-text-muted">Live Channels</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-bg-surface rounded-xl border border-white/5 flex-shrink-0">
-            <Globe className="w-4 h-4 text-accent" />
-            <span className="text-sm font-medium text-white">{categoryCount}</span>
-            <span className="text-xs text-text-muted">Categories</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-bg-surface rounded-xl border border-white/5 flex-shrink-0">
-            <Tv className="w-4 h-4 text-sky-400" />
-            <span className="text-sm font-medium text-white">{allCollections.length}</span>
-            <span className="text-xs text-text-muted">Collections</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-bg-surface rounded-xl border border-white/5 flex-shrink-0">
-            <Star className="w-4 h-4 text-warning" />
-            <span className="text-sm font-medium text-white">FREE</span>
-            <span className="text-xs text-text-muted">Live TV</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ═══ 3. CATEGORY BANNERS (NEW) ═══ */}
-      <section className="mb-8">
-        <div className="flex items-center justify-between px-4 lg:px-6 mb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="text-primary"><Globe className="w-5 h-5" /></div>
-            <div>
-              <h2 className="text-lg font-bold text-white">Browse by Category</h2>
-              <p className="text-xs text-text-muted mt-0.5">Dive into what you love</p>
-            </div>
-          </div>
-          <button
-            onClick={() => navigate('/live')}
-            className="flex items-center gap-1 text-xs text-primary-light hover:text-primary transition-colors font-medium"
-          >
-            All Channels
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 lg:px-6 pb-2">
-          {categoryBanners.map((banner, i) => (
-            <CategoryBannerCard
-              key={banner.id}
-              banner={banner}
-              count={bannerCounts[banner.id] || 0}
-              index={i}
-              onClick={() => navigate('/live')}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* ═══ 4. CONTINUE WATCHING ═══ */}
-      {continueWatching.length > 0 && (
-        <ContentRow
-          title="Continue Watching"
-          icon={<Clock className="w-5 h-5" />}
-        >
-          {continueWatching.map((ch) => (
-            <ChannelCard
-              key={ch.id}
-              channel={ch}
-              onPlay={onPlayChannel}
-              isFavorite={isFavorite(ch.id)}
-              onToggleFavorite={onToggleFavorite}
-              compact
-            />
-          ))}
-        </ContentRow>
-      )}
-
-      {/* ═══ 5. TRENDING NOW ═══ */}
-      {trending.length > 0 && (
-        <ContentRow
-          title="Trending Now"
-          subtitle="HD & Full HD streams"
-          icon={<TrendingUp className="w-5 h-5" />}
-          onSeeAll={() => navigate('/live')}
-        >
-          {trending.map((ch) => (
-            <ChannelCard
-              key={ch.id}
-              channel={ch}
-              onPlay={onPlayChannel}
-              isFavorite={isFavorite(ch.id)}
-              onToggleFavorite={onToggleFavorite}
-            />
-          ))}
-        </ContentRow>
-      )}
-
-      {/* ═══ 5b. NOW STREAMING — Blockbusters via DASH WebTV ═══ */}
-      <section className="mb-8">
-        <div className="flex items-center justify-between px-4 lg:px-6 mb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500/20 to-purple-500/20 flex items-center justify-center">
-              <Film className="w-4 h-4 text-red-400" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white">Now Streaming</h2>
-              <p className="text-xs text-text-muted mt-0.5">Blockbusters via DASH Lifestyle</p>
-            </div>
-          </div>
-          <button
-            onClick={() => navigate('/services')}
-            className="flex items-center gap-1 text-xs text-primary-light hover:text-primary transition-colors font-medium"
-          >
-            Browse All
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 lg:px-6 pb-2">
-          {nowStreaming.map((movie, i) => (
-            <MoviePosterCard key={movie.id} movie={movie} index={i} />
-          ))}
-        </div>
-      </section>
-
-      {/* ═══ 5c. DASH GAMES — Highlights ═══ */}
-      <section className="mb-8">
-        <div className="flex items-center justify-between px-4 lg:px-6 mb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-orange-500/20 flex items-center justify-center">
-              <Gamepad2 className="w-4 h-4 text-purple-400" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white">DASH Games</h2>
-              <p className="text-xs text-text-muted mt-0.5">Play or shop — your move</p>
-            </div>
-          </div>
-          <button
-            onClick={() => navigate('/games')}
-            className="flex items-center gap-1 text-xs text-primary-light hover:text-primary transition-colors font-medium"
-          >
-            All Games
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 lg:px-6 pb-2">
-          {homeGames.map((game, i) => (
-            <HomeGameCard key={game.id} game={game} index={i} />
-          ))}
-        </div>
-      </section>
-
-      {/* ═══ 6. STREAMING SERVICES ═══ */}
-      <section className="mb-10 mt-2">
-        <div className="px-4 lg:px-6 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-primary-light" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">Your Streaming Universe</h2>
-              <p className="text-xs text-text-muted">All your platforms. One destination.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Service Cards - horizontal scroll */}
-        <div className="flex gap-4 overflow-x-auto scrollbar-hide px-4 lg:px-6 pb-4">
-          {streamingServices.map((service, i) => (
-            <ServiceCard key={service.id} service={service} index={i} />
-          ))}
-        </div>
-
-        {/* CTA Banner */}
-        <div className="px-4 lg:px-6 mt-2">
-          <div
-            className="relative bg-gradient-to-r from-primary/10 via-bg-surface to-accent/10 rounded-2xl p-5 border border-white/5 overflow-hidden cursor-pointer group"
-            onClick={() => window.open('https://dasuperhub.com', '_blank')}
-          >
-            <div className="absolute -right-10 -top-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl" />
-            <div className="flex items-center justify-between relative z-10">
-              <div>
-                <h3 className="text-sm font-bold text-white mb-0.5">
-                  Unlock the Full Universe
-                </h3>
-                <p className="text-xs text-text-muted">
-                  Access Netflix, Prime, Disney+ and more through DASH SuperHub
-                </p>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-primary rounded-xl text-sm font-semibold text-white group-hover:bg-primary-light transition-all group-hover:scale-105 flex-shrink-0">
-                Get Access
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ 6b. PREMIUM CHANNELS — Social proof ═══ */}
-      <section className="mb-8">
-        <div className="flex items-center justify-between px-4 lg:px-6 mb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center">
-              <Crown className="w-4 h-4 text-amber-400" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white">Premium Channels</h2>
-              <p className="text-xs text-text-muted mt-0.5">Subscribe for full access</p>
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 lg:px-6 pb-2">
-          {[
-            { name: 'beIN Sports 1', logo: 'http://img-cdn.curl.pk:8880/channels_icon_api/02f7017975ea2ee46ceec077fd2407a9.png' },
-            { name: 'beIN Sports 2', logo: 'http://img-cdn.curl.pk:8880/channels_icon/53396148581.png' },
-            { name: 'beIN Sports 3', logo: 'http://img-cdn.curl.pk:8880/channels_icon_api/19e4acf04fb09ef5ab4d3eec9cbf98fa.png' },
-            { name: 'Canal+ Sport 1', logo: 'http://webtv360.org:2578/images/ebce02181d6817fc3c5070e477a6fe5a.png' },
-            { name: 'Canal+ Sport 2', logo: 'http://starshare.live:8080/images/b2ccce432dd1f51ecb3abd51acc5865c.png' },
-            { name: 'Canal+ Cinema', logo: 'http://starshare.live:8080/images/a53ab0f26b378f4098efb051f775a974.png' },
-            { name: 'Canal+ Premiere', logo: 'http://starshare.live:8080/images/cb184fd9e3561a85a1fc4648a429002e.png' },
-            { name: 'SuperSport', logo: 'https://supersport-cms-prod.azureedge.net/media/q24jrjac/supersport-ott-7.png' },
-            { name: 'Sky Cinema', logo: 'http://img-cdn.curl.pk:8880/channels_icon/5600193553.png' },
-            { name: 'FOX Movies', logo: 'http://img-cdn.curl.pk:8880/channels_icon_api/408f7e979f699607d01d30b767a1f3b8.png' },
-          ].map((ch, i) => (
-            <div key={ch.name} className="flex-shrink-0 w-[120px]">
-              <div className="relative rounded-xl overflow-hidden border border-amber-500/10 bg-gradient-to-br from-amber-900/20 to-amber-950/30 group cursor-pointer transition-all duration-300 hover:scale-[1.05] hover:border-amber-500/30">
-                <div className="aspect-square flex items-center justify-center p-3 relative">
-                  <img
-                    src={ch.logo}
-                    alt={ch.name}
-                    className="w-16 h-16 object-contain opacity-70 group-hover:opacity-100 transition-opacity grayscale group-hover:grayscale-0"
-                    loading="lazy"
-                  />
-                  {/* Lock overlay */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-60 group-hover:opacity-0 transition-opacity">
-                    <div className="w-7 h-7 rounded-full bg-black/50 flex items-center justify-center backdrop-blur-sm">
-                      <Lock className="w-3.5 h-3.5 text-amber-400/70" />
-                    </div>
-                  </div>
-                  {/* PREMIUM badge */}
-                  <div className="absolute top-1.5 right-1.5">
-                    <span className="px-1.5 py-0.5 text-[8px] font-bold rounded bg-amber-500/20 text-amber-400 border border-amber-500/20">
-                      PREMIUM
-                    </span>
-                  </div>
-                </div>
-                <div className="px-2 pb-2.5 text-center">
-                  <p className="text-[11px] font-medium text-white/60 leading-tight truncate">{ch.name}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ═══ 6c. LOCKED SERVICES — Upgrade CTA ═══ */}
-      <section className="mb-10 px-4 lg:px-6">
-        <div className="relative bg-bg-surface rounded-2xl border border-white/5 p-6 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-1">
-              <Lock className="w-4 h-4 text-text-muted" />
-              <h3 className="text-base font-bold text-white">Unlock Premium Streaming</h3>
-            </div>
-            <p className="text-xs text-text-muted mb-5">
-              Netflix, Prime Video, Disney+, Spotify & Crunchyroll — all via DASH Lifestyle
-            </p>
-            <div className="grid grid-cols-5 gap-3 mb-5">
-              {streamingServices.map((service) => (
-                <div key={service.id} className="relative group">
-                  <div className="aspect-square rounded-xl bg-white/[0.03] border border-white/5 flex flex-col items-center justify-center gap-1.5 opacity-40 group-hover:opacity-60 transition-opacity">
-                    {service.logo3d ? (
-                      <img src={service.logo3d} alt={service.name} className="w-8 h-8 object-contain grayscale" />
-                    ) : (
-                      <span className="text-xl font-black text-white/60">{service.logoText}</span>
-                    )}
-                    <span className="text-[9px] text-white/40 font-medium">{service.name}</span>
-                  </div>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-6 h-6 rounded-full bg-black/60 flex items-center justify-center">
-                      <Lock className="w-3 h-3 text-white/50" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={() => window.open('https://dasuperhub.com', '_blank')}
-              className="w-full py-3 rounded-xl font-semibold text-sm text-white flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
-              style={{ background: 'linear-gradient(135deg, #7C3AED, #6D28D9)' }}
-            >
-              <Crown className="w-4 h-4" />
-              Unlock with DASH Lifestyle
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ 7. POPULAR RIGHT NOW (NEW) ═══ */}
-      {popularRightNow.length > 0 && (
-        <ContentRow
-          title="Popular Right Now"
-          subtitle="On DASH Lifestyle"
-          icon={<Shuffle className="w-5 h-5" />}
-          onSeeAll={() => navigate('/live')}
-        >
-          {popularRightNow.map((ch) => (
-            <ChannelCard
-              key={ch.id}
-              channel={ch}
-              onPlay={onPlayChannel}
-              isFavorite={isFavorite(ch.id)}
-              onToggleFavorite={onToggleFavorite}
-            />
-          ))}
-        </ContentRow>
-      )}
-
-      {/* ═══ 8. FEATURED COLLECTIONS (enhanced) ═══ */}
-      {validCollections.length > 0 && (
-        <ContentRow
-          title="Featured Collections"
-          subtitle="Curated just for you"
-          onSeeAll={() => navigate('/collections')}
-        >
-          {validCollections.map((col) => (
-            <CollectionCard
-              key={col.key}
-              collection={col}
-              onClick={handleSelectCollection}
-            />
-          ))}
-        </ContentRow>
-      )}
-
-      {/* ═══ 9. CATEGORY ROWS ═══ */}
-      {rows.map((row) => (
-        <ContentRow
-          key={row.categoryId}
-          title={row.title}
-          onSeeAll={() => navigate('/live')}
-        >
-          {row.channels.map((ch) => (
-            <ChannelCard
-              key={ch.id}
-              channel={ch}
-              onPlay={onPlayChannel}
-              isFavorite={isFavorite(ch.id)}
-              onToggleFavorite={onToggleFavorite}
-            />
-          ))}
-        </ContentRow>
-      ))}
-
-      {/* ═══ 10. FOOTER ═══ */}
-      <footer className="px-4 lg:px-6 py-12 text-center border-t border-white/5 mt-8">
-        <div className="flex items-center justify-center gap-2 mb-3">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </div>
-          <span className="text-lg font-bold text-gradient">DASH Lifestyle</span>
-        </div>
-        <p className="text-xs text-text-muted mb-1">
-          Your streaming universe. Live TV, Movies, Games & more.
-        </p>
-        <p className="text-[10px] text-text-muted/50">
-          DASH Etation &copy; {new Date().getFullYear()}
-        </p>
-      </footer>
-    </div>
   );
-};
+}
+
+// ── Collection Row Renderer ───────────────────────────────────────
+
+function CollectionRow({
+  row,
+  onPlayLive,
+  onPlayMovie,
+  onNavigate,
+}: {
+  row: RowData;
+  onPlayLive: (stream: LiveStream, allStreams?: LiveStream[]) => void;
+  onPlayMovie: (movie: VodStream) => void;
+  onNavigate: (path: string) => void;
+}) {
+  const { collection } = row;
+
+  // ── Live channel row ────────────────────────────────────────
+  if (collection.type === 'live' && row.liveStreams) {
+    return (
+      <section>
+        <SectionHeader
+          emoji={collection.emoji}
+          title={collection.name}
+          seeAllTo={collection.navigateTo}
+          onNavigate={onNavigate}
+        />
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2">
+          {row.liveStreams.map((stream) => (
+            <button
+              key={stream.stream_id}
+              onClick={() => onPlayLive(stream, row.liveStreams)}
+              className="flex-shrink-0 w-36 group"
+            >
+              <div className="relative aspect-video rounded-xl overflow-hidden bg-white/5 border border-white/10 mb-2 group-hover:border-primary/30 transition-colors">
+                <ChannelIcon
+                  src={stream.stream_icon}
+                  name={stream.name}
+                  size="lg"
+                  className="!w-full !h-full !rounded-xl"
+                />
+                <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Play className="w-8 h-8 text-white" />
+                </div>
+                <div className="absolute top-2 left-2 flex items-center gap-1 px-1.5 py-0.5 bg-green-500/90 rounded text-[10px] font-bold text-white">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  LIVE
+                </div>
+              </div>
+              <p className="text-xs text-text-secondary truncate group-hover:text-white transition-colors">
+                {stream.name}
+              </p>
+            </button>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  // ── Movie row (poster style) ────────────────────────────────
+  if (collection.type === 'vod' && row.vodStreams) {
+    return (
+      <section>
+        <SectionHeader
+          emoji={collection.emoji}
+          title={collection.name}
+          seeAllTo={collection.navigateTo}
+          onNavigate={onNavigate}
+        />
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2">
+          {row.vodStreams.map((movie) => (
+            <div key={movie.stream_id} className="flex-shrink-0 w-32">
+              <PosterCard
+                title={movie.name}
+                poster={movie.stream_icon}
+                rating={movie.rating}
+                onClick={() => onPlayMovie(movie)}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  // ── Series row (poster style) ───────────────────────────────
+  if (collection.type === 'series' && row.seriesItems) {
+    return (
+      <section>
+        <SectionHeader
+          emoji={collection.emoji}
+          title={collection.name}
+          seeAllTo={collection.navigateTo}
+          onNavigate={onNavigate}
+        />
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2">
+          {row.seriesItems.map((series) => (
+            <div key={series.series_id} className="flex-shrink-0 w-32">
+              <PosterCard
+                title={series.name}
+                poster={series.cover}
+                rating={series.rating}
+                onClick={() => onNavigate('/series')}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  return null;
+}

@@ -1,5 +1,5 @@
 {
-  "name": "tivi",
+  "name": "tivi-plus",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -11,6 +11,8 @@
   "dependencies": {
     "hls.js": "^1.5.7",
     "lucide-react": "^0.344.0",
+    "mpegts.js": "^1.8.0",
+    "mux.js": "^6.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.22.3"

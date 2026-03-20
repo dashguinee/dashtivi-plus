@@ -1,12 +1,15 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Search, Bell, User } from 'lucide-react';
+import { Tv, LogOut } from 'lucide-react';
 
-export const Header: React.FC = () => {
+interface Props {
+  onLogout?: () => void;
+}
+
+export const Header: React.FC<Props> = ({ onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/';
-  const isTiviPage = location.pathname === '/services' || location.pathname === '/live';
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 safe-top">
@@ -17,27 +20,18 @@ export const Header: React.FC = () => {
             : 'glass-strong'
         }`}
       >
-        {/* Logo — TIVI+ on services page, DASH Lifestyle everywhere else */}
+        {/* Logo */}
         <button
           onClick={() => navigate('/')}
           className="flex items-center gap-2.5 group"
         >
           <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center group-hover:animate-glow-pulse transition-all shadow-lg shadow-primary/20">
-            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white">
-              <polygon points="8,5 8,19 19,12" />
-            </svg>
+            <Tv className="w-5 h-5 text-white" />
           </div>
-          {isTiviPage ? (
-            <span className="text-xl font-bold tracking-wide hidden sm:flex items-baseline gap-0.5">
-              <span className="text-gradient">TIVI</span>
-              <span className="text-accent text-sm font-black">+</span>
-            </span>
-          ) : (
-            <span className="text-lg font-bold tracking-wide hidden sm:block">
-              <span className="text-gradient">DASH</span>
-              <span className="text-white/60 text-sm font-medium ml-1">Lifestyle</span>
-            </span>
-          )}
+          <span className="text-xl font-bold tracking-wide hidden sm:flex items-baseline gap-0.5">
+            <span className="text-gradient">DashTivi</span>
+            <span className="text-primary-light text-sm font-black">+</span>
+          </span>
         </button>
 
         {/* Desktop Nav */}
@@ -45,20 +39,18 @@ export const Header: React.FC = () => {
           {[
             { path: '/', label: 'Home' },
             { path: '/live', label: 'Live TV' },
-            { path: '/services', label: 'Tivi+' },
-            { path: '/collections', label: 'Collections' },
+            { path: '/movies', label: 'Movies' },
+            { path: '/series', label: 'Series' },
+            { path: '/french', label: 'French' },
           ].map((item) => {
             const isActive = location.pathname === item.path;
-            const isTiviPlus = item.path === '/services';
             return (
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? isTiviPlus
-                      ? 'text-accent bg-accent/10'
-                      : 'text-white bg-white/5'
+                    ? 'text-white bg-white/5'
                     : 'text-text-secondary hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -70,27 +62,16 @@ export const Header: React.FC = () => {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate('/search')}
-            className="w-9 h-9 rounded-xl glass-light flex items-center justify-center hover:bg-white/10 transition-all"
-            aria-label="Search"
-          >
-            <Search className="w-4.5 h-4.5 text-text-secondary" />
-          </button>
-          <button
-            className="w-9 h-9 rounded-xl glass-light flex items-center justify-center hover:bg-white/10 transition-all relative"
-            aria-label="Notifications"
-          >
-            <Bell className="w-4.5 h-4.5 text-text-secondary" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent rounded-full animate-pulse" />
-          </button>
-          <button
-            onClick={() => navigate('/settings')}
-            className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center hover:from-primary/30 hover:to-primary/20 transition-all border border-primary/10"
-            aria-label="Profile"
-          >
-            <User className="w-4 h-4 text-primary-light" />
-          </button>
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="w-9 h-9 rounded-xl glass-light flex items-center justify-center hover:bg-white/10 transition-all"
+              aria-label="Logout"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4 text-text-secondary" />
+            </button>
+          )}
         </div>
       </div>
     </header>

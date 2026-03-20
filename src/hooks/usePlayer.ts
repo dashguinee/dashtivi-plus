@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { createHlsPlayer, setQuality } from '@/lib/hls';
+import { createHlsPlayer, createMpegTsPlayer, setQuality } from '@/lib/hls';
 import { markDead, markAlive } from '@/hooks/useChannelHealth';
+import { onStreamSuccess, onStreamFail, getStreamQuality } from '@/lib/xtream';
 import type { Channel, PlayerState } from '@/types';
 import type Hls from 'hls.js';
 
@@ -16,6 +17,8 @@ export function usePlayer() {
     qualities: ['Auto'],
     isLoading: false,
     error: null,
+    currentTime: 0,
+    duration: 0,
   });
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -33,49 +36,118 @@ export function usePlayer() {
 
   const playChannel = useCallback(
     (channel: Channel) => {
+      // Full cleanup — kill any existing stream
       cleanup();
+      const video = videoRef.current;
+      if (video) {
+        video.onerror = null;
+        video.onplaying = null;
+        video.src = '';
+        video.load();
+      }
 
-      setState((prev) => ({
-        ...prev,
+      setState({
         channel,
-        isPlaying: true,
+        isPlaying: false,
+        isMuted: false,
+        volume: 1,
+        isFullscreen: false,
+        isPiP: false,
+        quality: 'Auto',
+        qualities: ['Auto'],
         isLoading: true,
         error: null,
-        qualities: ['Auto'],
-        quality: 'Auto',
-      }));
+        currentTime: 0,
+        duration: 0,
+      });
 
-      // Small delay to ensure video element is mounted
+      // Small delay to ensure video element is clean
       requestAnimationFrame(() => {
         const video = videoRef.current;
         if (!video) return;
 
-        const { hls, destroy } = createHlsPlayer(
-          video,
-          channel.url,
-          (levels) => {
-            setState((prev) => ({ ...prev, qualities: levels, isLoading: false }));
-          },
-          (error) => {
-            markDead(channel.id, error);
-            setState((prev) => ({ ...prev, error, isLoading: false }));
+        // Rebuild URL with CURRENT quality setting (URL may be stale from initial play)
+        let url = channel.url;
+        const isLive = url.includes('/live?');
+        const isVod = url.includes('/vod?');
+        if (isLive || isVod) {
+          url = url.replace(/&q=eco/, '');
+          if (getStreamQuality() === 'eco') url += '&q=eco';
+        }
+        let retryCount = 0;
+
+        console.log(`[PLAYER] Loading: ${channel.name} | url=${url.substring(0, 100)} | isLive=${isLive}`);
+        video.src = url;
+        video.play().catch((e) => console.log(`[PLAYER] play() rejected: ${e.message}`));
+
+        const maxRetries = isLive ? 5 : 3;
+        video.onerror = () => {
+          const mediaErr = video.error;
+          const errCode = mediaErr?.code || 0;
+          const errMsg = mediaErr?.message || 'unknown';
+          console.error(`[PLAYER] Error on ${channel.name}: code=${errCode} msg="${errMsg}" src="${url.substring(0, 80)}"`);
+          console.error(`[PLAYER] readyState=${video.readyState} networkState=${video.networkState} currentTime=${video.currentTime}`);
+
+          if (retryCount < maxRetries) {
+            retryCount++;
+            console.log(`[PLAYER] Retry ${retryCount}/${maxRetries}...`);
+            setState((prev) => ({ ...prev, error: `Retry ${retryCount}/${maxRetries}`, isPlaying: false }));
+            setTimeout(() => {
+              setState((prev) => ({ ...prev, error: null }));
+              video.src = url;
+              video.play().catch(() => {});
+            }, 2000);
+          } else {
+            console.error(`[PLAYER] All retries exhausted for ${channel.name}`);
+            const idMatch = url.match(/[?&]id=(\d+)/);
+            if (idMatch) onStreamFail(parseInt(idMatch[1]));
+            markDead(channel.id, 'Stream error');
+            setState((prev) => ({ ...prev, error: 'Stream interrupted — tap Reconnect to resume', isLoading: false }));
           }
-        );
+        };
 
-        hlsRef.current = hls;
-        destroyRef.current = destroy;
+        destroyRef.current = () => {
+          video.onerror = null;
+          video.src = '';
+          video.load();
+        };
+        setState((prev) => ({ ...prev, isLoading: false }));
 
+        video.onloadstart = () => console.log(`[PLAYER] loadstart`);
+        video.onloadedmetadata = () => console.log(`[PLAYER] metadata loaded: ${video.videoWidth}x${video.videoHeight} duration=${video.duration}`);
+        video.oncanplay = () => {
+          console.log(`[PLAYER] canplay`);
+          setState((prev) => ({ ...prev, isLoading: false }));
+        };
         video.onplaying = () => {
+          retryCount = 0;
+          console.log(`[PLAYER] PLAYING: ${channel.name}`);
           markAlive(channel.id);
-          setState((prev) => ({ ...prev, isPlaying: true, isLoading: false }));
+          const idMatch = url.match(/[?&]id=(\d+)/);
+          if (idMatch) onStreamSuccess(parseInt(idMatch[1]));
+          setState((prev) => ({ ...prev, isPlaying: true, isLoading: false, error: null }));
         };
         video.onpause = () => setState((prev) => ({ ...prev, isPlaying: false }));
-        video.onwaiting = () => setState((prev) => ({ ...prev, isLoading: true }));
-        video.oncanplay = () => setState((prev) => ({ ...prev, isLoading: false }));
-        // Stall recovery — if stuck buffering for 8s, force quality drop or reload
+        video.onwaiting = () => {
+          console.log(`[PLAYER] waiting/buffering at ${video.currentTime}s`);
+          setState((prev) => ({ ...prev, isLoading: true }));
+        };
+        // VOD time tracking
+        video.ontimeupdate = () => {
+          setState((prev) => ({ ...prev, currentTime: video.currentTime }));
+        };
+        video.ondurationchange = () => {
+          const dur = video.duration;
+          if (dur && isFinite(dur)) {
+            setState((prev) => ({ ...prev, duration: dur }));
+          }
+        };
+
+        // Stall recovery for HLS — force quality drop
         video.onstalled = () => {
+          const hls = hlsRef.current;
           if (hls && hls.currentLevel > 0) {
-            hls.currentLevel = 0; // force lowest quality
+            hls.currentLevel = 0;
           }
         };
       });
@@ -143,6 +215,13 @@ export function usePlayer() {
     setState((prev) => ({ ...prev, quality }));
   }, []);
 
+  const seek = useCallback((time: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = time;
+    setState((prev) => ({ ...prev, currentTime: time }));
+  }, []);
+
   const stop = useCallback(() => {
     cleanup();
     const video = videoRef.current;
@@ -161,6 +240,8 @@ export function usePlayer() {
       qualities: ['Auto'],
       isLoading: false,
       error: null,
+      currentTime: 0,
+      duration: 0,
     });
   }, [cleanup]);
 
@@ -201,6 +282,7 @@ export function usePlayer() {
     toggleFullscreen,
     togglePiP,
     changeQuality,
+    seek,
     stop,
   };
 }
