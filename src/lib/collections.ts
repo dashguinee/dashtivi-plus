@@ -74,7 +74,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     emoji: '\uD83C\uDF7F',
     description: 'Netflix, HBO, Disney+',
     type: 'series',
-    categoryIds: ['106', '188', '654'], // Netflix, HBO Max, Disney+
+    categoryIds: ['106', '188', '102'], // Netflix, HBO Max, Disney+Hotstar
     limit: 15,
     navigateTo: '/series',
   },
@@ -203,28 +203,32 @@ export function getFeaturedHero(): FeaturedHero {
 // ── Movie Featured Categories (reordered for audience) ────────────
 
 export const MOVIE_FEATURED_CATS = [
-  { id: '749', name: 'New 2026' },
-  { id: '597', name: '2025 Hits' },
-  { id: '240', name: 'Award Winners' },
-  { id: '169', name: 'Netflix' },
-  { id: '122', name: '4K' },
-  { id: '525', name: '2024' },
-  { id: '88', name: 'Arabic' },
-  { id: '772', name: 'Turkish' },
-  { id: '168', name: 'Bollywood' },
+  { id: '749', name: 'New 2026' },        // 214 movies
+  { id: '597', name: '2025 Hits' },       // 2,120 movies
+  { id: '525', name: '2024' },            // 2,614 movies
+  { id: '122', name: '4K' },              // 1,058 movies
+  { id: '34', name: 'Blockbuster' },      // 1,002 movies
+  { id: '240', name: 'Award Winners' },   // 142 movies
+  { id: '95', name: 'Turkish' },          // 853 movies (was 772 → only 28)
+  { id: '33', name: 'Bollywood' },        // 2,683 movies (was 168 → only 51)
+  { id: '69', name: 'Kids' },             // 440 movies
+  { id: '96', name: 'Arabic Sub' },       // 684 movies (was 88 → only 3)
+  { id: '148', name: 'Horror' },          // 188 movies
 ];
 
 // ── Series Featured Categories ────────────────────────────────────
 
 export const SERIES_FEATURED_CATS = [
-  { id: '106', name: 'Netflix' },
-  { id: '188', name: 'HBO' },
-  { id: '654', name: 'Disney+' },
-  { id: '108', name: 'Prime Video' },
-  { id: '114', name: 'Apple TV+' },
-  { id: '249', name: 'Paramount+' },
-  { id: '209', name: 'Hulu' },
-  { id: '110', name: 'Starz' },
+  { id: '106', name: 'Netflix' },         // 2,532 series
+  { id: '108', name: 'Prime Video' },     // 1,574 series
+  { id: '102', name: 'Disney+' },         // 810 series (was 654 → only 49)
+  { id: '188', name: 'HBO' },             // 380 series
+  { id: '114', name: 'Apple TV+' },       // 346 series
+  { id: '209', name: 'Hulu' },            // 334 series
+  { id: '202', name: 'BBC' },             // 315 series
+  { id: '249', name: 'Paramount+' },      // 154 series
+  { id: '99', name: 'Turkish' },          // 1,130 series
+  { id: '267', name: 'Korean' },          // 235 series
 ];
 
 // ── Live TV Themed Collections ───────────────────────────────────
