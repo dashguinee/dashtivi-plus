@@ -9,6 +9,9 @@ import {
   buildLiveUrl,
   buildVodUrl,
   fetchVpsHealth,
+  fetchServerProbeData,
+  seedProbeCacheFromServer,
+  isChannelProbeAlive,
 } from '@/lib/xtream';
 import {
   HOMEPAGE_COLLECTIONS,
@@ -149,8 +152,12 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
     async function load() {
       setError(false);
       try {
-        // Fetch health data for live category filtering
-        const health = await fetchVpsHealth();
+        // Fetch health + probe data in parallel
+        const [health, probeData] = await Promise.all([
+          fetchVpsHealth(),
+          fetchServerProbeData(),
+        ]);
+        if (probeData) seedProbeCacheFromServer(probeData);
         const liveCatIds: string[] = health.liveCategories || [];
 
         // Load all collections in parallel
@@ -422,6 +429,8 @@ function CollectionRow({
 
   // ── Live channel row ────────────────────────────────────────
   if (collection.type === 'live' && row.liveStreams) {
+    const aliveStreams = row.liveStreams.filter(s => isChannelProbeAlive(s.stream_id));
+    if (aliveStreams.length === 0) return null;
     return (
       <section>
         <SectionHeader
@@ -431,10 +440,10 @@ function CollectionRow({
           onNavigate={onNavigate}
         />
         <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2">
-          {row.liveStreams.map((stream) => (
+          {aliveStreams.map((stream) => (
             <button
               key={stream.stream_id}
-              onClick={() => onPlayLive(stream, row.liveStreams)}
+              onClick={() => onPlayLive(stream, aliveStreams)}
               className="flex-shrink-0 w-36 group"
             >
               <div className="relative aspect-video rounded-xl overflow-hidden bg-white/5 border border-white/10 mb-2 group-hover:border-primary/30 transition-colors">

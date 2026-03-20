@@ -481,6 +481,11 @@ export function getProbeStatus(streamId: number): string | null {
 }
 
 export function isChannelProbeAlive(streamId: number): boolean {
+  // Check server probe set first (full coverage, no size limit)
+  if (serverAliveSet !== null && serverAliveSet.size > 0) {
+    return serverAliveSet.has(streamId);
+  }
+  // Fall back to client probe cache
   const status = getProbeStatus(streamId);
   if (status === null) return true; // unknown = show it
   return status === 'live' || status === 'weak';
@@ -567,13 +572,16 @@ export async function fetchServerProbeData(): Promise<ServerProbeData | null> {
   return serverProbePromise;
 }
 
+// Standalone alive set from server — checked by isChannelProbeAlive()
+// Separate from probe cache (which has 3000 entry limit)
+let serverAliveSet: Set<number> | null = null;
+
 export function seedProbeCacheFromServer(data: ServerProbeData): void {
-  const cache = getProbeCache();
-  const now = Date.now();
-  for (const sid of data.alive_set) {
-    cache[String(sid)] = { status: 'live', ts: now };
-  }
-  setProbeCache(cache);
+  serverAliveSet = new Set(data.alive_set);
+}
+
+export function hasServerProbeData(): boolean {
+  return serverAliveSet !== null && serverAliveSet.size > 0;
 }
 
 // --- VPS Health Data (server-side hourly scan) ---
