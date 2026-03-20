@@ -161,20 +161,6 @@ async function cachedFetch<T>(key: string, url: string): Promise<T> {
   return data;
 }
 
-// --- Auth ---
-
-export async function authenticate(creds: XtreamCredentials): Promise<boolean> {
-  try {
-    const res = await fetch(
-      `${BASE}/player_api.php?username=${creds.username}&password=${creds.password}`
-    );
-    const data = await res.json();
-    return data.user_info?.auth === 1;
-  } catch {
-    return false;
-  }
-}
-
 // --- Live TV ---
 
 export async function getLiveCategories(c: XtreamCredentials): Promise<LiveCategory[]> {

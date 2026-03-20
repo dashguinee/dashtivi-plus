@@ -1,5 +1,5 @@
 import React, { useState, useCallback, Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Navbar } from '@/components/layout/Navbar';
 import { CosmicBackground } from '@/components/ui/CosmicBackground';
@@ -112,6 +112,7 @@ function AppContent() {
                     />
                   }
                 />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
           </ErrorBoundary>
