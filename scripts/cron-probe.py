@@ -6,18 +6,51 @@ Two modes:
   --full     : Probe ALL channels (hourly, ~5 min)
   --recovery : Probe only DEAD channels to recover them (every 15 min, ~1 min)
 
-Output: /var/www/html/probe-results.json (served by nginx)
+Output: /tmp/probe-results.json (served by proxy)
 The app fetches this JSON and hides dead channels client-side.
 """
-import json, subprocess, sys, time, concurrent.futures, os, argparse
+import json, subprocess, sys, time, concurrent.futures, os, argparse, fcntl, tempfile
 
 PROXY = "https://stream.zionsynapse.online"
 RAW = os.path.expanduser("~/channel-intel-raw.json")
 RESULTS = os.path.expanduser("~/channel-probe-results.json")  # Last full probe
 OUTPUT = "/tmp/probe-results.json"  # Served by proxy
+LOCKFILE = "/tmp/cron-probe.lock"
 BATCH_SIZE = 20
 MAX_WORKERS = 5
 CURL_TIMEOUT = 8
+STALE_THRESHOLD = 3 * 3600  # 3 hours — warn if full probe is older
+
+
+def acquire_lock():
+    """Acquire exclusive lock to prevent overlapping runs."""
+    lock_fd = open(LOCKFILE, "w")
+    try:
+        fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return lock_fd
+    except IOError:
+        print("Another probe is running. Exiting.")
+        sys.exit(0)
+
+
+def atomic_write_json(path, data, compact=False):
+    """Write JSON atomically via temp file + rename."""
+    dirname = os.path.dirname(path) or "."
+    os.makedirs(dirname, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=dirname, suffix=".tmp")
+    try:
+        with os.fdopen(fd, 'w') as f:
+            if compact:
+                json.dump(data, f, separators=(',', ':'))
+            else:
+                json.dump(data, f)
+        os.rename(tmp, path)
+    except Exception:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def probe_batch(batch_ids):
@@ -39,13 +72,24 @@ def probe_batch(batch_ids):
                 status = "live"
             out[sid] = status
         return out
-    except Exception:
+    except json.JSONDecodeError as e:
+        print(f"  JSON parse error for batch {batch_ids[0]}..{batch_ids[-1]}: {e}", flush=True)
+        return {sid: "probe_failed" for sid in batch_ids}
+    except subprocess.TimeoutExpired:
+        return {sid: "probe_failed" for sid in batch_ids}
+    except Exception as e:
+        print(f"  Probe error for batch {batch_ids[0]}..{batch_ids[-1]}: {type(e).__name__}: {e}", flush=True)
         return {sid: "probe_failed" for sid in batch_ids}
 
 
 def load_channel_index():
     """Build stream index from raw intel data."""
-    d = json.load(open(RAW))
+    try:
+        with open(RAW) as f:
+            d = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"FATAL: Cannot load {RAW}: {e}")
+        sys.exit(1)
     seen = set()
     index = {}
     for cid, streams in d["category_streams"].items():
@@ -88,7 +132,6 @@ def run_probe(stream_ids, label=""):
 
 def build_output(results, index, categories):
     """Build the JSON output the app consumes."""
-    # Per-category summary (compact — app only needs alive/dead counts + alive IDs)
     cat_summary = {}
     for sid, status in results.items():
         info = index.get(sid, {})
@@ -110,9 +153,7 @@ def build_output(results, index, categories):
         "alive": total_alive,
         "dead": total_dead,
         "alive_pct": round(total_alive * 100 / max(len(results), 1), 1),
-        # Compact alive set — app checks: `if (probeData.alive_set.has(streamId))`
         "alive_set": sorted(sid for sid, status in results.items() if status in ("live", "weak")),
-        # Per-category alive counts for quick UI filtering
         "categories": {
             cid: {
                 "alive": len(info["alive"]),
@@ -130,15 +171,15 @@ def full_probe():
     all_ids = list(index.keys())
     results = run_probe(all_ids, "FULL")
 
-    # Save detailed results for recovery mode
-    with open(RESULTS, 'w') as f:
-        json.dump({"results": {str(k): v for k, v in results.items()}, "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}, f)
+    # Save detailed results for recovery mode (atomic)
+    atomic_write_json(RESULTS, {
+        "results": {str(k): v for k, v in results.items()},
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    })
 
-    # Save compact output for app
+    # Save compact output for app (atomic)
     output = build_output(results, index, categories)
-    os.makedirs(os.path.dirname(OUTPUT), exist_ok=True)
-    with open(OUTPUT, 'w') as f:
-        json.dump(output, f, separators=(',', ':'))
+    atomic_write_json(OUTPUT, output, compact=True)
 
     print(f"\nFull probe complete: {output['alive']}/{output['total']} alive ({output['alive_pct']}%)")
     print(f"Output: {OUTPUT} ({os.path.getsize(OUTPUT) / 1024:.0f} KB)")
@@ -150,7 +191,24 @@ def recovery_probe():
         print("No previous results found. Run --full first.")
         return
 
-    prev = json.load(open(RESULTS))
+    try:
+        with open(RESULTS) as f:
+            prev = json.load(f)
+    except (json.JSONDecodeError, IOError) as e:
+        print(f"ERROR: Cannot read {RESULTS}: {e}")
+        return
+
+    # Check staleness
+    prev_ts = prev.get("ts", "")
+    if prev_ts:
+        try:
+            prev_time = time.mktime(time.strptime(prev_ts, "%Y-%m-%dT%H:%M:%SZ")) - time.timezone
+            age = time.time() - prev_time
+            if age > STALE_THRESHOLD:
+                print(f"WARNING: Full probe is {age/3600:.1f}h old (threshold: {STALE_THRESHOLD/3600:.0f}h). Consider running --full.")
+        except ValueError:
+            pass
+
     prev_results = prev.get("results", {})
     dead_ids = [int(sid) for sid, status in prev_results.items() if status in ("dead", "probe_failed", "unknown")]
 
@@ -170,18 +228,15 @@ def recovery_probe():
         elif status == "dead":
             prev_results[str(sid)] = "dead"
 
-    # Save updated results
+    # Save updated results (atomic)
     prev["ts"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    with open(RESULTS, 'w') as f:
-        json.dump(prev, f)
+    atomic_write_json(RESULTS, prev)
 
-    # Rebuild compact output
+    # Rebuild compact output (atomic)
     index, categories = load_channel_index()
     int_results = {int(k): v for k, v in prev_results.items()}
     output = build_output(int_results, index, categories)
-    os.makedirs(os.path.dirname(OUTPUT), exist_ok=True)
-    with open(OUTPUT, 'w') as f:
-        json.dump(output, f, separators=(',', ':'))
+    atomic_write_json(OUTPUT, output, compact=True)
 
     print(f"\nRecovery complete: {recovered} channels came back alive")
     print(f"New totals: {output['alive']}/{output['total']} alive ({output['alive_pct']}%)")
@@ -192,6 +247,9 @@ if __name__ == "__main__":
     parser.add_argument("--full", action="store_true", help="Full probe of all channels")
     parser.add_argument("--recovery", action="store_true", help="Re-probe dead channels only")
     args = parser.parse_args()
+
+    # Exclusive lock — prevents overlapping runs
+    lock = acquire_lock()
 
     if args.recovery:
         recovery_probe()
