@@ -46,6 +46,8 @@ OUTPUT_TS = os.path.join(PROJECT_ROOT, "src", "lib", "logo-map.generated.ts")
 IPTV_ORG_CHANNELS_URL = "https://iptv-org.github.io/api/channels.json"
 IPTV_ORG_LOGOS_URL = "https://iptv-org.github.io/api/logos.json"
 TV_LOGO_CDN = "https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries"
+JARUBA_LOGOS_URL = "https://jaruba.github.io/channel-logos/logo_paths.json"
+JARUBA_CDN = "https://jaruba.github.io/channel-logos/export/transparent"
 
 # ── Common abbreviation expansions ──────────────────────────────────────────
 # Maps short name -> list of full names to look up in iptv-org
@@ -81,6 +83,83 @@ ABBREVIATIONS = {
     "bein": ["bein sports", "bein sport"],
     "dstv": ["dstv"],
 }
+
+# ── Parent brand fallback keywords ──────────────────────────────────────────
+# Maps keyword (checked in normalized channel name) -> iptv-org channel name to use as logo source
+# Order matters: more specific keywords first
+PARENT_BRAND_LOOKUP = [
+    ("nick jr",             "Nick Jr."),
+    ("nicktoons",           "Nicktoons"),
+    ("nickelodeon",         "Nickelodeon"),
+    ("nick",                "Nickelodeon"),
+    ("disney junior",       "Disney Junior"),
+    ("disney xd",           "Disney XD"),
+    ("disney channel",      "Disney Channel"),
+    ("disney",              "Disney Channel"),
+    ("cartoon network",     "Cartoon Network"),
+    ("national geographic", "National Geographic"),
+    ("nat geo",             "National Geographic"),
+    ("animal planet",       "Animal Planet"),
+    ("discovery",           "Discovery Channel"),
+    ("history",             "History"),
+    ("star sports",         "Star Sports 1"),
+    ("star plus",           "Star Plus"),
+    ("star gold",           "Star Gold"),
+    ("star world",          "Star World"),
+    ("star",                "Star Plus"),
+    ("zee cinema",          "Zee Cinema"),
+    ("zee tv",              "Zee TV"),
+    ("zee",                 "Zee TV"),
+    ("colors",              "Colors TV"),
+    ("sony yay",            "Sony Yay!"),
+    ("sony sab",            "Sony SAB"),
+    ("sony max",            "Sony MAX"),
+    ("sony",                "Sony Channel"),
+    ("sun tv",              "Sun TV"),
+    ("hbo max",             "Max"),
+    ("hbo",                 "HBO"),
+    ("showtime",            "Showtime"),
+    ("cinemax",             "Cinemax"),
+    ("starz",               "Starz"),
+    ("espn",                "ESPN"),
+    ("mtv",                 "MTV"),
+    ("vh1",                 "VH1"),
+    ("comedy central",      "Comedy Central"),
+    ("paramount",           "Paramount Network"),
+    ("syfy",                "Syfy"),
+    ("tnt",                 "TNT"),
+    ("tbs",                 "TBS"),
+    ("amc",                 "AMC"),
+    ("fxx",                 "FXX"),
+    ("fxm",                 "FXM"),
+    ("fx",                  "FX"),
+    ("lifetime",            "Lifetime"),
+    ("hallmark",            "Hallmark Channel"),
+    ("abc",                 "ABC"),
+    ("nbc",                 "NBC"),
+    ("cbs",                 "CBS"),
+    ("cnn",                 "CNN"),
+    ("fox news",            "Fox News"),
+    ("fox sports",          "Fox Sports"),
+    ("fox",                 "Fox"),
+    ("bbc",                 "BBC One"),
+    ("sky sports",          "Sky Sports"),
+    ("sky",                 "Sky One"),
+    ("al arabiya",          "Al Arabiya"),
+    ("mbc",                 "MBC 1"),
+    ("bein sports",         "beIN Sports"),
+    ("bein",                "beIN Sports"),
+    ("supersport",          "SuperSport Blitz"),
+    ("canal plus",          "Canal+"),
+    ("canal+",              "Canal+"),
+    ("quran",               "Quran TV"),
+    ("islam channel",       "Islam Channel"),
+    ("islam",               "Islam Channel"),
+    ("wwe",                 "WWE Network"),
+    ("ufc",                 "UFC Fight Pass"),
+    ("eurosport",           "Eurosport"),
+    ("sport",               None),  # skip generic "sport" keyword
+]
 
 # ── TV-Logo CDN known patterns ──────────────────────────────────────────────
 TV_LOGO_COUNTRIES = {
@@ -184,6 +263,12 @@ def normalize_name(name: str) -> str:
     n = PREFIX_RE.sub('', n)
     n = QUALITY_RE.sub(' ', n)
     n = COUNTRY_TAG_RE.sub(' ', n)
+    # Replace underscores and hyphens used as word separators with spaces
+    # e.g. "Nick_Hindi" -> "Nick Hindi", "Sony_Yay_Hindi" -> "Sony Yay Hindi"
+    n = re.sub(r'[_\-]', ' ', n)
+    # Strip language/region suffixes that come after the brand name
+    # e.g. "Nick Hindi" -> "Nick", "Sony Yay Hindi" -> "Sony Yay"
+    # (done via tokenization in matching, not here — keep full name for token match)
     # Remove trailing/leading punctuation
     n = re.sub(r'^[\s\-\|:./]+|[\s\-\|:./]+$', '', n)
     n = re.sub(r'\s+', ' ', n).strip()
@@ -291,9 +376,31 @@ def fetch_iptv_org_data() -> tuple:
     return result
 
 
+def fetch_jaruba_data() -> dict:
+    """
+    Fetch jaruba/channel-logos TMDB logo paths.
+    Returns dict: lowercase channel name -> full logo URL
+    """
+    print("[2b/5] Fetching jaruba/channel-logos (TMDB-sourced)...")
+    try:
+        resp = requests.get(JARUBA_LOGOS_URL, timeout=20)
+        resp.raise_for_status()
+        raw = resp.json()
+        # raw is { "channel name": "/path.png", ... }
+        result = {}
+        for name, path in raw.items():
+            if name and path:
+                result[name.strip().lower()] = f"{JARUBA_CDN}{path}"
+        print(f"  -> {len(result)} entries from jaruba")
+        return result
+    except Exception as e:
+        print(f"  WARNING: Failed to fetch jaruba data: {e}")
+        return {}
+
+
 # ── Index building ──────────────────────────────────────────────────────────
 
-def build_indices(db: list) -> dict:
+def build_indices(db: list, jaruba_data: dict = None) -> dict:
     """Build lookup indices from iptv-org data (channels with logos)."""
     exact_index = {}       # lowercase name -> {logo, country, name}
     normalized_index = {}  # normalized name -> {logo, country, name}
@@ -354,12 +461,47 @@ def build_indices(db: list) -> dict:
                     break
 
     print(f"  -> epg_id index: {len(epg_id_index)} entries")
+
+    # ── Jaruba index (TMDB-sourced logos) ────────────────────────────────────
+    jaruba_index = {}
+    if jaruba_data:
+        for raw_name, logo_url in jaruba_data.items():
+            norm = normalize_name(raw_name)
+            if norm and norm not in jaruba_index:
+                jaruba_index[norm] = logo_url
+            # Also index the raw lowercase name
+            if raw_name and raw_name not in jaruba_index:
+                jaruba_index[raw_name] = logo_url
+        print(f"  -> jaruba index: {len(jaruba_index)} entries")
+
+    # ── Parent brand index ───────────────────────────────────────────────────
+    # For each brand in PARENT_BRAND_LOOKUP, look up its logo in the iptv-org indices
+    parent_brand_index = {}  # keyword -> logo_url
+    for keyword, brand_name in PARENT_BRAND_LOOKUP:
+        if brand_name is None:
+            continue
+        logo_url = None
+        # Try exact lookup
+        brand_lower = brand_name.lower()
+        if brand_lower in exact_index:
+            logo_url = exact_index[brand_lower]["logo"]
+        # Try normalized lookup
+        if not logo_url:
+            brand_norm = normalize_name(brand_name)
+            if brand_norm in normalized_index:
+                logo_url = normalized_index[brand_norm]["logo"]
+        if logo_url:
+            parent_brand_index[keyword] = logo_url
+    print(f"  -> parent brand index: {len(parent_brand_index)}/{len(PARENT_BRAND_LOOKUP)} brands resolved")
+
     return {
         "exact": exact_index,
         "normalized": normalized_index,
         "tokens": token_entries,
         "abbreviations": abbrev_index,
         "epg_ids": epg_id_index,
+        "jaruba": jaruba_index,
+        "parent_brands": parent_brand_index,
     }
 
 
@@ -427,6 +569,8 @@ def match_channels(xtream_channels: list, indices: dict) -> tuple:
         "token": 0,
         "abbreviation": 0,
         "tv_logo_cdn": 0,
+        "jaruba": 0,
+        "parent_brand": 0,
         "unmatched": 0,
     }
 
@@ -435,6 +579,8 @@ def match_channels(xtream_channels: list, indices: dict) -> tuple:
     token_entries = indices["tokens"]
     abbrev_idx = indices["abbreviations"]
     epg_idx = indices["epg_ids"]
+    jaruba_idx = indices.get("jaruba", {})
+    parent_brand_idx = indices.get("parent_brands", {})
 
     total = len(xtream_channels)
     progress_step = max(total // 10, 1)
