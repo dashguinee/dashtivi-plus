@@ -60,7 +60,7 @@ export const TrailerModal: React.FC<TrailerModalProps> = ({
         </h2>
 
         {hasTrailer ? (
-          /* YouTube embed with 16:9 aspect ratio */
+          /* YouTube embed with 16:9 aspect ratio + fallback link */
           <div className="relative w-full pb-[56.25%] rounded-xl overflow-hidden bg-black shadow-2xl">
             <iframe
               className="absolute inset-0 w-full h-full"
@@ -70,6 +70,15 @@ export const TrailerModal: React.FC<TrailerModalProps> = ({
               allowFullScreen
               frameBorder="0"
             />
+            {/* Fallback link if embed is blocked */}
+            <a
+              href={`https://www.youtube.com/watch?v=${youtubeKey}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute bottom-3 right-3 px-3 py-1.5 bg-red-600/90 hover:bg-red-500 rounded-lg text-white text-xs font-medium transition-colors z-10"
+            >
+              Watch on YouTube
+            </a>
           </div>
         ) : (
           /* Fallback: poster + overview */
