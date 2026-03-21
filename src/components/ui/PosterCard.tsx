@@ -154,7 +154,7 @@ export const PosterCard: React.FC<Props> = ({ title, poster, rating, categoryId,
           className="absolute bottom-12 left-2 z-20"
           onClick={(e) => {
             e.stopPropagation();
-            onTrailer!(tmdbData!.y!, cleanTitle, safePoster || undefined, tmdbData!.o);
+            onTrailer!(tmdbData!.y!, cleanTitle, safePoster || undefined);
           }}
         >
           <div className="w-8 h-8 rounded-full bg-red-600/90 hover:bg-red-500 flex items-center justify-center shadow-lg transition-colors cursor-pointer">

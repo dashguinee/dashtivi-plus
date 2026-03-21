@@ -159,7 +159,7 @@ const VeeCard: React.FC<{
           className="absolute bottom-10 left-1.5 z-20"
           onClick={(e) => {
             e.stopPropagation();
-            onTrailer!(tmdb!.y!, clean, poster || undefined, tmdb!.o);
+            onTrailer!(tmdb!.y!, clean, poster || undefined);
           }}
         >
           <div className="w-6 h-6 rounded-full bg-red-600/90 hover:bg-red-500 flex items-center justify-center transition-colors cursor-pointer">

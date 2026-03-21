@@ -88,14 +88,14 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const [seriesError, setSeriesError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
 
-  // #18: 5-second timeout for episodes loading
+  // #18: 15-second timeout for episodes loading (MKV on slow networks needs FFmpeg probe time)
   useEffect(() => {
     if (!loadingInfo) return;
     const t = setTimeout(() => {
-      // If still loading after 5s, mark episodes as unavailable
+      // If still loading after 15s, mark episodes as unavailable
       setEpisodesUnavailable(true);
       setLoadingInfo(false);
-    }, 5000);
+    }, 15000);
     return () => clearTimeout(t);
   }, [loadingInfo]);
 
