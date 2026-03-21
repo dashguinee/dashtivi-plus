@@ -17,6 +17,7 @@ export interface LiveStream {
   stream_id: number;
   name: string;
   stream_icon: string;
+  epg_channel_id: string;
   category_id: string;
 }
 
@@ -167,15 +168,43 @@ export async function getLiveCategories(c: XtreamCredentials): Promise<LiveCateg
   return cachedFetch<LiveCategory[]>('live_cats', apiUrl(c, 'get_live_categories'));
 }
 
+/** Lazy-load logo map to keep main bundle small */
+let logoMapCache: Record<string, string> | null = null;
+let logoMapPromise: Promise<Record<string, string>> | null = null;
+
+function getLogoMap(): Promise<Record<string, string>> {
+  if (logoMapCache) return Promise.resolve(logoMapCache);
+  if (!logoMapPromise) {
+    logoMapPromise = import('./logo-map.generated')
+      .then(m => { logoMapCache = m.CHANNEL_LOGO_MAP; return logoMapCache; })
+      .catch(() => { logoMapCache = {}; return logoMapCache; });
+  }
+  return logoMapPromise;
+}
+
+/** Patch empty stream_icon from the generated logo map */
+async function enrichIcons(streams: LiveStream[]): Promise<LiveStream[]> {
+  const map = await getLogoMap();
+  for (const s of streams) {
+    if (!s.stream_icon || s.stream_icon.trim() === '') {
+      const mapped = map[String(s.stream_id)];
+      if (mapped) s.stream_icon = mapped;
+    }
+  }
+  return streams;
+}
+
 export async function getLiveStreams(c: XtreamCredentials, catId: string): Promise<LiveStream[]> {
-  return cachedFetch<LiveStream[]>(
+  const streams = await cachedFetch<LiveStream[]>(
     `live_streams_${catId}`,
     apiUrl(c, 'get_live_streams', `&category_id=${catId}`)
   );
+  return enrichIcons(streams);
 }
 
 export async function getAllLiveStreams(c: XtreamCredentials): Promise<LiveStream[]> {
-  return cachedFetch<LiveStream[]>('live_streams_all', apiUrl(c, 'get_live_streams'));
+  const streams = await cachedFetch<LiveStream[]>('live_streams_all', apiUrl(c, 'get_live_streams'));
+  return enrichIcons(streams);
 }
 
 // --- VOD ---

@@ -103,6 +103,36 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     limit: 12,
     navigateTo: '/live',
   },
+  {
+    id: 'k-drama-turkish',
+    name: 'K-Drama & Turkish Hits',
+    emoji: '\uD83C\uDF1F',
+    description: 'Korean & Turkish drama everyone\'s watching',
+    type: 'series',
+    categoryIds: ['267', '99'],  // Korean (235 series), Turkish (1,130 series)
+    limit: 15,
+    navigateTo: '/series',
+  },
+  {
+    id: 'cinema-4k',
+    name: '4K Cinema',
+    emoji: '\uD83C\uDFA5',
+    description: 'Crystal clear blockbusters',
+    type: 'vod',
+    categoryIds: ['122', '34'],  // 4K (1,058 movies), Blockbuster (1,002 movies)
+    limit: 15,
+    navigateTo: '/movies',
+  },
+  {
+    id: 'fight-night',
+    name: 'Fight Night',
+    emoji: '\uD83E\uDD4A',
+    description: 'UFC, WWE, PPV & Combat Sports',
+    type: 'live',
+    categoryIds: ['190', '516'],  // PPV/Combat (351 channels), NFL
+    limit: 12,
+    navigateTo: '/live',
+  },
 ];
 
 // ── Quick-tap Collection Cards (vibes navigation) ─────────────────
@@ -149,6 +179,20 @@ export const COLLECTION_CARDS: CollectionCard[] = [
     emoji: '\uD83D\uDCA5',
     gradient: 'from-orange-600/40 to-red-900/40',
     navigateTo: '/movies',
+  },
+  {
+    id: 'kdrama',
+    name: 'K-Drama',
+    emoji: '\uD83C\uDF1F',
+    gradient: 'from-pink-600/40 to-rose-900/40',
+    navigateTo: '/series',
+  },
+  {
+    id: 'fight',
+    name: 'Fight',
+    emoji: '\uD83E\uDD4A',
+    gradient: 'from-red-700/40 to-orange-900/40',
+    navigateTo: '/live',
   },
 ];
 

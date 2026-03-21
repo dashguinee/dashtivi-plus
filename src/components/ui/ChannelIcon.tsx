@@ -89,17 +89,20 @@ export const ChannelIcon: React.FC<Props> = ({ src, name, size = 'md', className
   const letter = name.charAt(0).toUpperCase();
   const color = getColor(name);
 
+  // Sanitize common URL issues (missing 'h', trailing quotes)
+  const cleanSrc = src?.replace(/^ttps:/, 'https:').replace(/"$/, '') || '';
+
   // Priority: 1. HTTPS src from API  2. tv-logo CDN  3. Proxied HTTP  4. Letter avatar
   let safeSrc: string | null = null;
   if (!failed) {
-    if (src?.startsWith('https://') && !src.includes('webhop.live')) {
-      safeSrc = src;
+    if (cleanSrc?.startsWith('https://') && !cleanSrc.includes('webhop.live')) {
+      safeSrc = cleanSrc;
     } else if (!logoFailed) {
       const logoUrl = findLogoUrl(name);
       if (logoUrl) safeSrc = logoUrl;
     }
-    if (!safeSrc && src?.startsWith('http://') && !src.includes('webhop.live')) {
-      safeSrc = `https://stream.zionsynapse.online/?url=${encodeURIComponent(src)}`;
+    if (!safeSrc && cleanSrc?.startsWith('http://') && !cleanSrc.includes('webhop.live')) {
+      safeSrc = `https://stream.zionsynapse.online/?url=${encodeURIComponent(cleanSrc)}`;
     }
   }
 
