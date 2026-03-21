@@ -219,9 +219,8 @@ export function useUserProfile(): { profile: UserProfile | null; loading: boolea
         // Cache miss or corrupt — rebuild
       }
 
-      // Defer TMDB load — let main content render first
-      await new Promise(r => setTimeout(r, 3000));
-      if (!mounted) return;
+      // TMDB chunk is preloaded during splash/login screen (preloader.ts)
+      // No delay needed — just await the already-started import
 
       // Load dependencies
       const history: WatchHistoryEntry[] = getItem('watch_history', []);

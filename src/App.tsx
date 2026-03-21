@@ -14,7 +14,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useWatchHistory } from '@/hooks/useWatchHistory';
 import { getItem, setItem } from '@/lib/storage';
 import { setCurrentChannel } from '@/lib/playlist';
+import { startPreload, preloadApiData } from '@/lib/preloader';
 import type { Channel } from '@/types';
+
+// Start preloading immediately on script load — before React even mounts
+startPreload();
 
 // Lazy load pages
 const HomePage = lazy(() => import('@/pages/HomePage').then((m) => ({ default: m.HomePage })));
@@ -191,8 +195,17 @@ function AppRouter() {
         <AccessCodeLogin onLogin={auth.login} />
       )}
 
-      {/* Layer 3: Main app */}
-      {auth.isAuthenticated && <AppContent />}
+      {/* Layer 3: Main app — preload API data on auth */}
+      {auth.isAuthenticated && (() => {
+        if (auth.credentials) {
+          preloadApiData(
+            (import.meta.env.VITE_PROXY_URL || 'https://stream.zionsynapse.online').trim(),
+            auth.credentials.username,
+            auth.credentials.password
+          );
+        }
+        return <AppContent />;
+      })()}
     </>
   );
 }
