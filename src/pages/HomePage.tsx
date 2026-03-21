@@ -27,6 +27,8 @@ import { getForYouItems, getBecauseYouWatched } from '@/lib/recommend';
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { PosterCard } from '@/components/ui/PosterCard';
+import { TrailerModal } from '@/components/ui/TrailerModal';
+import { VeeWidget } from '@/components/ui/VeeWidget';
 import { SkeletonRow } from '@/components/ui/LoadingSpinner';
 import type { Channel, WatchHistoryEntry } from '@/types';
 
@@ -149,9 +151,12 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const { profile } = useUserProfile();
   const [rows, setRows] = useState<RowData[]>([]);
   const [smartRows, setSmartRows] = useState<RowData[]>([]);
+  const [veePool, setVeePool] = useState<VodStream[]>([]);
+  const [veeTmdbMap, setVeeTmdbMap] = useState<Record<string, TmdbEntry>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+  const [trailerState, setTrailerState] = useState<{ youtubeKey: string; title: string; poster?: string; overview?: string } | null>(null);
 
   const recentHistory = getRecent(10).filter(
     (h): h is WatchHistoryEntry & { name: string; url: string } =>
@@ -256,6 +261,9 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
         }
 
         if (!mounted) return;
+        // Feed the Vee widget with the movie pool + TMDB data
+        setVeePool(moviePool);
+        setVeeTmdbMap(TMDB_MAP);
         const newSmartRows: RowData[] = [];
 
         // "For You" row
@@ -461,6 +469,18 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
         </section>
       )}
 
+      {/* ── Vee Smart Picks ─────────────────────────────────── */}
+      {veePool.length > 0 && (
+        <section className="mt-6">
+          <VeeWidget
+            items={veePool}
+            onPlay={(item) => playMovie(item as unknown as VodStream)}
+            onTrailer={(key, title, poster, overview) => setTrailerState({ youtubeKey: key, title, poster, overview })}
+            tmdbMap={veeTmdbMap}
+          />
+        </section>
+      )}
+
       {/* ── Dynamic Collection Rows ──────────────────────────── */}
       {loading ? (
         <div className="space-y-8 px-1">
@@ -490,6 +510,17 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
             />
           ))}
         </div>
+      )}
+
+      {/* ── Trailer Modal ──────────────────────────────────────── */}
+      {trailerState && (
+        <TrailerModal
+          youtubeKey={trailerState.youtubeKey}
+          title={trailerState.title}
+          poster={trailerState.poster}
+          overview={trailerState.overview}
+          onClose={() => setTrailerState(null)}
+        />
       )}
     </div>
   );
