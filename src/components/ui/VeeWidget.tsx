@@ -232,13 +232,13 @@ const PortalBox: React.FC<{
         <Compass className="w-6 h-6 text-blue-400" />
       )}
       <span
-        className={`text-sm font-extrabold tracking-wide ${
+        className={`text-sm font-extrabold tracking-wider ${
           isHot ? 'text-red-400' : 'text-blue-400'
         }`}
       >
-        Vee
+        VEE
       </span>
-      <span className={`text-[9px] font-medium ${isHot ? 'text-red-400/60' : 'text-blue-400/60'}`}>
+      <span className={`text-[8px] font-bold tracking-widest uppercase ${isHot ? 'text-red-400/60' : 'text-blue-400/60'}`}>
         {isHot ? 'HOT' : 'EXPLORE'}
       </span>
     </button>
@@ -304,9 +304,9 @@ export const VeeWidget: React.FC<VeeWidgetProps> = ({
           <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-red-500/30 to-blue-500/30 flex items-center justify-center">
             <Flame className="w-3.5 h-3.5 text-primary-light" />
           </div>
-          <h2 className="text-lg font-bold text-white">Vee Smart Picks</h2>
-          <span className="text-[10px] font-semibold text-primary-light/60 bg-primary/10 px-1.5 py-0.5 rounded">
-            AI
+          <h2 className="text-lg font-bold text-white">VEE Smart Picks</h2>
+          <span className="text-[10px] font-semibold text-primary-light/60 bg-primary/10 px-1.5 py-0.5 rounded tracking-wide">
+            Video Emotional Intelligence
           </span>
         </div>
 

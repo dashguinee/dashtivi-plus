@@ -96,6 +96,9 @@ export const VeeMoodOverlay: React.FC<VeeMoodOverlayProps> = ({
 
         {/* Header */}
         <div className="text-center mb-6">
+          <p className="text-[10px] font-bold tracking-[3px] text-white/25 uppercase mb-2">
+            Video Emotional Intelligence
+          </p>
           <h2 className="text-2xl font-extrabold mb-1">
             <span
               className="bg-clip-text text-transparent"
@@ -109,7 +112,7 @@ export const VeeMoodOverlay: React.FC<VeeMoodOverlayProps> = ({
             </span>
           </h2>
           <p className="text-white/40 text-sm">
-            {mode === 'hot' ? 'Pick a vibe, Vee handles the rest' : 'Explore something new tonight'}
+            {mode === 'hot' ? 'Pick a vibe, VEE handles the rest' : 'Let VEE find something new tonight'}
           </p>
         </div>
 
