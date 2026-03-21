@@ -219,6 +219,10 @@ export function useUserProfile(): { profile: UserProfile | null; loading: boolea
         // Cache miss or corrupt — rebuild
       }
 
+      // Defer TMDB load — let main content render first
+      await new Promise(r => setTimeout(r, 3000));
+      if (!mounted) return;
+
       // Load dependencies
       const history: WatchHistoryEntry[] = getItem('watch_history', []);
       const favorites: FavoriteEntry[] = getItem('favorites', []);
