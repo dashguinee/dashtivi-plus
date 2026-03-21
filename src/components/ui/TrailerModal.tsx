@@ -1,5 +1,12 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { X } from 'lucide-react';
+
+// Embed sources — fallback chain: YouTube nocookie → Piped → Invidious
+const EMBED_SOURCES = [
+  (key: string) => `https://www.youtube-nocookie.com/embed/${key}?autoplay=1&rel=0&modestbranding=1`,
+  (key: string) => `https://piped.video/embed/${key}`,
+  (key: string) => `https://inv.nadeko.net/embed/${key}`,
+];
 
 interface TrailerModalProps {
   youtubeKey: string;
@@ -34,6 +41,15 @@ export const TrailerModal: React.FC<TrailerModalProps> = ({
   }, [handleKeyDown]);
 
   const hasTrailer = youtubeKey && youtubeKey.length > 0;
+  const [sourceIdx, setSourceIdx] = useState(0);
+  const embedUrl = hasTrailer ? EMBED_SOURCES[sourceIdx](youtubeKey) : '';
+
+  // If embed fails, try next source
+  const tryNextSource = useCallback(() => {
+    if (sourceIdx < EMBED_SOURCES.length - 1) {
+      setSourceIdx(prev => prev + 1);
+    }
+  }, [sourceIdx]);
 
   return (
     <div
@@ -64,21 +80,22 @@ export const TrailerModal: React.FC<TrailerModalProps> = ({
           <div className="relative w-full pb-[56.25%] rounded-xl overflow-hidden bg-black shadow-2xl">
             <iframe
               className="absolute inset-0 w-full h-full"
-              src={`https://www.youtube.com/embed/${youtubeKey}?autoplay=1&rel=0&modestbranding=1`}
+              src={embedUrl}
               title={`${title} - Trailer`}
               allow="autoplay; encrypted-media; fullscreen"
               allowFullScreen
               frameBorder="0"
+              onError={tryNextSource}
             />
-            {/* Fallback link if embed is blocked */}
-            <a
-              href={`https://www.youtube.com/watch?v=${youtubeKey}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="absolute bottom-3 right-3 px-3 py-1.5 bg-red-600/90 hover:bg-red-500 rounded-lg text-white text-xs font-medium transition-colors z-10"
-            >
-              Watch on YouTube
-            </a>
+            {/* Try next embed source if this one fails */}
+            {sourceIdx < EMBED_SOURCES.length - 1 && (
+              <button
+                onClick={tryNextSource}
+                className="absolute bottom-3 right-3 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white text-xs font-medium transition-colors z-10"
+              >
+                Not loading? Try another source
+              </button>
+            )}
           </div>
         ) : (
           /* Fallback: poster + overview */
