@@ -46,11 +46,21 @@ function getSafePoster(url?: string): string | null {
   if (url.includes('webhop.live')) return null;
   if (url.includes('imdb.com')) return null; // IMDB page URLs, not images
   if (url.includes('wikia.nocookie.net')) return null; // Often broken/blocked
+  if (url.includes('paste.pics')) return null; // HTTP2 protocol errors
+  // Rewrite dead starshare domain to live datahub
+  const fixed = url.replace('starshare.live:8080', 'datahub11.com:8080');
   // HTTPS posters load directly
-  if (url.startsWith('https://')) return url;
+  if (fixed.startsWith('https://')) return fixed;
   // HTTP posters go through VPS proxy
-  if (url.startsWith('http://')) return `https://stream.zionsynapse.online/?url=${encodeURIComponent(url)}`;
+  if (fixed.startsWith('http://')) return `https://stream.zionsynapse.online/?url=${encodeURIComponent(fixed)}`;
   return null;
+}
+
+/** Extract and strip year from title: "Movie Name (2025)" -> { clean: "Movie Name", year: "2025" } */
+function parseTitle(raw: string): { clean: string; year: string | null } {
+  const m = raw.match(/^(.+?)\s*\((\d{4})\)\s*$/);
+  if (m) return { clean: m[1].trim(), year: m[2] };
+  return { clean: raw, year: null };
 }
 
 export const PosterCard: React.FC<Props> = ({ title, poster, rating, categoryId, onClick }) => {
@@ -58,6 +68,7 @@ export const PosterCard: React.FC<Props> = ({ title, poster, rating, categoryId,
   const [imgFailed, setImgFailed] = useState(false);
   const safePoster = getSafePoster(poster);
   const hasPoster = safePoster && !imgFailed;
+  const { clean: cleanTitle, year } = parseTitle(title);
 
   return (
     <button
@@ -79,7 +90,7 @@ export const PosterCard: React.FC<Props> = ({ title, poster, rating, categoryId,
             <Play className="w-4 h-4 text-white/70 ml-0.5" />
           </div>
           <span className="text-white/80 text-center text-xs font-semibold line-clamp-2 leading-tight">
-            {title}
+            {cleanTitle}
           </span>
           <span className="mt-1.5 text-[8px] font-bold tracking-[2px] text-white/30 uppercase">
             DASH+
@@ -119,7 +130,10 @@ export const PosterCard: React.FC<Props> = ({ title, poster, rating, categoryId,
             <span className="text-xs text-yellow-400 font-medium">{rating}</span>
           </div>
         )}
-        <h3 className="text-xs font-medium text-white line-clamp-2 leading-tight">{title}</h3>
+        <h3 className="text-xs font-medium text-white line-clamp-2 leading-tight">{cleanTitle}</h3>
+        {year && (
+          <span className="text-[10px] text-white/40 font-medium mt-0.5">{year}</span>
+        )}
       </div>
     </button>
   );

@@ -83,19 +83,26 @@ async function loadVodCollection(
   const results = await Promise.allSettled(
     collection.categoryIds.map((catId) => getVodStreams(credentials, catId))
   );
-  const all: VodStream[] = [];
+  // Priority order: first category fills first, then subsequent categories fill remaining slots
+  // This ensures e.g. 2026 movies appear before 2025 in "Fresh Movies"
+  const picked: VodStream[] = [];
   const seen = new Set<number>();
   for (const r of results) {
     if (r.status === 'fulfilled') {
+      const batch: VodStream[] = [];
       for (const m of r.value) {
         if (!seen.has(m.stream_id)) {
           seen.add(m.stream_id);
-          all.push(m);
+          batch.push(m);
         }
       }
+      // Shuffle within each category, take what fits
+      const shuffled = shuffle(batch);
+      const remaining = collection.limit - picked.length;
+      if (remaining > 0) picked.push(...shuffled.slice(0, remaining));
     }
   }
-  return shuffle(all).slice(0, collection.limit);
+  return picked;
 }
 
 async function loadSeriesCollection(

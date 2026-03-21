@@ -1,5 +1,5 @@
-const BASE = (import.meta.env.VITE_XTREAM_API || 'https://datahub11.com').trim();
 const STREAM_BASE = (import.meta.env.VITE_XTREAM_STREAM || 'http://datahub11.com:80').trim();
+const PROXY = (import.meta.env.VITE_PROXY_URL || 'https://stream.zionsynapse.online').trim();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 const FETCH_TIMEOUT = 10000; // 10s timeout for API calls
 
@@ -98,7 +98,7 @@ function cacheSet<T>(key: string, data: T): void {
 }
 
 function apiUrl(c: XtreamCredentials, action: string, extra = ''): string {
-  return `${BASE}/player_api.php?username=${c.username}&password=${c.password}&action=${action}${extra}`;
+  return `${PROXY}/api?action=${action}&u=${c.username}&p=${c.password}${extra}`;
 }
 
 async function cachedFetch<T>(key: string, url: string): Promise<T> {
@@ -241,8 +241,7 @@ export async function getSeriesInfo(c: XtreamCredentials, seriesId: number): Pro
 }
 
 // --- Stream URL Builders ---
-// ALL streams go through our VPS proxy in France (Vercel Edge times out, CF blocks video)
-const PROXY = (import.meta.env.VITE_PROXY_URL || 'https://stream.zionsynapse.online').trim();
+// ALL streams + API go through our VPS proxy (Cloudflare blocks browser→datahub direct)
 
 // Stream quality setting — persisted in localStorage
 const QUALITY_KEY = 'tivi_stream_quality';

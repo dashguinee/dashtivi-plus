@@ -90,12 +90,13 @@ export const ChannelIcon: React.FC<Props> = ({ src, name, size = 'md', className
   const color = getColor(name);
 
   // Sanitize common URL issues (missing 'h', trailing quotes)
-  const cleanSrc = src?.replace(/^ttps:/, 'https:').replace(/"$/, '') || '';
+  // Sanitize common URL issues (missing 'h', trailing quotes, dead starshare domain)
+  const cleanSrc = src?.replace(/^ttps:/, 'https:').replace(/"$/, '').replace('starshare.live:8080', 'datahub11.com:8080') || '';
 
   // Priority: 1. HTTPS src from API  2. tv-logo CDN  3. Proxied HTTP  4. Letter avatar
   let safeSrc: string | null = null;
   if (!failed) {
-    if (cleanSrc?.startsWith('https://') && !cleanSrc.includes('webhop.live')) {
+    if (cleanSrc?.startsWith('https://') && !cleanSrc.includes('webhop.live') && !cleanSrc.includes('paste.pics')) {
       safeSrc = cleanSrc;
     } else if (!logoFailed) {
       const logoUrl = findLogoUrl(name);
