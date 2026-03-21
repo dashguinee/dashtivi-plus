@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Download, Play, Search, X } from 'lucide-react';
 import type { XtreamCredentials, LiveCategory, VodStream } from '@/lib/xtream';
-import { getVodCategories, getVodStreams, buildVodUrl } from '@/lib/xtream';
+import { getVodCategories, getVodStreams, buildVodUrl, getTmdbMap } from '@/lib/xtream';
+import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { PosterCard } from '@/components/ui/PosterCard';
+import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import type { Channel } from '@/types';
 
@@ -37,6 +39,8 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const [searchResults, setSearchResults] = useState<VodStream[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [detailMovie, setDetailMovie] = useState<VodStream | null>(null);
+  const [tmdbMap, setTmdbMap] = useState<Record<string, TmdbEntry>>({});
 
   // Debounce search query (300ms)
   useEffect(() => {
@@ -95,6 +99,11 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     search();
     return () => { mounted = false; };
   }, [debouncedQuery, credentials, movies]);
+
+  // Lazy-load TMDB map for detail modal metadata
+  useEffect(() => {
+    getTmdbMap().then(m => m && setTmdbMap(m.TMDB_MAP));
+  }, []);
 
   const isSearching = debouncedQuery.trim().length > 0;
 
@@ -240,7 +249,8 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 poster={movie.stream_icon}
                 rating={movie.rating}
                 categoryId={activeCat}
-                onClick={() => handlePlay(movie)}
+                tmdbData={tmdbMap[`m:${movie.stream_id}`]}
+                onClick={() => setDetailMovie(movie)}
               />
               {/* Download button overlay */}
               <button
@@ -257,6 +267,25 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Movie Detail Modal */}
+      {detailMovie && (
+        <ContentDetailModal
+          streamId={detailMovie.stream_id}
+          name={detailMovie.name}
+          poster={detailMovie.stream_icon}
+          rating={detailMovie.rating}
+          categoryId={activeCat}
+          containerExtension={detailMovie.container_extension}
+          type="movie"
+          tmdbData={tmdbMap[`m:${detailMovie.stream_id}`]}
+          onPlay={() => {
+            handlePlay(detailMovie);
+            setDetailMovie(null);
+          }}
+          onClose={() => setDetailMovie(null)}
+        />
       )}
     </div>
   );

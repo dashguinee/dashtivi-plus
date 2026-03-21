@@ -27,6 +27,7 @@ import { getForYouItems, getBecauseYouWatched } from '@/lib/recommend';
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { PosterCard } from '@/components/ui/PosterCard';
+import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
 import { TrailerModal } from '@/components/ui/TrailerModal';
 import { VeeWidget } from '@/components/ui/VeeWidget';
 import { SkeletonRow } from '@/components/ui/LoadingSpinner';
@@ -157,6 +158,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const [error, setError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   const [trailerState, setTrailerState] = useState<{ youtubeKey: string; title: string; poster?: string; overview?: string } | null>(null);
+  const [detailMovie, setDetailMovie] = useState<{ movie: VodStream; tmdbMap?: Record<string, TmdbEntry> } | null>(null);
 
   const recentHistory = getRecent(10).filter(
     (h): h is WatchHistoryEntry & { name: string; url: string } =>
@@ -322,6 +324,14 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
         if (mounted && newSmartRows.length > 0) {
           setSmartRows(newSmartRows);
+        }
+        // Enrich regular VOD rows with TMDB data for detail modal
+        if (mounted && TMDB_MAP) {
+          setRows(prev => prev.map(row =>
+            (row.collection.type === 'vod' && row.vodStreams && !row.tmdbMap)
+              ? { ...row, tmdbMap: TMDB_MAP }
+              : row
+          ));
         }
       } catch {
         // Smart rows are additive — failure is silent
@@ -506,10 +516,29 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
               row={row}
               onPlayLive={playLive}
               onPlayMovie={playMovie}
+              onOpenDetail={(movie, tmdb) => setDetailMovie({ movie, tmdbMap: tmdb })}
               onNavigate={navigate}
             />
           ))}
         </div>
+      )}
+
+      {/* ── Movie Detail Modal ─────────────────────────────────── */}
+      {detailMovie && (
+        <ContentDetailModal
+          streamId={detailMovie.movie.stream_id}
+          name={detailMovie.movie.name}
+          poster={detailMovie.movie.stream_icon}
+          rating={detailMovie.movie.rating}
+          containerExtension={detailMovie.movie.container_extension}
+          type="movie"
+          tmdbData={detailMovie.tmdbMap?.[`m:${detailMovie.movie.stream_id}`]}
+          onPlay={() => {
+            playMovie(detailMovie.movie);
+            setDetailMovie(null);
+          }}
+          onClose={() => setDetailMovie(null)}
+        />
       )}
 
       {/* ── Trailer Modal ──────────────────────────────────────── */}
@@ -567,11 +596,13 @@ function CollectionRow({
   row,
   onPlayLive,
   onPlayMovie,
+  onOpenDetail,
   onNavigate,
 }: {
   row: RowData;
   onPlayLive: (stream: LiveStream, allStreams?: LiveStream[]) => void;
   onPlayMovie: (movie: VodStream) => void;
+  onOpenDetail?: (movie: VodStream, tmdbMap?: Record<string, TmdbEntry>) => void;
   onNavigate: (path: string) => void;
 }) {
   const { collection } = row;
@@ -640,7 +671,7 @@ function CollectionRow({
                   poster={movie.stream_icon}
                   rating={movie.rating}
                   tmdbData={tmdb}
-                  onClick={() => onPlayMovie(movie)}
+                  onClick={() => onOpenDetail ? onOpenDetail(movie, row.tmdbMap) : onPlayMovie(movie)}
                 />
               </div>
             );
@@ -667,7 +698,7 @@ function CollectionRow({
                 title={movie.name}
                 poster={movie.stream_icon}
                 rating={movie.rating}
-                onClick={() => onPlayMovie(movie)}
+                onClick={() => onOpenDetail ? onOpenDetail(movie, row.tmdbMap) : onPlayMovie(movie)}
               />
             </div>
           ))}
