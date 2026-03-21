@@ -228,6 +228,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   useEffect(() => {
     // Only run after main rows loaded + profile exists
     if (loading || rows.length === 0 || !profile) return;
+    const userProfile = profile; // capture non-null for async closure
     let mounted = true;
 
     async function loadSmartRows() {
@@ -259,7 +260,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
         // "For You" row
         if (moviePool.length > 0) {
-          const forYou = getForYouItems(moviePool, 'movie', profile, TMDB_MAP, 15);
+          const forYou = getForYouItems(moviePool, 'movie', userProfile, TMDB_MAP, 15);
           if (forYou.length > 0) {
             const smartCollection: SmartCollection = {
               id: 'smart-for-you',
@@ -279,8 +280,8 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
         }
 
         // "Because You Watched" row
-        if (profile.lastWatched.length > 0) {
-          const lastItem = profile.lastWatched.find((w) => w.genres.length > 0);
+        if (userProfile.lastWatched.length > 0) {
+          const lastItem = userProfile.lastWatched.find((w) => w.genres.length > 0);
           if (lastItem && moviePool.length > 0) {
             const similar = getBecauseYouWatched(
               lastItem.genres,

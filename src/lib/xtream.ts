@@ -185,17 +185,18 @@ function getLogoMap(): Promise<Record<string, string>> {
 /** Lazy-load TMDB metadata map to keep main bundle small */
 import type { TmdbEntry } from './tmdb-map.generated';
 
-let tmdbMapCache: { TMDB_MAP: Record<string, TmdbEntry>; TMDB_GENRES: Record<number, string> } | null = null;
-let tmdbMapPromise: Promise<typeof tmdbMapCache> | null = null;
+type TmdbMapData = { TMDB_MAP: Record<string, TmdbEntry>; TMDB_GENRES: Record<number, string> };
+let tmdbMapCache: TmdbMapData | null = null;
+let tmdbMapPromise: Promise<TmdbMapData | null> | null = null;
 
-export function getTmdbMap(): Promise<{ TMDB_MAP: Record<string, TmdbEntry>; TMDB_GENRES: Record<number, string> } | null> {
+export function getTmdbMap(): Promise<TmdbMapData | null> {
   if (tmdbMapCache) return Promise.resolve(tmdbMapCache);
   if (!tmdbMapPromise) {
     tmdbMapPromise = import('./tmdb-map.generated')
       .then(m => { tmdbMapCache = { TMDB_MAP: m.TMDB_MAP, TMDB_GENRES: m.TMDB_GENRES }; return tmdbMapCache; })
       .catch(() => { tmdbMapCache = { TMDB_MAP: {}, TMDB_GENRES: {} }; return tmdbMapCache; });
   }
-  return tmdbMapPromise!;
+  return tmdbMapPromise;
 }
 
 /** Patch empty stream_icon from the generated logo map */
