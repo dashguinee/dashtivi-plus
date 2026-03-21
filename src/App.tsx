@@ -1,5 +1,5 @@
 import React, { useState, useCallback, Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Navbar } from '@/components/layout/Navbar';
 import { CosmicBackground } from '@/components/ui/CosmicBackground';
@@ -22,6 +22,7 @@ const LiveTVPage = lazy(() => import('@/pages/LiveTVPage').then((m) => ({ defaul
 const MoviesPage = lazy(() => import('@/pages/MoviesPage').then((m) => ({ default: m.MoviesPage })));
 const SeriesPage = lazy(() => import('@/pages/SeriesPage').then((m) => ({ default: m.SeriesPage })));
 const FrenchPage = lazy(() => import('@/pages/FrenchPage').then((m) => ({ default: m.FrenchPage })));
+const WelcomePage = lazy(() => import('@/pages/WelcomePage').then((m) => ({ default: m.WelcomePage })));
 
 function AppContent() {
   const { credentials, logout } = useAuth();
@@ -161,17 +162,27 @@ function AppContent() {
   );
 }
 
-export default function App() {
+function AppRouter() {
   const [showSplash, setShowSplash] = useState(() => !getItem<boolean>('splash_seen_plus', false));
   const auth = useAuth();
+  const location = useLocation();
 
   const handleSplashComplete = useCallback(() => {
     setShowSplash(false);
     setItem('splash_seen_plus', true);
   }, []);
 
+  // /welcome is a public route — no splash, no auth gate
+  if (location.pathname === '/welcome') {
+    return (
+      <Suspense fallback={<FullPageLoader />}>
+        <WelcomePage />
+      </Suspense>
+    );
+  }
+
   return (
-    <BrowserRouter>
+    <>
       {/* Layer 1: Splash */}
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
 
@@ -182,6 +193,14 @@ export default function App() {
 
       {/* Layer 3: Main app */}
       {auth.isAuthenticated && <AppContent />}
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRouter />
     </BrowserRouter>
   );
 }
