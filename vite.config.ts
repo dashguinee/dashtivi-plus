@@ -20,6 +20,8 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes('hls.js')) return 'hls';
           if (id.includes('mpegts.js')) return 'mpegts';
+          if (id.includes('logo-map.generated')) return 'logo-data';
+          if (id.includes('tmdb-map.generated')) return 'tmdb-data';
           if (id.includes('react-router-dom')) return 'router';
         },
       },

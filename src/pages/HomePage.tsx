@@ -12,14 +12,18 @@ import {
   fetchServerProbeData,
   seedProbeCacheFromServer,
   isChannelProbeAlive,
+  getTmdbMap,
 } from '@/lib/xtream';
+import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import {
   HOMEPAGE_COLLECTIONS,
   COLLECTION_CARDS,
   getFeaturedHero,
 } from '@/lib/collections';
-import type { Collection } from '@/lib/collections';
+import type { Collection, SmartCollection } from '@/lib/collections';
 import { useWatchHistory } from '@/hooks/useWatchHistory';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { getForYouItems, getBecauseYouWatched } from '@/lib/recommend';
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { PosterCard } from '@/components/ui/PosterCard';
@@ -130,10 +134,11 @@ async function loadSeriesCollection(
 // ── Types for loaded row data ─────────────────────────────────────
 
 interface RowData {
-  collection: Collection;
+  collection: Collection | SmartCollection;
   liveStreams?: LiveStream[];
   vodStreams?: VodStream[];
   seriesItems?: SeriesItem[];
+  tmdbMap?: Record<string, TmdbEntry>;
 }
 
 // ── Main Component ────────────────────────────────────────────────
@@ -141,7 +146,9 @@ interface RowData {
 export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const navigate = useNavigate();
   const { getRecent } = useWatchHistory();
+  const { profile } = useUserProfile();
   const [rows, setRows] = useState<RowData[]>([]);
+  const [smartRows, setSmartRows] = useState<RowData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
@@ -215,6 +222,109 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
     load();
     return () => { mounted = false; };
   }, [credentials, retryKey]);
+
+  // ── Smart Rows (lazy, after main content loads) ─────────────────
+
+  useEffect(() => {
+    // Only run after main rows loaded + profile exists
+    if (loading || rows.length === 0 || !profile) return;
+    let mounted = true;
+
+    async function loadSmartRows() {
+      try {
+        const tmdbData = await getTmdbMap();
+        if (!tmdbData || !mounted) return;
+        const { TMDB_MAP } = tmdbData;
+
+        // Fetch movies from multiple categories for the recommendation pool
+        const forYouCatIds = ['749', '597', '525', '122'];
+        const catResults = await Promise.allSettled(
+          forYouCatIds.map((catId) => getVodStreams(credentials, catId))
+        );
+        const moviePool: VodStream[] = [];
+        const seen = new Set<number>();
+        for (const r of catResults) {
+          if (r.status === 'fulfilled') {
+            for (const m of r.value) {
+              if (!seen.has(m.stream_id)) {
+                seen.add(m.stream_id);
+                moviePool.push(m);
+              }
+            }
+          }
+        }
+
+        if (!mounted) return;
+        const newSmartRows: RowData[] = [];
+
+        // "For You" row
+        if (moviePool.length > 0) {
+          const forYou = getForYouItems(moviePool, 'movie', profile, TMDB_MAP, 15);
+          if (forYou.length > 0) {
+            const smartCollection: SmartCollection = {
+              id: 'smart-for-you',
+              name: 'For You',
+              emoji: '\u2728',
+              description: 'Personalized picks based on your taste',
+              type: 'smart-vod',
+              contentType: 'vod',
+              navigateTo: '/movies',
+            };
+            newSmartRows.push({
+              collection: smartCollection,
+              vodStreams: forYou,
+              tmdbMap: TMDB_MAP,
+            });
+          }
+        }
+
+        // "Because You Watched" row
+        if (profile.lastWatched.length > 0) {
+          const lastItem = profile.lastWatched.find((w) => w.genres.length > 0);
+          if (lastItem && moviePool.length > 0) {
+            const similar = getBecauseYouWatched(
+              lastItem.genres,
+              lastItem.name,
+              moviePool,
+              'movie',
+              TMDB_MAP,
+              15
+            );
+            if (similar.length >= 3) {
+              // Parse clean name for display
+              const cleanName = lastItem.name.replace(/\s*\(\d{4}\)\s*$/, '');
+              const smartCollection: SmartCollection = {
+                id: 'smart-because-watched',
+                name: `Because You Watched ${cleanName}`,
+                emoji: '\uD83C\uDFAF',
+                description: `Similar to ${cleanName}`,
+                type: 'smart-vod',
+                contentType: 'vod',
+                navigateTo: '/movies',
+              };
+              newSmartRows.push({
+                collection: smartCollection,
+                vodStreams: similar,
+                tmdbMap: TMDB_MAP,
+              });
+            }
+          }
+        }
+
+        if (mounted && newSmartRows.length > 0) {
+          setSmartRows(newSmartRows);
+        }
+      } catch {
+        // Smart rows are additive — failure is silent
+      }
+    }
+
+    loadSmartRows();
+    return () => { mounted = false; };
+  }, [loading, rows, profile, credentials]);
+
+  // ── Merge rows: smart rows prepended ──────────────────────────
+  const allRows = [...smartRows, ...rows];
 
   // ── Play handlers ───────────────────────────────────────────────
 
@@ -369,7 +479,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
         </div>
       ) : (
         <div className="space-y-6">
-          {rows.map((row) => (
+          {allRows.map((row) => (
             <CollectionRow
               key={row.collection.id}
               row={row}
@@ -473,6 +583,36 @@ function CollectionRow({
               </p>
             </button>
           ))}
+        </div>
+      </section>
+    );
+  }
+
+  // ── Smart VOD row (recommendation engine) ────────────────────
+  if (collection.type === 'smart-vod' && row.vodStreams) {
+    return (
+      <section>
+        <SectionHeader
+          emoji={collection.emoji}
+          title={collection.name}
+          seeAllTo={collection.navigateTo}
+          onNavigate={onNavigate}
+        />
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2">
+          {row.vodStreams.map((movie) => {
+            const tmdb = row.tmdbMap?.[`m:${movie.stream_id}`];
+            return (
+              <div key={movie.stream_id} className="flex-shrink-0 w-32">
+                <PosterCard
+                  title={movie.name}
+                  poster={movie.stream_icon}
+                  rating={movie.rating}
+                  tmdbData={tmdb}
+                  onClick={() => onPlayMovie(movie)}
+                />
+              </div>
+            );
+          })}
         </div>
       </section>
     );

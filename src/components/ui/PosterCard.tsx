@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Play, Star } from 'lucide-react';
+import { Play, Star, Clock } from 'lucide-react';
+
+import type { TmdbEntry } from '../../lib/tmdb-map.generated';
 
 interface Props {
   title: string;
@@ -7,6 +9,8 @@ interface Props {
   rating?: string;
   categoryId?: string;
   onClick: () => void;
+  tmdbData?: TmdbEntry;
+  onTrailer?: (youtubeKey: string, title: string, poster?: string, overview?: string) => void;
 }
 
 // Platform badges — mapped by Starshare category ID
@@ -40,19 +44,24 @@ function getGradient(title: string): string {
   return COLORS[Math.abs(hash) % COLORS.length];
 }
 
-function getSafePoster(url?: string): string | null {
-  if (!url) return null;
-  // Dead/invalid sources
-  if (url.includes('webhop.live')) return null;
-  if (url.includes('imdb.com')) return null; // IMDB page URLs, not images
-  if (url.includes('wikia.nocookie.net')) return null; // Often broken/blocked
-  if (url.includes('paste.pics')) return null; // HTTP2 protocol errors
-  // Rewrite dead starshare domain to live datahub
-  const fixed = url.replace('starshare.live:8080', 'datahub11.com:8080');
-  // HTTPS posters load directly
-  if (fixed.startsWith('https://')) return fixed;
-  // HTTP posters go through VPS proxy
-  if (fixed.startsWith('http://')) return `https://stream.zionsynapse.online/?url=${encodeURIComponent(fixed)}`;
+function getSafePoster(url?: string, tmdbPoster?: string): string | null {
+  if (url) {
+    // Dead/invalid sources
+    if (url.includes('webhop.live')) { /* fall through to TMDB */ }
+    else if (url.includes('imdb.com')) { /* fall through */ }
+    else if (url.includes('wikia.nocookie.net')) { /* fall through */ }
+    else if (url.includes('paste.pics')) { /* fall through */ }
+    else {
+      // Rewrite dead starshare domain to live datahub
+      const fixed = url.replace('starshare.live:8080', 'datahub11.com:8080');
+      // HTTPS posters load directly
+      if (fixed.startsWith('https://')) return fixed;
+      // HTTP posters go through VPS proxy
+      if (fixed.startsWith('http://')) return `https://stream.zionsynapse.online/?url=${encodeURIComponent(fixed)}`;
+    }
+  }
+  // TMDB poster fallback
+  if (tmdbPoster) return `https://image.tmdb.org/t/p/w342${tmdbPoster}`;
   return null;
 }
 
@@ -63,12 +72,29 @@ function parseTitle(raw: string): { clean: string; year: string | null } {
   return { clean: raw, year: null };
 }
 
-export const PosterCard: React.FC<Props> = ({ title, poster, rating, categoryId, onClick }) => {
+/** Format runtime in minutes to "Xh Ym" */
+function formatRuntime(minutes: number): string {
+  if (minutes <= 0) return '';
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+export const PosterCard: React.FC<Props> = ({ title, poster, rating, categoryId, onClick, tmdbData, onTrailer }) => {
   const badge = categoryId ? PLATFORM_BADGES[categoryId] : undefined;
   const [imgFailed, setImgFailed] = useState(false);
-  const safePoster = getSafePoster(poster);
+  const safePoster = getSafePoster(poster, tmdbData?.p);
   const hasPoster = safePoster && !imgFailed;
   const { clean: cleanTitle, year } = parseTitle(title);
+
+  // Use TMDB rating if available, otherwise fall back to Xtream rating
+  const displayRating = tmdbData?.r ? tmdbData.r.toFixed(1) : rating;
+  const hasRating = displayRating && parseFloat(displayRating) > 0;
+
+  const hasTrailer = tmdbData?.y && onTrailer;
+  const runtime = tmdbData?.t ? formatRuntime(tmdbData.t) : null;
 
   return (
     <button
@@ -122,18 +148,41 @@ export const PosterCard: React.FC<Props> = ({ title, poster, rating, categoryId,
         </div>
       </div>
 
+      {/* Trailer button — bottom-left overlay */}
+      {hasTrailer && (
+        <div
+          className="absolute bottom-12 left-2 z-20"
+          onClick={(e) => {
+            e.stopPropagation();
+            onTrailer!(tmdbData!.y!, cleanTitle, safePoster || undefined, tmdbData!.o);
+          }}
+        >
+          <div className="w-8 h-8 rounded-full bg-red-600/90 hover:bg-red-500 flex items-center justify-center shadow-lg transition-colors cursor-pointer">
+            <Play className="w-3.5 h-3.5 text-white ml-0.5" />
+          </div>
+        </div>
+      )}
+
       {/* Bottom info */}
       <div className="absolute bottom-0 left-0 right-0 p-3">
-        {rating && parseFloat(rating) > 0 && (
+        {hasRating && (
           <div className="flex items-center gap-1 mb-1">
             <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-            <span className="text-xs text-yellow-400 font-medium">{rating}</span>
+            <span className="text-xs text-yellow-400 font-medium">{displayRating}</span>
           </div>
         )}
         <h3 className="text-xs font-medium text-white line-clamp-2 leading-tight">{cleanTitle}</h3>
-        {year && (
-          <span className="text-[10px] text-white/40 font-medium mt-0.5">{year}</span>
-        )}
+        <div className="flex items-center gap-2 mt-0.5">
+          {year && (
+            <span className="text-[10px] text-white/40 font-medium">{year}</span>
+          )}
+          {runtime && (
+            <span className="flex items-center gap-0.5 text-[10px] text-white/35 font-medium">
+              <Clock className="w-2.5 h-2.5" />
+              {runtime}
+            </span>
+          )}
+        </div>
       </div>
     </button>
   );

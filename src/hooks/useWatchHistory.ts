@@ -8,7 +8,7 @@ const MAX_HISTORY = 50;
 export function useWatchHistory() {
   const [history, setHistory] = useState<WatchHistoryEntry[]>(() => getItem(KEY, []));
 
-  const addToHistory = useCallback((channelOrId: string | Channel) => {
+  const addToHistory = useCallback((channelOrId: string | Channel, duration?: number) => {
     setHistory((prev) => {
       const isChannel = typeof channelOrId !== 'string';
       const channelId = isChannel ? channelOrId.id : channelOrId;
@@ -18,7 +18,7 @@ export function useWatchHistory() {
       const entry: WatchHistoryEntry = {
         channelId,
         watchedAt: Date.now(),
-        duration: 0,
+        duration: duration || 0,
         ...(isChannel
           ? {
               name: channelOrId.name,
@@ -29,6 +29,17 @@ export function useWatchHistory() {
           : {}),
       };
       const next = [entry, ...filtered].slice(0, MAX_HISTORY);
+      setItem(KEY, next);
+      return next;
+    });
+  }, []);
+
+  const updateDuration = useCallback((channelId: string, duration: number) => {
+    setHistory((prev) => {
+      const idx = prev.findIndex((h) => h.channelId === channelId);
+      if (idx === -1) return prev;
+      const next = [...prev];
+      next[idx] = { ...next[idx], duration };
       setItem(KEY, next);
       return next;
     });
@@ -46,5 +57,5 @@ export function useWatchHistory() {
     setItem(KEY, []);
   }, []);
 
-  return { history, addToHistory, getRecent, clearHistory };
+  return { history, addToHistory, getRecent, clearHistory, updateDuration };
 }
