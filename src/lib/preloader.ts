@@ -25,23 +25,23 @@ export function startPreload() {
     // Preload VPS health + probe data
     fetch('https://stream.zionsynapse.online/channels.json', { signal: AbortSignal.timeout(5000) }).catch(() => {});
     fetch('https://stream.zionsynapse.online/probe-results.json', { signal: AbortSignal.timeout(5000) }).catch(() => {});
+  }, 200);
+
+  // Phase 2: TMDB data (500ms — start early, it's the heaviest)
+  setTimeout(() => {
+    import('@/lib/tmdb-map.generated').catch(() => {});
   }, 500);
 
-  // Phase 2: Page chunks (1s delay — login UI is rendered)
+  // Phase 3: Logo map (1000ms — after TMDB starts)
+  setTimeout(() => {
+    import('@/lib/logo-map.generated').catch(() => {});
+  }, 1000);
+
+  // Phase 4: Page chunks (1500ms — login UI is rendered)
   setTimeout(() => {
     import('@/pages/HomePage').catch(() => {});
     import('@/pages/LiveTVPage').catch(() => {});
-  }, 1000);
-
-  // Phase 3: Heavy data chunks (2s delay — login animation is done)
-  setTimeout(() => {
-    import('@/lib/logo-map.generated').catch(() => {});
-  }, 2000);
-
-  // Phase 4: TMDB data (3s delay — user is typing their code)
-  setTimeout(() => {
-    import('@/lib/tmdb-map.generated').catch(() => {});
-  }, 3000);
+  }, 1500);
 }
 
 /**

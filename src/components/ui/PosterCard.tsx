@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Play, Star, Clock } from 'lucide-react';
 
 import type { TmdbEntry } from '../../lib/tmdb-map.generated';
@@ -82,7 +82,7 @@ function formatRuntime(minutes: number): string {
   return `${h}h ${m}m`;
 }
 
-export const PosterCard: React.FC<Props> = ({ title, poster, rating, categoryId, onClick, tmdbData, onTrailer }) => {
+export const PosterCard = memo(function PosterCard({ title, poster, rating, categoryId, onClick, tmdbData, onTrailer }: Props) {
   const badge = categoryId ? PLATFORM_BADGES[categoryId] : undefined;
   const [imgFailed, setImgFailed] = useState(false);
   const safePoster = getSafePoster(poster, tmdbData?.p);
@@ -108,6 +108,7 @@ export const PosterCard: React.FC<Props> = ({ title, poster, rating, categoryId,
           className="absolute inset-0 w-full h-full object-cover"
           onError={() => setImgFailed(true)}
           loading="lazy"
+          decoding="async"
         />
       ) : (
         <div className={`absolute inset-0 bg-gradient-to-br ${getGradient(title)} flex flex-col items-center justify-center p-3`}>
@@ -186,4 +187,4 @@ export const PosterCard: React.FC<Props> = ({ title, poster, rating, categoryId,
       </div>
     </button>
   );
-};
+});

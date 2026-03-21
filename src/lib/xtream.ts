@@ -493,11 +493,11 @@ function getProbeCache(): ProbeCache {
 
 function setProbeCache(cache: ProbeCache) {
   try {
-    // Enforce max 3000 entries
+    // Enforce max 10000 entries
     const entries = Object.entries(cache);
-    if (entries.length > 3000) {
+    if (entries.length > 10000) {
       entries.sort((a, b) => a[1].ts - b[1].ts);
-      cache = Object.fromEntries(entries.slice(entries.length - 3000));
+      cache = Object.fromEntries(entries.slice(entries.length - 10000));
     }
     localStorage.setItem(PROBE_CACHE_KEY, JSON.stringify(cache));
   } catch {}

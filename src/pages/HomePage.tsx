@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Play, ChevronRight, Tv, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { XtreamCredentials, LiveStream, VodStream, SeriesItem } from '@/lib/xtream';
@@ -347,7 +347,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   // ── Play handlers ───────────────────────────────────────────────
 
-  const playLive = (stream: LiveStream, allStreams?: LiveStream[]) => {
+  const playLive = useCallback((stream: LiveStream, allStreams?: LiveStream[]) => {
     if (allStreams && allStreams.length > 1) {
       const channels = allStreams.map(s => ({
         id: `live-${s.stream_id}`,
@@ -367,9 +367,9 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
     };
     setCurrentChannel(channel.id);
     onPlay(channel);
-  };
+  }, [credentials, onPlay]);
 
-  const playMovie = (movie: VodStream) => {
+  const playMovie = useCallback((movie: VodStream) => {
     onPlay({
       id: `vod-${movie.stream_id}`,
       name: movie.name,
@@ -377,9 +377,9 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       logo: movie.stream_icon,
       category: 'movie',
     });
-  };
+  }, [credentials, onPlay]);
 
-  const playHistoryItem = (entry: WatchHistoryEntry & { name: string; url: string }) => {
+  const playHistoryItem = useCallback((entry: WatchHistoryEntry & { name: string; url: string }) => {
     onPlay({
       id: entry.channelId,
       name: entry.name,
@@ -387,7 +387,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       logo: entry.logo,
       category: entry.category,
     });
-  };
+  }, [onPlay]);
 
   // ── Render ──────────────────────────────────────────────────────
 

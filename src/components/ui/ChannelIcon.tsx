@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 
 interface Props {
   src?: string;
@@ -83,7 +83,7 @@ const sizes = {
   lg: 'w-20 h-20 text-2xl',
 };
 
-export const ChannelIcon: React.FC<Props> = ({ src, name, size = 'md', className = '' }) => {
+export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', className = '' }: Props) {
   const [failed, setFailed] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
   const letter = name.charAt(0).toUpperCase();
@@ -119,6 +119,7 @@ export const ChannelIcon: React.FC<Props> = ({ src, name, size = 'md', className
           else setFailed(true);
         }}
         loading="lazy"
+        decoding="async"
       />
     );
   }
@@ -131,4 +132,4 @@ export const ChannelIcon: React.FC<Props> = ({ src, name, size = 'md', className
       {letter}
     </div>
   );
-};
+});
