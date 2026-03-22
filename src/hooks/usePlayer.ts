@@ -123,18 +123,42 @@ export function usePlayer() {
           lastTimeUpdate = now;
           setState((prev) => ({ ...prev, currentTime: video.currentTime }));
         };
-        // Duration: if we have knownDuration from TMDB/Xtream, use it ALWAYS for VOD.
-        // Browser's ondurationchange reports fragment duration for FFmpeg remux (wrong).
-        const hasKnownDuration = channel.knownDuration && channel.knownDuration > 60;
-        if (hasKnownDuration) {
-          // Set immediately — don't wait for browser
+        // Duration: multiple sources, bulletproof chain
+        let durationLocked = false;
+
+        // Source 1: knownDuration from Channel (TMDB/VOD info, passed by caller)
+        if (channel.knownDuration && channel.knownDuration > 60) {
           setState((prev) => ({ ...prev, duration: channel.knownDuration! }));
+          durationLocked = true;
         }
+
+        // Source 2: fetch from TMDB map (async, catches cases where caller didn't have it)
+        if (!durationLocked && !isLive) {
+          const streamId = channel.id.replace(/^(vod|series)-/, '');
+          const prefix = channel.id.startsWith('series-') ? 's' : 'm';
+          import('../lib/tmdb-map.generated').then(m => {
+            const entry = m.TMDB_MAP[`${prefix}:${streamId}`];
+            if (entry?.t && entry.t > 1 && !durationLocked) {
+              durationLocked = true;
+              setState((prev) => ({ ...prev, duration: entry.t! * 60 }));
+            }
+          }).catch(() => {});
+        }
+
+        // Source 3: browser's ondurationchange (only if nothing else worked)
         video.ondurationchange = () => {
           const dur = video.duration;
-          if (dur && isFinite(dur) && !hasKnownDuration) {
-            // Only use browser duration if we don't have a known duration
-            setState((prev) => ({ ...prev, duration: dur }));
+          if (dur && isFinite(dur) && !durationLocked) {
+            // Accept browser duration only if > 120s (avoid fragment durations)
+            if (dur > 120) {
+              durationLocked = true;
+              setState((prev) => ({ ...prev, duration: dur }));
+            }
+            // If browser reports < 120s and we have no other source, still show it
+            // but don't lock (allow TMDB to override later)
+            else {
+              setState((prev) => ({ ...prev, duration: dur }));
+            }
           }
         };
 

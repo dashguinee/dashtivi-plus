@@ -97,7 +97,7 @@ export const PlayerControls: React.FC<Props> = ({
             </h3>
             <div className="flex items-center gap-2 text-xs text-text-secondary">
               {state.channel?.country && <span>{state.channel.country}</span>}
-              <span><span className="font-bold tracking-wider text-primary-light">DASH</span> <span className="text-white/30">·</span> <span className="text-white/40">Tivi+</span></span>
+              <HeaderBrand duration={state.duration} isVod={isVod} />
               {!isVod && (
                 <span className="flex items-center gap-1">
                   <span className="live-pulse !w-1.5 !h-1.5" />
@@ -338,5 +338,28 @@ function StreamQualityMenu({ onClose, onApplyNow }: { onClose: () => void; onApp
         Applies immediately — stream will reconnect
       </p>
     </div>
+  );
+}
+
+/** Header brand — swaps from "DASH · Tivi+" to "DASH · 2h 36m" after 2s */
+function HeaderBrand({ duration, isVod }: { duration: number; isVod: boolean }) {
+  const [showDuration, setShowDuration] = useState(false);
+
+  useEffect(() => {
+    if (!isVod || duration <= 0) return;
+    const t = setTimeout(() => setShowDuration(true), 2000);
+    return () => clearTimeout(t);
+  }, [duration, isVod]);
+
+  const formatted = duration > 0 ? formatTime(duration) : null;
+
+  return (
+    <span className="transition-all duration-500">
+      <span className="font-bold tracking-wider text-primary-light">DASH</span>
+      <span className="text-white/30"> · </span>
+      <span className="text-white/40">
+        {showDuration && formatted ? formatted : 'Tivi+'}
+      </span>
+    </span>
   );
 }
