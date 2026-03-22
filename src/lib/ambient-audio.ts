@@ -17,7 +17,24 @@ let targetSpeed = 0.8;
 let transitionInterval: ReturnType<typeof setInterval> | null = null;
 let isEnabled = false;
 
-const AUDIO_URL = '/dash-ambient-loop.mp3';
+const VPS = 'https://stream.zionsynapse.online/ambient';
+
+// Track mapping — each experience gets its own sonic vibe
+const EXPERIENCE_TRACKS: Record<string, string> = {
+  'welcome':       `${VPS}/ritual-awakening.mp3`,
+  'home':          `${VPS}/deep-earth-current.mp3`,
+  'sports':        `${VPS}/tribal-heatline.mp3`,
+  'entertainment': `${VPS}/warm-drum-motion.mp3`,
+  'kids':          `${VPS}/organic-invocation.mp3`,
+  'movies247':     `${VPS}/midnight-polyrhythm.mp3`,
+  'music':         `${VPS}/body-in-rhythm.mp3`,
+  'news':          `${VPS}/shadowed-soil.mp3`,
+  'documentary':   `${VPS}/echoes-of-earth.mp3`,
+  'faith':         `${VPS}/ancestral-lift.mp3`,
+  'football':      `${VPS}/tribal-language-rising.mp3`,
+};
+
+const AUDIO_URL = EXPERIENCE_TRACKS['home']; // Default
 const STORAGE_KEY = 'tivi_ambient_enabled';
 const VOLUME = 0.12; // Subtle — background, not foreground
 
@@ -114,6 +131,40 @@ export function muteAmbient(): void {
 /** Restore ambient volume */
 export function unmuteAmbient(): void {
   if (audio) audio.volume = VOLUME;
+}
+
+/** Switch to a different experience track (crossfade) */
+export function setAmbientExperience(experience: string): void {
+  const trackUrl = EXPERIENCE_TRACKS[experience] || EXPERIENCE_TRACKS['home'];
+  if (!audio) return;
+
+  // Only switch if it's a different track
+  if (audio.src.includes(trackUrl.split('/').pop()!)) return;
+
+  // Fade out current, switch, fade in
+  const originalVolume = audio.volume;
+  const fadeSteps = 20;
+  let step = 0;
+
+  const fadeOut = setInterval(() => {
+    step++;
+    if (audio) audio.volume = originalVolume * (1 - step / fadeSteps);
+    if (step >= fadeSteps) {
+      clearInterval(fadeOut);
+      if (audio) {
+        audio.src = trackUrl;
+        audio.volume = 0;
+        audio.play().catch(() => {});
+        // Fade in
+        let inStep = 0;
+        const fadeIn = setInterval(() => {
+          inStep++;
+          if (audio) audio.volume = VOLUME * (inStep / fadeSteps);
+          if (inStep >= fadeSteps) clearInterval(fadeIn);
+        }, 50);
+      }
+    }
+  }, 50);
 }
 
 /** Get current state */
