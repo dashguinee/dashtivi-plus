@@ -149,62 +149,14 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
 // ── Quick-tap Collection Cards (vibes navigation) ─────────────────
 
 export const COLLECTION_CARDS: CollectionCard[] = [
-  {
-    id: 'sports',
-    name: 'Sports',
-    emoji: '\u26BD',
-    gradient: 'from-green-600/40 to-emerald-900/40',
-    navigateTo: '/live',
-  },
-  {
-    id: 'news',
-    name: 'News',
-    emoji: '\uD83D\uDCF0',
-    gradient: 'from-blue-600/40 to-blue-900/40',
-    navigateTo: '/live',
-  },
-  {
-    id: 'movies',
-    name: 'Movies',
-    emoji: '\uD83C\uDFAC',
-    gradient: 'from-red-600/40 to-red-900/40',
-    navigateTo: '/movies',
-  },
-  {
-    id: 'series',
-    name: 'Series',
-    emoji: '\uD83D\uDCFA',
-    gradient: 'from-purple-600/40 to-purple-900/40',
-    navigateTo: '/series',
-  },
-  {
-    id: 'africa',
-    name: 'Africa',
-    emoji: '\uD83C\uDF0D',
-    gradient: 'from-amber-600/40 to-orange-900/40',
-    navigateTo: '/french',
-  },
-  {
-    id: 'action',
-    name: 'Action',
-    emoji: '\uD83D\uDCA5',
-    gradient: 'from-orange-600/40 to-red-900/40',
-    navigateTo: '/movies',
-  },
-  {
-    id: 'kdrama',
-    name: 'K-Drama',
-    emoji: '\uD83C\uDF1F',
-    gradient: 'from-pink-600/40 to-rose-900/40',
-    navigateTo: '/series',
-  },
-  {
-    id: 'fight',
-    name: 'Fight',
-    emoji: '\uD83E\uDD4A',
-    gradient: 'from-red-700/40 to-orange-900/40',
-    navigateTo: '/live',
-  },
+  { id: 'sports', name: 'Sports', emoji: '\u26BD', gradient: 'from-green-600/40 to-emerald-900/40', navigateTo: '/live' },
+  { id: 'news', name: 'News', emoji: '\uD83D\uDCF0', gradient: 'from-blue-600/40 to-blue-900/40', navigateTo: '/live' },
+  { id: 'movies', name: 'Movies', emoji: '\uD83C\uDFAC', gradient: 'from-red-600/40 to-red-900/40', navigateTo: '/movies' },
+  { id: 'series', name: 'Series', emoji: '\uD83D\uDCFA', gradient: 'from-purple-600/40 to-purple-900/40', navigateTo: '/series' },
+  { id: 'africa', name: 'Africa', emoji: '\uD83C\uDF0D', gradient: 'from-amber-600/40 to-orange-900/40', navigateTo: '/french' },
+  { id: 'kids', name: 'Kids', emoji: '\uD83E\uDDF8', gradient: 'from-pink-600/40 to-rose-900/40', navigateTo: '/live' },
+  { id: 'music', name: 'Music', emoji: '\uD83C\uDFB5', gradient: 'from-fuchsia-600/40 to-pink-900/40', navigateTo: '/live' },
+  { id: 'faith', name: 'Faith', emoji: '\uD83D\uDE4F', gradient: 'from-amber-500/40 to-yellow-900/40', navigateTo: '/live' },
 ];
 
 // ── Time-aware Featured Hero ──────────────────────────────────────
@@ -303,25 +255,28 @@ export const LIVETV_THEMES: LiveTheme[] = [
     name: 'Sports',
     emoji: '\u26BD',
     categoryIds: [
-      '234',  // Football
-      '85',   // beIN Sports
-      '345',  // DSTV Super Sports
-      '427',  // DSTV Super Sports FHD
-      '353',  // Sky UK 4K
-      '578',  // Real 4K
-      '6',    // General Sports
-      '342',  // Racing / F1
-      '550',  // Rugby
-      '138',  // Golf
-      '212',  // Tennis
-      '356',  // India Sports
-      '156',  // Arabic Sports
-      '137',  // Fox Australia
-      '516',  // NFL
-      '483',  // UK Sports
+      '234', '85', '345', '427', '353', '578', '5', '6', '342',
+      '550', '138', '212', '356', '156', '137', '516', '483',
+      '139', '492', '773', '726', '328',
     ],
     gradient: 'from-green-500 to-emerald-700',
     glowColor: 'shadow-green-500/20',
+  },
+  {
+    id: 'entertainment',
+    name: 'Entertainment',
+    emoji: '\u2728',
+    categoryIds: [
+      '3',    // UK Entertainment
+      '2',    // USA
+      '247',  // India Entertainment
+      '19',   // UK Asian
+      '414',  // UK General
+      '338',  // India Entertainment
+      '24',   // US 24/7
+    ],
+    gradient: 'from-purple-500 to-violet-700',
+    glowColor: 'shadow-purple-500/20',
   },
   {
     id: 'news',
@@ -332,65 +287,74 @@ export const LIVETV_THEMES: LiveTheme[] = [
       '417',  // UK News
       '165',  // Arabic News
       '730',  // Indian News
+      '77',   // Indian News (additional)
       '98',   // Pakistan News
     ],
     gradient: 'from-blue-500 to-sky-700',
     glowColor: 'shadow-blue-500/20',
   },
   {
-    id: 'entertainment',
-    name: 'Entertainment',
-    emoji: '\u2728',
-    categoryIds: [
-      '3',    // UK Entertainment
-      '2',    // USA
-      '247',  // India Entertainment
-    ],
-    gradient: 'from-purple-500 to-violet-700',
-    glowColor: 'shadow-purple-500/20',
-  },
-  {
     id: 'kids',
     name: 'Kids & Family',
     emoji: '\uD83E\uDDF8',
-    categoryIds: ['32', '347', '430', '410'],
+    categoryIds: [
+      '32',   // Kids (108ch — Nick, Disney, CN, CBeebies, PBS)
+      '410',  // UK Kids
+    ],
     gradient: 'from-pink-500 to-rose-600',
     glowColor: 'shadow-pink-500/20',
   },
   {
     id: 'movies247',
-    name: 'Movies 24/7',
+    name: 'Cinema 24/7',
     emoji: '\uD83C\uDFAC',
     categoryIds: [
       '275',  // English Movies 24/7
       '57',   // Netflix Movies 24/7
       '282',  // Bollywood Movies 24/7
+      '87',   // beIN Movies (31ch)
+      '280',  // Amazon Movies 24/7
+      '339',  // India Hindi Movies
+      '340',  // India English Movies
     ],
     gradient: 'from-red-500 to-rose-700',
     glowColor: 'shadow-red-500/20',
-  },
-  {
-    id: 'documentary',
-    name: 'Discovery & Learning',
-    emoji: '\uD83C\uDF0E',
-    categoryIds: [
-      '337',  // India Documentary (Discovery, NatGeo, History, Animal Planet, BBC Earth)
-      '415',  // UK Documentary
-    ],
-    gradient: 'from-teal-500 to-cyan-700',
-    glowColor: 'shadow-teal-500/20',
   },
   {
     id: 'music',
     name: 'Music & Vibes',
     emoji: '\uD83C\uDFB5',
     categoryIds: [
-      '416',  // UK Music (MTV, VH1)
+      '416',  // UK Music
       '341',  // India Music
       '555',  // Arabic Music
+      '270',  // Bollywood Singers 24/7
+      '287',  // Punjabi Singers 24/7
     ],
     gradient: 'from-fuchsia-500 to-pink-700',
     glowColor: 'shadow-fuchsia-500/20',
+  },
+  {
+    id: 'documentary',
+    name: 'Discovery',
+    emoji: '\uD83C\uDF0E',
+    categoryIds: [
+      '337',  // India Documentary
+      '415',  // UK Documentary
+    ],
+    gradient: 'from-teal-500 to-cyan-700',
+    glowColor: 'shadow-teal-500/20',
+  },
+  {
+    id: 'faith',
+    name: 'Faith',
+    emoji: '\uD83D\uDE4F',
+    categoryIds: [
+      '123',  // Islamic (156ch)
+      '561',  // Christian (16ch)
+    ],
+    gradient: 'from-amber-500 to-yellow-700',
+    glowColor: 'shadow-amber-500/20',
   },
 ];
 
@@ -402,16 +366,74 @@ export interface SportType {
   categoryIds: string[];
 }
 
+// Child experiences within Sports — DASH-branded rooms
 export const SPORT_TYPES: SportType[] = [
-  { id: 'all', name: 'All', categoryIds: ['234', '85', '345', '427', '353', '578', '6', '342', '550', '138', '212', '356', '156', '137', '516', '483'] },
-  { id: 'football', name: 'Football', categoryIds: ['234'] },
-  { id: 'cricket', name: 'Cricket', categoryIds: ['5'] },
+  { id: 'all', name: 'All Sports', categoryIds: ['234', '85', '345', '427', '353', '578', '5', '6', '342', '550', '138', '212', '356', '156', '137', '516', '483', '139', '492', '773', '726', '328'] },
+  { id: 'football', name: 'Football Non-Stop', categoryIds: ['234', '492', '427'] },
+  { id: 'bein', name: 'beIN Zone', categoryIds: ['85'] },
+  { id: 'nba', name: 'Take a Hoop', categoryIds: ['773'] },
+  { id: 'cricket', name: 'Cricket Ground', categoryIds: ['5'] },
   { id: 'nfl', name: 'NFL', categoryIds: ['516'] },
-  { id: 'africa', name: 'Africa', categoryIds: ['345', '427'] },
-  { id: 'uk', name: 'UK', categoryIds: ['353', '483', '578'] },
-  { id: 'bein', name: 'beIN', categoryIds: ['85'] },
-  { id: 'india', name: 'India', categoryIds: ['6', '356'] },
-  { id: 'racing', name: 'F1/Racing', categoryIds: ['342'] },
+  { id: 'combat', name: 'The Ring', categoryIds: ['190'] },
+  { id: 'fans', name: 'Fans Space', categoryIds: ['234'] },  // LFC TV, MUTV, team channels
+  { id: 'africa', name: 'African Football', categoryIds: ['345', '427'] },
+  { id: 'sky', name: 'Sky Sports', categoryIds: ['353', '483', '578'] },
+  { id: 'racing', name: 'Speed', categoryIds: ['342'] },
+  { id: 'rugby', name: 'Rugby', categoryIds: ['550'] },
+  { id: 'more', name: 'More', categoryIds: ['138', '212', '726', '328', '6'] },
+];
+
+// ── Child Experiences — sub-tabs within each mother theme ─────────
+// Same SportType interface reused for all child experiences
+
+export const ENTERTAINMENT_TYPES: SportType[] = [
+  { id: 'all', name: 'All', categoryIds: ['3', '2', '247', '19', '414', '338', '24'] },
+  { id: 'usa', name: 'USA Tonight', categoryIds: ['2'] },
+  { id: 'uk', name: 'UK Lounge', categoryIds: ['3', '414'] },
+  { id: 'african', name: 'African Drama', categoryIds: [] },  // Free channels (experience: entertainment, culture: africa)
+  { id: 'reality', name: 'Reality Rush', categoryIds: [] },    // Free channels (experience: general)
+  { id: 'asian', name: 'Asian Vibes', categoryIds: ['247', '338', '19'] },
+];
+
+export const KIDS_TYPES: SportType[] = [
+  { id: 'all', name: 'All', categoryIds: ['32', '410'] },
+  { id: 'cartoons', name: 'Cartoon World', categoryIds: ['32'] },
+  { id: 'littleones', name: 'Little Ones', categoryIds: ['32'] },   // Filtered by name: baby, rhyme, panda
+  { id: 'adventure', name: 'Adventure', categoryIds: ['32'] },      // Filtered by name: avatar, paw patrol, spongebob
+  { id: 'ukkids', name: 'UK Kids', categoryIds: ['410'] },
+];
+
+export const CINEMA_TYPES: SportType[] = [
+  { id: 'all', name: 'All', categoryIds: ['275', '57', '282', '87', '280', '339', '340'] },
+  { id: 'action', name: 'Action Vault', categoryIds: ['275'] },     // Filtered: action/thriller channels
+  { id: 'comedy', name: 'Comedy Corner', categoryIds: ['275'] },    // Filtered: comedy channels
+  { id: 'horror', name: 'Horror Room', categoryIds: ['275'] },      // Filtered: horror channels
+  { id: 'bollywood', name: 'Bollywood Palace', categoryIds: ['282', '339'] },
+  { id: 'netflix', name: 'Netflix Loop', categoryIds: ['57'] },
+  { id: 'bein', name: 'beIN Cinema', categoryIds: ['87'] },
+];
+
+export const MUSIC_TYPES: SportType[] = [
+  { id: 'all', name: 'All', categoryIds: ['416', '341', '555', '270', '287'] },
+  { id: 'afro', name: 'Afro Beats', categoryIds: [] },              // Free channels (experience: music, culture: africa)
+  { id: 'mtv', name: 'MTV World', categoryIds: ['416'] },
+  { id: 'bollywood', name: 'Bollywood Beats', categoryIds: ['341', '270'] },
+  { id: 'throwback', name: 'Throwback', categoryIds: ['416'] },     // Filtered: NOW 70s, 80s, 90s
+  { id: 'arabic', name: 'Arabic Vibes', categoryIds: ['555'] },
+];
+
+export const DISCOVERY_TYPES: SportType[] = [
+  { id: 'all', name: 'All', categoryIds: ['337', '415'] },
+  { id: 'wild', name: 'Wild Planet', categoryIds: ['337', '415'] },  // Filtered: animal, natgeo, bbc earth
+  { id: 'science', name: 'Science Lab', categoryIds: ['337', '415'] }, // Filtered: discovery, science
+  { id: 'history', name: 'History Vault', categoryIds: ['337', '415'] }, // Filtered: history, sky history
+  { id: 'crime', name: 'Crime Files', categoryIds: ['415'] },        // Filtered: investigation, court
+];
+
+export const FAITH_TYPES: SportType[] = [
+  { id: 'all', name: 'All', categoryIds: ['123', '561'] },
+  { id: 'islamic', name: 'Islamic', categoryIds: ['123'] },
+  { id: 'christian', name: 'Christian', categoryIds: ['561'] },
 ];
 
 // ── WorldEX Region Genre Filters ─────────────────────────────────
@@ -428,47 +450,95 @@ export const REGION_GENRES: Record<string, RegionGenre[]> = {
   africa: [
     { id: 'all', name: 'All', categoryIds: ['345', '427'] },
     { id: 'sports', name: 'Sports', categoryIds: ['345', '427'] },
-    { id: 'kids', name: 'Kids', categoryIds: ['347', '430'] },
   ],
   france: [
-    { id: 'all', name: 'All', categoryIds: ['11', '156'] },
-    { id: 'france', name: 'France', categoryIds: ['11'] },
+    { id: 'all', name: 'All', categoryIds: ['11'] },
     { id: 'bein', name: 'beIN FR', categoryIds: ['156'] },
+    { id: 'movies', name: 'beIN Movies', categoryIds: ['87'] },
   ],
   uk: [
-    { id: 'all', name: 'All', categoryIds: ['414'] },
-    { id: 'sports', name: 'Sports', categoryIds: ['483'] },
+    { id: 'all', name: 'All', categoryIds: ['3', '414'] },
+    { id: 'sports', name: 'Sports', categoryIds: ['483', '353'] },
     { id: 'entertainment', name: 'Entertainment', categoryIds: ['3'] },
     { id: 'news', name: 'News', categoryIds: ['417'] },
     { id: 'movies', name: 'Movies', categoryIds: ['413'] },
     { id: 'kids', name: 'Kids', categoryIds: ['410'] },
     { id: 'documentary', name: 'Docs', categoryIds: ['415'] },
     { id: 'music', name: 'Music', categoryIds: ['416'] },
+    { id: 'asian', name: 'Asian', categoryIds: ['19'] },
   ],
   usa: [
     { id: 'all', name: 'All', categoryIds: ['2'] },
+    { id: '247', name: '24/7', categoryIds: ['24'] },
+    { id: 'asian', name: 'Asian', categoryIds: ['194'] },
   ],
   arabic: [
-    { id: 'all', name: 'All', categoryIds: ['86', '165', '156'] },
+    { id: 'all', name: 'All', categoryIds: ['86', '165', '156', '13'] },
     { id: 'mbc', name: 'MBC', categoryIds: ['86'] },
     { id: 'news', name: 'News', categoryIds: ['165'] },
     { id: 'sports', name: 'Sports', categoryIds: ['156'] },
+    { id: 'music', name: 'Music', categoryIds: ['555'] },
+    { id: 'shahed', name: 'Shahed', categoryIds: ['175'] },
+    { id: 'movies', name: 'Movies', categoryIds: ['87'] },
+    { id: 'egypt', name: 'Egypt', categoryIds: ['180'] },
+    { id: 'iraq', name: 'Iraq', categoryIds: ['129'] },
+    { id: 'lebanon', name: 'Lebanon', categoryIds: ['549'] },
+    { id: 'syria', name: 'Syria', categoryIds: ['548'] },
+    { id: 'morocco', name: 'Morocco', categoryIds: ['554'] },
+    { id: 'algeria', name: 'Algeria', categoryIds: ['553'] },
+    { id: 'saudi', name: 'Saudi', categoryIds: ['181'] },
+    { id: 'uae', name: 'UAE', categoryIds: ['556'] },
+    { id: 'qatar', name: 'Qatar', categoryIds: ['83'] },
+    { id: 'kuwait', name: 'Kuwait', categoryIds: ['178'] },
+    { id: 'oman', name: 'Oman', categoryIds: ['227'] },
   ],
   india: [
-    { id: 'all', name: 'All', categoryIds: ['247', '9', '7', '732', '729', '5', '18', '730', '356'] },
-    { id: 'entertainment', name: 'Entertainment', categoryIds: ['247'] },
-    { id: 'bangla', name: 'Bangla', categoryIds: ['9'] },
-    { id: 'punjabi', name: 'Punjabi', categoryIds: ['7'] },
-    { id: 'tamil', name: 'Tamil', categoryIds: ['732'] },
-    { id: 'malayalam', name: 'Malayalam', categoryIds: ['729'] },
+    { id: 'all', name: 'All', categoryIds: ['247', '338', '18'] },
+    { id: 'entertainment', name: 'Entertainment', categoryIds: ['247', '338'] },
     { id: 'cricket', name: 'Cricket', categoryIds: ['5'] },
-    { id: 'news', name: 'News', categoryIds: ['730'] },
     { id: 'sports', name: 'Sports', categoryIds: ['356'] },
+    { id: 'news', name: 'News', categoryIds: ['77', '730', '731'] },
+    { id: 'documentary', name: 'Docs', categoryIds: ['337'] },
+    { id: 'music', name: 'Music', categoryIds: ['341'] },
+    { id: 'movies', name: 'Movies', categoryIds: ['339', '340'] },
+    { id: 'bangla', name: 'Bangla', categoryIds: ['9'] },
+    { id: 'tamil', name: 'Tamil', categoryIds: ['732', '733', '72'] },
+    { id: 'telugu', name: 'Telugu', categoryIds: ['73', '290'] },
+    { id: 'malayalam', name: 'Malayalam', categoryIds: ['728', '729', '727', '730'] },
+    { id: 'kannada', name: 'Kannada', categoryIds: ['81', '291'] },
+    { id: 'marathi', name: 'Marathi', categoryIds: ['75'] },
+    { id: 'gujarati', name: 'Gujarati', categoryIds: ['76'] },
+    { id: 'punjabi', name: 'Punjabi', categoryIds: ['7', '285'] },
   ],
   pakistan: [
-    { id: 'all', name: 'All', categoryIds: ['98'] },
+    { id: 'all', name: 'All', categoryIds: ['4', '98'] },
+    { id: 'news', name: 'News', categoryIds: ['98'] },
+    { id: 'drama', name: 'Drama', categoryIds: ['350'] },
+    { id: 'movies', name: 'Movies', categoryIds: ['272'] },
+    { id: 'singers', name: 'Singers', categoryIds: ['360'] },
   ],
   turkey: [
     { id: 'all', name: 'All', categoryIds: ['25'] },
+  ],
+  germany: [
+    { id: 'all', name: 'All', categoryIds: ['15'] },
+  ],
+  netherlands: [
+    { id: 'all', name: 'All', categoryIds: ['21'] },
+  ],
+  brazil: [
+    { id: 'all', name: 'All', categoryIds: ['66'] },
+  ],
+  iran: [
+    { id: 'all', name: 'All', categoryIds: ['751'] },
+  ],
+  srilanka: [
+    { id: 'all', name: 'All', categoryIds: ['42'] },
+  ],
+  nepal: [
+    { id: 'all', name: 'All', categoryIds: ['64'] },
+  ],
+  philippines: [
+    { id: 'all', name: 'All', categoryIds: ['90'] },
   ],
 };

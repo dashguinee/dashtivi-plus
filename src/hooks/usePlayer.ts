@@ -81,6 +81,8 @@ export function usePlayer() {
           if (getStreamQuality() === 'eco') url += '&q=eco';
         }
 
+        let retryCount = 0;
+
         // Free HLS channels — use createHlsPlayer (handles Safari native + HLS.js)
         if (isHlsUrl) {
           const hlsInstance = createHlsPlayer(video, url, undefined, (errMsg) => {
@@ -95,7 +97,6 @@ export function usePlayer() {
           };
         } else {
           // Xtream proxy channels — existing behavior
-          let retryCount = 0;
           video.src = url;
           video.play().catch(() => {});
 
