@@ -58,6 +58,7 @@ export default {
         'portal-pulse-red': 'portal-pulse-red 2.5s ease-in-out infinite',
         'portal-pulse-blue': 'portal-pulse-blue 2.5s ease-in-out infinite',
         'mood-pop': 'mood-pop 0.3s ease-out',
+        'shimmer': 'shimmer 2s linear infinite',
       },
       keyframes: {
         'pulse-live': {
@@ -99,6 +100,10 @@ export default {
         'mood-pop': {
           from: { opacity: '0', transform: 'scale(0.85)' },
           to: { opacity: '1', transform: 'scale(1)' },
+        },
+        'shimmer': {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
         },
       },
       backdropBlur: {

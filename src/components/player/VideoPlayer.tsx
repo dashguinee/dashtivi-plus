@@ -398,26 +398,6 @@ function DashCinemaLoader({ title }: { title?: string }) {
 
       {/* Logo + text */}
       <div className="relative z-10 flex flex-col items-center">
-        {/* Lightning bolt icon */}
-        <div
-          className="transition-all duration-500 ease-out"
-          style={{
-            transform: `scale(${phase >= 1 ? 1 : 0.3}) translateY(${phase >= 1 ? 0 : 20}px)`,
-            opacity: phase >= 1 ? 1 : 0,
-          }}
-        >
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center"
-            style={{
-              background: 'linear-gradient(135deg, #9D4EDD, #7B2CBF)',
-              boxShadow: phase >= 2 ? '0 0 40px rgba(157,78,221,0.6), 0 0 80px rgba(157,78,221,0.3)' : '0 0 10px rgba(157,78,221,0.3)',
-              transition: 'box-shadow 0.8s ease',
-            }}
-          >
-            <Zap className="w-8 h-8 text-white fill-white" />
-          </div>
-        </div>
-
         {/* DASH text */}
         <h2
           className="mt-4 text-2xl font-black tracking-[6px] transition-all duration-500"

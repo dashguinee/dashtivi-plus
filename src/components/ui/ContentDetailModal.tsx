@@ -105,7 +105,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg max-h-[92vh] bg-[#0a0a0f] rounded-t-2xl sm:rounded-2xl overflow-hidden overflow-y-auto border border-white/10 animate-slide-up shadow-2xl"
+        className="w-full max-w-2xl max-h-[92vh] bg-[#0a0a0f] rounded-t-2xl sm:rounded-2xl overflow-hidden overflow-y-auto border border-white/10 animate-slide-up shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Close button ─────────────────────────────────────── */}
@@ -118,10 +118,10 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
         </button>
 
         {/* ── Media area (trailer or poster) ───────────────────── */}
-        <div className="relative w-full aspect-video overflow-hidden bg-black">
+        <div className="relative w-full pb-[62%] rounded-xl overflow-hidden bg-black shadow-2xl">
           {hasTrailer ? (
             <iframe
-              className="absolute inset-0 w-full h-full"
+              className="absolute inset-0 w-full h-[115%] -top-[8%]"
               src={`https://www.youtube-nocookie.com/embed/${tmdbData!.y}?rel=0&modestbranding=1`}
               title={`${cleanTitle} - Trailer`}
               allow="autoplay; encrypted-media; fullscreen"
@@ -141,6 +141,24 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
           )}
           {/* Gradient overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-transparent to-transparent pointer-events-none" />
+
+          {/* Watch Now shimmer overlay */}
+          {hasTrailer && (
+            <div
+              className="absolute bottom-0 left-0 right-0 z-10 cursor-pointer"
+              onClick={onPlay}
+            >
+              <div className="relative overflow-hidden bg-gradient-to-r from-purple-600/90 via-orange-500/90 to-purple-600/90 py-3 text-center">
+                {/* Shimmer sweep */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"
+                  style={{ backgroundSize: '200% 100%' }}
+                />
+                <span className="relative z-10 text-white font-bold text-sm tracking-wide flex items-center justify-center gap-2">
+                  <Play className="w-4 h-4" /> Watch Now
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── Content details ──────────────────────────────────── */}
