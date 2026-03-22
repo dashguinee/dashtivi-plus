@@ -123,23 +123,20 @@ export function usePlayer() {
           lastTimeUpdate = now;
           setState((prev) => ({ ...prev, currentTime: video.currentTime }));
         };
-        video.ondurationchange = () => {
-          const dur = video.duration;
-          if (dur && isFinite(dur)) {
-            // For FFmpeg remux (MKV/AVI), browser reports fragment duration (~4s) not full movie.
-            // Use TMDB knownDuration if browser duration is suspiciously short (<60s for a movie).
-            const knownDur = channel.knownDuration;
-            if (knownDur && knownDur > 60 && dur < 60) {
-              setState((prev) => ({ ...prev, duration: knownDur }));
-            } else {
-              setState((prev) => ({ ...prev, duration: dur }));
-            }
-          }
-        };
-        // Also set known duration immediately if available (before browser detects it)
-        if (channel.knownDuration && channel.knownDuration > 60) {
+        // Duration: if we have knownDuration from TMDB/Xtream, use it ALWAYS for VOD.
+        // Browser's ondurationchange reports fragment duration for FFmpeg remux (wrong).
+        const hasKnownDuration = channel.knownDuration && channel.knownDuration > 60;
+        if (hasKnownDuration) {
+          // Set immediately — don't wait for browser
           setState((prev) => ({ ...prev, duration: channel.knownDuration! }));
         }
+        video.ondurationchange = () => {
+          const dur = video.duration;
+          if (dur && isFinite(dur) && !hasKnownDuration) {
+            // Only use browser duration if we don't have a known duration
+            setState((prev) => ({ ...prev, duration: dur }));
+          }
+        };
 
       });
     },

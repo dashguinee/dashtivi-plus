@@ -108,7 +108,7 @@ export const PlayerControls: React.FC<Props> = ({
               )}
               {isVod && state.duration > 0 && (
                 <span className="text-text-muted">
-                  {formatTime(state.currentTime)} / {formatTime(state.duration)}
+                  {formatTime(state.duration)}
                 </span>
               )}
             </div>

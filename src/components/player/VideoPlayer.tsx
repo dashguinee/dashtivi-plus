@@ -398,23 +398,25 @@ export const VideoPlayer: React.FC<Props> = ({
         onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
       />
 
-      {/* Controls overlay */}
-      <PlayerControls
-        state={state}
-        onTogglePlay={onTogglePlay}
-        onToggleMute={onToggleMute}
-        onVolumeChange={onVolumeChange}
-        onToggleFullscreen={onToggleFullscreen}
-        onTogglePiP={onTogglePiP}
-        onQualityChange={onQualityChange}
-        onClose={onClose}
-        onBack={onBack}
-        onSeek={onSeek}
-        visible={controlsVisible}
-        hasSubs={hasSubs}
-        subsOn={subsOn}
-        onToggleSubs={toggleSubs}
-      />
+      {/* Controls overlay — hidden during cinema intro */}
+      {!showCinemaIntro && (
+        <PlayerControls
+          state={state}
+          onTogglePlay={onTogglePlay}
+          onToggleMute={onToggleMute}
+          onVolumeChange={onVolumeChange}
+          onToggleFullscreen={onToggleFullscreen}
+          onTogglePiP={onTogglePiP}
+          onQualityChange={onQualityChange}
+          onClose={onClose}
+          onBack={onBack}
+          onSeek={onSeek}
+          visible={controlsVisible}
+          hasSubs={hasSubs}
+          subsOn={subsOn}
+          onToggleSubs={toggleSubs}
+        />
+      )}
     </div>
   );
 };
