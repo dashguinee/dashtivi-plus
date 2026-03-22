@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Tv, LogOut } from 'lucide-react';
+import { Tv, LogOut, Volume2, VolumeX } from 'lucide-react';
+import { toggleAmbient } from '@/lib/ambient-audio';
 
 interface Props {
   onLogout?: () => void;
@@ -10,6 +11,7 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/';
+  const [ambientOn, setAmbientOn] = useState(false);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 safe-top">
@@ -62,6 +64,16 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const on = toggleAmbient();
+              setAmbientOn(on);
+            }}
+            className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+            title={ambientOn ? 'Mute ambient' : 'Play ambient'}
+          >
+            {ambientOn ? <Volume2 className="w-4 h-4 text-primary-light" /> : <VolumeX className="w-4 h-4 text-white/40" />}
+          </button>
           {onLogout && (
             <button
               onClick={onLogout}

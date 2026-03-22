@@ -20,6 +20,7 @@ const THEME_SUBTYPES: Record<string, SportType[]> = {
   'news': [], // News doesn't need sub-tabs
 };
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
+import { setAmbientSpeed, setAmbientExperience } from '@/lib/ambient-audio';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { isDead } from '@/hooks/useChannelHealth';
@@ -310,6 +311,10 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
                   streams={themeStreams[theme.id] || []}
                   credentials={credentials}
                   onPlay={handlePlayFromList}
+                  onThemeSelect={(themeId) => {
+                    setAmbientExperience(themeId);
+                    setAmbientSpeed(0.85);
+                  }}
                 />
               ))}
             </div>
@@ -399,11 +404,13 @@ function ThemeRow({
   streams,
   credentials,
   onPlay,
+  onThemeSelect,
 }: {
   theme: LiveTheme;
   streams: LiveStream[];
   credentials: XtreamCredentials;
   onPlay: (stream: LiveStream, allStreams: LiveStream[]) => void;
+  onThemeSelect?: (themeId: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<string>('all');
@@ -438,7 +445,11 @@ function ThemeRow({
         <h2 className="text-[15px] font-bold text-white">{theme.name}</h2>
         <span className="text-[11px] text-text-muted">{alive.length}</span>
         <button
-          onClick={() => setExpanded(e => !e)}
+          onClick={() => {
+            const next = !expanded;
+            setExpanded(next);
+            if (next) onThemeSelect?.(theme.id);
+          }}
           className="ml-auto flex items-center gap-0.5 text-xs text-primary-light hover:text-white transition-colors"
         >
           {expanded ? 'See less' : 'See all'}

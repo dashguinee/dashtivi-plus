@@ -31,6 +31,7 @@ import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
 import { TrailerModal } from '@/components/ui/TrailerModal';
 import { VeeWidget } from '@/components/ui/VeeWidget';
 import { SkeletonRow } from '@/components/ui/LoadingSpinner';
+import { setAmbientSpeed } from '@/lib/ambient-audio';
 import type { Channel, WatchHistoryEntry } from '@/types';
 
 interface Props {
@@ -166,6 +167,11 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   );
 
   const hero = getFeaturedHero();
+
+  // Set ambient speed for home — comfortable pace
+  useEffect(() => {
+    setAmbientSpeed(0.8);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
