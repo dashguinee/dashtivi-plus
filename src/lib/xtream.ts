@@ -817,6 +817,67 @@ function iconScore(icon: string): number {
   return 0;
 }
 
+// --- Free HLS Channels ---
+// 5,234 free channels from /free-channels.json, merged into themes + regions
+
+export interface FreeChannel {
+  id: string;
+  name: string;
+  url: string;
+  logo: string;
+  experience: string;
+  culture: string;
+  source: 'free';
+}
+
+let freeChannelCache: FreeChannel[] | null = null;
+let freeChannelPromise: Promise<FreeChannel[]> | null = null;
+
+export function getFreeChannels(): Promise<FreeChannel[]> {
+  if (freeChannelCache) return Promise.resolve(freeChannelCache);
+  if (!freeChannelPromise) {
+    freeChannelPromise = fetch('/free-channels.json')
+      .then(r => r.json())
+      .then((data: FreeChannel[]) => { freeChannelCache = data; return data; })
+      .catch(() => { freeChannelCache = []; return []; });
+  }
+  return freeChannelPromise;
+}
+
+export function getFreeChannelsByExperience(experience: string): Promise<FreeChannel[]> {
+  return getFreeChannels().then(all => all.filter(ch => ch.experience === experience));
+}
+
+export function getFreeChannelsByCulture(culture: string): Promise<FreeChannel[]> {
+  return getFreeChannels().then(all => all.filter(ch => ch.culture === culture));
+}
+
+/** Convert a FreeChannel to LiveStream for unified rendering */
+export function freeToLiveStream(ch: FreeChannel): LiveStream {
+  return {
+    stream_id: parseInt(ch.id.replace('free-', '')) + 900000,
+    name: ch.name,
+    stream_icon: ch.logo,
+    epg_channel_id: '',
+    category_id: 'free',
+  };
+}
+
+/** Build a map of freeStreamId -> HLS URL for playback */
+export function buildFreeUrlMap(channels: FreeChannel[]): Record<number, string> {
+  const map: Record<number, string> = {};
+  for (const ch of channels) {
+    const fakeId = parseInt(ch.id.replace('free-', '')) + 900000;
+    map[fakeId] = ch.url;
+  }
+  return map;
+}
+
+/** Check if a stream_id belongs to a free channel */
+export function isFreeChannel(streamId: number): boolean {
+  return streamId >= 900000;
+}
+
 // --- Cache management ---
 
 export function clearXtreamCache(): void {

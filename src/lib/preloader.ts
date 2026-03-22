@@ -32,6 +32,11 @@ export function startPreload() {
     fetch('/tmdb-data.json').catch(() => {});  // Browser caches the response
   }, 1000);
 
+  // Phase 2b: Free channels (1.5s — 1.4MB JSON, preload for instant merge)
+  setTimeout(() => {
+    fetch('/free-channels.json').catch(() => {});
+  }, 1500);
+
   // Phase 3: Logo map (1000ms — after TMDB starts)
   setTimeout(() => {
     import('@/lib/logo-map.generated').catch(() => {});

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Play, Globe, Headphones, ChevronRight } from 'lucide-react';
-import type { XtreamCredentials, LiveStream } from '@/lib/xtream';
-import { getLiveStreams, buildLiveUrl, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortByIconQuality, fetchServerProbeData, seedProbeCacheFromServer, type VpsHealthData } from '@/lib/xtream';
+import type { XtreamCredentials, LiveStream, FreeChannel } from '@/lib/xtream';
+import { getLiveStreams, buildLiveUrl, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortByIconQuality, fetchServerProbeData, seedProbeCacheFromServer, getFreeChannelsByCulture, freeToLiveStream, buildFreeUrlMap, isFreeChannel, type VpsHealthData } from '@/lib/xtream';
 import { REGION_GENRES } from '@/lib/collections';
 import type { RegionGenre } from '@/lib/collections';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
@@ -97,6 +97,16 @@ const REGIONS: WorldRegion[] = [
   },
 ];
 
+// Map region IDs to free channel culture tags
+const REGION_TO_CULTURE: Record<string, string> = {
+  'africa': 'africa',
+  'france': 'france',
+  'uk': 'uk',
+  'usa': 'usa',
+  'arabic': 'arabic',
+  'india': 'india',
+};
+
 interface Props {
   credentials: XtreamCredentials;
   onPlay: (channel: Channel) => void;
@@ -112,7 +122,10 @@ export const FrenchPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const [genreLoading, setGenreLoading] = useState(false);
   const portalScrollRef = useRef<HTMLDivElement>(null);
 
-  // Initial load: fetch first region + health check
+  // Free channel URL map (stream_id -> HLS URL)
+  const [freeUrlMap, setFreeUrlMap] = useState<Record<number, string>>({});
+
+  // Initial load: fetch first region + health check + free channels
   useEffect(() => {
     let mounted = true;
     async function load() {
@@ -123,9 +136,22 @@ export const FrenchPage: React.FC<Props> = ({ credentials, onPlay }) => {
         ]);
         if (probeData) seedProbeCacheFromServer(probeData);
         const first = REGIONS[0];
-        const streams = await loadRegionStreams(first, healthData, credentials);
+        const xtreamStreams = await loadRegionStreams(first, healthData, credentials);
+
+        // Merge free channels for this region's culture
+        const culture = REGION_TO_CULTURE[first.id];
+        let freeChannels: FreeChannel[] = [];
+        if (culture) {
+          freeChannels = await getFreeChannelsByCulture(culture);
+        }
+        const freeAsLive = freeChannels.map(freeToLiveStream);
+        const merged = [...xtreamStreams, ...freeAsLive];
+
         if (!mounted) return;
-        setRegionStreams({ [first.id]: streams });
+        setRegionStreams({ [first.id]: merged });
+        if (freeChannels.length > 0) {
+          setFreeUrlMap(prev => ({ ...prev, ...buildFreeUrlMap(freeChannels) }));
+        }
       } catch {
         // silent
       } finally {
@@ -136,7 +162,7 @@ export const FrenchPage: React.FC<Props> = ({ credentials, onPlay }) => {
     return () => { mounted = false; };
   }, [credentials]);
 
-  // Load region streams on demand
+  // Load region streams on demand (Xtream + free merged)
   const switchRegion = useCallback(async (regionId: string) => {
     setActiveRegion(regionId);
     setActiveGenre('all');
@@ -147,8 +173,21 @@ export const FrenchPage: React.FC<Props> = ({ credentials, onPlay }) => {
       const region = REGIONS.find((r) => r.id === regionId);
       if (!region) return;
       const healthData = await fetchVpsHealth();
-      const streams = await loadRegionStreams(region, healthData, credentials);
-      setRegionStreams((prev) => ({ ...prev, [regionId]: streams }));
+      const xtreamStreams = await loadRegionStreams(region, healthData, credentials);
+
+      // Merge free channels for this region's culture
+      const culture = REGION_TO_CULTURE[regionId];
+      let freeChannels: FreeChannel[] = [];
+      if (culture) {
+        freeChannels = await getFreeChannelsByCulture(culture);
+      }
+      const freeAsLive = freeChannels.map(freeToLiveStream);
+      const merged = [...xtreamStreams, ...freeAsLive];
+
+      setRegionStreams((prev) => ({ ...prev, [regionId]: merged }));
+      if (freeChannels.length > 0) {
+        setFreeUrlMap(prev => ({ ...prev, ...buildFreeUrlMap(freeChannels) }));
+      }
     } catch {
       // silent
     } finally {
@@ -196,7 +235,9 @@ export const FrenchPage: React.FC<Props> = ({ credentials, onPlay }) => {
       const playlist = regionChannels.map(s => ({
         id: `live-${s.stream_id}`,
         name: s.name,
-        url: buildLiveUrl(credentials, s.stream_id),
+        url: isFreeChannel(s.stream_id)
+          ? freeUrlMap[s.stream_id] || ''
+          : buildLiveUrl(credentials, s.stream_id),
         logo: s.stream_icon,
         category: 'live' as const,
       }));
@@ -204,14 +245,16 @@ export const FrenchPage: React.FC<Props> = ({ credentials, onPlay }) => {
       const channel = {
         id: `live-${stream.stream_id}`,
         name: stream.name,
-        url: buildLiveUrl(credentials, stream.stream_id),
+        url: isFreeChannel(stream.stream_id)
+          ? freeUrlMap[stream.stream_id] || ''
+          : buildLiveUrl(credentials, stream.stream_id),
         logo: stream.stream_icon,
         category: 'live' as const,
       };
       setCurrentChannel(channel.id);
       onPlay(channel);
     },
-    [credentials, onPlay, displayStreams]
+    [credentials, onPlay, displayStreams, freeUrlMap]
   );
 
   if (loading) {

@@ -1,6 +1,8 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { markDead, markAlive } from '@/hooks/useChannelHealth';
 import { onStreamSuccess, onStreamFail, getStreamQuality } from '@/lib/xtream';
+import { createHlsPlayer } from '@/lib/hls';
+import type { HlsInstance } from '@/lib/hls';
 import type { Channel, PlayerState } from '@/types';
 
 export function usePlayer() {
@@ -21,9 +23,15 @@ export function usePlayer() {
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const destroyRef = useRef<(() => void) | null>(null);
+  const hlsRef = useRef<HlsInstance | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const cleanup = useCallback(() => {
+    // Destroy HLS.js instance if active (free channels)
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
     if (destroyRef.current) {
       destroyRef.current();
       destroyRef.current = null;
@@ -66,38 +74,55 @@ export function usePlayer() {
         let url = channel.url;
         const isLive = url.includes('/live?');
         const isVod = url.includes('/vod?');
+        const isHlsUrl = url.endsWith('.m3u8') || url.includes('.m3u8?');
+
         if (isLive || isVod) {
           url = url.replace(/&q=eco/, '');
           if (getStreamQuality() === 'eco') url += '&q=eco';
         }
-        let retryCount = 0;
 
-        video.src = url;
-        video.play().catch(() => {});
-
-        const maxRetries = isLive ? 5 : 3;
-        video.onerror = () => {
-          if (retryCount < maxRetries) {
-            retryCount++;
-            setState((prev) => ({ ...prev, error: `Retry ${retryCount}/${maxRetries}`, isPlaying: false }));
-            setTimeout(() => {
-              setState((prev) => ({ ...prev, error: null }));
-              video.src = url;
-              video.play().catch(() => {});
-            }, 2000);
-          } else {
-            const idMatch = url.match(/[?&]id=(\d+)/);
-            if (idMatch) onStreamFail(parseInt(idMatch[1]));
-            markDead(channel.id, 'Stream error');
+        // Free HLS channels — use createHlsPlayer (handles Safari native + HLS.js)
+        if (isHlsUrl) {
+          const hlsInstance = createHlsPlayer(video, url, undefined, (errMsg) => {
+            markDead(channel.id, errMsg);
             setState((prev) => ({ ...prev, error: 'Stream interrupted — tap Reconnect to resume', isLoading: false }));
-          }
-        };
+          });
+          hlsRef.current = hlsInstance;
+          destroyRef.current = () => {
+            hlsInstance.destroy();
+            hlsRef.current = null;
+            video.onerror = null;
+          };
+        } else {
+          // Xtream proxy channels — existing behavior
+          let retryCount = 0;
+          video.src = url;
+          video.play().catch(() => {});
 
-        destroyRef.current = () => {
-          video.onerror = null;
-          video.src = '';
-          video.load();
-        };
+          const maxRetries = isLive ? 5 : 3;
+          video.onerror = () => {
+            if (retryCount < maxRetries) {
+              retryCount++;
+              setState((prev) => ({ ...prev, error: `Retry ${retryCount}/${maxRetries}`, isPlaying: false }));
+              setTimeout(() => {
+                setState((prev) => ({ ...prev, error: null }));
+                video.src = url;
+                video.play().catch(() => {});
+              }, 2000);
+            } else {
+              const idMatch = url.match(/[?&]id=(\d+)/);
+              if (idMatch) onStreamFail(parseInt(idMatch[1]));
+              markDead(channel.id, 'Stream error');
+              setState((prev) => ({ ...prev, error: 'Stream interrupted — tap Reconnect to resume', isLoading: false }));
+            }
+          };
+
+          destroyRef.current = () => {
+            video.onerror = null;
+            video.src = '';
+            video.load();
+          };
+        }
         setState((prev) => ({ ...prev, isLoading: false }));
 
         video.oncanplay = () => {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Play, Search, X, ChevronRight, LayoutGrid } from 'lucide-react';
-import type { XtreamCredentials, LiveCategory, LiveStream, GroupedChannel } from '@/lib/xtream';
-import { getLiveCategories, getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortByIconQuality, fetchServerProbeData, seedProbeCacheFromServer } from '@/lib/xtream';
+import type { XtreamCredentials, LiveCategory, LiveStream, GroupedChannel, FreeChannel } from '@/lib/xtream';
+import { getLiveCategories, getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortByIconQuality, fetchServerProbeData, seedProbeCacheFromServer, getFreeChannelsByExperience, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
 import { LIVETV_THEMES, SPORT_TYPES } from '@/lib/collections';
 import type { LiveTheme, SportType } from '@/lib/collections';
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
@@ -15,6 +15,17 @@ const SPORTS_CAT_IDS = new Set([
   '75', '76', '77', '78', '79', '80', '81', '82', '83', '84',
   '184', '185', '186', '187', '188',
 ]);
+
+// Map theme IDs to free channel experience tags
+const THEME_TO_EXPERIENCE: Record<string, string> = {
+  'sports': 'sports',
+  'news': 'news',
+  'entertainment': 'entertainment',
+  'kids': 'kids',
+  'movies247': 'movies',
+  'documentary': 'documentary',
+  'music': 'music',
+};
 
 interface Props {
   credentials: XtreamCredentials;
@@ -33,6 +44,9 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const [themeStreams, setThemeStreams] = useState<Record<string, LiveStream[]>>({});
   const [themesLoading, setThemesLoading] = useState(true);
 
+  // ── Free channel URL map (stream_id -> HLS URL) ────────────
+  const [freeUrlMap, setFreeUrlMap] = useState<Record<number, string>>({});
+
   // ── Browse state ──────────────────────────────────────────────
   const [showBrowse, setShowBrowse] = useState(false);
   const [categories, setCategories] = useState<LiveCategory[]>([]);
@@ -49,16 +63,26 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // ── Search across all channels ────────────────────────────────
+  // ── Search across all channels (Xtream + free) ─────────────────
   useEffect(() => {
     if (!debouncedQuery.trim()) { setSearchResults([]); return; }
     let mounted = true;
     async function search() {
       setSearchLoading(true);
       try {
-        const all = await getAllLiveStreams(credentials);
+        const [all, freeAll] = await Promise.all([
+          getAllLiveStreams(credentials),
+          getFreeChannels(),
+        ]);
         const q = debouncedQuery.toLowerCase();
-        if (mounted) setSearchResults(all.filter(s => s.name.toLowerCase().includes(q)));
+        const xtreamResults = all.filter(s => s.name.toLowerCase().includes(q));
+        const freeResults = freeAll.filter(ch => ch.name.toLowerCase().includes(q));
+        const freeAsLive = freeResults.map(freeToLiveStream);
+        // Populate URL map for free results
+        if (freeResults.length > 0) {
+          setFreeUrlMap(prev => ({ ...prev, ...buildFreeUrlMap(freeResults) }));
+        }
+        if (mounted) setSearchResults([...xtreamResults, ...freeAsLive]);
       } catch {
         if (mounted) setSearchResults([]);
       } finally {
@@ -69,7 +93,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
     return () => { mounted = false; };
   }, [debouncedQuery, credentials]);
 
-  // ── Load theme streams on mount ───────────────────────────────
+  // ── Load theme streams on mount (Xtream + free channels merged) ─
   useEffect(() => {
     let mounted = true;
     async function loadThemes() {
@@ -79,6 +103,10 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
           fetchServerProbeData(),
         ]);
         if (probeData) seedProbeCacheFromServer(probeData);
+
+        // Load free channels in parallel with Xtream themes
+        const freeChannelsPromise = getFreeChannels();
+
         const results = await Promise.allSettled(
           LIVETV_THEMES.map(async (theme) => {
             const activeCats = theme.categoryIds.filter(id => !isCategoryDead(healthData, id));
@@ -86,18 +114,34 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             const streams = await Promise.allSettled(
               cats.map(id => getLiveStreams(credentials, id).catch(() => [] as LiveStream[]))
             );
+            const xtreamStreams = dedupeStreams(streams.flatMap(r => r.status === 'fulfilled' ? r.value : []));
+
+            // Merge matching free channels
+            const experience = THEME_TO_EXPERIENCE[theme.id];
+            let freeStreams: FreeChannel[] = [];
+            if (experience) {
+              const allFree = await freeChannelsPromise;
+              freeStreams = allFree.filter(ch => ch.experience === experience);
+            }
+            const freeAsLive = freeStreams.map(freeToLiveStream);
             return {
               id: theme.id,
-              streams: dedupeStreams(streams.flatMap(r => r.status === 'fulfilled' ? r.value : [])),
+              streams: [...xtreamStreams, ...freeAsLive],
+              freeChannels: freeStreams,
             };
           })
         );
         if (!mounted) return;
         const map: Record<string, LiveStream[]> = {};
+        const urlMap: Record<number, string> = {};
         for (const r of results) {
-          if (r.status === 'fulfilled') map[r.value.id] = r.value.streams;
+          if (r.status === 'fulfilled') {
+            map[r.value.id] = r.value.streams;
+            Object.assign(urlMap, buildFreeUrlMap(r.value.freeChannels));
+          }
         }
         setThemeStreams(map);
+        setFreeUrlMap(prev => ({ ...prev, ...urlMap }));
       } catch {
         // silent — themes are best-effort
       } finally {
@@ -175,7 +219,9 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
         .map(s => ({
           id: `live-${s.stream_id}`,
           name: s.name,
-          url: buildLiveUrl(credentials, s.stream_id),
+          url: isFreeChannel(s.stream_id)
+            ? freeUrlMap[s.stream_id] || ''  // Direct HLS URL for free channels
+            : buildLiveUrl(credentials, s.stream_id),  // VPS proxy for Xtream
           logo: s.stream_icon,
           category: 'live' as const,
         }));
@@ -186,7 +232,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
         onPlay(ch);
       }
     },
-    [credentials, onPlay]
+    [credentials, onPlay, freeUrlMap]
   );
 
   return (
@@ -231,7 +277,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             No channels match your search
           </div>
         ) : (
-          <SearchGrid streams={searchResults} credentials={credentials} onPlay={onPlay} />
+          <SearchGrid streams={searchResults} credentials={credentials} onPlay={onPlay} freeUrlMap={freeUrlMap} />
         )
       ) : (
         <>
@@ -553,10 +599,11 @@ function BrowseGrid({
 
 // ── Search Grid (simple, no quality grouping) ─────────────────────
 
-function SearchGrid({ streams, credentials, onPlay }: {
+function SearchGrid({ streams, credentials, onPlay, freeUrlMap }: {
   streams: LiveStream[];
   credentials: XtreamCredentials;
   onPlay: (channel: Channel) => void;
+  freeUrlMap: Record<number, string>;
 }) {
   const handlePlay = useCallback(
     (stream: LiveStream) => {
@@ -564,7 +611,9 @@ function SearchGrid({ streams, credentials, onPlay }: {
       const channels = streams.map(s => ({
         id: `live-${s.stream_id}`,
         name: s.name,
-        url: buildLiveUrl(credentials, s.stream_id),
+        url: isFreeChannel(s.stream_id)
+          ? freeUrlMap[s.stream_id] || ''
+          : buildLiveUrl(credentials, s.stream_id),
         logo: s.stream_icon,
         category: 'live' as const,
       }));
@@ -575,7 +624,7 @@ function SearchGrid({ streams, credentials, onPlay }: {
         onPlay(ch);
       }
     },
-    [streams, credentials, onPlay]
+    [streams, credentials, onPlay, freeUrlMap]
   );
 
   return (
