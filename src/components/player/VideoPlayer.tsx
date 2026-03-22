@@ -5,7 +5,6 @@ import { RefreshCw, AlertTriangle, Zap, ChevronLeft as ChevLeft, ChevronRight as
 import { useAdjacentChannels, usePlaylistState, setCurrentChannel } from '@/lib/playlist';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { getStreamQuality, setStreamQuality } from '@/lib/xtream';
-import { playDashCinemaSound } from '@/lib/cinema-sound';
 import type { Channel, PlayerState } from '@/types';
 
 interface Props {
@@ -50,10 +49,10 @@ export const VideoPlayer: React.FC<Props> = ({
   const bufferCountRef = useRef(0);
   const bufferTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Cinema intro — persists independently of isLoading so the full animation plays
+  // Cinema intro — shows until video is READY (not a fixed timer)
   const [showCinemaIntro, setShowCinemaIntro] = useState(false);
   const cinemaChannelRef = useRef<string | null>(null);
-  const cinemaTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const cinemaMinTimeRef = useRef(false); // has minimum 2.5s elapsed?
 
   // Trigger cinema intro when a VOD channel starts loading
   useEffect(() => {
@@ -63,17 +62,25 @@ export const VideoPlayer: React.FC<Props> = ({
     if (isVod && state.isLoading && channelId !== cinemaChannelRef.current) {
       // New VOD channel loading — start cinema intro
       cinemaChannelRef.current = channelId;
+      cinemaMinTimeRef.current = false;
       setShowCinemaIntro(true);
-      if (cinemaTimerRef.current) clearTimeout(cinemaTimerRef.current);
-      // Auto-dismiss after 2.5s (matches the animation timeline)
-      cinemaTimerRef.current = setTimeout(() => setShowCinemaIntro(false), 2600);
+      // Minimum display time: 2.5s (let the animation + sound complete)
+      setTimeout(() => { cinemaMinTimeRef.current = true; }, 2500);
+      // Maximum display time: 8s (fallback if video never starts)
+      setTimeout(() => { setShowCinemaIntro(false); }, 8000);
     } else if (!state.channel) {
-      // Player closed — reset
       cinemaChannelRef.current = null;
       setShowCinemaIntro(false);
-      if (cinemaTimerRef.current) clearTimeout(cinemaTimerRef.current);
     }
   }, [state.channel, state.isLoading]);
+
+  // Dismiss cinema intro when video starts playing AND min time elapsed
+  useEffect(() => {
+    if (showCinemaIntro && state.isPlaying && cinemaMinTimeRef.current) {
+      // Fade out over 500ms
+      setTimeout(() => setShowCinemaIntro(false), 500);
+    }
+  }, [showCinemaIntro, state.isPlaying]);
 
   const showControls = useCallback(() => {
     setControlsVisible(true);
@@ -410,19 +417,13 @@ export const VideoPlayer: React.FC<Props> = ({
 function DashCinemaLoader({ title }: { title?: string }) {
   const [phase, setPhase] = useState(0);
   const [dismissed, setDismissed] = useState(false);
-  const soundPlayedRef = useRef(false);
 
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = [];
 
     // Phase 0 → 1: Black settles, then glow + sound
-    timers.push(setTimeout(() => {
-      setPhase(1);
-      if (!soundPlayedRef.current) {
-        soundPlayedRef.current = true;
-        playDashCinemaSound();
-      }
-    }, 200));
+    // Sound plays from App.tsx click handler (user gesture required for AudioContext)
+    timers.push(setTimeout(() => setPhase(1), 200));
 
     // Phase 1 → 2: DASH text appears (synced with "toundoum" at ~500ms into sound)
     timers.push(setTimeout(() => setPhase(2), 700));

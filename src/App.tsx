@@ -15,6 +15,7 @@ import { useWatchHistory } from '@/hooks/useWatchHistory';
 import { getItem, setItem } from '@/lib/storage';
 import { setCurrentChannel } from '@/lib/playlist';
 import { startPreload, preloadApiData } from '@/lib/preloader';
+import { playDashCinemaSound } from '@/lib/cinema-sound';
 import type { Channel } from '@/types';
 
 // Start preloading immediately on script load — before React even mounts
@@ -37,6 +38,9 @@ function AppContent() {
 
   const handlePlayChannel = useCallback(
     (channel: Channel) => {
+      // Play cinema sound on user gesture (VOD only) — must be in click handler for AudioContext
+      const isVod = channel.category === 'movie' || channel.category === 'series';
+      if (isVod) playDashCinemaSound();
       player.playChannel(channel);
       addToHistory(channel);
       setCurrentChannel(channel.id);
