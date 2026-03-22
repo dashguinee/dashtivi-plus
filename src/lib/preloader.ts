@@ -27,16 +27,10 @@ export function startPreload() {
     fetch('https://stream.zionsynapse.online/probe-results.json', { signal: AbortSignal.timeout(5000) }).catch(() => {});
   }, 200);
 
-  // Phase 2: TMDB data (3s — after login UI is interactive, this is 4MB)
+  // Phase 2: TMDB data (1s — now JSON via fetch, doesn't block main thread)
   setTimeout(() => {
-    // Use requestIdleCallback to avoid blocking main thread
-    const load = () => import('@/lib/tmdb-map.generated').catch(() => {});
-    if ('requestIdleCallback' in window) {
-      (window as unknown as { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(load);
-    } else {
-      load();
-    }
-  }, 3000);
+    fetch('/tmdb-data.json').catch(() => {});  // Browser caches the response
+  }, 1000);
 
   // Phase 3: Logo map (1000ms — after TMDB starts)
   setTimeout(() => {

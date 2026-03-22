@@ -110,7 +110,7 @@ const VeeCard: React.FC<{
   onTrailer?: (youtubeKey: string, title: string, poster?: string, overview?: string) => void;
 }> = ({ item, tmdb, neonColor, onPlay, onTrailer }) => {
   const [imgFailed, setImgFailed] = useState(false);
-  const poster = getSafePoster(item.stream_icon, tmdb?.p);
+  const poster = getSafePoster(item.stream_icon, undefined);
   const hasPoster = poster && !imgFailed;
   const { clean, year } = parseTitle(item.name);
   const displayRating = tmdb?.r ? tmdb.r.toFixed(1) : item.rating;

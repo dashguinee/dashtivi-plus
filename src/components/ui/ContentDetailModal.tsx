@@ -114,7 +114,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   // Trailer: prefer Xtream VOD info trailer (more reliable embedding), fallback to TMDB
   const trailerKey = vodTrailer || tmdbData?.y || null;
   const hasTrailer = !!trailerKey;
-  const backdropUrl = getBackdropUrl(poster, tmdbData?.p);
+  const backdropUrl = getBackdropUrl(poster, undefined);
 
   // Rating: prefer TMDB, fallback to Xtream
   const displayRating = tmdbData?.r ? tmdbData.r.toFixed(1) : rating;

@@ -132,15 +132,15 @@ export function usePlayer() {
           durationLocked = true;
         }
 
-        // Source 2: fetch from TMDB map (async, catches cases where caller didn't have it)
+        // Source 2: fetch from TMDB JSON (async, no main thread blocking)
         if (!durationLocked && !isLive) {
           const streamId = channel.id.replace(/^(vod|series)-/, '');
           const prefix = channel.id.startsWith('series-') ? 's' : 'm';
-          import('../lib/tmdb-map.generated').then(m => {
-            const entry = m.TMDB_MAP[`${prefix}:${streamId}`];
+          fetch('/tmdb-data.json').then(r => r.json()).then((data: Record<string, { t?: number }>) => {
+            const entry = data[`${prefix}:${streamId}`];
             if (entry?.t && entry.t > 1 && !durationLocked) {
               durationLocked = true;
-              setState((prev) => ({ ...prev, duration: entry.t! * 60 }));
+              setState((prev) => ({ ...prev, duration: (entry.t ?? 0) * 60 }));
             }
           }).catch(() => {});
         }

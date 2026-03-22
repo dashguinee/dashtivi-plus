@@ -85,7 +85,7 @@ function formatRuntime(minutes: number): string {
 export const PosterCard = memo(function PosterCard({ title, poster, rating, categoryId, onClick, tmdbData, onTrailer }: Props) {
   const badge = categoryId ? PLATFORM_BADGES[categoryId] : undefined;
   const [imgFailed, setImgFailed] = useState(false);
-  const safePoster = getSafePoster(poster, tmdbData?.p);
+  const safePoster = getSafePoster(poster, undefined);
   const hasPoster = safePoster && !imgFailed;
   const { clean: cleanTitle, year } = parseTitle(title);
 

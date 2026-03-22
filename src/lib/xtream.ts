@@ -182,8 +182,9 @@ function getLogoMap(): Promise<Record<string, string>> {
   return logoMapPromise;
 }
 
-/** Lazy-load TMDB metadata map to keep main bundle small */
+/** TMDB metadata — loaded as JSON via fetch (doesn't block main thread) */
 import type { TmdbEntry } from './tmdb-map.generated';
+import { TMDB_GENRES } from './tmdb-map.generated';
 
 type TmdbMapData = { TMDB_MAP: Record<string, TmdbEntry>; TMDB_GENRES: Record<number, string> };
 let tmdbMapCache: TmdbMapData | null = null;
@@ -192,9 +193,13 @@ let tmdbMapPromise: Promise<TmdbMapData | null> | null = null;
 export function getTmdbMap(): Promise<TmdbMapData | null> {
   if (tmdbMapCache) return Promise.resolve(tmdbMapCache);
   if (!tmdbMapPromise) {
-    tmdbMapPromise = import('./tmdb-map.generated')
-      .then(m => { tmdbMapCache = { TMDB_MAP: m.TMDB_MAP, TMDB_GENRES: m.TMDB_GENRES }; return tmdbMapCache; })
-      .catch(() => { tmdbMapCache = { TMDB_MAP: {}, TMDB_GENRES: {} }; return tmdbMapCache; });
+    tmdbMapPromise = fetch('/tmdb-data.json')
+      .then(r => r.json())
+      .then((data: Record<string, TmdbEntry>) => {
+        tmdbMapCache = { TMDB_MAP: data, TMDB_GENRES };
+        return tmdbMapCache;
+      })
+      .catch(() => { tmdbMapCache = { TMDB_MAP: {}, TMDB_GENRES }; return tmdbMapCache; });
   }
   return tmdbMapPromise;
 }

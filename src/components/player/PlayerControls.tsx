@@ -132,28 +132,33 @@ export const PlayerControls: React.FC<Props> = ({
 
       {/* Bottom controls */}
       <div className="player-controls-gradient p-4 pt-12">
-        {/* Progress bar — seek bar for VOD, live pulse for live */}
+        {/* Progress bar — seek for mp4 passthrough, display-only for remux */}
         {isVod && state.duration > 0 ? (
           <div className="flex items-center gap-3 mb-4">
             <span className="text-[11px] text-white/60 font-mono min-w-[3.5rem] text-right">
               {formatTime(state.currentTime)}
             </span>
             <div
-              className="relative flex-1 h-1 bg-white/10 rounded-full cursor-pointer group"
+              className="relative flex-1 h-2 bg-white/10 rounded-full cursor-pointer group py-2"
               onClick={(e) => {
                 if (!onSeek) return;
+                // Only seek if stream supports it (mp4 passthrough, not FFmpeg remux)
+                const url = state.channel?.url || '';
+                const canSeek = url.includes('/?url=') && !url.includes('/vod?');
+                if (!canSeek) return;
                 const rect = e.currentTarget.getBoundingClientRect();
                 const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
                 onSeek(pct * state.duration);
               }}
             >
+              <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-1 bg-white/10 rounded-full" />
               <div
-                className="absolute top-0 left-0 h-full bg-primary rounded-full transition-[width] duration-100"
-                style={{ width: `${(state.currentTime / state.duration) * 100}%` }}
+                className="absolute top-1/2 -translate-y-1/2 left-0 h-1 bg-primary rounded-full transition-[width] duration-100"
+                style={{ width: `${Math.min(100, (state.currentTime / state.duration) * 100)}%` }}
               />
               <div
-                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
-                style={{ left: `calc(${(state.currentTime / state.duration) * 100}% - 6px)` }}
+                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 group-active:opacity-100 group-active:w-6 group-active:h-6 transition-all duration-200"
+                style={{ left: `calc(${Math.min(100, (state.currentTime / state.duration) * 100)}% - 8px)` }}
               />
             </div>
             <span className="text-[11px] text-white/60 font-mono min-w-[3.5rem]">
