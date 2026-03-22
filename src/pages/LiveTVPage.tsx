@@ -2,8 +2,23 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Play, Search, X, ChevronRight, LayoutGrid } from 'lucide-react';
 import type { XtreamCredentials, LiveCategory, LiveStream, GroupedChannel, FreeChannel } from '@/lib/xtream';
 import { getLiveCategories, getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortByIconQuality, fetchServerProbeData, seedProbeCacheFromServer, getFreeChannelsByExperience, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
-import { LIVETV_THEMES, SPORT_TYPES } from '@/lib/collections';
+import {
+  LIVETV_THEMES, SPORT_TYPES, ENTERTAINMENT_TYPES, KIDS_TYPES,
+  CINEMA_TYPES, MUSIC_TYPES, DISCOVERY_TYPES, FAITH_TYPES,
+} from '@/lib/collections';
 import type { LiveTheme, SportType } from '@/lib/collections';
+
+// Map theme IDs to their child experience sub-tabs
+const THEME_SUBTYPES: Record<string, SportType[]> = {
+  'sports': SPORT_TYPES,
+  'entertainment': ENTERTAINMENT_TYPES,
+  'kids': KIDS_TYPES,
+  'movies247': CINEMA_TYPES,
+  'music': MUSIC_TYPES,
+  'documentary': DISCOVERY_TYPES,
+  'faith': FAITH_TYPES,
+  'news': [], // News doesn't need sub-tabs
+};
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -391,17 +406,20 @@ function ThemeRow({
   onPlay: (stream: LiveStream, allStreams: LiveStream[]) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [activeSportTab, setActiveSportTab] = useState<string>('all');
+  const [activeSubTab, setActiveSubTab] = useState<string>('all');
 
   const alive = streams.filter((s) => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id));
   if (alive.length === 0) return null;
 
-  // Apply sports sub-tab filter
+  // Get sub-tabs for this theme (if any)
+  const subtypes = THEME_SUBTYPES[theme.id] || [];
+
+  // Apply sub-tab filter
   let filtered = alive;
-  if (theme.id === 'sports' && activeSportTab !== 'all') {
-    const sport = SPORT_TYPES.find(t => t.id === activeSportTab);
-    if (sport) {
-      const catSet = new Set(sport.categoryIds);
+  if (subtypes.length > 0 && activeSubTab !== 'all') {
+    const subtype = subtypes.find(t => t.id === activeSubTab);
+    if (subtype) {
+      const catSet = new Set(subtype.categoryIds);
       filtered = alive.filter(s => catSet.has(String(s.category_id)));
     }
   }
@@ -428,20 +446,20 @@ function ThemeRow({
         </button>
       </div>
 
-      {/* Sports sub-tabs */}
-      {theme.id === 'sports' && (
+      {/* Child experience sub-tabs */}
+      {subtypes.length > 0 && (
         <div className="flex gap-1.5 overflow-x-auto scrollbar-hide px-4 mb-3">
-          {SPORT_TYPES.map((sport) => (
+          {subtypes.map((sub) => (
             <button
-              key={sport.id}
-              onClick={() => setActiveSportTab(sport.id)}
+              key={sub.id}
+              onClick={() => setActiveSubTab(sub.id)}
               className={`flex-shrink-0 text-[10px] px-2.5 py-1 rounded-full transition-all duration-150 ${
-                activeSportTab === sport.id
-                  ? 'bg-green-500/20 text-green-400 border border-green-500/40'
+                activeSubTab === sub.id
+                  ? `bg-gradient-to-r ${theme.gradient} text-white border border-white/20`
                   : 'bg-white/5 text-white/50 border border-transparent hover:text-white/80'
               }`}
             >
-              {sport.name}
+              {sub.name}
             </button>
           ))}
         </div>
