@@ -140,7 +140,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     emoji: '\uD83E\uDD4A',
     description: 'UFC, WWE, PPV & Combat Sports',
     type: 'live',
-    categoryIds: ['190', '516'],  // PPV/Combat (351 channels), NFL
+    categoryIds: ['516'],  // NFL/Combat
     limit: 12,
     navigateTo: '/live',
   },
@@ -318,7 +318,6 @@ export const LIVETV_THEMES: LiveTheme[] = [
       '156',  // Arabic Sports
       '137',  // Fox Australia
       '516',  // NFL
-      '190',  // PPV / Combat
       '483',  // UK Sports
     ],
     gradient: 'from-green-500 to-emerald-700',
@@ -331,8 +330,6 @@ export const LIVETV_THEMES: LiveTheme[] = [
     categoryIds: [
       '82',   // English News
       '417',  // UK News
-      '346',  // DSTV News
-      '431',  // DSTV News FHD
       '165',  // Arabic News
       '730',  // Indian News
       '98',   // Pakistan News
