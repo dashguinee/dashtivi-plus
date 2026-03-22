@@ -272,12 +272,6 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
               {vodCast && <p>Cast: <span className="text-white/50">{vodCast.split(',').slice(0, 4).join(', ')}</span></p>}
             </div>
           )}
-
-          {tmdbData?.v !== undefined && tmdbData.v > 0 && (
-            <p className="text-xs text-white/20 mt-2">
-              {tmdbData.v.toLocaleString()} TMDB votes
-            </p>
-          )}
         </div>
       </div>
     </div>

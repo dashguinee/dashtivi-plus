@@ -68,7 +68,7 @@ export function scoreContent(
   const freshness = freshnessScore(year);
 
   // Popularity (10%) — log10(vote_count) / 5
-  const popularityScore = tmdb ? clamp(Math.log10(Math.max(tmdb.v, 1)) / 5, 0, 1) : 0.1;
+  const popularityScore = tmdb ? clamp(tmdb.r / 10, 0, 1) : 0.1;
 
   // Diversity (10%) — rewards unexplored genres
   const diversityScore = 1 - genreMatch;

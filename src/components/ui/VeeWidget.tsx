@@ -264,7 +264,7 @@ export const VeeWidget: React.FC<VeeWidgetProps> = ({
     const scored = items.map((item) => {
       const tmdb = tmdbMap[`m:${item.stream_id}`];
       const rating = tmdb?.r || 0;
-      const popularity = tmdb?.v ? Math.log10(Math.max(tmdb.v, 1)) : 0;
+      const popularity = tmdb?.r ? tmdb.r / 10 : 0;
       return { item, score: rating * 0.7 + popularity * 0.3 };
     });
     scored.sort((a, b) => b.score - a.score);
