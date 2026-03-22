@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { ChevronLeft, Play, X, Download, Search } from 'lucide-react';
+import { Play, X, Download, Search } from 'lucide-react';
 import type { XtreamCredentials, LiveCategory, SeriesItem, SeriesInfo, Episode } from '@/lib/xtream';
-import { getSeriesCategories, getSeries, getSeriesInfo, buildSeriesUrl } from '@/lib/xtream';
+import { getSeriesCategories, getSeries, getSeriesInfo, buildSeriesUrl, getTmdbMap } from '@/lib/xtream';
+import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { PosterCard } from '@/components/ui/PosterCard';
+import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import type { Channel } from '@/types';
 
@@ -29,6 +31,8 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const [activeCat, setActiveCat] = useState<string>(FEATURED_CATS[0].id);
   const [seriesList, setSeriesList] = useState<SeriesItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detailSeries, setDetailSeries] = useState<SeriesItem | null>(null);
+  const [tmdbMap, setTmdbMap] = useState<Record<string, TmdbEntry>>({});
 
   // Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -98,6 +102,11 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     }, 15000);
     return () => clearTimeout(t);
   }, [loadingInfo]);
+
+  // Lazy-load TMDB map for detail modal metadata
+  useEffect(() => {
+    getTmdbMap().then(m => m && setTmdbMap(m.TMDB_MAP));
+  }, []);
 
   // Load categories
   useEffect(() => {
@@ -267,10 +276,30 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               poster={series.cover}
               rating={series.rating}
               categoryId={isSearching ? undefined : activeCat}
-              onClick={() => handleSelectSeries(series)}
+              tmdbData={tmdbMap[`s:${series.series_id}`]}
+              onClick={() => setDetailSeries(series)}
             />
           ))}
         </div>
+      )}
+
+      {/* ContentDetailModal — metadata + trailer, opens episode picker on play */}
+      {detailSeries && (
+        <ContentDetailModal
+          streamId={detailSeries.series_id}
+          name={detailSeries.name}
+          poster={detailSeries.cover}
+          rating={detailSeries.rating}
+          type="series"
+          tmdbData={tmdbMap[`s:${detailSeries.series_id}`]}
+          credentials={credentials}
+          onPlay={() => {
+            const series = detailSeries;
+            setDetailSeries(null);
+            handleSelectSeries(series);
+          }}
+          onClose={() => setDetailSeries(null)}
+        />
       )}
 
       {/* Series Detail Modal */}
