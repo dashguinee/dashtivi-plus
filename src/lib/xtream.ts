@@ -237,6 +237,42 @@ export async function getVodStreams(c: XtreamCredentials, catId: string): Promis
   );
 }
 
+// --- VOD Info (detailed movie metadata) ---
+
+export interface VodInfo {
+  info: {
+    name?: string;
+    plot?: string;
+    description?: string;
+    director?: string;
+    actors?: string;
+    cast?: string;
+    releasedate?: string;
+    episode_run_time?: string;
+    youtube_trailer?: string;
+    tmdb_id?: string;
+    genre?: string;
+    cover_big?: string;
+    duration?: string;
+    rating?: string;
+  };
+  movie_data?: {
+    stream_id?: number;
+    container_extension?: string;
+  };
+}
+
+export async function getVodInfo(c: XtreamCredentials, vodId: number): Promise<VodInfo | null> {
+  try {
+    return await cachedFetch<VodInfo>(
+      `vod_info_${vodId}`,
+      apiUrl(c, 'get_vod_info', `&vod_id=${vodId}`)
+    );
+  } catch {
+    return null;
+  }
+}
+
 // --- Series ---
 
 export async function getSeriesCategories(c: XtreamCredentials): Promise<LiveCategory[]> {

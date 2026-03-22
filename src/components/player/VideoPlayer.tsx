@@ -5,6 +5,7 @@ import { RefreshCw, AlertTriangle, Zap, ChevronLeft as ChevLeft, ChevronRight as
 import { useAdjacentChannels, usePlaylistState, setCurrentChannel } from '@/lib/playlist';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { getStreamQuality, setStreamQuality } from '@/lib/xtream';
+import { playDashCinemaSound } from '@/lib/cinema-sound';
 import type { Channel, PlayerState } from '@/types';
 
 interface Props {
@@ -48,6 +49,31 @@ export const VideoPlayer: React.FC<Props> = ({
   const [subsUnavailable, setSubsUnavailable] = useState(false);
   const bufferCountRef = useRef(0);
   const bufferTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Cinema intro — persists independently of isLoading so the full animation plays
+  const [showCinemaIntro, setShowCinemaIntro] = useState(false);
+  const cinemaChannelRef = useRef<string | null>(null);
+  const cinemaTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Trigger cinema intro when a VOD channel starts loading
+  useEffect(() => {
+    const isVod = state.channel?.category === 'movie' || state.channel?.category === 'series';
+    const channelId = state.channel?.id ?? null;
+
+    if (isVod && state.isLoading && channelId !== cinemaChannelRef.current) {
+      // New VOD channel loading — start cinema intro
+      cinemaChannelRef.current = channelId;
+      setShowCinemaIntro(true);
+      if (cinemaTimerRef.current) clearTimeout(cinemaTimerRef.current);
+      // Auto-dismiss after 2.5s (matches the animation timeline)
+      cinemaTimerRef.current = setTimeout(() => setShowCinemaIntro(false), 2600);
+    } else if (!state.channel) {
+      // Player closed — reset
+      cinemaChannelRef.current = null;
+      setShowCinemaIntro(false);
+      if (cinemaTimerRef.current) clearTimeout(cinemaTimerRef.current);
+    }
+  }, [state.channel, state.isLoading]);
 
   const showControls = useCallback(() => {
     setControlsVisible(true);
@@ -246,17 +272,18 @@ export const VideoPlayer: React.FC<Props> = ({
         autoPlay
       />
 
-      {/* Loading — DASH Cinema loader for movies, spinner for live */}
-      {state.isLoading && !state.error && !state.isPlaying && (
+      {/* Cinema intro — VOD only, runs independently of loading state */}
+      {showCinemaIntro && (
+        <DashCinemaLoader title={state.channel?.name} />
+      )}
+
+      {/* Loading spinner — live TV only (VOD uses cinema intro above) */}
+      {state.isLoading && !state.error && !state.isPlaying && !showCinemaIntro && (
         <div className="absolute inset-0 flex items-center justify-center bg-black">
-          {state.channel?.category === 'movie' || state.channel?.category === 'series' ? (
-            <DashCinemaLoader title={state.channel?.name} />
-          ) : (
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-12 h-12 border-3 border-white/20 border-t-primary rounded-full animate-spin" />
-              <p className="text-sm text-white/50">Connecting...</p>
-            </div>
-          )}
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-12 h-12 border-3 border-white/20 border-t-primary rounded-full animate-spin" />
+            <p className="text-sm text-white/50">Connecting...</p>
+          </div>
         </div>
       )}
 
@@ -372,80 +399,135 @@ export const VideoPlayer: React.FC<Props> = ({
   );
 };
 
-/** DASH Cinema Loader — Netflix-style branded loading screen that hides buffer time */
+/** DASH Cinema Loader — cinematic intro that masks buffer time for VOD content.
+ *  Phase timeline (~2.5s total):
+ *    0 (0-200ms)      — Pure black, screen settles
+ *    1 (200-700ms)    — Purple glow emanates from center + "Zzzzoum" sound
+ *    2 (700-1200ms)   — "DASH" text fades in, letter-spacing widens + "toundoum" impact
+ *    3 (1200-2000ms)  — Movie title fades in, subtle pulse on glow
+ *    4 (2000-2500ms)  — Everything fades to transparent, video takes over
+ */
 function DashCinemaLoader({ title }: { title?: string }) {
   const [phase, setPhase] = useState(0);
+  const [dismissed, setDismissed] = useState(false);
+  const soundPlayedRef = useRef(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase(1), 100);  // fade in
-    const t2 = setTimeout(() => setPhase(2), 600);  // glow expand
-    const t3 = setTimeout(() => setPhase(3), 1200); // title appear
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    // Phase 0 → 1: Black settles, then glow + sound
+    timers.push(setTimeout(() => {
+      setPhase(1);
+      if (!soundPlayedRef.current) {
+        soundPlayedRef.current = true;
+        playDashCinemaSound();
+      }
+    }, 200));
+
+    // Phase 1 → 2: DASH text appears (synced with "toundoum" at ~500ms into sound)
+    timers.push(setTimeout(() => setPhase(2), 700));
+
+    // Phase 2 → 3: Movie title fades in
+    timers.push(setTimeout(() => setPhase(3), 1200));
+
+    // Phase 3 → 4: Fade out — video takes over
+    timers.push(setTimeout(() => setPhase(4), 2000));
+
+    // Final dismiss after fade-out transition completes
+    timers.push(setTimeout(() => setDismissed(true), 2500));
+
+    return () => timers.forEach(clearTimeout);
   }, []);
 
+  if (dismissed) return null;
+
   return (
-    <div className="absolute inset-0 bg-black flex items-center justify-center overflow-hidden">
-      {/* Central glow */}
+    <div
+      className="absolute inset-0 z-50 flex items-center justify-center overflow-hidden"
+      style={{
+        backgroundColor: 'black',
+        opacity: phase >= 4 ? 0 : 1,
+        transition: 'opacity 500ms ease-out',
+        pointerEvents: phase >= 4 ? 'none' : 'auto',
+      }}
+    >
+      {/* Purple radial glow — expands from center */}
       <div
-        className="absolute rounded-full transition-all duration-1000 ease-out"
+        className="absolute rounded-full"
         style={{
-          width: 400, height: 400,
-          background: 'radial-gradient(circle, rgba(157,78,221,0.4) 0%, rgba(157,78,221,0.1) 40%, transparent 70%)',
-          transform: `scale(${phase >= 1 ? 1.5 : 0})`,
-          opacity: phase >= 1 ? 1 : 0,
+          width: 500,
+          height: 500,
+          background: 'radial-gradient(circle, rgba(157,78,221,0.35) 0%, rgba(157,78,221,0.12) 35%, rgba(157,78,221,0.03) 60%, transparent 75%)',
+          transform: `scale(${phase >= 1 ? (phase >= 2 ? 1.8 : 1.2) : 0})`,
+          opacity: phase >= 1 ? (phase >= 4 ? 0 : 1) : 0,
+          transition: phase >= 2 ? 'transform 800ms ease-out, opacity 500ms ease-out' : 'transform 500ms ease-out, opacity 400ms ease-out',
         }}
       />
 
-      {/* Logo + text */}
+      {/* Glow pulse ring — synced with "toundoum" bass hit */}
+      {phase >= 2 && phase < 4 && (
+        <div
+          className="absolute rounded-full"
+          style={{
+            width: 300,
+            height: 300,
+            border: '1px solid rgba(157,78,221,0.2)',
+            animation: 'cinema-pulse 1.5s ease-out forwards',
+          }}
+        />
+      )}
+
+      {/* Center content */}
       <div className="relative z-10 flex flex-col items-center">
-        {/* DASH text */}
+        {/* DASH text — letter-spacing animates from tight to wide */}
         <h2
-          className="mt-4 text-2xl font-black tracking-[6px] transition-all duration-500"
+          className="text-3xl sm:text-4xl font-black uppercase select-none"
           style={{
             opacity: phase >= 2 ? 1 : 0,
-            transform: `translateY(${phase >= 2 ? 0 : 10}px)`,
+            transform: `translateY(${phase >= 2 ? 0 : 12}px)`,
+            letterSpacing: phase >= 2 ? (phase >= 3 ? '0.5em' : '0.15em') : '0.05em',
             color: '#C77DFF',
-            textShadow: '0 0 20px rgba(157,78,221,0.5)',
+            textShadow: phase >= 2
+              ? '0 0 30px rgba(157,78,221,0.6), 0 0 60px rgba(157,78,221,0.2)'
+              : 'none',
+            transition: 'opacity 400ms ease-out, transform 400ms ease-out, letter-spacing 800ms cubic-bezier(0.16, 1, 0.3, 1), text-shadow 400ms ease-out',
           }}
         >
           DASH
         </h2>
 
+        {/* Thin accent line under DASH */}
+        <div
+          style={{
+            width: phase >= 2 ? 60 : 0,
+            height: 1,
+            marginTop: 12,
+            background: 'linear-gradient(90deg, transparent, rgba(199,125,255,0.5), transparent)',
+            opacity: phase >= 2 ? (phase >= 4 ? 0 : 0.7) : 0,
+            transition: 'width 600ms cubic-bezier(0.16, 1, 0.3, 1), opacity 400ms ease-out',
+          }}
+        />
+
         {/* Movie title */}
         {title && (
           <p
-            className="mt-6 text-sm text-white/40 text-center max-w-xs transition-all duration-500"
+            className="mt-5 text-sm sm:text-base text-center max-w-xs select-none"
             style={{
-              opacity: phase >= 3 ? 1 : 0,
-              transform: `translateY(${phase >= 3 ? 0 : 10}px)`,
+              opacity: phase >= 3 ? (phase >= 4 ? 0 : 0.4) : 0,
+              transform: `translateY(${phase >= 3 ? 0 : 8}px)`,
+              color: 'rgba(255,255,255,0.4)',
+              transition: 'opacity 500ms ease-out, transform 500ms ease-out',
             }}
           >
             {title}
           </p>
         )}
-
-        {/* Loading bar */}
-        <div
-          className="mt-6 h-0.5 bg-white/10 rounded-full overflow-hidden transition-all duration-500"
-          style={{
-            width: phase >= 2 ? 120 : 0,
-            opacity: phase >= 2 ? 1 : 0,
-          }}
-        >
-          <div
-            className="h-full bg-gradient-to-r from-primary to-primary-light rounded-full"
-            style={{
-              animation: 'dash-load 1.5s ease-in-out infinite',
-            }}
-          />
-        </div>
       </div>
 
       <style>{`
-        @keyframes dash-load {
-          0% { width: 0%; margin-left: 0; }
-          50% { width: 60%; margin-left: 20%; }
-          100% { width: 0%; margin-left: 100%; }
+        @keyframes cinema-pulse {
+          0% { transform: scale(0.8); opacity: 0.6; }
+          100% { transform: scale(2.5); opacity: 0; }
         }
       `}</style>
     </div>

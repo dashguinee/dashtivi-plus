@@ -126,9 +126,20 @@ export function usePlayer() {
         video.ondurationchange = () => {
           const dur = video.duration;
           if (dur && isFinite(dur)) {
-            setState((prev) => ({ ...prev, duration: dur }));
+            // For FFmpeg remux (MKV/AVI), browser reports fragment duration (~4s) not full movie.
+            // Use TMDB knownDuration if browser duration is suspiciously short (<60s for a movie).
+            const knownDur = channel.knownDuration;
+            if (knownDur && knownDur > 60 && dur < 60) {
+              setState((prev) => ({ ...prev, duration: knownDur }));
+            } else {
+              setState((prev) => ({ ...prev, duration: dur }));
+            }
           }
         };
+        // Also set known duration immediately if available (before browser detects it)
+        if (channel.knownDuration && channel.knownDuration > 60) {
+          setState((prev) => ({ ...prev, duration: channel.knownDuration! }));
+        }
 
       });
     },

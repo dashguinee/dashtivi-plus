@@ -280,8 +280,16 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           containerExtension={detailMovie.container_extension}
           type="movie"
           tmdbData={tmdbMap[`m:${detailMovie.stream_id}`]}
-          onPlay={() => {
-            handlePlay(detailMovie);
+          credentials={credentials}
+          onPlay={(knownDuration) => {
+            onPlay({
+              id: `vod-${detailMovie.stream_id}`,
+              name: detailMovie.name,
+              url: buildVodUrl(credentials, detailMovie.stream_id, detailMovie.container_extension || 'mp4'),
+              logo: detailMovie.stream_icon,
+              category: 'movie',
+              knownDuration,
+            });
             setDetailMovie(null);
           }}
           onClose={() => setDetailMovie(null)}

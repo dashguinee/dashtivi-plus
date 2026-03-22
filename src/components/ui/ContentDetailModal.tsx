@@ -1,6 +1,7 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { Play, Star, Clock, Heart, X } from 'lucide-react';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
+import type { XtreamCredentials } from '@/lib/xtream';
 
 // ── TMDB genre map (subset — loaded inline to avoid async dependency) ──
 const TMDB_GENRES: Record<number, string> = {
@@ -21,7 +22,8 @@ export interface ContentDetailModalProps {
   containerExtension?: string;
   type: 'movie' | 'series';
   tmdbData?: TmdbEntry;
-  onPlay: () => void;
+  credentials?: XtreamCredentials;
+  onPlay: (knownDuration?: number) => void;
   onClose: () => void;
 }
 
@@ -56,14 +58,40 @@ function getBackdropUrl(poster?: string, tmdbPoster?: string): string | null {
 }
 
 export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
+  streamId,
   name,
   poster,
   rating,
   type,
   tmdbData,
+  credentials,
   onPlay,
   onClose,
 }) => {
+  // ── Fetch VOD info for real duration + description ──────────
+  const [vodDescription, setVodDescription] = useState<string | null>(null);
+  const [vodDuration, setVodDuration] = useState<number | null>(null);
+  const [vodTrailer, setVodTrailer] = useState<string | null>(null);
+  const [vodDirector, setVodDirector] = useState<string | null>(null);
+  const [vodCast, setVodCast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (type !== 'movie' || !credentials) return;
+    let mounted = true;
+    import('@/lib/xtream').then(({ getVodInfo }) => {
+      getVodInfo(credentials, streamId).then(info => {
+        if (!info || !mounted) return;
+        const i = info.info;
+        if (i.plot || i.description) setVodDescription(i.plot || i.description || null);
+        if (i.episode_run_time) setVodDuration(parseInt(i.episode_run_time) || null);
+        if (i.youtube_trailer) setVodTrailer(i.youtube_trailer);
+        if (i.director) setVodDirector(i.director);
+        if (i.cast || i.actors) setVodCast(i.cast || i.actors || null);
+      });
+    });
+    return () => { mounted = false; };
+  }, [streamId, type, credentials]);
+
   // ── Keyboard / scroll lock ────────────────────────────────────
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -83,15 +111,22 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
 
   // ── Derived data ──────────────────────────────────────────────
   const { clean: cleanTitle, year } = parseTitle(name);
-  const hasTrailer = !!(tmdbData?.y);
+  // Trailer: prefer Xtream VOD info trailer (more reliable embedding), fallback to TMDB
+  const trailerKey = vodTrailer || tmdbData?.y || null;
+  const hasTrailer = !!trailerKey;
   const backdropUrl = getBackdropUrl(poster, tmdbData?.p);
 
   // Rating: prefer TMDB, fallback to Xtream
   const displayRating = tmdbData?.r ? tmdbData.r.toFixed(1) : rating;
   const hasRating = displayRating && parseFloat(displayRating) > 0;
 
-  // Runtime
-  const runtime = tmdbData?.t ? formatRuntime(tmdbData.t) : null;
+  // Runtime: prefer Xtream VOD info (authoritative), fallback to TMDB
+  const runtimeMinutes = vodDuration || tmdbData?.t || null;
+  const runtime = runtimeMinutes ? formatRuntime(runtimeMinutes) : null;
+  const knownDurationSeconds = runtimeMinutes ? runtimeMinutes * 60 : undefined;
+
+  // Description: prefer Xtream VOD info (full plot), fallback to TMDB
+  const description = vodDescription || null;
 
   // Genres (first 3)
   const genres = (tmdbData?.g || [])
@@ -122,7 +157,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
           {hasTrailer ? (
             <iframe
               className="absolute inset-0 w-full h-[115%] -top-[8%]"
-              src={`https://www.youtube-nocookie.com/embed/${tmdbData!.y}?rel=0&modestbranding=1`}
+              src={`https://www.youtube-nocookie.com/embed/${trailerKey}?rel=0&modestbranding=1`}
               title={`${cleanTitle} - Trailer`}
               allow="autoplay; encrypted-media; fullscreen"
               allowFullScreen
@@ -146,7 +181,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
           {hasTrailer && (
             <div
               className="absolute bottom-0 left-0 right-0 z-10 cursor-pointer"
-              onClick={onPlay}
+              onClick={() => onPlay(knownDurationSeconds)}
             >
               <div className="relative overflow-hidden bg-gradient-to-r from-purple-600/90 via-orange-500/90 to-purple-600/90 py-3 text-center">
                 {/* Shimmer sweep */}
@@ -209,7 +244,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
           {/* Action buttons */}
           <div className="flex gap-3 mb-4">
             <button
-              onClick={onPlay}
+              onClick={() => onPlay(knownDurationSeconds)}
               className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-primary to-primary-light rounded-xl font-bold text-white text-sm shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all active:scale-[0.98]"
             >
               <Play className="w-5 h-5 fill-white" />
@@ -223,9 +258,23 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
             </button>
           </div>
 
-          {/* TMDB overview — if we had it we'd show it; for now just show a subtle line */}
+          {/* Description from Xtream VOD info */}
+          {description && (
+            <p className="text-sm text-white/50 leading-relaxed line-clamp-3 mb-3">
+              {description}
+            </p>
+          )}
+
+          {/* Director + Cast */}
+          {(vodDirector || vodCast) && (
+            <div className="text-xs text-white/30 space-y-1">
+              {vodDirector && <p>Director: <span className="text-white/50">{vodDirector}</span></p>}
+              {vodCast && <p>Cast: <span className="text-white/50">{vodCast.split(',').slice(0, 4).join(', ')}</span></p>}
+            </div>
+          )}
+
           {tmdbData?.v !== undefined && tmdbData.v > 0 && (
-            <p className="text-xs text-white/30">
+            <p className="text-xs text-white/20 mt-2">
               {tmdbData.v.toLocaleString()} TMDB votes
             </p>
           )}

@@ -370,14 +370,18 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   }, [credentials, onPlay]);
 
   const playMovie = useCallback((movie: VodStream) => {
+    // Get TMDB runtime for duration display (browser can't detect for MKV remux)
+    const tmdb = veeTmdbMap[`m:${movie.stream_id}`];
+    const knownDuration = tmdb?.t ? tmdb.t * 60 : undefined; // TMDB stores minutes, player needs seconds
     onPlay({
       id: `vod-${movie.stream_id}`,
       name: movie.name,
       url: buildVodUrl(credentials, movie.stream_id, movie.container_extension || 'mp4'),
       logo: movie.stream_icon,
       category: 'movie',
+      knownDuration,
     });
-  }, [credentials, onPlay]);
+  }, [credentials, onPlay, veeTmdbMap]);
 
   const playHistoryItem = useCallback((entry: WatchHistoryEntry & { name: string; url: string }) => {
     onPlay({
@@ -533,8 +537,16 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           containerExtension={detailMovie.movie.container_extension}
           type="movie"
           tmdbData={detailMovie.tmdbMap?.[`m:${detailMovie.movie.stream_id}`]}
-          onPlay={() => {
-            playMovie(detailMovie.movie);
+          credentials={credentials}
+          onPlay={(knownDuration) => {
+            onPlay({
+              id: `vod-${detailMovie.movie.stream_id}`,
+              name: detailMovie.movie.name,
+              url: buildVodUrl(credentials, detailMovie.movie.stream_id, detailMovie.movie.container_extension || 'mp4'),
+              logo: detailMovie.movie.stream_icon,
+              category: 'movie',
+              knownDuration,
+            });
             setDetailMovie(null);
           }}
           onClose={() => setDetailMovie(null)}

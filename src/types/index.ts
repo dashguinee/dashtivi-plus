@@ -8,6 +8,8 @@ export interface Channel {
   group?: string;
   needsProxy?: boolean;
   logo?: string;
+  /** Known duration in seconds from TMDB — used when browser can't detect duration */
+  knownDuration?: number;
 }
 
 export interface PlayerState {
