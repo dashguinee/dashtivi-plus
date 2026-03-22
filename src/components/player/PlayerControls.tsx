@@ -97,9 +97,7 @@ export const PlayerControls: React.FC<Props> = ({
             </h3>
             <div className="flex items-center gap-2 text-xs text-text-secondary">
               {state.channel?.country && <span>{state.channel.country}</span>}
-              {state.channel?.category && (
-                <span className="capitalize">{state.channel.category}</span>
-              )}
+              <span className="font-bold tracking-wider text-primary-light">DASH</span>
               {!isVod && (
                 <span className="flex items-center gap-1">
                   <span className="live-pulse !w-1.5 !h-1.5" />
@@ -229,12 +227,7 @@ export const PlayerControls: React.FC<Props> = ({
                 LIVE
               </span>
             )}
-            {/* VOD time display */}
-            {isVod && state.duration > 0 && (
-              <span className="text-xs text-white/50 font-mono ml-2">
-                {formatTime(state.duration - state.currentTime)} left
-              </span>
-            )}
+            {/* Eco mode indicator */}
           </div>
 
           <div className="flex items-center gap-1">
