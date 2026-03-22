@@ -84,11 +84,14 @@ export const VideoPlayer: React.FC<Props> = ({
       if (video && video.readyState >= 2) {
         // UNMUTE video as cinema intro fades — audio starts clean with video
         video.muted = false;
+        // Hide controls for 3s after intro — let the movie breathe
+        setControlsVisible(false);
         setTimeout(() => setShowCinemaIntro(false), 500);
       } else {
         // Video not fully ready — give it another second
         setTimeout(() => {
           if (videoRef.current) videoRef.current.muted = false;
+          setControlsVisible(false);
           setShowCinemaIntro(false);
         }, 1000);
       }

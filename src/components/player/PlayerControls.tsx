@@ -97,16 +97,11 @@ export const PlayerControls: React.FC<Props> = ({
             </h3>
             <div className="flex items-center gap-2 text-xs text-text-secondary">
               {state.channel?.country && <span>{state.channel.country}</span>}
-              <span className="font-bold tracking-wider text-primary-light">DASH</span>
+              <span><span className="font-bold tracking-wider text-primary-light">DASH</span> <span className="text-white/30">·</span> <span className="text-white/40">Tivi+</span></span>
               {!isVod && (
                 <span className="flex items-center gap-1">
                   <span className="live-pulse !w-1.5 !h-1.5" />
                   LIVE
-                </span>
-              )}
-              {isVod && state.duration > 0 && (
-                <span className="text-text-muted">
-                  {formatTime(state.duration)}
                 </span>
               )}
             </div>
