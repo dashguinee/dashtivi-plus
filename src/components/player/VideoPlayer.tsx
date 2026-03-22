@@ -64,10 +64,12 @@ export const VideoPlayer: React.FC<Props> = ({
       cinemaChannelRef.current = channelId;
       cinemaMinTimeRef.current = false;
       setShowCinemaIntro(true);
+      // MUTE video during cinema intro (prevent audio overlap with cinema sound)
+      if (videoRef.current) videoRef.current.muted = true;
       // Minimum display time: 2.5s (let the animation + sound complete)
       setTimeout(() => { cinemaMinTimeRef.current = true; }, 2500);
       // Maximum display time: 8s (fallback if video never starts)
-      setTimeout(() => { setShowCinemaIntro(false); }, 8000);
+      setTimeout(() => { setShowCinemaIntro(false); if (videoRef.current) videoRef.current.muted = false; }, 8000);
     } else if (!state.channel) {
       cinemaChannelRef.current = null;
       setShowCinemaIntro(false);
@@ -77,8 +79,19 @@ export const VideoPlayer: React.FC<Props> = ({
   // Dismiss cinema intro when video starts playing AND min time elapsed
   useEffect(() => {
     if (showCinemaIntro && state.isPlaying && cinemaMinTimeRef.current) {
-      // Fade out over 500ms
-      setTimeout(() => setShowCinemaIntro(false), 500);
+      const video = videoRef.current;
+      // Verify video has actually decoded frames (readyState >= HAVE_CURRENT_DATA)
+      if (video && video.readyState >= 2) {
+        // UNMUTE video as cinema intro fades — audio starts clean with video
+        video.muted = false;
+        setTimeout(() => setShowCinemaIntro(false), 500);
+      } else {
+        // Video not fully ready — give it another second
+        setTimeout(() => {
+          if (videoRef.current) videoRef.current.muted = false;
+          setShowCinemaIntro(false);
+        }, 1000);
+      }
     }
   }, [showCinemaIntro, state.isPlaying]);
 
