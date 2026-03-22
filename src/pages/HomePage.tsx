@@ -475,7 +475,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                   </div>
                 </div>
                 <p className="text-xs text-text-secondary truncate group-hover:text-white transition-colors">
-                  {entry.name}
+                  {entry.name.replace(/\s*\(\d{4}\)\s*$/, '')}
                 </p>
               </button>
             ))}

@@ -257,11 +257,19 @@ export const VeeWidget: React.FC<VeeWidgetProps> = ({
   const [overlayMode, setOverlayMode] = useState<'hot' | 'explore' | null>(null);
   const [moodItems, setMoodItems] = useState<VeeItem[] | null>(null);
 
-  // Default display: top-rated items from pool
+  // Default display: top-rated items from pool (deduped by name)
   const displayItems = useMemo(() => {
     if (moodItems && moodItems.length > 0) return moodItems;
-    // Default: score by TMDB rating, highest first
-    const scored = items.map((item) => {
+    // Dedup by cleaned name (strip year, quality tags)
+    const seen = new Set<string>();
+    const unique = items.filter((item) => {
+      const clean = item.name.replace(/\s*\(\d{4}\)\s*$/, '').replace(/\s*(HD|FHD|4K|UHD)\s*/gi, '').trim().toLowerCase();
+      if (seen.has(clean)) return false;
+      seen.add(clean);
+      return true;
+    });
+    // Score by TMDB rating, highest first
+    const scored = unique.map((item) => {
       const tmdb = tmdbMap[`m:${item.stream_id}`];
       const rating = tmdb?.r || 0;
       const popularity = tmdb?.r ? tmdb.r / 10 : 0;
