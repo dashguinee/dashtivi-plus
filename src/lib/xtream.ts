@@ -89,12 +89,44 @@ function cacheGet<T>(key: string): T | null {
 function cacheSet<T>(key: string, data: T): void {
   try {
     const entry: CacheEntry<T> = { data, ts: Date.now() };
-    localStorage.setItem(`xtream_${key}`, JSON.stringify(entry));
+    const json = JSON.stringify(entry);
+    // Skip caching if single entry > 200KB (large category responses)
+    if (json.length > 200_000) return;
+    localStorage.setItem(`xtream_${key}`, json);
   } catch (e) {
     if (e instanceof DOMException && e.name === 'QuotaExceededError') {
-      console.warn('[xtream] localStorage quota exceeded — cache write skipped for key:', key);
+      // Evict oldest caches to make room
+      evictOldestCaches();
+      // Retry once
+      try {
+        const entry: CacheEntry<T> = { data, ts: Date.now() };
+        const json = JSON.stringify(entry);
+        if (json.length < 200_000) localStorage.setItem(`xtream_${key}`, json);
+      } catch { /* give up */ }
     }
   }
+}
+
+/** Evict oldest xtream_ caches when quota is full */
+function evictOldestCaches(): void {
+  try {
+    const keys: { key: string; ts: number }[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('xtream_')) {
+        try {
+          const entry = JSON.parse(localStorage.getItem(key) || '{}');
+          keys.push({ key, ts: entry.ts || 0 });
+        } catch { keys.push({ key, ts: 0 }); }
+      }
+    }
+    // Sort oldest first, delete half
+    keys.sort((a, b) => a.ts - b.ts);
+    const toDelete = Math.max(Math.ceil(keys.length / 2), 3);
+    for (let i = 0; i < toDelete && i < keys.length; i++) {
+      localStorage.removeItem(keys[i].key);
+    }
+  } catch { /* ignore */ }
 }
 
 function apiUrl(c: XtreamCredentials, action: string, extra = ''): string {

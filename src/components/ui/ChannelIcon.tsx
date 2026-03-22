@@ -96,7 +96,7 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
   // Priority: 1. HTTPS src from API  2. tv-logo CDN  3. Proxied HTTP  4. Letter avatar
   let safeSrc: string | null = null;
   if (!failed) {
-    if (cleanSrc?.startsWith('https://') && !cleanSrc.includes('webhop.live') && !cleanSrc.includes('paste.pics')) {
+    if (cleanSrc?.startsWith('https://') && !cleanSrc.includes('webhop.live') && !cleanSrc.includes('paste.pics') && !cleanSrc.includes('tensports.com.pk')) {
       safeSrc = cleanSrc;
     } else if (!logoFailed) {
       const logoUrl = findLogoUrl(name);

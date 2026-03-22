@@ -1,16 +1,6 @@
-const CACHE_NAME = 'tivi-v1';
-const SHELL_ASSETS = [
-  '/',
-  '/index.html',
-];
+const CACHE_NAME = 'tivi-plus-v3';
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_ASSETS))
-  );
-  self.skipWaiting();
-});
-
+self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -21,23 +11,30 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
+  const url = event.request.url;
+  if (event.request.method !== 'GET') return;
 
-  // Skip non-GET and stream requests
-  if (request.method !== 'GET') return;
-  if (request.url.includes('.m3u8') || request.url.includes('.ts')) return;
+  // Skip ALL external and streaming requests
+  if (url.includes('stream.zionsynapse.online')) return;
+  if (url.includes('datahub11.com')) return;
+  if (url.includes('starshare.cx')) return;
+  if (url.includes('player_api.php')) return;
+  if (url.includes('.m3u8') || url.includes('.ts') || url.includes('.mp4')) return;
+  if (url.includes('webhop.live')) return;
 
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      const fetched = fetch(request).then((response) => {
-        if (response.ok && request.url.startsWith(self.location.origin)) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-        }
-        return response;
-      }).catch(() => cached);
+  // SPA navigation
+  if (event.request.mode === 'navigate') {
+    event.respondWith(fetch(event.request).catch(() => caches.match('/index.html')));
+    return;
+  }
 
-      return cached || fetched;
-    })
-  );
+  // Static assets only
+  if (url.startsWith(self.location.origin)) {
+    event.respondWith(
+      fetch(event.request).then((r) => {
+        if (r.ok) { const c = r.clone(); caches.open(CACHE_NAME).then((cache) => cache.put(event.request, c)); }
+        return r;
+      }).catch(() => caches.match(event.request))
+    );
+  }
 });
