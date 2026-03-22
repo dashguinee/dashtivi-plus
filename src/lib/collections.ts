@@ -92,13 +92,13 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
   },
   {
     id: 'african-tv',
-    name: 'African TV',
-    emoji: '\uD83C\uDF0D',
-    description: 'Canal+ Africa, DSTV & more',
+    name: 'African Sports',
+    emoji: '\u26BD',
+    description: 'SuperSport, beIN Africa & more',
     type: 'live',
-    categoryIds: ['336', '345'], // Canal+ Africa, DSTV Super Sports
+    categoryIds: ['345', '427', '156'], // DSTV Sports, DSTV Sports FHD, Arabic Sports (beIN Africa)
     limit: 15,
-    navigateTo: '/french',
+    navigateTo: '/live',
   },
   {
     id: 'news-world',
@@ -109,7 +109,6 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     categoryIds: [
       '82',   // English News (CNN, BBC, Fox News, Al Jazeera)
       '417',  // UK News
-      '346',  // DSTV News (Africa News, Bloomberg, Sky News)
       '165',  // Arabic News
     ],
     limit: 12,
@@ -347,8 +346,6 @@ export const LIVETV_THEMES: LiveTheme[] = [
     emoji: '\u2728',
     categoryIds: [
       '3',    // UK Entertainment
-      '343',  // DSTV Entertainment
-      '428',  // DSTV Entertainment FHD
       '2',    // USA
       '247',  // India Entertainment
     ],
@@ -371,8 +368,6 @@ export const LIVETV_THEMES: LiveTheme[] = [
       '275',  // English Movies 24/7
       '57',   // Netflix Movies 24/7
       '282',  // Bollywood Movies 24/7
-      '344',  // DSTV Movies
-      '429',  // DSTV Movies FHD
     ],
     gradient: 'from-red-500 to-rose-700',
     glowColor: 'shadow-red-500/20',
@@ -411,10 +406,10 @@ export interface SportType {
 }
 
 export const SPORT_TYPES: SportType[] = [
-  { id: 'all', name: 'All', categoryIds: ['234', '85', '345', '427', '353', '578', '6', '342', '550', '138', '212', '356', '156', '137', '516', '190', '483'] },
+  { id: 'all', name: 'All', categoryIds: ['234', '85', '345', '427', '353', '578', '6', '342', '550', '138', '212', '356', '156', '137', '516', '483'] },
   { id: 'football', name: 'Football', categoryIds: ['234'] },
   { id: 'cricket', name: 'Cricket', categoryIds: ['5'] },
-  { id: 'nfl', name: 'NFL/PPV', categoryIds: ['516', '190'] },
+  { id: 'nfl', name: 'NFL', categoryIds: ['516'] },
   { id: 'africa', name: 'Africa', categoryIds: ['345', '427'] },
   { id: 'uk', name: 'UK', categoryIds: ['353', '483', '578'] },
   { id: 'bein', name: 'beIN', categoryIds: ['85'] },
@@ -434,17 +429,14 @@ export interface RegionGenre {
 
 export const REGION_GENRES: Record<string, RegionGenre[]> = {
   africa: [
-    { id: 'all', name: 'All', categoryIds: ['336', '345'] },
+    { id: 'all', name: 'All', categoryIds: ['345', '427'] },
     { id: 'sports', name: 'Sports', categoryIds: ['345', '427'] },
-    { id: 'entertainment', name: 'Entertainment', categoryIds: ['343', '428'] },
-    { id: 'news', name: 'News', categoryIds: ['346', '431'] },
-    { id: 'movies', name: 'Movies', categoryIds: ['344', '429'] },
     { id: 'kids', name: 'Kids', categoryIds: ['347', '430'] },
   ],
   france: [
-    { id: 'all', name: 'All', categoryIds: ['11', '336'] },
+    { id: 'all', name: 'All', categoryIds: ['11', '156'] },
     { id: 'france', name: 'France', categoryIds: ['11'] },
-    { id: 'canal', name: 'Canal+', categoryIds: ['336'] },
+    { id: 'bein', name: 'beIN FR', categoryIds: ['156'] },
   ],
   uk: [
     { id: 'all', name: 'All', categoryIds: ['414'] },
