@@ -39,7 +39,6 @@ function AppContent() {
   const [showFullPlayer, setShowFullPlayer] = useState(false);
 
   // Start ambient on ANY first click/tap inside the app (user gesture required by browser)
-  const ambientStartedRef = React.useRef(false);
   React.useEffect(() => {
     if (ambientStartedRef.current) return;
     const handler = () => {
