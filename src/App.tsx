@@ -38,7 +38,13 @@ function AppContent() {
 
   const [showFullPlayer, setShowFullPlayer] = useState(false);
 
-  // Ambient starts from login submit (user gesture) or splash dismiss
+  // Ambient starts on any click — the simplest way
+  const handleAmbientStart = React.useCallback(() => {
+    if (!ambientStartedRef.current && isAmbientEnabled()) {
+      ambientStartedRef.current = true;
+      startAmbient();
+    }
+  }, []);
 
   const handlePlayChannel = useCallback(
     (channel: Channel) => {
@@ -72,7 +78,7 @@ function AppContent() {
   if (!credentials) return null;
 
   return (
-    <div className="min-h-screen bg-bg relative">
+    <div className="min-h-screen bg-bg relative" onClick={handleAmbientStart}>
       <CosmicBackground />
 
       <div className="relative z-10">
