@@ -45,6 +45,7 @@ export const WelcomeStory: React.FC<Props> = ({ started = false, onComplete }) =
     return () => t.forEach(clearTimeout);
   }, [started, onComplete]);
 
+  console.log('[welcome] visible:', visible, 'started:', started, 'phase:', phase);
   if (!visible || !started) return null;
 
   return (
