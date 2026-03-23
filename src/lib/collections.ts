@@ -149,14 +149,14 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
 // ── Quick-tap Collection Cards (vibes navigation) ─────────────────
 
 export const COLLECTION_CARDS: CollectionCard[] = [
-  { id: 'sports', name: 'Sports', emoji: '\u26BD', gradient: 'from-green-600/40 to-emerald-900/40', navigateTo: '/live' },
-  { id: 'news', name: 'News', emoji: '\uD83D\uDCF0', gradient: 'from-blue-600/40 to-blue-900/40', navigateTo: '/live' },
-  { id: 'movies', name: 'Movies', emoji: '\uD83C\uDFAC', gradient: 'from-red-600/40 to-red-900/40', navigateTo: '/movies' },
-  { id: 'series', name: 'Series', emoji: '\uD83D\uDCFA', gradient: 'from-purple-600/40 to-purple-900/40', navigateTo: '/series' },
-  { id: 'africa', name: 'Africa', emoji: '\uD83C\uDF0D', gradient: 'from-amber-600/40 to-orange-900/40', navigateTo: '/french' },
-  { id: 'kids', name: 'Kids', emoji: '\uD83E\uDDF8', gradient: 'from-pink-600/40 to-rose-900/40', navigateTo: '/live' },
-  { id: 'music', name: 'Music', emoji: '\uD83C\uDFB5', gradient: 'from-fuchsia-600/40 to-pink-900/40', navigateTo: '/live' },
-  { id: 'faith', name: 'Faith', emoji: '\uD83D\uDE4F', gradient: 'from-amber-500/40 to-yellow-900/40', navigateTo: '/live' },
+  { id: 'sports', name: 'Sports', emoji: '\u26BD', gradient: 'from-primary/30 to-primary-dark/30', navigateTo: '/live' },
+  { id: 'news', name: 'News', emoji: '\uD83D\uDCF0', gradient: 'from-primary/20 to-white/5', navigateTo: '/live' },
+  { id: 'movies', name: 'Movies', emoji: '\uD83C\uDFAC', gradient: 'from-primary/25 to-primary-dark/25', navigateTo: '/movies' },
+  { id: 'series', name: 'Series', emoji: '\uD83D\uDCFA', gradient: 'from-primary/30 to-primary-dark/20', navigateTo: '/series' },
+  { id: 'africa', name: 'Africa', emoji: '\uD83C\uDF0D', gradient: 'from-accent/20 to-accent-gold/10', navigateTo: '/french' },
+  { id: 'kids', name: 'Kids', emoji: '\uD83E\uDDF8', gradient: 'from-primary-light/20 to-primary/15', navigateTo: '/live' },
+  { id: 'music', name: 'Music', emoji: '\uD83C\uDFB5', gradient: 'from-primary/25 to-primary-light/15', navigateTo: '/live' },
+  { id: 'faith', name: 'Faith', emoji: '\uD83D\uDE4F', gradient: 'from-accent-gold/15 to-primary/10', navigateTo: '/live' },
 ];
 
 // ── Time-aware Featured Hero ──────────────────────────────────────
