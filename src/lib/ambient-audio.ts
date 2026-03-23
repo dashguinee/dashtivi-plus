@@ -36,7 +36,7 @@ const EXPERIENCE_TRACKS: Record<string, string> = {
 
 const AUDIO_URL = EXPERIENCE_TRACKS['home']; // Default
 const STORAGE_KEY = 'tivi_ambient_enabled';
-const VOLUME = 0.12; // Subtle — background, not foreground
+const VOLUME = 0.35; // Warm presence — audible but not dominant
 
 /** Check if user has ambient enabled (ON by default) */
 export function isAmbientEnabled(): boolean {
@@ -82,8 +82,10 @@ export function startAmbient(): void {
   if (!audio) initAmbient();
   if (!audio) return;
 
+  // Set rate before play so it starts at the right speed
+  audio.playbackRate = currentSpeed;
   audio.play().then(() => {
-    console.log('[ambient] play() succeeded');
+    console.log('[ambient] play() succeeded — rate:', audio?.playbackRate, 'vol:', audio?.volume);
   }).catch((err) => {
     console.error('[ambient] play() failed:', err.message);
   });
