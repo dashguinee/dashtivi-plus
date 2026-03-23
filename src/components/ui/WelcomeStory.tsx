@@ -3,9 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 /**
  * WelcomeStory — Cinematic welcome in the hero space.
  *
- * Positioned in the TOP portion of the hero (not center — leaves room for DashTivi+ below).
- * "Welcome" appears on first click. Then experiences bloom. Then DASH.
- * Everything breathes. Nothing bounces. Art, not animation.
+ * Top portion of hero. "Welcome" on load → experiences bloom with shimmer →
+ * DASH → collapses hero to bring DashTivi+ up.
  */
 
 const EXPERIENCES = [
@@ -18,9 +17,10 @@ const EXPERIENCES = [
 
 interface Props {
   started?: boolean;
+  onComplete?: () => void; // Called when story finishes — parent collapses hero
 }
 
-export const WelcomeStory: React.FC<Props> = ({ started = false }) => {
+export const WelcomeStory: React.FC<Props> = ({ started = false, onComplete }) => {
   const [phase, setPhase] = useState(0);
   const [activeExp, setActiveExp] = useState(-1);
   const [visible, setVisible] = useState(true);
@@ -32,23 +32,18 @@ export const WelcomeStory: React.FC<Props> = ({ started = false }) => {
 
     const t: ReturnType<typeof setTimeout>[] = [];
 
-    // Phase 1: Glow appears
     t.push(setTimeout(() => setPhase(1), 100));
-    // Phase 2: "Welcome"
     t.push(setTimeout(() => setPhase(2), 800));
-    // Phase 3: Experiences bloom
     t.push(setTimeout(() => setPhase(3), 3500));
     EXPERIENCES.forEach((_, i) => {
       t.push(setTimeout(() => setActiveExp(i), 3800 + i * 900));
     });
-    // Phase 4: DASH
     t.push(setTimeout(() => setPhase(4), 8500));
-    // Phase 5: Dissolve
     t.push(setTimeout(() => setPhase(5), 10500));
-    t.push(setTimeout(() => setVisible(false), 12500));
+    t.push(setTimeout(() => { setVisible(false); onComplete?.(); }, 12000));
 
     return () => t.forEach(clearTimeout);
-  }, [started]);
+  }, [started, onComplete]);
 
   if (!visible || !started) return null;
 
@@ -56,7 +51,7 @@ export const WelcomeStory: React.FC<Props> = ({ started = false }) => {
     <div
       className="absolute inset-x-0 top-0 z-20 pointer-events-none"
       style={{
-        height: '65%', // Top 65% of hero — never touches DashTivi+ section below
+        height: '65%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -83,25 +78,55 @@ export const WelcomeStory: React.FC<Props> = ({ started = false }) => {
         />
       )}
 
-      {/* "Welcome" — elegant, luminous, centered */}
+      {/* "Welcome" */}
       {phase >= 2 && phase < 4 && (
         <h2
+          className="absolute"
           style={{
-            fontFamily: "'Inter', sans-serif",
             fontSize: 'clamp(2rem, 6vw, 3.5rem)',
             fontWeight: 100,
             letterSpacing: '0.5em',
             color: 'rgba(255,255,255,0)',
             textShadow: '0 0 80px rgba(157,78,221,0.25)',
             animation: 'welcomeFadeIn 2.5s ease-out forwards',
-            position: 'absolute',
           }}
         >
           Welcome
         </h2>
       )}
 
-      {/* Experience words — bloom around center, accumulate */}
+      {/* Purple shimmer sweep */}
+      {phase >= 2 && phase < 5 && (
+        <div
+          className="absolute"
+          style={{
+            width: '70%',
+            height: '1px',
+            top: '48%',
+            left: '15%',
+            background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.2), rgba(199,125,255,0.5), rgba(157,78,221,0.2), transparent)',
+            backgroundSize: '200% 100%',
+            animation: 'shimmerSweep 4s ease-in-out infinite',
+          }}
+        />
+      )}
+      {/* Orange shimmer sweep — offset timing */}
+      {phase >= 3 && phase < 5 && (
+        <div
+          className="absolute"
+          style={{
+            width: '55%',
+            height: '1px',
+            top: '52%',
+            left: '22%',
+            background: 'linear-gradient(90deg, transparent, rgba(251,146,60,0.15), rgba(249,115,22,0.4), rgba(251,146,60,0.15), transparent)',
+            backgroundSize: '200% 100%',
+            animation: 'shimmerSweep 4s ease-in-out 1.5s infinite',
+          }}
+        />
+      )}
+
+      {/* Experience words */}
       {phase >= 3 && phase < 4 && (
         <>
           {EXPERIENCES.map((exp, i) => (
@@ -112,7 +137,6 @@ export const WelcomeStory: React.FC<Props> = ({ started = false }) => {
                 left: `calc(50% + ${exp.x})`,
                 top: `calc(50% + ${exp.y})`,
                 transform: 'translate(-50%, -50%)',
-                fontFamily: "'Inter', sans-serif",
                 fontSize: i === EXPERIENCES.length - 1 ? 'clamp(1.2rem, 3vw, 1.8rem)' : 'clamp(0.9rem, 2.5vw, 1.3rem)',
                 fontWeight: i === EXPERIENCES.length - 1 ? 300 : 100,
                 letterSpacing: '0.3em',
@@ -135,7 +159,6 @@ export const WelcomeStory: React.FC<Props> = ({ started = false }) => {
         >
           <p
             style={{
-              fontFamily: "'Inter', sans-serif",
               fontSize: '0.65rem',
               letterSpacing: '0.6em',
               color: 'rgba(255,255,255,0.25)',
@@ -148,7 +171,6 @@ export const WelcomeStory: React.FC<Props> = ({ started = false }) => {
           </p>
           <h2
             style={{
-              fontFamily: "'Inter', sans-serif",
               fontSize: 'clamp(2.5rem, 8vw, 4rem)',
               fontWeight: 700,
               letterSpacing: '0.35em',
@@ -176,6 +198,12 @@ export const WelcomeStory: React.FC<Props> = ({ started = false }) => {
         @keyframes dashFadeIn {
           0% { opacity: 0; }
           100% { opacity: 1; }
+        }
+        @keyframes shimmerSweep {
+          0% { background-position: -200% 0; opacity: 0; }
+          30% { opacity: 1; }
+          70% { opacity: 1; }
+          100% { background-position: 200% 0; opacity: 0; }
         }
       `}</style>
     </div>

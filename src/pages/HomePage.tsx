@@ -157,6 +157,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const [veePool, setVeePool] = useState<VodStream[]>([]);
   const [veeTmdbMap, setVeeTmdbMap] = useState<Record<string, TmdbEntry>>({});
   const [loading, setLoading] = useState(true);
+  const [heroCollapsed, setHeroCollapsed] = useState(false);
   const [error, setError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   const [trailerState, setTrailerState] = useState<{ youtubeKey: string; title: string; poster?: string; overview?: string } | null>(null);
@@ -404,11 +405,18 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   return (
     <div className="pt-16 pb-4">
-      {/* ── Hero Banner (time-aware) ─────────────────────────── */}
-      <div className="relative h-[42vh] min-h-[300px] max-h-[460px] mb-2 overflow-hidden">
+      {/* ── Hero Banner (time-aware) — collapses after welcome story ── */}
+      <div
+        className="relative mb-2 overflow-hidden transition-all duration-[2000ms] ease-out"
+        style={{
+          height: heroCollapsed ? '180px' : '42vh',
+          minHeight: heroCollapsed ? '180px' : '300px',
+          maxHeight: heroCollapsed ? '180px' : '460px',
+        }}
+      >
         <div className={`absolute inset-0 bg-gradient-to-br ${hero.gradient}`} />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent" />
-        <WelcomeStory started={true} />
+        <WelcomeStory started={true} onComplete={() => setHeroCollapsed(true)} />
 
         <div className="relative z-10 flex flex-col justify-end h-full px-5 pb-8 max-w-2xl">
           <div className="flex items-center gap-2 mb-3">
