@@ -36,7 +36,7 @@ const EXPERIENCE_TRACKS: Record<string, string> = {
 
 const AUDIO_URL = EXPERIENCE_TRACKS['home']; // Default
 const STORAGE_KEY = 'tivi_ambient_enabled';
-const VOLUME = 0.35; // Warm presence — audible but not dominant
+const VOLUME = 0.7; // Clearly audible — user can lower via system volume
 
 /** Check if user has ambient enabled (ON by default) */
 export function isAmbientEnabled(): boolean {
