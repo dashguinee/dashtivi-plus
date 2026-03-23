@@ -36,7 +36,7 @@ const EXPERIENCE_TRACKS: Record<string, string> = {
 
 const AUDIO_URL = EXPERIENCE_TRACKS['home']; // Default
 const STORAGE_KEY = 'tivi_ambient_enabled';
-const VOLUME = 0.7; // Clearly audible — user can lower via system volume
+const VOLUME = 1.0; // MAX for testing — lower after confirming audio works
 
 /** Check if user has ambient enabled (ON by default) */
 export function isAmbientEnabled(): boolean {
@@ -53,7 +53,7 @@ export function initAmbient(): void {
 
   console.log('[ambient] init — URL:', AUDIO_URL);
   audio = new Audio(AUDIO_URL);
-  audio.crossOrigin = 'anonymous';
+  // No crossOrigin — we just need playback, not audio analysis
   audio.loop = true;
   audio.volume = VOLUME;
   audio.preservesPitch = false;

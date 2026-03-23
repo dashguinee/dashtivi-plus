@@ -74,19 +74,14 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
             title={ambientOn ? 'Mute ambient' : 'Play ambient'}
           >
             {ambientOn ? (
-              <div className="flex items-end gap-[2px] h-4">
-                <span className="w-[3px] bg-primary-light rounded-full animate-pulse" style={{ height: '40%', animationDelay: '0s' }} />
-                <span className="w-[3px] bg-primary-light rounded-full animate-pulse" style={{ height: '70%', animationDelay: '0.2s' }} />
-                <span className="w-[3px] bg-primary-light rounded-full animate-pulse" style={{ height: '100%', animationDelay: '0.1s' }} />
-                <span className="w-[3px] bg-primary-light rounded-full animate-pulse" style={{ height: '55%', animationDelay: '0.3s' }} />
-              </div>
+              <svg width="18" height="16" viewBox="0 0 18 16" className="text-primary-light">
+                <path d="M1 8 Q3 2, 5 8 Q7 14, 9 8 Q11 2, 13 8 Q15 14, 17 8" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="animate-pulse" />
+                <path d="M1 8 Q3 4, 5 8 Q7 12, 9 8 Q11 4, 13 8 Q15 12, 17 8" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" opacity="0.4" />
+              </svg>
             ) : (
-              <div className="flex items-end gap-[2px] h-4">
-                <span className="w-[3px] bg-white/30 rounded-full" style={{ height: '20%' }} />
-                <span className="w-[3px] bg-white/30 rounded-full" style={{ height: '20%' }} />
-                <span className="w-[3px] bg-white/30 rounded-full" style={{ height: '20%' }} />
-                <span className="w-[3px] bg-white/30 rounded-full" style={{ height: '20%' }} />
-              </div>
+              <svg width="18" height="16" viewBox="0 0 18 16" className="text-white/30">
+                <line x1="1" y1="8" x2="17" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
             )}
           </button>
           {onLogout && (
