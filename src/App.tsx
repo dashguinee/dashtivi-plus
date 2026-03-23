@@ -38,27 +38,22 @@ function AppContent() {
 
   const [showFullPlayer, setShowFullPlayer] = useState(false);
 
-  // Start ambient on ANY first click/tap inside the app (user gesture required by browser)
+  // Ambient auto-starts on first real button/link click via capture phase
   React.useEffect(() => {
     if (ambientStartedRef.current) return;
-    const handler = () => {
-      if (!ambientStartedRef.current && isAmbientEnabled()) {
+    const handler = (e: Event) => {
+      if (ambientStartedRef.current) return;
+      // Only trigger on interactive elements (buttons, links, cards)
+      const target = e.target as HTMLElement;
+      if (target.closest('button, a, [role="button"], [onclick]')) {
         ambientStartedRef.current = true;
         startAmbient();
+        document.removeEventListener('click', handler, true);
       }
     };
-    // Attach to the app container, not document — guarantees it's a real user gesture
-    const el = document.getElementById('root');
-    if (el) {
-      el.addEventListener('click', handler, { once: true });
-      el.addEventListener('touchstart', handler, { once: true });
-    }
-    return () => {
-      if (el) {
-        el.removeEventListener('click', handler);
-        el.removeEventListener('touchstart', handler);
-      }
-    };
+    // Capture phase — fires on the button click itself, not a bubbled event
+    document.addEventListener('click', handler, true);
+    return () => document.removeEventListener('click', handler, true);
   }, []);
 
   const handlePlayChannel = useCallback(
