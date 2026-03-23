@@ -34,8 +34,28 @@ function AppContent() {
   const { credentials, logout } = useAuth();
   const player = usePlayer();
   const { addToHistory } = useWatchHistory();
+  const ambientStartedRef = React.useRef(false);
 
   const [showFullPlayer, setShowFullPlayer] = useState(false);
+
+  // Start ambient on first user interaction (click/tap) — browser requires gesture
+  React.useEffect(() => {
+    if (ambientStartedRef.current) return;
+    const handler = () => {
+      if (!ambientStartedRef.current && isAmbientEnabled()) {
+        ambientStartedRef.current = true;
+        startAmbient();
+      }
+      document.removeEventListener('click', handler);
+      document.removeEventListener('touchstart', handler);
+    };
+    document.addEventListener('click', handler, { once: true });
+    document.addEventListener('touchstart', handler, { once: true });
+    return () => {
+      document.removeEventListener('click', handler);
+      document.removeEventListener('touchstart', handler);
+    };
+  }, []);
 
   const handlePlayChannel = useCallback(
     (channel: Channel) => {
@@ -203,7 +223,7 @@ function AppRouter() {
         <AccessCodeLogin onLogin={auth.login} />
       )}
 
-      {/* Layer 3: Main app — preload API data + start ambient on auth */}
+      {/* Layer 3: Main app — preload API data on auth */}
       {auth.isAuthenticated && (() => {
         if (auth.credentials) {
           preloadApiData(
@@ -211,10 +231,6 @@ function AppRouter() {
             auth.credentials.username,
             auth.credentials.password
           );
-          // Start ambient audio (ON by default, user logged in = gesture satisfied)
-          if (isAmbientEnabled()) {
-            setTimeout(() => startAmbient(), 1000); // Small delay to not compete with page load
-          }
         }
         return <AppContent />;
       })()}
