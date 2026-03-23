@@ -409,9 +409,9 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       <div
         className="relative mb-2 overflow-hidden transition-all duration-[2000ms] ease-out"
         style={{
-          height: heroCollapsed ? '180px' : '42vh',
-          minHeight: heroCollapsed ? '180px' : '300px',
-          maxHeight: heroCollapsed ? '180px' : '460px',
+          height: heroCollapsed ? '28vh' : '42vh',
+          minHeight: heroCollapsed ? '220px' : '300px',
+          maxHeight: heroCollapsed ? '300px' : '460px',
         }}
       >
         <div className={`absolute inset-0 bg-gradient-to-br ${hero.gradient}`} />
