@@ -70,16 +70,36 @@ export function initAmbient(): void {
   audio.loop = false; // Don't loop — rotate to next track
   audio.volume = VOLUME;
 
-  // When track ends, crossfade to next in rotation
+  // Fade out near end of track, then switch to next
+  let fadeOutStarted = false;
+  audio.addEventListener('timeupdate', () => {
+    if (!audio || !isEnabled || fadeOutStarted) return;
+    const remaining = audio.duration - audio.currentTime;
+    // Start fade out 3 seconds before end
+    if (remaining > 0 && remaining < 3 && audio.duration > 10) {
+      fadeOutStarted = true;
+      let step = 0;
+      const steps = 30;
+      const startVol = audio.volume;
+      const fadeOut = setInterval(() => {
+        step++;
+        if (audio) audio.volume = Math.max(0, startVol * (1 - step / steps));
+        if (step >= steps) clearInterval(fadeOut);
+      }, 100);
+    }
+  });
+
+  // When track ends, switch to next and fade in
   audio.addEventListener('ended', () => {
     if (!audio || !isEnabled) return;
+    fadeOutStarted = false;
     rotationIndex = (rotationIndex + 1) % HOME_ROTATION.length;
     audio.src = HOME_ROTATION[rotationIndex];
     audio.volume = 0;
     audio.play().catch(() => {});
-    // Fade in next track
+    // Fade in over 3 seconds
     let step = 0;
-    const steps = 20;
+    const steps = 30;
     const interval = setInterval(() => {
       step++;
       if (audio) audio.volume = VOLUME * (step / steps);
