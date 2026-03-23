@@ -4,6 +4,7 @@ import { PlayerControls } from './PlayerControls';
 import { RefreshCw, AlertTriangle, Zap, ChevronLeft as ChevLeft, ChevronRight as ChevRight } from 'lucide-react';
 import { useAdjacentChannels, usePlaylistState, setCurrentChannel } from '@/lib/playlist';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
+import { SmartMatch } from './SmartMatch';
 import { getStreamQuality, setStreamQuality } from '@/lib/xtream';
 import type { Channel, PlayerState } from '@/types';
 
@@ -394,6 +395,14 @@ export const VideoPlayer: React.FC<Props> = ({
         onGenreSwitch={onGenreSwitch}
       />
 
+      {/* Smart Match — quality variants + family channels */}
+      <SmartMatchOverlay
+        channel={state.channel}
+        visible={controlsVisible}
+        isLive={!!state.channel?.url?.includes('/live?')}
+        onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
+      />
+
       {/* Channel carousel — concave arc conveyor belt */}
       <ChannelCarousel
         visible={controlsVisible}
@@ -776,6 +785,32 @@ function LandscapeGenreBar({
         </div>
       </div>
     </div>
+  );
+}
+
+/** SmartMatch overlay — bridges playlist state to SmartMatch component */
+function SmartMatchOverlay({
+  channel,
+  visible,
+  isLive,
+  onSwitch,
+}: {
+  channel: Channel | null;
+  visible: boolean;
+  isLive: boolean;
+  onSwitch: (channel: Channel) => void;
+}) {
+  const { channels } = usePlaylistState();
+
+  if (!isLive || !channel || channels.length <= 1) return null;
+
+  return (
+    <SmartMatch
+      currentChannel={channel}
+      allChannels={channels}
+      onSwitch={onSwitch}
+      visible={visible}
+    />
   );
 }
 
