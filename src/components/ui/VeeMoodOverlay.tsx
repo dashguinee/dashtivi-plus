@@ -97,7 +97,7 @@ export const VeeMoodOverlay: React.FC<VeeMoodOverlayProps> = ({
         {/* Header */}
         <div className="text-center mb-6">
           <p className="text-[10px] font-bold tracking-[3px] text-white/25 uppercase mb-2">
-            Video Emotional Intelligence
+            Video Intelligence
           </p>
           <h2 className="text-2xl font-extrabold mb-1">
             <span

@@ -11,7 +11,7 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/';
-  const [ambientOn, setAmbientOn] = useState(false);
+  const [ambientOn, setAmbientOn] = useState(true);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 safe-top">

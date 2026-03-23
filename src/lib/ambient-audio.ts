@@ -38,12 +38,12 @@ const AUDIO_URL = EXPERIENCE_TRACKS['home']; // Default
 const STORAGE_KEY = 'tivi_ambient_enabled';
 const VOLUME = 0.12; // Subtle — background, not foreground
 
-/** Check if user has ambient enabled */
+/** Check if user has ambient enabled (ON by default) */
 export function isAmbientEnabled(): boolean {
   try {
-    return localStorage.getItem(STORAGE_KEY) === 'true';
+    return localStorage.getItem(STORAGE_KEY) !== 'false'; // ON unless explicitly disabled
   } catch {
-    return false;
+    return true;
   }
 }
 
@@ -52,9 +52,14 @@ export function initAmbient(): void {
   if (audio) return;
 
   audio = new Audio(AUDIO_URL);
+  audio.crossOrigin = 'anonymous';
   audio.loop = true;
   audio.volume = VOLUME;
-  audio.playbackRate = currentSpeed;
+  audio.preservesPitch = false; // Natural pitch shift at different speeds
+  // Set playback rate after audio loads (some browsers ignore it before)
+  audio.addEventListener('canplaythrough', () => {
+    if (audio) audio.playbackRate = currentSpeed;
+  }, { once: true });
   isEnabled = true;
 
   try {

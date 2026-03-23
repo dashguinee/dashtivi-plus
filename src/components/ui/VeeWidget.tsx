@@ -314,7 +314,7 @@ export const VeeWidget: React.FC<VeeWidgetProps> = ({
           </div>
           <h2 className="text-lg font-bold text-white">VEE Smart Picks</h2>
           <span className="text-[10px] font-semibold text-primary-light/60 bg-primary/10 px-1.5 py-0.5 rounded tracking-wide">
-            Video Emotional Intelligence
+            Video Intelligence
           </span>
         </div>
 

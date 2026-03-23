@@ -16,7 +16,7 @@ import { getItem, setItem } from '@/lib/storage';
 import { setCurrentChannel } from '@/lib/playlist';
 import { startPreload, preloadApiData } from '@/lib/preloader';
 import { playDashCinemaSound } from '@/lib/cinema-sound';
-import { muteAmbient, unmuteAmbient } from '@/lib/ambient-audio';
+import { muteAmbient, unmuteAmbient, startAmbient, isAmbientEnabled } from '@/lib/ambient-audio';
 import type { Channel } from '@/types';
 
 // Start preloading immediately on script load — before React even mounts
@@ -203,7 +203,7 @@ function AppRouter() {
         <AccessCodeLogin onLogin={auth.login} />
       )}
 
-      {/* Layer 3: Main app — preload API data on auth */}
+      {/* Layer 3: Main app — preload API data + start ambient on auth */}
       {auth.isAuthenticated && (() => {
         if (auth.credentials) {
           preloadApiData(
@@ -211,6 +211,10 @@ function AppRouter() {
             auth.credentials.username,
             auth.credentials.password
           );
+          // Start ambient audio (ON by default, user logged in = gesture satisfied)
+          if (isAmbientEnabled()) {
+            setTimeout(() => startAmbient(), 1000); // Small delay to not compete with page load
+          }
         }
         return <AppContent />;
       })()}
