@@ -73,7 +73,21 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
             className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
             title={ambientOn ? 'Mute ambient' : 'Play ambient'}
           >
-            {ambientOn ? <Volume2 className="w-4 h-4 text-primary-light" /> : <VolumeX className="w-4 h-4 text-white/40" />}
+            {ambientOn ? (
+              <div className="flex items-end gap-[2px] h-4">
+                <span className="w-[3px] bg-primary-light rounded-full animate-pulse" style={{ height: '40%', animationDelay: '0s' }} />
+                <span className="w-[3px] bg-primary-light rounded-full animate-pulse" style={{ height: '70%', animationDelay: '0.2s' }} />
+                <span className="w-[3px] bg-primary-light rounded-full animate-pulse" style={{ height: '100%', animationDelay: '0.1s' }} />
+                <span className="w-[3px] bg-primary-light rounded-full animate-pulse" style={{ height: '55%', animationDelay: '0.3s' }} />
+              </div>
+            ) : (
+              <div className="flex items-end gap-[2px] h-4">
+                <span className="w-[3px] bg-white/30 rounded-full" style={{ height: '20%' }} />
+                <span className="w-[3px] bg-white/30 rounded-full" style={{ height: '20%' }} />
+                <span className="w-[3px] bg-white/30 rounded-full" style={{ height: '20%' }} />
+                <span className="w-[3px] bg-white/30 rounded-full" style={{ height: '20%' }} />
+              </div>
+            )}
           </button>
           {onLogout && (
             <button
