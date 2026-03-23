@@ -408,7 +408,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       <div className="relative h-[42vh] min-h-[300px] max-h-[460px] mb-2 overflow-hidden">
         <div className={`absolute inset-0 bg-gradient-to-br ${hero.gradient}`} />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent" />
-        <WelcomeStory />
+        <WelcomeStory started={true} />
 
         <div className="relative z-10 flex flex-col justify-end h-full px-5 pb-8 max-w-2xl">
           <div className="flex items-center gap-2 mb-3">
