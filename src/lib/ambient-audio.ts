@@ -21,17 +21,17 @@ const VPS = 'https://stream.zionsynapse.online/ambient';
 
 // Track mapping — each experience gets its own sonic vibe
 const EXPERIENCE_TRACKS: Record<string, string> = {
-  'welcome':       `${VPS}/ritual-awakening.mp3`,
-  'home':          `${VPS}/deep-earth-current.mp3`,
-  'sports':        `${VPS}/tribal-heatline.mp3`,
-  'entertainment': `${VPS}/warm-drum-motion.mp3`,
-  'kids':          `${VPS}/organic-invocation.mp3`,
-  'movies247':     `${VPS}/midnight-polyrhythm.mp3`,
-  'music':         `${VPS}/body-in-rhythm.mp3`,
-  'news':          `${VPS}/shadowed-soil.mp3`,
-  'documentary':   `${VPS}/echoes-of-earth.mp3`,
-  'faith':         `${VPS}/ancestral-lift.mp3`,
-  'football':      `${VPS}/tribal-language-rising.mp3`,
+  'welcome':       `${VPS}/ritual-awakening.webm`,
+  'home':          `${VPS}/deep-earth-current.webm`,
+  'sports':        `${VPS}/tribal-heatline.webm`,
+  'entertainment': `${VPS}/warm-drum-motion.webm`,
+  'kids':          `${VPS}/organic-invocation.webm`,
+  'movies247':     `${VPS}/midnight-polyrhythm.webm`,
+  'music':         `${VPS}/body-in-rhythm.webm`,
+  'news':          `${VPS}/shadowed-soil.webm`,
+  'documentary':   `${VPS}/echoes-of-earth.webm`,
+  'faith':         `${VPS}/ancestral-lift.webm`,
+  'football':      `${VPS}/tribal-language-rising.webm`,
 };
 
 const AUDIO_URL = EXPERIENCE_TRACKS['home']; // Default
