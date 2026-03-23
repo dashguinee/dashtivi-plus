@@ -34,7 +34,19 @@ const EXPERIENCE_TRACKS: Record<string, string> = {
   'football':      `${VPS}/tribal-language-rising.webm`,
 };
 
-const AUDIO_URL = EXPERIENCE_TRACKS['home']; // Default
+// Home rotation — shuffle through these on the homepage
+const HOME_ROTATION = [
+  `${VPS}/deep-earth-current.webm`,
+  `${VPS}/warm-drum-motion.webm`,
+  `${VPS}/organic-invocation.webm`,
+  `${VPS}/sacred-groove-expansion.webm`,
+  `${VPS}/low-fire-drive.webm`,
+  `${VPS}/ancestral-lift.webm`,
+  `${VPS}/echoes-of-earth.webm`,
+  `${VPS}/rooted-ceremony.webm`,
+];
+let rotationIndex = Math.floor(Math.random() * HOME_ROTATION.length);
+const AUDIO_URL = HOME_ROTATION[rotationIndex];
 const STORAGE_KEY = 'tivi_ambient_enabled';
 const VOLUME = 0.7;
 
@@ -55,8 +67,25 @@ export function initAmbient(): void {
   console.log('[ambient] init — URL:', AUDIO_URL);
   audio = new Audio();
   audio.src = AUDIO_URL;
-  audio.loop = true;
+  audio.loop = false; // Don't loop — rotate to next track
   audio.volume = VOLUME;
+
+  // When track ends, crossfade to next in rotation
+  audio.addEventListener('ended', () => {
+    if (!audio || !isEnabled) return;
+    rotationIndex = (rotationIndex + 1) % HOME_ROTATION.length;
+    audio.src = HOME_ROTATION[rotationIndex];
+    audio.volume = 0;
+    audio.play().catch(() => {});
+    // Fade in next track
+    let step = 0;
+    const steps = 20;
+    const interval = setInterval(() => {
+      step++;
+      if (audio) audio.volume = VOLUME * (step / steps);
+      if (step >= steps) { clearInterval(interval); if (audio) audio.volume = VOLUME; }
+    }, 100);
+  });
   audio.addEventListener('error', (e) => {
     console.error('[ambient] error:', audio?.error?.code, audio?.error?.message);
   });

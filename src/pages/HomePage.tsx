@@ -157,7 +157,13 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const [veePool, setVeePool] = useState<VodStream[]>([]);
   const [veeTmdbMap, setVeeTmdbMap] = useState<Record<string, TmdbEntry>>({});
   const [loading, setLoading] = useState(true);
-  const [heroCollapsed, setHeroCollapsed] = useState(false);
+  const [heroCollapsed, setHeroCollapsed] = useState(() => {
+    // Show welcome: once per session OR once per day (whichever comes first)
+    try {
+      const seenThisSession = sessionStorage.getItem('dash_welcome_seen') === '1';
+      return seenThisSession;
+    } catch { return false; }
+  });
   const [error, setError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
   const [trailerState, setTrailerState] = useState<{ youtubeKey: string; title: string; poster?: string; overview?: string } | null>(null);
@@ -416,7 +422,10 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       >
         <div className={`absolute inset-0 bg-gradient-to-br ${hero.gradient}`} />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent" />
-        <WelcomeStory started={true} onComplete={() => setHeroCollapsed(true)} />
+        <WelcomeStory started={!heroCollapsed} onComplete={() => {
+          setHeroCollapsed(true);
+          try { sessionStorage.setItem('dash_welcome_seen', '1'); } catch {}
+        }} />
 
         <div className="relative z-10 flex flex-col justify-end h-full px-5 pb-8 max-w-2xl">
           <div className="flex items-center gap-2 mb-3">
