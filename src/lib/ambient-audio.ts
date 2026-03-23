@@ -72,13 +72,24 @@ export function startAmbient(): void {
   console.log('[ambient] startAmbient');
   if (!audio) initAmbient();
   if (!audio) return;
-  // Don't set playbackRate before first play — some browsers reject it on webm
+  // Start silent, fade in over 3 seconds
+  audio.volume = 0;
   audio.play().then(() => {
-    console.log('[ambient] play OK');
-    // Set rate AFTER play succeeds
+    console.log('[ambient] play OK — fading in');
     if (audio) {
       audio.playbackRate = currentSpeed;
       try { audio.preservesPitch = false; } catch {}
+      // Smooth fade in: 0 → VOLUME over 3 seconds
+      let step = 0;
+      const steps = 30;
+      const interval = setInterval(() => {
+        step++;
+        if (audio) audio.volume = VOLUME * (step / steps);
+        if (step >= steps) {
+          clearInterval(interval);
+          if (audio) audio.volume = VOLUME;
+        }
+      }, 100);
     }
   }).catch((err) => {
     console.error('[ambient] play FAIL:', err.message);
