@@ -57,15 +57,16 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     id: 'live-sports',
     name: 'Live Sports',
     emoji: '\u26BD',
-    description: 'Football, Cricket, Combat & more',
+    description: 'Premier League, beIN, Sky Sports & more',
     type: 'live',
     categoryIds: [
       '234',  // Football
       '85',   // beIN Sports
       '345',  // DSTV Super Sports
-      '5',    // Cricket
+      '427',  // DSTV Sports FHD
       '353',  // Sky Sports UK 4K
       '578',  // Real 4K
+      '492',  // EPL
     ],
     limit: 15,
     navigateTo: '/live',
@@ -74,7 +75,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     id: 'fresh-movies',
     name: 'Fresh Movies',
     emoji: '\uD83C\uDFAC',
-    description: 'Just added this year',
+    description: 'Just added — 2025 & 2026',
     type: 'vod',
     categoryIds: ['749', '597'], // English 2026, 2025
     limit: 15,
@@ -84,19 +85,19 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     id: 'binge-worthy',
     name: 'Binge-Worthy',
     emoji: '\uD83C\uDF7F',
-    description: 'Netflix, HBO, Disney+',
+    description: 'Netflix, HBO, Disney+ originals',
     type: 'series',
-    categoryIds: ['106', '188', '102'], // Netflix, HBO Max, Disney+Hotstar
+    categoryIds: ['106', '188', '102'], // Netflix, HBO Max, Disney+
     limit: 15,
     navigateTo: '/series',
   },
   {
-    id: 'african-tv',
-    name: 'African Sports',
-    emoji: '\u26BD',
-    description: 'SuperSport, beIN Africa & more',
+    id: 'kids-family',
+    name: 'Kids & Family',
+    emoji: '\uD83E\uDDF8',
+    description: 'Nick, Disney, Cartoon Network & more',
     type: 'live',
-    categoryIds: ['345', '427', '156'], // DSTV Sports, DSTV Sports FHD, Arabic Sports (beIN Africa)
+    categoryIds: ['32', '410'],  // Kids (108ch), UK Kids (12ch)
     limit: 15,
     navigateTo: '/live',
   },
@@ -104,10 +105,10 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     id: 'news-world',
     name: 'News & World',
     emoji: '\uD83D\uDCF0',
-    description: 'Stay informed, stay sharp',
+    description: 'CNN, BBC, Al Jazeera, Sky News',
     type: 'live',
     categoryIds: [
-      '82',   // English News (CNN, BBC, Fox News, Al Jazeera)
+      '82',   // English News
       '417',  // UK News
       '165',  // Arabic News
     ],
@@ -115,32 +116,32 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     navigateTo: '/live',
   },
   {
-    id: 'k-drama-turkish',
-    name: 'K-Drama & Turkish Hits',
-    emoji: '\uD83C\uDF1F',
-    description: 'Korean & Turkish drama everyone\'s watching',
-    type: 'series',
-    categoryIds: ['267', '99'],  // Korean (235 series), Turkish (1,130 series)
-    limit: 15,
-    navigateTo: '/series',
-  },
-  {
     id: 'cinema-4k',
     name: '4K Cinema',
     emoji: '\uD83C\uDFA5',
     description: 'Crystal clear blockbusters',
     type: 'vod',
-    categoryIds: ['122', '34'],  // 4K (1,058 movies), Blockbuster (1,002 movies)
+    categoryIds: ['122', '34'],  // 4K, Blockbuster
     limit: 15,
     navigateTo: '/movies',
   },
   {
-    id: 'fight-night',
-    name: 'Fight Night',
-    emoji: '\uD83E\uDD4A',
-    description: 'UFC, WWE, PPV & Combat Sports',
+    id: 'k-drama-turkish',
+    name: 'Drama World',
+    emoji: '\uD83C\uDF1F',
+    description: 'K-Drama, Turkish & international series',
+    type: 'series',
+    categoryIds: ['267', '99'],  // Korean, Turkish
+    limit: 15,
+    navigateTo: '/series',
+  },
+  {
+    id: 'nba-basketball',
+    name: 'NBA',
+    emoji: '\uD83C\uDFC0',
+    description: 'Every game, every dunk',
     type: 'live',
-    categoryIds: ['516'],  // NFL/Combat
+    categoryIds: ['773', '516'],  // NBA League Pass, NFL
     limit: 12,
     navigateTo: '/live',
   },
