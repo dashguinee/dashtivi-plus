@@ -602,7 +602,7 @@ function SectionHeader({
           onClick={() => onNavigate(seeAllTo)}
           className="flex items-center gap-1 text-xs text-primary-light hover:text-white transition-colors"
         >
-          See All
+          See More
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       )}

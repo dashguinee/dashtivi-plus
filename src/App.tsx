@@ -42,6 +42,7 @@ function AppContent() {
   React.useEffect(() => {
     if (ambientStartedRef.current) return;
     const handler = () => {
+      console.log('[app] first interaction — ambient enabled:', isAmbientEnabled(), 'started:', ambientStartedRef.current);
       if (!ambientStartedRef.current && isAmbientEnabled()) {
         ambientStartedRef.current = true;
         startAmbient();

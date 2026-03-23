@@ -51,29 +51,41 @@ export function isAmbientEnabled(): boolean {
 export function initAmbient(): void {
   if (audio) return;
 
+  console.log('[ambient] init — URL:', AUDIO_URL);
   audio = new Audio(AUDIO_URL);
   audio.crossOrigin = 'anonymous';
   audio.loop = true;
   audio.volume = VOLUME;
-  audio.preservesPitch = false; // Natural pitch shift at different speeds
-  // Set playback rate after audio loads (some browsers ignore it before)
+  audio.preservesPitch = false;
+
   audio.addEventListener('canplaythrough', () => {
+    console.log('[ambient] canplaythrough — setting rate:', currentSpeed);
     if (audio) audio.playbackRate = currentSpeed;
   }, { once: true });
-  isEnabled = true;
 
-  try {
-    localStorage.setItem(STORAGE_KEY, 'true');
-  } catch {}
+  audio.addEventListener('error', (e) => {
+    const err = audio?.error;
+    console.error('[ambient] audio error:', err?.code, err?.message, e);
+  });
+
+  audio.addEventListener('playing', () => {
+    console.log('[ambient] playing — rate:', audio?.playbackRate, 'vol:', audio?.volume);
+  });
+
+  isEnabled = true;
+  try { localStorage.setItem(STORAGE_KEY, 'true'); } catch {}
 }
 
 /** Start playing (must be called from user gesture for autoplay policy) */
 export function startAmbient(): void {
+  console.log('[ambient] startAmbient called — audio exists:', !!audio, 'enabled:', isAmbientEnabled());
   if (!audio) initAmbient();
   if (!audio) return;
 
-  audio.play().catch(() => {
-    // Autoplay blocked — will start on next user interaction
+  audio.play().then(() => {
+    console.log('[ambient] play() succeeded');
+  }).catch((err) => {
+    console.error('[ambient] play() failed:', err.message);
   });
   isEnabled = true;
 }
