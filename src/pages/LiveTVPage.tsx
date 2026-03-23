@@ -431,8 +431,17 @@ function ThemeRow({
     }
   }
 
-  // Sort by thumbnail quality
-  const sorted = sortByIconQuality(filtered);
+  // Group quality variants (beIN 1 4K + HD + SD → one card showing best)
+  const grouped = groupChannelsByQuality(filtered);
+  // Convert back to LiveStream using best quality variant
+  const deduped = grouped.map(g => {
+    const best = g.variants.reduce((a, b) => {
+      const order: Record<string, number> = { '4k': 4, 'fhd': 3, 'hd': 2, 'sd': 1, 'unknown': 0 };
+      return (order[b.quality] || 0) > (order[a.quality] || 0) ? b : a;
+    });
+    return filtered.find(s => s.stream_id === best.streamId) || filtered[0];
+  }).filter(Boolean);
+  const sorted = sortByIconQuality(deduped);
   const displayed = expanded ? sorted : sorted.slice(0, 25);
 
   return (
@@ -443,7 +452,7 @@ function ThemeRow({
           {theme.emoji}
         </div>
         <h2 className="text-[15px] font-bold text-white">{theme.name}</h2>
-        <span className="text-[11px] text-text-muted">{alive.length}</span>
+        <span className="text-[11px] text-text-muted">{sorted.length}</span>
         <button
           onClick={() => {
             const next = !expanded;
