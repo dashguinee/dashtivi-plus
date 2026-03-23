@@ -374,7 +374,6 @@ export const SPORT_TYPES: SportType[] = [
   { id: 'nba', name: 'Take a Hoop', categoryIds: ['773'] },
   { id: 'cricket', name: 'Cricket Ground', categoryIds: ['5'] },
   { id: 'nfl', name: 'NFL', categoryIds: ['516'] },
-  { id: 'combat', name: 'The Ring', categoryIds: ['190'] },
   { id: 'fans', name: 'Fans Space', categoryIds: ['234'] },  // LFC TV, MUTV, team channels
   { id: 'africa', name: 'African Football', categoryIds: ['345', '427'] },
   { id: 'sky', name: 'Sky Sports', categoryIds: ['353', '483', '578'] },

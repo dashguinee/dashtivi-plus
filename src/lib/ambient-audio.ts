@@ -36,7 +36,7 @@ const EXPERIENCE_TRACKS: Record<string, string> = {
 
 const AUDIO_URL = EXPERIENCE_TRACKS['home']; // Default
 const STORAGE_KEY = 'tivi_ambient_enabled';
-const VOLUME = 0.7;
+const VOLUME = 0.8;
 
 /** Check if user has ambient enabled (ON by default, reset on new version) */
 export function isAmbientEnabled(): boolean {
