@@ -50,44 +50,36 @@ export function isAmbientEnabled(): boolean {
 /** Initialize ambient audio (call once, on user gesture) */
 export function initAmbient(): void {
   if (audio) return;
-
   console.log('[ambient] init — URL:', AUDIO_URL);
-  audio = new Audio(AUDIO_URL);
-  // No crossOrigin — we just need playback, not audio analysis
+  audio = new Audio();
+  audio.src = AUDIO_URL;
   audio.loop = true;
   audio.volume = VOLUME;
-  audio.preservesPitch = false;
-
-  audio.addEventListener('canplaythrough', () => {
-    console.log('[ambient] canplaythrough — setting rate:', currentSpeed);
-    if (audio) audio.playbackRate = currentSpeed;
-  }, { once: true });
-
   audio.addEventListener('error', (e) => {
-    const err = audio?.error;
-    console.error('[ambient] audio error:', err?.code, err?.message, e);
+    console.error('[ambient] error:', audio?.error?.code, audio?.error?.message);
   });
-
   audio.addEventListener('playing', () => {
-    console.log('[ambient] playing — rate:', audio?.playbackRate, 'vol:', audio?.volume);
+    console.log('[ambient] PLAYING — vol:', audio?.volume, 'rate:', audio?.playbackRate);
   });
-
   isEnabled = true;
   try { localStorage.setItem(STORAGE_KEY, 'true'); } catch {}
 }
 
 /** Start playing (must be called from user gesture for autoplay policy) */
 export function startAmbient(): void {
-  console.log('[ambient] startAmbient called — audio exists:', !!audio, 'enabled:', isAmbientEnabled());
+  console.log('[ambient] startAmbient');
   if (!audio) initAmbient();
   if (!audio) return;
-
-  // Set rate before play so it starts at the right speed
-  audio.playbackRate = currentSpeed;
+  // Don't set playbackRate before first play — some browsers reject it on webm
   audio.play().then(() => {
-    console.log('[ambient] play() succeeded — rate:', audio?.playbackRate, 'vol:', audio?.volume);
+    console.log('[ambient] play OK');
+    // Set rate AFTER play succeeds
+    if (audio) {
+      audio.playbackRate = currentSpeed;
+      try { audio.preservesPitch = false; } catch {}
+    }
   }).catch((err) => {
-    console.error('[ambient] play() failed:', err.message);
+    console.error('[ambient] play FAIL:', err.message);
   });
   isEnabled = true;
 }
