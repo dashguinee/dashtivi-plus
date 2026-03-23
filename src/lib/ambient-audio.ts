@@ -38,10 +38,12 @@ const AUDIO_URL = EXPERIENCE_TRACKS['home']; // Default
 const STORAGE_KEY = 'tivi_ambient_enabled';
 const VOLUME = 1.0; // MAX for testing — lower after confirming audio works
 
-/** Check if user has ambient enabled (ON by default) */
+/** Check if user has ambient enabled (ON by default, reset on new version) */
 export function isAmbientEnabled(): boolean {
   try {
-    return localStorage.getItem(STORAGE_KEY) !== 'false'; // ON unless explicitly disabled
+    const val = localStorage.getItem(STORAGE_KEY);
+    // If never set or set to anything other than explicit 'off', enable
+    return val !== 'off';
   } catch {
     return true;
   }
@@ -91,7 +93,7 @@ export function stopAmbient(): void {
   }
   isEnabled = false;
   try {
-    localStorage.setItem(STORAGE_KEY, 'false');
+    localStorage.setItem(STORAGE_KEY, 'off');
   } catch {}
 }
 
