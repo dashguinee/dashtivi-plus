@@ -259,8 +259,8 @@ export const LIVETV_THEMES: LiveTheme[] = [
       '550', '138', '212', '356', '156', '137', '516', '483',
       '139', '492', '773', '726', '328',
     ],
-    gradient: 'from-green-500 to-emerald-700',
-    glowColor: 'shadow-green-500/20',
+    gradient: 'from-primary to-primary-dark',
+    glowColor: 'shadow-primary/20',
   },
   {
     id: 'entertainment',
@@ -275,8 +275,8 @@ export const LIVETV_THEMES: LiveTheme[] = [
       '338',  // India Entertainment
       '24',   // US 24/7
     ],
-    gradient: 'from-purple-500 to-violet-700',
-    glowColor: 'shadow-purple-500/20',
+    gradient: 'from-primary/80 to-primary-dark/80',
+    glowColor: 'shadow-primary/20',
   },
   {
     id: 'news',
@@ -290,8 +290,8 @@ export const LIVETV_THEMES: LiveTheme[] = [
       '77',   // Indian News (additional)
       '98',   // Pakistan News
     ],
-    gradient: 'from-blue-500 to-sky-700',
-    glowColor: 'shadow-blue-500/20',
+    gradient: 'from-primary-dark to-primary/70',
+    glowColor: 'shadow-primary-dark/20',
   },
   {
     id: 'kids',
@@ -301,8 +301,8 @@ export const LIVETV_THEMES: LiveTheme[] = [
       '32',   // Kids (108ch — Nick, Disney, CN, CBeebies, PBS)
       '410',  // UK Kids
     ],
-    gradient: 'from-pink-500 to-rose-600',
-    glowColor: 'shadow-pink-500/20',
+    gradient: 'from-primary-light to-primary',
+    glowColor: 'shadow-primary-light/20',
   },
   {
     id: 'movies247',
@@ -317,8 +317,8 @@ export const LIVETV_THEMES: LiveTheme[] = [
       '339',  // India Hindi Movies
       '340',  // India English Movies
     ],
-    gradient: 'from-red-500 to-rose-700',
-    glowColor: 'shadow-red-500/20',
+    gradient: 'from-primary-dark/90 to-accent/30',
+    glowColor: 'shadow-primary-dark/20',
   },
   {
     id: 'music',
@@ -331,8 +331,8 @@ export const LIVETV_THEMES: LiveTheme[] = [
       '270',  // Bollywood Singers 24/7
       '287',  // Punjabi Singers 24/7
     ],
-    gradient: 'from-fuchsia-500 to-pink-700',
-    glowColor: 'shadow-fuchsia-500/20',
+    gradient: 'from-primary to-primary-light/70',
+    glowColor: 'shadow-primary/20',
   },
   {
     id: 'documentary',
@@ -342,8 +342,8 @@ export const LIVETV_THEMES: LiveTheme[] = [
       '337',  // India Documentary
       '415',  // UK Documentary
     ],
-    gradient: 'from-teal-500 to-cyan-700',
-    glowColor: 'shadow-teal-500/20',
+    gradient: 'from-primary-dark/80 to-primary/60',
+    glowColor: 'shadow-primary-dark/20',
   },
   {
     id: 'faith',
@@ -353,8 +353,8 @@ export const LIVETV_THEMES: LiveTheme[] = [
       '123',  // Islamic (156ch)
       '561',  // Christian (16ch)
     ],
-    gradient: 'from-amber-500 to-yellow-700',
-    glowColor: 'shadow-amber-500/20',
+    gradient: 'from-accent-gold/40 to-primary/30',
+    glowColor: 'shadow-accent-gold/20',
   },
 ];
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Play, ChevronRight, Tv, Clock } from 'lucide-react';
+import { Play, ChevronRight, Tv, Clock, Trophy, Radio, Film, MonitorPlay, Globe, Sparkles, Music, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { XtreamCredentials, LiveStream, VodStream, SeriesItem } from '@/lib/xtream';
 import {
@@ -456,16 +456,28 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       {/* ── Quick Collection Cards (vibes) ───────────────────── */}
       <div className="px-4 mb-6">
         <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-1">
-          {COLLECTION_CARDS.map((card) => (
-            <button
-              key={card.id}
-              onClick={() => navigate(card.navigateTo)}
-              className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r ${card.gradient} border border-white/10 hover:border-white/20 transition-all hover:scale-[1.02] active:scale-[0.98]`}
-            >
-              <span className="text-base">{card.emoji}</span>
-              <span className="text-sm font-semibold text-white whitespace-nowrap">{card.name}</span>
-            </button>
-          ))}
+          {COLLECTION_CARDS.map((card) => {
+            const IconMap: Record<string, React.ReactNode> = {
+              sports: <Trophy className="w-4 h-4" />,
+              news: <Radio className="w-4 h-4" />,
+              movies: <Film className="w-4 h-4" />,
+              series: <MonitorPlay className="w-4 h-4" />,
+              africa: <Globe className="w-4 h-4" />,
+              kids: <Sparkles className="w-4 h-4" />,
+              music: <Music className="w-4 h-4" />,
+              faith: <Heart className="w-4 h-4" />,
+            };
+            return (
+              <button
+                key={card.id}
+                onClick={() => navigate(card.navigateTo)}
+                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r ${card.gradient} border border-white/10 hover:border-white/20 transition-all hover:scale-[1.02] active:scale-[0.98]`}
+              >
+                <span className="text-primary-light">{IconMap[card.id] || <span className="text-base">{card.emoji}</span>}</span>
+                <span className="text-sm font-semibold text-white whitespace-nowrap">{card.name}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

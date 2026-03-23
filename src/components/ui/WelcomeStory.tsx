@@ -32,15 +32,16 @@ export const WelcomeStory: React.FC<Props> = ({ started = false, onComplete }) =
 
     const t: ReturnType<typeof setTimeout>[] = [];
 
-    t.push(setTimeout(() => setPhase(1), 100));
-    t.push(setTimeout(() => setPhase(2), 800));
-    t.push(setTimeout(() => setPhase(3), 3500));
+    // Delay start by 500ms to ensure component is painted first
+    t.push(setTimeout(() => setPhase(1), 500));
+    t.push(setTimeout(() => setPhase(2), 1500));
+    t.push(setTimeout(() => setPhase(3), 4000));
     EXPERIENCES.forEach((_, i) => {
-      t.push(setTimeout(() => setActiveExp(i), 3800 + i * 900));
+      t.push(setTimeout(() => setActiveExp(i), 4300 + i * 900));
     });
-    t.push(setTimeout(() => setPhase(4), 8500));
-    t.push(setTimeout(() => setPhase(5), 10500));
-    t.push(setTimeout(() => { setVisible(false); onComplete?.(); }, 12000));
+    t.push(setTimeout(() => setPhase(4), 9000));
+    t.push(setTimeout(() => setPhase(5), 11000));
+    t.push(setTimeout(() => { setVisible(false); onComplete?.(); }, 12500));
 
     return () => t.forEach(clearTimeout);
   }, [started, onComplete]);
