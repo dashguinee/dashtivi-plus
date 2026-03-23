@@ -38,7 +38,29 @@ function AppContent() {
 
   const [showFullPlayer, setShowFullPlayer] = useState(false);
 
-  // Ambient starts from Header toggle button (direct user gesture required)
+  // Start ambient on ANY first click/tap inside the app (user gesture required by browser)
+  const ambientStartedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (ambientStartedRef.current) return;
+    const handler = () => {
+      if (!ambientStartedRef.current && isAmbientEnabled()) {
+        ambientStartedRef.current = true;
+        startAmbient();
+      }
+    };
+    // Attach to the app container, not document — guarantees it's a real user gesture
+    const el = document.getElementById('root');
+    if (el) {
+      el.addEventListener('click', handler, { once: true });
+      el.addEventListener('touchstart', handler, { once: true });
+    }
+    return () => {
+      if (el) {
+        el.removeEventListener('click', handler);
+        el.removeEventListener('touchstart', handler);
+      }
+    };
+  }, []);
 
   const handlePlayChannel = useCallback(
     (channel: Channel) => {
