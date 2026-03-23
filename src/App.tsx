@@ -38,23 +38,7 @@ function AppContent() {
 
   const [showFullPlayer, setShowFullPlayer] = useState(false);
 
-  // Ambient auto-starts on first real button/link click via capture phase
-  React.useEffect(() => {
-    if (ambientStartedRef.current) return;
-    const handler = (e: Event) => {
-      if (ambientStartedRef.current) return;
-      // Only trigger on interactive elements (buttons, links, cards)
-      const target = e.target as HTMLElement;
-      if (target.closest('button, a, [role="button"], [onclick]')) {
-        ambientStartedRef.current = true;
-        startAmbient();
-        document.removeEventListener('click', handler, true);
-      }
-    };
-    // Capture phase — fires on the button click itself, not a bubbled event
-    document.addEventListener('click', handler, true);
-    return () => document.removeEventListener('click', handler, true);
-  }, []);
+  // Ambient starts from login submit (user gesture) or splash dismiss
 
   const handlePlayChannel = useCallback(
     (channel: Channel) => {
@@ -201,6 +185,8 @@ function AppRouter() {
   const handleSplashComplete = useCallback(() => {
     setShowSplash(false);
     setItem('splash_seen_plus', true);
+    // Splash dismiss is a user gesture — start ambient
+    if (isAmbientEnabled()) startAmbient();
   }, []);
 
   // /welcome is a public route — no splash, no auth gate
@@ -219,7 +205,11 @@ function AppRouter() {
 
       {/* Layer 2: Access Code Login */}
       {!showSplash && !auth.isAuthenticated && (
-        <AccessCodeLogin onLogin={auth.login} />
+        <AccessCodeLogin onLogin={async (code) => {
+          // Login button click = user gesture → start ambient
+          if (isAmbientEnabled()) startAmbient();
+          return auth.login(code);
+        }} />
       )}
 
       {/* Layer 3: Main app — preload API data on auth */}
