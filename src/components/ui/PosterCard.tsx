@@ -14,19 +14,25 @@ interface Props {
 }
 
 // Platform badges — mapped by Starshare category ID
+// Platform badges — image logos for major platforms, text fallback for others
+const PLATFORM_LOGOS: Record<string, string> = {
+  '106': '/logos/netflix.svg',   // Netflix Series
+  '169': '/logos/netflix.svg',   // Netflix Movies EN
+  '168': '/logos/netflix.svg',   // Netflix Movies Hindi
+  '108': '/logos/prime.svg',     // Prime Video
+};
+
 const PLATFORM_BADGES: Record<string, { label: string; bg: string; text: string }> = {
-  // Series
-  '106': { label: 'N', bg: 'bg-[#E50914]', text: 'text-white' },              // Netflix
-  '108': { label: 'prime', bg: 'bg-[#00A8E1]', text: 'text-white' },          // Amazon Prime
-  '188': { label: 'HBO', bg: 'bg-[#9D4EDD]', text: 'text-white' },            // HBO Max
-  '654': { label: 'D+', bg: 'bg-[#113CCF]', text: 'text-white' },             // Disney+
-  '114': { label: 'tv+', bg: 'bg-[#1d1d1f]', text: 'text-white' },            // Apple TV+
-  '209': { label: 'hulu', bg: 'bg-[#1CE783]', text: 'text-black' },           // Hulu
-  '249': { label: 'P+', bg: 'bg-[#0064FF]', text: 'text-white' },             // Paramount+
-  '110': { label: 'STARZ', bg: 'bg-[#1a1a2e]', text: 'text-[#FFB300]' },      // Starz
-  // Movies
-  '169': { label: 'N', bg: 'bg-[#E50914]', text: 'text-white' },              // Netflix English
-  '168': { label: 'N', bg: 'bg-[#E50914]', text: 'text-white' },              // Netflix Hindi
+  '106': { label: 'N', bg: 'bg-[#E50914]', text: 'text-white' },
+  '108': { label: 'prime', bg: 'bg-[#00A8E1]', text: 'text-white' },
+  '188': { label: 'HBO', bg: 'bg-[#9D4EDD]', text: 'text-white' },
+  '654': { label: 'D+', bg: 'bg-[#113CCF]', text: 'text-white' },
+  '114': { label: 'tv+', bg: 'bg-[#1d1d1f]', text: 'text-white' },
+  '209': { label: 'hulu', bg: 'bg-[#1CE783]', text: 'text-black' },
+  '249': { label: 'P+', bg: 'bg-[#0064FF]', text: 'text-white' },
+  '110': { label: 'STARZ', bg: 'bg-[#1a1a2e]', text: 'text-[#FFB300]' },
+  '169': { label: 'N', bg: 'bg-[#E50914]', text: 'text-white' },
+  '168': { label: 'N', bg: 'bg-[#E50914]', text: 'text-white' },
 };
 
 const COLORS = [
@@ -84,6 +90,7 @@ function formatRuntime(minutes: number): string {
 
 export const PosterCard = memo(function PosterCard({ title, poster, rating, categoryId, onClick, tmdbData, onTrailer }: Props) {
   const badge = categoryId ? PLATFORM_BADGES[categoryId] : undefined;
+  const platformLogo = categoryId ? PLATFORM_LOGOS[categoryId] : undefined;
   const [imgFailed, setImgFailed] = useState(false);
   const safePoster = getSafePoster(poster, undefined);
   const hasPoster = safePoster && !imgFailed;
@@ -132,10 +139,16 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
         </div>
       )}
 
-      {/* Platform badge — top left */}
+      {/* Platform badge — top left (logo image or text fallback) */}
       {badge && (
-        <div className={`absolute top-2 left-2 z-10 px-1.5 py-0.5 rounded-md ${badge.bg} ${badge.text} text-[9px] font-black tracking-wide shadow-lg`}>
-          {badge.label}
+        <div className="absolute top-2 left-2 z-10">
+          {platformLogo ? (
+            <img src={platformLogo} alt={badge.label} className="h-5 w-auto drop-shadow-lg" />
+          ) : (
+            <div className={`px-1.5 py-0.5 rounded-md ${badge.bg} ${badge.text} text-[9px] font-black tracking-wide shadow-lg`}>
+              {badge.label}
+            </div>
+          )}
         </div>
       )}
 
