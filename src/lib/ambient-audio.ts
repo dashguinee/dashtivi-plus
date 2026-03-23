@@ -151,14 +151,35 @@ export function setAmbientSpeed(speed: number): void {
   }, 50);
 }
 
-/** Mute ambient temporarily (e.g., when video is playing) */
+/** Fade out ambient over 2s (e.g., when video starts playing) */
 export function muteAmbient(): void {
-  if (audio) audio.volume = 0;
+  if (!audio) return;
+  let step = 0;
+  const steps = 20;
+  const startVol = audio.volume;
+  const fadeInterval = setInterval(() => {
+    step++;
+    if (audio) audio.volume = Math.max(0, startVol * (1 - step / steps));
+    if (step >= steps) {
+      clearInterval(fadeInterval);
+      if (audio) audio.volume = 0;
+    }
+  }, 100); // 20 steps × 100ms = 2 seconds
 }
 
-/** Restore ambient volume */
+/** Fade ambient back in over 2s */
 export function unmuteAmbient(): void {
-  if (audio) audio.volume = VOLUME;
+  if (!audio) return;
+  let step = 0;
+  const steps = 20;
+  const interval = setInterval(() => {
+    step++;
+    if (audio) audio.volume = VOLUME * (step / steps);
+    if (step >= steps) {
+      clearInterval(interval);
+      if (audio) audio.volume = VOLUME;
+    }
+  }, 100);
 }
 
 /** Switch to a different experience track (crossfade) */
