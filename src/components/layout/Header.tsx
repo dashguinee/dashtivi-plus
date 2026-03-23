@@ -65,6 +65,7 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
         {/* Actions */}
         <div className="flex items-center gap-2">
           <button
+            data-ambient-toggle
             onClick={() => {
               const on = toggleAmbient();
               setAmbientOn(on);

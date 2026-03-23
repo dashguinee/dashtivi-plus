@@ -41,7 +41,10 @@ function AppContent() {
   // Start ambient on first user interaction (click/tap) — browser requires gesture
   React.useEffect(() => {
     if (ambientStartedRef.current) return;
-    const handler = () => {
+    const handler = (e: Event) => {
+      // Don't auto-start if user clicked the ambient toggle button itself
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-ambient-toggle]')) return;
       console.log('[app] first interaction — ambient enabled:', isAmbientEnabled(), 'started:', ambientStartedRef.current);
       if (!ambientStartedRef.current && isAmbientEnabled()) {
         ambientStartedRef.current = true;
