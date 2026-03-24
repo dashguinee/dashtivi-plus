@@ -22,8 +22,8 @@ const FEATURED_CATS = [
 ];
 
 const PLATFORM_LOGOS: Record<string, { logo: string; color: string }> = {
-  '106': { logo: '/logos/netflix.svg', color: '#E50914' },
-  '108': { logo: '/logos/prime.svg', color: '#00A8E1' },
+  '106': { logo: '/logos/netflix-3d.png', color: '#E50914' },
+  '108': { logo: '/logos/prime-3d.webp', color: '#00A8E1' },
   '188': { logo: '/logos/hbo.svg', color: '#9D4EDD' },
   '654': { logo: '/logos/disney-plus.svg', color: '#113CCF' },
   '114': { logo: '/logos/apple-tv.svg', color: '#1d1d1f' },

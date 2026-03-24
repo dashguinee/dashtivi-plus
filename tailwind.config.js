@@ -45,7 +45,7 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Outfit', 'system-ui', '-apple-system', 'sans-serif'],
       },
       animation: {
         'pulse-live': 'pulse-live 2s ease-in-out infinite',
@@ -55,7 +55,7 @@ export default {
         'glow': 'glow 2s ease-in-out infinite alternate',
         'glow-pulse': 'glow-pulse 3s ease-in-out infinite',
         'scale-in': 'scale-in 0.3s ease-out',
-        'portal-pulse-red': 'portal-pulse-red 2.5s ease-in-out infinite',
+        'portal-pulse-red': 'portal-pulse-red 5s ease-in-out infinite',
         'portal-pulse-blue': 'portal-pulse-blue 2.5s ease-in-out infinite',
         'mood-pop': 'mood-pop 0.3s ease-out',
         'shimmer': 'shimmer 2s linear infinite',
@@ -90,8 +90,8 @@ export default {
           to: { opacity: '1', transform: 'scale(1)' },
         },
         'portal-pulse-red': {
-          '0%, 100%': { boxShadow: '0 0 20px rgba(239,68,68,0.3), 0 0 40px rgba(239,68,68,0.1)' },
-          '50%': { boxShadow: '0 0 30px rgba(239,68,68,0.5), 0 0 60px rgba(239,68,68,0.2)' },
+          '0%, 100%': { boxShadow: '0 0 10px rgba(239,68,68,0.15), 0 0 20px rgba(239,68,68,0.05)' },
+          '50%': { boxShadow: '0 0 15px rgba(239,68,68,0.25), 0 0 30px rgba(239,68,68,0.1)' },
         },
         'portal-pulse-blue': {
           '0%, 100%': { boxShadow: '0 0 20px rgba(59,130,246,0.3), 0 0 40px rgba(59,130,246,0.1)' },

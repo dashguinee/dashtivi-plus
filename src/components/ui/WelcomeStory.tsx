@@ -27,7 +27,7 @@ export const WelcomeStory: React.FC<Props> = ({ started = false, onComplete }) =
   const hasRun = useRef(false);
 
   useEffect(() => {
-    if (hasRun.current) return;
+    if (!started || hasRun.current) return;
     hasRun.current = true;
 
     const t: ReturnType<typeof setTimeout>[] = [];
@@ -46,7 +46,7 @@ export const WelcomeStory: React.FC<Props> = ({ started = false, onComplete }) =
     return () => t.forEach(clearTimeout);
   }, [started, onComplete]);
 
-  if (!visible) return null;
+  if (!visible || !started) return null;
 
   return (
     <div

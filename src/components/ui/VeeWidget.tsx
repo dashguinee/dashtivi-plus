@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useMemo } from 'react';
-import { Flame, Compass, Play, Star } from 'lucide-react';
+import { Flame, Compass, Play, Star, Clapperboard } from 'lucide-react';
 import { VeeMoodOverlay, MOOD_GENRES } from './VeeMoodOverlay';
 import type { TmdbEntry } from '../../lib/tmdb-map.generated';
 
@@ -143,12 +143,13 @@ const VeeCard: React.FC<{
         </div>
       )}
 
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+      {/* Purple brand fade — 15% overlay */}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(157,78,221,0.15) 0%, rgba(157,78,221,0.06) 40%, transparent 60%, rgba(0,0,0,0.7) 100%)' }} />
+
 
       {/* Play icon on hover */}
       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-        <div className="w-9 h-9 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center">
+        <div className="w-9 h-9 rounded-full bg-primary/80 flex items-center justify-center">
           <Play className="w-4 h-4 text-white ml-0.5" />
         </div>
       </div>
@@ -162,22 +163,23 @@ const VeeCard: React.FC<{
             onTrailer!(tmdb!.y!, clean, poster || undefined);
           }}
         >
-          <div className="w-6 h-6 rounded-full bg-red-600/90 hover:bg-red-500 flex items-center justify-center transition-colors cursor-pointer">
-            <Play className="w-3 h-3 text-white ml-0.5" />
+          <div className="w-6 h-6 rounded-lg bg-black/50 hover:bg-primary/40 flex items-center justify-center transition-colors cursor-pointer" style={{ border: '1px solid rgba(157,78,221,0.2)' }}>
+            <Clapperboard className="w-3 h-3 text-primary-light/80" />
           </div>
         </div>
       )}
 
-      {/* Bottom info */}
+      {/* Bottom info — rating + year only (title is at top) */}
       <div className="absolute bottom-0 left-0 right-0 p-2">
-        {hasRating && (
-          <div className="flex items-center gap-0.5 mb-0.5">
-            <Star className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />
-            <span className="text-[10px] text-yellow-400 font-medium">{displayRating}</span>
-          </div>
-        )}
-        <h3 className="text-[10px] font-medium text-white line-clamp-2 leading-tight">{clean}</h3>
-        {year && <span className="text-[9px] text-white/35 font-medium">{year}</span>}
+        <div className="flex items-center gap-1.5">
+          {hasRating && (
+            <div className="flex items-center gap-0.5">
+              <Star className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />
+              <span className="text-[10px] text-yellow-400 font-medium">{displayRating}</span>
+            </div>
+          )}
+          {year && <span className="text-[9px] text-white/30 font-medium">{year}</span>}
+        </div>
       </div>
     </button>
   );
@@ -196,7 +198,7 @@ const PortalBox: React.FC<{
       onClick={onClick}
       className={`
         relative flex-shrink-0 flex flex-col items-center justify-center gap-2
-        w-[90px] h-[200px] rounded-xl
+        w-[70px] h-[155px] rounded-xl
         transition-transform duration-300 hover:scale-105 active:scale-95
         ${isHot ? 'animate-portal-pulse-red' : 'animate-portal-pulse-blue'}
       `}
@@ -308,14 +310,11 @@ export const VeeWidget: React.FC<VeeWidgetProps> = ({
     <>
       {/* Vee Section Header */}
       <section className="mb-6">
-        <div className="flex items-center gap-2 px-4 mb-3">
-          <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-red-500/30 to-blue-500/30 flex items-center justify-center">
-            <Flame className="w-3.5 h-3.5 text-primary-light" />
+        <div className="flex items-center justify-center gap-2 px-4 mb-3">
+          <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-red-500/20 to-blue-500/20 flex items-center justify-center">
+            <Flame className="w-3 h-3 text-primary-light" />
           </div>
-          <h2 className="text-lg font-bold text-white">VEE Smart Picks</h2>
-          <span className="text-[10px] font-semibold text-primary-light/60 bg-primary/10 px-1.5 py-0.5 rounded tracking-wide">
-            Video Intelligence
-          </span>
+          <h2 className="text-[15px] font-bold text-white/80">VEE Smart Picks</h2>
         </div>
 
         {/* Scrollable row: [Hot Portal] [Cards...] [Explore Portal] */}

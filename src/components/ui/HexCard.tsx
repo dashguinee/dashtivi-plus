@@ -17,10 +17,10 @@ interface HexPalette {
 
 const PALETTES: Record<HexVariant, HexPalette> = {
   netflix:  { glow: '#E50914', accent: '#FF6B6B', inner: '#E50914', borderOpacity: 0.7 },
-  dash:     { glow: '#9D4EDD', accent: '#E040FB', inner: '#9D4EDD', borderOpacity: 0.6 },
+  dash:     { glow: '#9D4EDD', accent: '#E040FB', inner: '#B06EF0', borderOpacity: 0.7 },
   sports:   { glow: '#EF4444', accent: '#F97316', inner: '#EF4444', borderOpacity: 0.65 },
   club:     { glow: '#9D4EDD', accent: '#3B82F6', inner: '#6366F1', borderOpacity: 0.5 },
-  discover: { glow: '#3B82F6', accent: '#06B6D4', inner: '#3B82F6', borderOpacity: 0.45 },
+  discover: { glow: '#9D4EDD', accent: '#7C3AED', inner: '#9D4EDD', borderOpacity: 0.15 },
 };
 
 // ── Club-specific colors ─────────────────────────────────────────
@@ -90,71 +90,95 @@ const HexCardInner: React.FC<HexCardProps> = ({
     : variant === 'discover' ? 'hex-anim-pulse'
     : ''; // club: no animation
 
+  const isGate = variant === 'sports';
+
   return (
     <button
       onClick={onClick}
-      className={`relative flex-shrink-0 group transition-transform duration-300 hover:scale-[1.05] active:scale-[0.97] ${className}`}
+      className={`relative flex-shrink-0 group transition-transform duration-300 hover:scale-[1.05] active:scale-[0.97] ${glowAnim} ${className}`}
       style={{ width: 140 * scale, height: 160 * scale }}
     >
-      {/* Layer 1: Outer neon HALO — the radiant aura (like Page 1 mockup) */}
-      <svg viewBox="0 0 100 100" className={`absolute inset-0 w-full h-full ${glowAnim}`}
-        style={{ filter: `drop-shadow(0 0 ${6 * scale}px ${palette.glow}80) drop-shadow(0 0 ${12 * scale}px ${palette.glow}40)` }}>
-        <path d={HEX_OUTER} fill="none" stroke={palette.glow} strokeWidth="3" strokeOpacity={palette.borderOpacity} strokeLinejoin="round" />
-      </svg>
+      {isGate ? (
+        <>
+          {/* ── FADE GATE — sports variant ── */}
+          {/* ── Same hex halo system as other variants, but with sports flicker ── */}
+          <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full hex-anim-flicker"
+            style={{ filter: `drop-shadow(0 0 ${6 * scale}px ${palette.glow}80) drop-shadow(0 0 ${12 * scale}px ${palette.glow}40)` }}>
+            <path d={HEX_OUTER} fill="none" stroke={palette.glow} strokeWidth="3" strokeOpacity={palette.borderOpacity} strokeLinejoin="round" />
+          </svg>
 
-      {/* Layer 2: Inner radiance gradient — glow from INSIDE the hex */}
-      <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full">
-        <defs>
-          <radialGradient id={`rad${uid}`} cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={palette.inner} stopOpacity="0.08" />
-            <stop offset="60%" stopColor={palette.inner} stopOpacity="0.03" />
-            <stop offset="100%" stopColor={palette.glow} stopOpacity="0.12" />
-          </radialGradient>
-          <linearGradient id={`fill${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={palette.inner} stopOpacity="0.04" />
-            <stop offset="100%" stopColor={palette.accent} stopOpacity="0.02" />
-          </linearGradient>
-          <clipPath id={`clip${uid}`}>
-            <path d={HEX_INNER} />
-          </clipPath>
-          {filled && (
-            <linearGradient id={`ov${uid}`} x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="black" stopOpacity="0" />
-              <stop offset="45%" stopColor="black" stopOpacity="0.1" />
-              <stop offset="75%" stopColor="black" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="black" stopOpacity="0.92" />
-            </linearGradient>
-          )}
-        </defs>
+          <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full">
+            <defs>
+              <radialGradient id={`rad${uid}`} cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={palette.inner} stopOpacity="0.08" />
+                <stop offset="60%" stopColor={palette.inner} stopOpacity="0.03" />
+                <stop offset="100%" stopColor={palette.glow} stopOpacity="0.12" />
+              </radialGradient>
+              <linearGradient id={`fill${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={palette.inner} stopOpacity="0.04" />
+                <stop offset="100%" stopColor={palette.accent} stopOpacity="0.02" />
+              </linearGradient>
+            </defs>
+            <path d={HEX_INNER} fill={`url(#fill${uid})`} />
+            <path d={HEX_INNER} fill={`url(#rad${uid})`} />
+          </svg>
+        </>
+      ) : (
+        <>
+          {/* ── HEX MODE — neon halo for non-sports variants ── */}
+          {/* Layer 1: Outer border — static glow, no orbiting */}
+          <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full"
+            style={{ filter: `drop-shadow(0 0 ${5 * scale}px ${palette.glow}50) drop-shadow(0 0 ${10 * scale}px ${palette.glow}20)` }}>
+            <path d={HEX_OUTER} fill="none" stroke={palette.glow} strokeWidth="1.5" strokeOpacity={palette.borderOpacity} strokeLinejoin="round" />
+          </svg>
 
-        {/* Inner fill — barely visible tint */}
-        <path d={HEX_INNER} fill={`url(#fill${uid})`} />
+          {/* Layer 2: Inner radiance gradient */}
+          <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full">
+            <defs>
+              <radialGradient id={`rad${uid}`} cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={palette.inner} stopOpacity="0.08" />
+                <stop offset="60%" stopColor={palette.inner} stopOpacity="0.03" />
+                <stop offset="100%" stopColor={palette.glow} stopOpacity="0.12" />
+              </radialGradient>
+              <linearGradient id={`fill${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={palette.inner} stopOpacity="0.04" />
+                <stop offset="100%" stopColor={palette.accent} stopOpacity="0.02" />
+              </linearGradient>
+              <clipPath id={`clip${uid}`}>
+                <path d={HEX_INNER} />
+              </clipPath>
+              {filled && (
+                <linearGradient id={`ov${uid}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="black" stopOpacity="0" />
+                  <stop offset="45%" stopColor="black" stopOpacity="0.1" />
+                  <stop offset="75%" stopColor="black" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="black" stopOpacity="0.92" />
+                </linearGradient>
+              )}
+            </defs>
 
-        {/* Inner radiance — glow emanates from center to edges */}
-        <path d={HEX_INNER} fill={`url(#rad${uid})`} />
+            <path d={HEX_INNER} fill={`url(#fill${uid})`} />
+            <path d={HEX_INNER} fill={`url(#rad${uid})`} />
 
-        {/* Accent border — thin inner line for depth */}
-        <path d={HEX_INNER} fill="none" stroke={palette.accent} strokeWidth="0.5" strokeOpacity="0.15" strokeLinejoin="round" />
+            {(image || (filled && icon)) && (
+              <image
+                href={filled ? (icon || image) : image}
+                x="10" y="5" width="80" height="90"
+                clipPath={`url(#clip${uid})`}
+                preserveAspectRatio="xMidYMid slice"
+                opacity={filled ? '1' : '0.3'}
+              />
+            )}
 
-        {/* Poster image (filled mode) */}
-        {(image || (filled && icon)) && (
-          <image
-            href={filled ? (icon || image) : image}
-            x="10" y="5" width="80" height="90"
-            clipPath={`url(#clip${uid})`}
-            preserveAspectRatio="xMidYMid slice"
-            opacity={filled ? '1' : '0.3'}
-          />
-        )}
+            {filled && <path d={HEX_INNER} fill={`url(#ov${uid})`} />}
+          </svg>
+        </>
+      )}
 
-        {/* Dark overlay for filled mode */}
-        {filled && <path d={HEX_INNER} fill={`url(#ov${uid})`} />}
-      </svg>
-
-      {/* Layer 3: Content */}
+      {/* Content layer */}
       <div
         className={`absolute inset-0 flex flex-col z-10 px-2 ${filled ? 'justify-end items-center' : 'justify-center items-center'}`}
-        style={!filled ? {
+        style={!filled && !isGate ? {
           clipPath: 'polygon(50% 6%, 87% 27%, 90% 32%, 90% 68%, 87% 73%, 50% 94%, 13% 73%, 10% 68%, 10% 32%, 13% 27%)',
         } : undefined}
       >
@@ -212,23 +236,26 @@ interface HexRowProps {
   onSeeMore?: () => void;
 }
 
-const HexRowInner: React.FC<HexRowProps> = ({ title, titleIcon, titleGlow, children, onSeeMore }) => (
-  <section className="mb-4">
-    <div className="flex items-center justify-between px-4 mb-2">
-      <h2
-        className="text-base font-bold text-white flex items-center gap-2"
-        style={titleGlow ? { textShadow: `0 0 20px ${titleGlow}30` } : undefined}
-      >
-        {titleIcon}
-        {title}
-      </h2>
+const HexRowInner: React.FC<HexRowProps> = ({ title, titleGlow, children, onSeeMore }) => (
+  <section className="mb-2 py-3">
+    <div className="flex items-center justify-between px-4 mb-3">
+      <div className="flex items-baseline gap-2.5">
+        <h2 className="text-[20px] font-black tracking-tight text-white">{title}</h2>
+        <div
+          className="w-1.5 h-1.5 rounded-full mb-0.5 flex-shrink-0"
+          style={{
+            background: titleGlow || '#9D4EDD',
+            boxShadow: `0 0 6px ${titleGlow || '#9D4EDD'}60`,
+          }}
+        />
+      </div>
       {onSeeMore && (
-        <button onClick={onSeeMore} className="text-[11px] text-white/30 hover:text-white/60 transition-colors">
-          See All
+        <button onClick={onSeeMore} className="text-[11px] text-white/20 hover:text-white/50 transition-colors tracking-wide">
+          More
         </button>
       )}
     </div>
-    <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-3 items-end">
+    <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade px-4 py-2 items-end">
       {children}
     </div>
   </section>

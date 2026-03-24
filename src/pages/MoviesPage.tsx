@@ -22,8 +22,8 @@ const FEATURED_CATS = [
 ];
 
 const PLATFORM_LOGOS: Record<string, { logo: string; color: string }> = {
-  '169': { logo: '/logos/netflix.svg', color: '#E50914' },
-  '168': { logo: '/logos/netflix.svg', color: '#E50914' },
+  '169': { logo: '/logos/netflix-3d.png', color: '#E50914' },
+  '168': { logo: '/logos/netflix-3d.png', color: '#E50914' },
 };
 
 function getTrendingScore(movie: VodStream, tmdbMap: Record<string, TmdbEntry>): number {

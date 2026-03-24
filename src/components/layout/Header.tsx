@@ -25,16 +25,18 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
         {/* Logo */}
         <button
           onClick={() => navigate('/')}
-          className="flex items-center gap-2.5 group"
+          className="flex items-baseline group"
         >
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center group-hover:animate-glow-pulse transition-all shadow-lg shadow-primary/20">
-            <Tv className="w-5 h-5 text-white" />
-          </div>
-          <span className="text-xl font-bold tracking-wide hidden sm:flex items-baseline gap-0.5">
-            <span className="text-gradient">DashTivi</span>
-            <span className="text-primary-light text-sm font-black">+</span>
-          </span>
+          <span className="text-[20px] font-black tracking-tight text-white uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>DASH</span>
+          <span className="text-[16px] font-light tracking-wide text-white/50" style={{ fontFamily: "'Outfit', sans-serif", marginLeft: '1px' }}>tivi</span>
+          <span className="text-primary-light text-[13px] font-bold" style={{ marginLeft: '2px' }}>+</span>
         </button>
+        {/* Welcome — only on Home */}
+        {isHome && (
+          <div className="absolute inset-x-0 flex justify-center pointer-events-none">
+            <span className="text-[12px] font-light tracking-[5px] uppercase" style={{ animation: 'welcome-blink 6s ease-in-out infinite', color: 'rgba(255,255,255,0.35)' }}>Welcome</span>
+          </div>
+        )}
 
         {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-1">

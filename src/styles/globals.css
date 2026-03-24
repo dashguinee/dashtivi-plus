@@ -61,6 +61,12 @@
     -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
   }
 
+  /* Edge fade on horizontal scroll — cards dissolve into darkness */
+  .scroll-fade {
+    mask-image: linear-gradient(to right, transparent, black 4%, black 94%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 4%, black 94%, transparent);
+  }
+
   .gradient-mask-l {
     mask-image: linear-gradient(to left, black 85%, transparent 100%);
     -webkit-mask-image: linear-gradient(to left, black 85%, transparent 100%);
@@ -562,48 +568,158 @@
     100% { background-position: 200% 0; }
   }
 
-  /* ═══ HEX GLOW ANIMATIONS — subtle aura effects, no orbiting ═══ */
-
-  /* Netflix: warm ember — the halo softly breathes like a candle */
-  @keyframes hex-anim-breathe-kf {
-    0%, 100% { opacity: 0.7; filter: drop-shadow(0 0 4px currentColor); }
-    50% { opacity: 1; filter: drop-shadow(0 0 10px currentColor) drop-shadow(0 0 20px currentColor); }
-  }
-  .hex-anim-breathe {
-    animation: hex-anim-breathe-kf 4s ease-in-out infinite;
+  /* ═══ WELCOME — gentle blink fade ═══ */
+  @keyframes welcome-blink {
+    0%, 100% { opacity: 0.35; }
+    40% { opacity: 0.55; }
+    60% { opacity: 0.25; }
   }
 
-  /* DASH Exclusives: metallic shimmer — the halo intensity shifts like chrome catching light */
-  @keyframes hex-anim-shimmer-kf {
-    0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 5px currentColor); }
-    30% { opacity: 0.9; filter: drop-shadow(0 0 12px currentColor) drop-shadow(0 0 3px currentColor); }
-    70% { opacity: 0.5; filter: drop-shadow(0 0 6px currentColor); }
-  }
-  .hex-anim-shimmer {
-    animation: hex-anim-shimmer-kf 6s ease-in-out infinite;
+  /* ═══ SPORTS BREAK — gentle float + fade like a waiting screen ═══ */
+  @keyframes sports-ball-float {
+    0%, 100% { transform: translateY(0); opacity: 0.3; }
+    25% { transform: translateY(-6px); opacity: 0.5; }
+    50% { transform: translateY(-2px); opacity: 0.25; }
+    75% { transform: translateY(-8px); opacity: 0.45; }
   }
 
-  /* Sports: subtle flicker — alive energy, like stadium lights */
-  @keyframes hex-anim-flicker-kf {
-    0%, 100% { opacity: 0.8; }
-    10% { opacity: 0.9; }
-    20% { opacity: 0.75; }
-    40% { opacity: 1; }
-    60% { opacity: 0.85; }
-    80% { opacity: 0.95; }
-  }
-  .hex-anim-flicker {
-    animation: hex-anim-flicker-kf 3s ease-in-out infinite;
+  /* ═══ BECAUSE YOU WATCHED — wandering orange firefly glow ═══ */
+  @keyframes firefly-glide {
+    0%   { left: -5%;  top: 30%; opacity: 0; }
+    8%   { opacity: 0.7; }
+    18%  { left: 12%;  top: 20%; }
+    30%  { left: 28%;  top: 45%; opacity: 0.5; }
+    42%  { left: 45%;  top: 25%; opacity: 0.8; }
+    55%  { left: 60%;  top: 50%; opacity: 0.4; }
+    68%  { left: 75%;  top: 30%; opacity: 0.7; }
+    82%  { left: 88%;  top: 45%; opacity: 0.5; }
+    92%  { left: 100%; top: 35%; opacity: 0; }
+    100% { left: 105%; top: 35%; opacity: 0; }
   }
 
-  /* Discover: slow mysterious pulse — inviting, unknown */
-  @keyframes hex-anim-pulse-kf {
-    0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 3px currentColor); }
-    50% { opacity: 0.75; filter: drop-shadow(0 0 8px currentColor); }
+  /* ═══ DASH EXCLUSIVES — cinema ticket light shimmer (uses blade-pass) ═══ */
+  @keyframes dash-ticket-shimmer {
+    0% { transform: translateX(-120%) skewX(-15deg); opacity: 0; }
+    5% { opacity: 1; }
+    30% { transform: translateX(280%) skewX(-15deg); opacity: 1; }
+    35% { opacity: 0; }
+    100% { opacity: 0; transform: translateX(280%) skewX(-15deg); }
   }
+
+  /* ═══ DASH EXCLUSIVES — neon pulse on portrait cards ═══ */
+  @keyframes dash-neon-pulse {
+    0%, 100% { box-shadow: 0 0 6px rgba(157,78,221,0.15), 0 0 0 1px rgba(157,78,221,0.1); }
+    50% { box-shadow: 0 0 14px rgba(157,78,221,0.3), 0 0 0 1px rgba(157,78,221,0.2); }
+  }
+
+  /* ═══ BLADE SHIMMER — fluid diagonal light with pause + stagger ═══ */
+
+  /* The blade passes in first 35% of the animation, then rests — feels natural */
+  @keyframes blade-pass {
+    0% { transform: translateX(-130%) skewX(-18deg); opacity: 0; }
+    5% { opacity: 1; }
+    30% { transform: translateX(280%) skewX(-18deg); opacity: 1; }
+    35% { opacity: 0; }
+    100% { opacity: 0; transform: translateX(280%) skewX(-18deg); }
+  }
+
+  /* Reverse pass — blade comes from right for variety */
+  @keyframes blade-pass-reverse {
+    0% { transform: translateX(280%) skewX(18deg); opacity: 0; }
+    5% { opacity: 1; }
+    30% { transform: translateX(-130%) skewX(18deg); opacity: 1; }
+    35% { opacity: 0; }
+    100% { opacity: 0; transform: translateX(-130%) skewX(18deg); }
+  }
+
+  /* Shared base for all shimmer variants */
+  .hex-anim-shimmer,
+  .hex-anim-flicker,
+  .hex-anim-breathe,
   .hex-anim-pulse {
-    animation: hex-anim-pulse-kf 5s ease-in-out infinite;
+    position: relative;
+    overflow: hidden;
   }
+
+  /* DASH shimmer — purple blade, 8s cycle (passes in ~2.4s, rests ~5.6s) */
+  .hex-anim-shimmer::after {
+    content: '';
+    position: absolute;
+    top: -10%;
+    bottom: -10%;
+    width: 35%;
+    background: linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.04) 20%, rgba(255,255,255,0.03) 45%, rgba(157,78,221,0.05) 70%, transparent 100%);
+    animation: blade-pass 8s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Sports flicker — warmer blade, reverse direction, 7s */
+  .hex-anim-flicker::after {
+    content: '';
+    position: absolute;
+    top: -10%;
+    bottom: -10%;
+    width: 28%;
+    background: linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.03) 25%, rgba(255,255,255,0.025) 50%, transparent 100%);
+    animation: blade-pass-reverse 7s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Netflix breathe — wider, slower, warm white */
+  .hex-anim-breathe::after {
+    content: '';
+    position: absolute;
+    top: -10%;
+    bottom: -10%;
+    width: 40%;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.02) 30%, rgba(229,9,20,0.03) 50%, rgba(255,255,255,0.015) 70%, transparent 100%);
+    animation: blade-pass 10s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Discover pulse — purple/blue, medium */
+  .hex-anim-pulse::after {
+    content: '';
+    position: absolute;
+    top: -10%;
+    bottom: -10%;
+    width: 30%;
+    background: linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.03) 25%, rgba(255,255,255,0.02) 50%, rgba(157,78,221,0.03) 75%, transparent 100%);
+    animation: blade-pass 9s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Stagger — each card in a row starts at a different time */
+  .hex-anim-shimmer:nth-child(2)::after,
+  .hex-anim-pulse:nth-child(2)::after { animation-delay: 1.5s; }
+  .hex-anim-shimmer:nth-child(3)::after,
+  .hex-anim-pulse:nth-child(3)::after { animation-delay: 3.2s; }
+  .hex-anim-shimmer:nth-child(4)::after,
+  .hex-anim-pulse:nth-child(4)::after { animation-delay: 0.8s; }
+  .hex-anim-shimmer:nth-child(5)::after,
+  .hex-anim-pulse:nth-child(5)::after { animation-delay: 4.5s; }
+  .hex-anim-shimmer:nth-child(6)::after,
+  .hex-anim-pulse:nth-child(6)::after { animation-delay: 2.1s; }
+  .hex-anim-shimmer:nth-child(7)::after,
+  .hex-anim-pulse:nth-child(7)::after { animation-delay: 5.3s; }
+  .hex-anim-shimmer:nth-child(8)::after,
+  .hex-anim-pulse:nth-child(8)::after { animation-delay: 0.3s; }
+
+  .hex-anim-flicker:nth-child(2)::after { animation-delay: 2.3s; }
+  .hex-anim-flicker:nth-child(3)::after { animation-delay: 0.7s; }
+  .hex-anim-flicker:nth-child(4)::after { animation-delay: 4.1s; }
+  .hex-anim-flicker:nth-child(5)::after { animation-delay: 1.9s; }
+  .hex-anim-flicker:nth-child(6)::after { animation-delay: 3.5s; }
+
+  .hex-anim-breathe:nth-child(2)::after { animation-delay: 3s; }
+  .hex-anim-breathe:nth-child(3)::after { animation-delay: 1.2s; }
+  .hex-anim-breathe:nth-child(4)::after { animation-delay: 5.5s; }
+  .hex-anim-breathe:nth-child(5)::after { animation-delay: 2.4s; }
+  .hex-anim-breathe:nth-child(6)::after { animation-delay: 7s; }
 
   /* ═══ OG TEXT EFFECTS ═══ */
   .text-gradient-cosmic {
