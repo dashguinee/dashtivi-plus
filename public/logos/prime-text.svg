@@ -1,0 +1,5 @@
+<svg viewBox="0 0 160 60" xmlns="http://www.w3.org/2000/svg">
+  <text x="0" y="32" font-family="'Amazon Ember', 'Segoe UI', sans-serif" font-size="34" font-weight="400" letter-spacing="1" fill="#00A8E1">prime</text>
+  <path d="M10,48 Q80,62 145,44" stroke="#00A8E1" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M140,44 L148,40 L143,47" fill="#00A8E1"/>
+</svg>

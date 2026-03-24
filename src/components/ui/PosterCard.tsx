@@ -36,11 +36,12 @@ const PLATFORM_BADGES: Record<string, { label: string; bg: string; text: string 
 function getSafePoster(url?: string): string | null {
   if (url) {
     if (url.includes('webhop.live') || url.includes('imdb.com') || url.includes('wikia.nocookie.net') || url.includes('paste.pics')) {
-      return null;
+      // Fall through to TMDB
+    } else {
+      const fixed = url.replace('starshare.live:8080', 'datahub11.com:8080');
+      if (fixed.startsWith('https://')) return fixed;
+      if (fixed.startsWith('http://')) return `https://stream.zionsynapse.online/?url=${encodeURIComponent(fixed)}`;
     }
-    const fixed = url.replace('starshare.live:8080', 'datahub11.com:8080');
-    if (fixed.startsWith('https://')) return fixed;
-    if (fixed.startsWith('http://')) return `https://stream.zionsynapse.online/?url=${encodeURIComponent(fixed)}`;
   }
   return null;
 }
@@ -108,11 +109,11 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
         </div>
       )}
 
-      {/* Platform badge — top left */}
+      {/* Platform badge — top left, prominent */}
       {badge && (
         <div className="absolute top-2 left-2 z-10">
           {platformLogo ? (
-            <img src={platformLogo} alt={badge.label} className="h-5 w-auto" loading="lazy" />
+            <img src={platformLogo} alt={badge.label} className="h-7 w-auto drop-shadow-lg" loading="lazy" />
           ) : (
             <div className={`px-1.5 py-0.5 rounded-md ${badge.bg} ${badge.text} text-[9px] font-black tracking-wide`}>
               {badge.label}

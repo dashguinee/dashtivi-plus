@@ -128,6 +128,62 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   const isSearching = debouncedQuery.trim().length > 0;
 
+  // ── Mood Rows — cross-category, genre-intelligent ──────────
+  const [moodPool, setMoodPool] = useState<VodStream[]>([]);
+
+  useEffect(() => {
+    if (Object.keys(tmdbMap).length === 0) return;
+    let mounted = true;
+    // Fetch from top categories to build a cross-platform pool
+    Promise.allSettled(['749', '597', '525', '122', '240'].map(c => getVodStreams(credentials, c)))
+      .then(results => {
+        if (!mounted) return;
+        const all: VodStream[] = [];
+        const seen = new Set<number>();
+        for (const r of results) {
+          if (r.status === 'fulfilled') {
+            for (const m of r.value) {
+              if (!seen.has(m.stream_id)) { seen.add(m.stream_id); all.push(m); }
+            }
+          }
+        }
+        setMoodPool(all);
+      });
+    return () => { mounted = false; };
+  }, [tmdbMap, credentials]);
+
+  interface MoodRow { id: string; name: string; genres: number[]; min: number }
+
+  const moodRows = useMemo(() => {
+    if (moodPool.length === 0 || Object.keys(tmdbMap).length === 0) return [];
+    const hour = new Date().getHours();
+    const defs: MoodRow[] = [
+      ...(hour >= 18 || hour < 6 ? [
+        { id: 'late-night', name: 'Late Night Thrills', genres: [27, 53, 9648, 80], min: 6.5 },
+        { id: 'date-night', name: 'Date Night', genres: [10749, 18, 35], min: 6.0 },
+      ] : []),
+      ...(hour >= 12 && hour < 18 ? [
+        { id: 'feel-good', name: 'Feel Good Energy', genres: [35, 10749, 16, 10751], min: 6.0 },
+        { id: 'adrenaline', name: 'Edge of Your Seat', genres: [28, 53, 12], min: 6.5 },
+      ] : []),
+      ...(hour >= 6 && hour < 12 ? [
+        { id: 'morning', name: 'Easy Morning Watch', genres: [35, 99, 10751, 16], min: 5.5 },
+        { id: 'mind', name: 'Mind Expanding', genres: [9648, 878, 14, 99], min: 7.0 },
+      ] : []),
+      { id: 'acclaimed', name: 'Critically Acclaimed', genres: [18, 36, 10752], min: 7.5 },
+    ];
+    return defs.map(d => {
+      const filtered = moodPool
+        .filter(m => {
+          const t = tmdbMap[`m:${m.stream_id}`];
+          return t && t.r >= d.min && t.g.some(g => d.genres.includes(g));
+        })
+        .sort((a, b) => (tmdbMap[`m:${b.stream_id}`]?.r || 0) - (tmdbMap[`m:${a.stream_id}`]?.r || 0))
+        .slice(0, 12);
+      return filtered.length >= 4 ? { ...d, items: filtered } : null;
+    }).filter(Boolean) as (MoodRow & { items: VodStream[] })[];
+  }, [moodPool, tmdbMap]);
+
   const trendingMovies = useMemo(() => {
     if (Object.keys(tmdbMap).length === 0) return [];
     return movies
@@ -274,6 +330,34 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Mood rows — cross-category intelligence */}
+      {!isSearching && moodRows.length > 0 && (
+        <div className="space-y-6 py-4 mb-2">
+          {moodRows.map(row => (
+            <section key={row.id}>
+              <div className="px-4 mb-3">
+                <h3 className="text-[15px] font-semibold text-white/50" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{row.name}</h3>
+              </div>
+              <div className="flex gap-3.5 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-2">
+                {row.items.map(movie => (
+                  <div key={movie.stream_id} className="flex-shrink-0 w-[108px]">
+                    <PosterCard
+                      title={movie.name}
+                      poster={movie.stream_icon}
+                      rating={movie.rating}
+                      tmdbData={tmdbMap[`m:${movie.stream_id}`]}
+                      onClick={() => setDetailMovie(movie)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+          {/* Divider before grid */}
+          <div className="mx-8 h-[0.5px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.06), transparent)' }} />
         </div>
       )}
 

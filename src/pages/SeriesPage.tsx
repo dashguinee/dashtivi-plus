@@ -21,6 +21,17 @@ const FEATURED_CATS = [
   { id: '369', name: 'Australian' },
 ];
 
+const PLATFORM_HEROES: Record<string, { logo: string; bg: string }> = {
+  '106': { logo: '/logos/netflix-text.svg', bg: 'linear-gradient(135deg, rgba(229,9,20,0.12) 0%, rgba(10,10,15,0.95) 50%, rgba(229,9,20,0.06) 100%)' },
+  '108': { logo: '/logos/prime-text.svg', bg: 'linear-gradient(135deg, rgba(0,168,225,0.12) 0%, rgba(10,10,15,0.95) 50%, rgba(0,168,225,0.06) 100%)' },
+  '188': { logo: '/logos/hbo.svg', bg: 'linear-gradient(135deg, rgba(157,78,221,0.12) 0%, rgba(10,10,15,0.95) 50%, rgba(157,78,221,0.06) 100%)' },
+  '654': { logo: '/logos/disney-plus.svg', bg: 'linear-gradient(135deg, rgba(17,60,207,0.12) 0%, rgba(10,10,15,0.95) 50%, rgba(17,60,207,0.06) 100%)' },
+  '114': { logo: '/logos/apple-tv.svg', bg: 'linear-gradient(135deg, rgba(161,161,170,0.08) 0%, rgba(10,10,15,0.95) 50%, rgba(161,161,170,0.04) 100%)' },
+  '209': { logo: '/logos/hulu.svg', bg: 'linear-gradient(135deg, rgba(28,231,131,0.12) 0%, rgba(10,10,15,0.95) 50%, rgba(28,231,131,0.06) 100%)' },
+  '249': { logo: '/logos/paramount.svg', bg: 'linear-gradient(135deg, rgba(0,100,255,0.12) 0%, rgba(10,10,15,0.95) 50%, rgba(0,100,255,0.06) 100%)' },
+  '110': { logo: '/logos/starz.svg', bg: 'linear-gradient(135deg, rgba(255,179,0,0.08) 0%, rgba(10,10,15,0.95) 50%, rgba(255,179,0,0.04) 100%)' },
+};
+
 const PLATFORM_LOGOS: Record<string, { logo: string; color: string }> = {
   '106': { logo: '/logos/netflix-3d.png', color: '#E50914' },
   '108': { logo: '/logos/prime-3d.webp', color: '#00A8E1' },
@@ -104,6 +115,58 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   }, [debouncedQuery, credentials]);
 
   const isSearching = debouncedQuery.trim().length > 0;
+
+  // ── Mood Rows — cross-platform series intelligence ──────────
+  const [moodPool, setMoodPool] = useState<SeriesItem[]>([]);
+
+  useEffect(() => {
+    if (Object.keys(tmdbMap).length === 0) return;
+    let mounted = true;
+    Promise.allSettled(['106', '108', '188', '102', '114'].map(c => getSeries(credentials, c)))
+      .then(results => {
+        if (!mounted) return;
+        const all: SeriesItem[] = [];
+        const seen = new Set<number>();
+        for (const r of results) {
+          if (r.status === 'fulfilled') {
+            for (const s of r.value) {
+              if (!seen.has(s.series_id)) { seen.add(s.series_id); all.push(s); }
+            }
+          }
+        }
+        setMoodPool(all);
+      });
+    return () => { mounted = false; };
+  }, [tmdbMap, credentials]);
+
+  const moodRows = useMemo(() => {
+    if (moodPool.length === 0 || Object.keys(tmdbMap).length === 0) return [];
+    const hour = new Date().getHours();
+    const defs = [
+      ...(hour >= 18 || hour < 6 ? [
+        { id: 'binge', name: 'Binge All Night', genres: [18, 80, 9648], min: 7.0 },
+        { id: 'cozy', name: 'Cozy Night In', genres: [35, 10749, 10751], min: 6.0 },
+      ] : []),
+      ...(hour >= 12 && hour < 18 ? [
+        { id: 'hook', name: 'Gets You Hooked', genres: [53, 80, 9648, 18], min: 7.0 },
+        { id: 'light', name: 'Light & Easy', genres: [35, 16, 10751], min: 5.5 },
+      ] : []),
+      ...(hour >= 6 && hour < 12 ? [
+        { id: 'quick', name: 'Quick Episodes', genres: [35, 16, 10764], min: 5.0 },
+      ] : []),
+      { id: 'masterpiece', name: 'Masterpiece TV', genres: [18, 80, 10768], min: 8.0 },
+    ];
+    return defs.map(d => {
+      const filtered = moodPool
+        .filter(s => {
+          const t = tmdbMap[`s:${s.series_id}`];
+          return t && t.r >= d.min && t.g.some(g => d.genres.includes(g));
+        })
+        .sort((a, b) => (tmdbMap[`s:${b.series_id}`]?.r || 0) - (tmdbMap[`s:${a.series_id}`]?.r || 0))
+        .slice(0, 12);
+      return filtered.length >= 4 ? { ...d, items: filtered } : null;
+    }).filter(Boolean) as { id: string; name: string; items: SeriesItem[] }[];
+  }, [moodPool, tmdbMap]);
 
   const trendingSeries = useMemo(() => {
     if (Object.keys(tmdbMap).length === 0) return [];
@@ -241,6 +304,19 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   return (
     <div className="pt-16 pb-4">
+      {/* Platform Hero Banner — shows when a platform category is active */}
+      {!isSearching && PLATFORM_HEROES[activeCat] && (
+        <div
+          className="mx-4 mb-3 rounded-xl flex items-center justify-center overflow-hidden"
+          style={{
+            height: 80,
+            background: PLATFORM_HEROES[activeCat].bg,
+          }}
+        >
+          <img src={PLATFORM_HEROES[activeCat].logo} alt="" className="h-8 w-auto" />
+        </div>
+      )}
+
       {/* Search + Category pills */}
       <div className="sticky top-14 z-20 py-3 px-4 bg-[#0A0A0A]/90 backdrop-blur-lg border-b border-white/5">
         {/* Search input */}
@@ -304,6 +380,33 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Mood rows — cross-platform series intelligence */}
+      {!isSearching && moodRows.length > 0 && (
+        <div className="space-y-6 py-4 mb-2">
+          {moodRows.map(row => (
+            <section key={row.id}>
+              <div className="px-4 mb-3">
+                <h3 className="text-[15px] font-semibold text-white/50" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{row.name}</h3>
+              </div>
+              <div className="flex gap-3.5 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-2">
+                {row.items.map(series => (
+                  <div key={series.series_id} className="flex-shrink-0 w-[108px]">
+                    <PosterCard
+                      title={series.name}
+                      poster={series.cover}
+                      rating={series.rating}
+                      tmdbData={tmdbMap[`s:${series.series_id}`]}
+                      onClick={() => setDetailSeries(series)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+          <div className="mx-8 h-[0.5px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.06), transparent)' }} />
         </div>
       )}
 
