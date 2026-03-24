@@ -62,7 +62,7 @@ export function preloadApiData(proxyUrl: string, username: string, password: str
   fetch(`${base}&action=get_series_categories`, { signal: AbortSignal.timeout(8000) }).catch(() => {});
 
   // Preload homepage collection categories (the ones that load on mount)
-  const hotCats = ['749', '597', '234', '85', '345', '5'];
+  const hotCats = ['749', '597', '234', '85', '353', '5'];
   for (const cat of hotCats) {
     fetch(`${base}&action=get_live_streams&category_id=${cat}`, { signal: AbortSignal.timeout(10000) }).catch(() => {});
   }

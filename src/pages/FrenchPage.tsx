@@ -25,19 +25,19 @@ interface WorldRegion {
 const REGIONS: WorldRegion[] = [
   {
     id: 'africa',
-    categoryIds: ['336', '345'],
+    categoryIds: ['234'],
     name: 'Africa',
     flag: '\uD83C\uDF0D',
-    vibe: 'Canal+ \u00B7 DSTV \u00B7 SuperSport',
+    vibe: 'SuperSport \u00B7 beIN \u00B7 African Sports',
     gradient: 'from-amber-500 to-orange-700',
     glowColor: 'shadow-amber-500/30',
   },
   {
     id: 'france',
-    categoryIds: ['11', '336'],
+    categoryIds: ['11'],
     name: 'France',
     flag: '\uD83C\uDDEB\uD83C\uDDF7',
-    vibe: 'TF1 \u00B7 Canal+ \u00B7 France 2',
+    vibe: 'TF1 \u00B7 France 2 \u00B7 M6',
     gradient: 'from-blue-500 to-indigo-700',
     glowColor: 'shadow-blue-500/30',
   },

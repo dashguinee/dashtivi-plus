@@ -29,6 +29,7 @@ const MoviesPage = lazy(() => import('@/pages/MoviesPage').then((m) => ({ defaul
 const SeriesPage = lazy(() => import('@/pages/SeriesPage').then((m) => ({ default: m.SeriesPage })));
 const FrenchPage = lazy(() => import('@/pages/FrenchPage').then((m) => ({ default: m.FrenchPage })));
 const WelcomePage = lazy(() => import('@/pages/WelcomePage').then((m) => ({ default: m.WelcomePage })));
+const PlatformsPage = lazy(() => import('@/pages/PlatformsPage').then((m) => ({ default: m.PlatformsPage })));
 
 function AppContent() {
   const { credentials, logout } = useAuth();
@@ -129,6 +130,15 @@ function AppContent() {
                   path="/french"
                   element={
                     <FrenchPage
+                      credentials={credentials}
+                      onPlay={handlePlayChannel}
+                    />
+                  }
+                />
+                <Route
+                  path="/originals"
+                  element={
+                    <PlatformsPage
                       credentials={credentials}
                       onPlay={handlePlayChannel}
                     />

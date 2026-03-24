@@ -120,7 +120,7 @@ const VeeCard: React.FC<{
   return (
     <button
       onClick={onPlay}
-      className="group relative flex-shrink-0 w-[120px] aspect-[2/3] rounded-xl overflow-hidden bg-white/5 border transition-all duration-300 hover:scale-[1.04] text-left"
+      className="group relative flex-shrink-0 w-[140px] aspect-[2/3] rounded-xl overflow-hidden bg-white/5 border transition-all duration-300 hover:scale-[1.04] text-left"
       style={{
         borderColor: `${neonColor}33`,
         boxShadow: `0 0 8px ${neonColor}22`,
@@ -196,7 +196,7 @@ const PortalBox: React.FC<{
       onClick={onClick}
       className={`
         relative flex-shrink-0 flex flex-col items-center justify-center gap-2
-        w-[80px] h-[170px] rounded-xl
+        w-[90px] h-[200px] rounded-xl
         transition-transform duration-300 hover:scale-105 active:scale-95
         ${isHot ? 'animate-portal-pulse-red' : 'animate-portal-pulse-blue'}
       `}

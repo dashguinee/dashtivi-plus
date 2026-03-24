@@ -169,6 +169,21 @@
     animation: shimmer 2s infinite;
   }
 
+  .skeleton-hex {
+    width: 140px;
+    height: 160px;
+    flex-shrink: 0;
+    clip-path: polygon(50% 2%, 93% 27%, 93% 73%, 50% 98%, 7% 73%, 7% 27%);
+    background: linear-gradient(135deg, rgba(157, 78, 221, 0.06) 0%, rgba(20, 20, 28, 0.9) 50%, rgba(157, 78, 221, 0.04) 100%);
+    background-size: 200% 200%;
+    animation: hex-skeleton-pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes hex-skeleton-pulse {
+    0%, 100% { background-position: 0% 0%; opacity: 0.5; }
+    50% { background-position: 100% 100%; opacity: 0.8; }
+  }
+
   /* ═══ LIVE PULSE ═══ */
   .live-pulse {
     @apply w-2 h-2 rounded-full bg-success;
@@ -539,6 +554,55 @@
   @keyframes cosmic-rotate {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+  }
+
+  /* ═══ PLATFORM SHOWCASE — metallic beam sweep ═══ */
+  @keyframes beam-sweep {
+    0% { background-position: -100% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /* ═══ HEX GLOW ANIMATIONS — subtle aura effects, no orbiting ═══ */
+
+  /* Netflix: warm ember — the halo softly breathes like a candle */
+  @keyframes hex-anim-breathe-kf {
+    0%, 100% { opacity: 0.7; filter: drop-shadow(0 0 4px currentColor); }
+    50% { opacity: 1; filter: drop-shadow(0 0 10px currentColor) drop-shadow(0 0 20px currentColor); }
+  }
+  .hex-anim-breathe {
+    animation: hex-anim-breathe-kf 4s ease-in-out infinite;
+  }
+
+  /* DASH Exclusives: metallic shimmer — the halo intensity shifts like chrome catching light */
+  @keyframes hex-anim-shimmer-kf {
+    0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 5px currentColor); }
+    30% { opacity: 0.9; filter: drop-shadow(0 0 12px currentColor) drop-shadow(0 0 3px currentColor); }
+    70% { opacity: 0.5; filter: drop-shadow(0 0 6px currentColor); }
+  }
+  .hex-anim-shimmer {
+    animation: hex-anim-shimmer-kf 6s ease-in-out infinite;
+  }
+
+  /* Sports: subtle flicker — alive energy, like stadium lights */
+  @keyframes hex-anim-flicker-kf {
+    0%, 100% { opacity: 0.8; }
+    10% { opacity: 0.9; }
+    20% { opacity: 0.75; }
+    40% { opacity: 1; }
+    60% { opacity: 0.85; }
+    80% { opacity: 0.95; }
+  }
+  .hex-anim-flicker {
+    animation: hex-anim-flicker-kf 3s ease-in-out infinite;
+  }
+
+  /* Discover: slow mysterious pulse — inviting, unknown */
+  @keyframes hex-anim-pulse-kf {
+    0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 3px currentColor); }
+    50% { opacity: 0.75; filter: drop-shadow(0 0 8px currentColor); }
+  }
+  .hex-anim-pulse {
+    animation: hex-anim-pulse-kf 5s ease-in-out infinite;
   }
 
   /* ═══ OG TEXT EFFECTS ═══ */

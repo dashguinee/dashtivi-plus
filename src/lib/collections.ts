@@ -62,8 +62,6 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     categoryIds: [
       '234',  // Football
       '85',   // beIN Sports
-      '345',  // DSTV Super Sports
-      '427',  // DSTV Sports FHD
       '353',  // Sky Sports UK 4K
       '578',  // Real 4K
       '492',  // EPL
@@ -80,16 +78,6 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     categoryIds: ['749', '597'], // English 2026, 2025
     limit: 15,
     navigateTo: '/movies',
-  },
-  {
-    id: 'binge-worthy',
-    name: 'Binge-Worthy',
-    emoji: '\uD83C\uDF7F',
-    description: 'Netflix, HBO, Disney+ originals',
-    type: 'series',
-    categoryIds: ['106', '188', '102'], // Netflix, HBO Max, Disney+
-    limit: 15,
-    navigateTo: '/series',
   },
   {
     id: 'kids-family',
@@ -256,7 +244,7 @@ export const LIVETV_THEMES: LiveTheme[] = [
     name: 'Sports',
     emoji: '\u26BD',
     categoryIds: [
-      '234', '85', '345', '427', '353', '578', '5', '6', '342',
+      '234', '85', '353', '578', '5', '6', '342',
       '550', '138', '212', '356', '156', '137', '516', '483',
       '139', '492', '773', '726', '328',
     ],
@@ -369,14 +357,14 @@ export interface SportType {
 
 // Child experiences within Sports — DASH-branded rooms
 export const SPORT_TYPES: SportType[] = [
-  { id: 'all', name: 'All Sports', categoryIds: ['234', '85', '345', '427', '353', '578', '5', '6', '342', '550', '138', '212', '356', '156', '137', '516', '483', '139', '492', '773', '726', '328'] },
-  { id: 'football', name: 'Football Non-Stop', categoryIds: ['234', '492', '427'] },
+  { id: 'all', name: 'All Sports', categoryIds: ['234', '85', '353', '578', '5', '6', '342', '550', '138', '212', '356', '156', '137', '516', '483', '139', '492', '773', '726', '328'] },
+  { id: 'football', name: 'Football Non-Stop', categoryIds: ['234', '492'] },
   { id: 'bein', name: 'beIN Zone', categoryIds: ['85'] },
   { id: 'nba', name: 'Take a Hoop', categoryIds: ['773'] },
   { id: 'cricket', name: 'Cricket Ground', categoryIds: ['5'] },
   { id: 'nfl', name: 'NFL', categoryIds: ['516'] },
   { id: 'fans', name: 'Fans Space', categoryIds: ['234'] },  // LFC TV, MUTV, team channels
-  { id: 'africa', name: 'African Football', categoryIds: ['345', '427'] },
+  { id: 'africa', name: 'African Football', categoryIds: ['234'] },
   { id: 'sky', name: 'Sky Sports', categoryIds: ['353', '483', '578'] },
   { id: 'racing', name: 'Speed', categoryIds: ['342'] },
   { id: 'rugby', name: 'Rugby', categoryIds: ['550'] },
@@ -448,8 +436,8 @@ export interface RegionGenre {
 
 export const REGION_GENRES: Record<string, RegionGenre[]> = {
   africa: [
-    { id: 'all', name: 'All', categoryIds: ['345', '427'] },
-    { id: 'sports', name: 'Sports', categoryIds: ['345', '427'] },
+    { id: 'all', name: 'All', categoryIds: ['234'] },
+    { id: 'sports', name: 'Sports', categoryIds: ['234'] },
   ],
   france: [
     { id: 'all', name: 'All', categoryIds: ['11'] },

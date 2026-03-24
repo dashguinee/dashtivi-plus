@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Play, X, Download, Search } from 'lucide-react';
 import type { XtreamCredentials, LiveCategory, SeriesItem, SeriesInfo, Episode } from '@/lib/xtream';
 import { getSeriesCategories, getSeries, getSeriesInfo, buildSeriesUrl, getTmdbMap } from '@/lib/xtream';
@@ -20,6 +20,28 @@ const FEATURED_CATS = [
   { id: '110', name: 'Starz' },
   { id: '369', name: 'Australian' },
 ];
+
+const PLATFORM_LOGOS: Record<string, { logo: string; color: string }> = {
+  '106': { logo: '/logos/netflix.svg', color: '#E50914' },
+  '108': { logo: '/logos/prime.svg', color: '#00A8E1' },
+  '188': { logo: '/logos/hbo.svg', color: '#9D4EDD' },
+  '654': { logo: '/logos/disney-plus.svg', color: '#113CCF' },
+  '114': { logo: '/logos/apple-tv.svg', color: '#1d1d1f' },
+  '209': { logo: '/logos/hulu.svg', color: '#1CE783' },
+  '249': { logo: '/logos/paramount.svg', color: '#0064FF' },
+  '110': { logo: '/logos/starz.svg', color: '#1a1a2e' },
+};
+
+function getTrendingScore(tmdbKey: string, tmdbMap: Record<string, TmdbEntry>, name: string): number {
+  const tmdb = tmdbMap[tmdbKey];
+  if (!tmdb) return 0;
+  const ratingScore = Math.min((tmdb.r || 0) / 10, 1);
+  const yearMatch = name.match(/\((\d{4})\)/);
+  const year = yearMatch ? parseInt(yearMatch[1]) : 0;
+  const age = 2026 - year;
+  const freshnessScore = age <= 0 ? 1.0 : age === 1 ? 0.85 : age === 2 ? 0.7 : age === 3 ? 0.5 : 0.3;
+  return ratingScore * 0.55 + freshnessScore * 0.35 + (tmdb.y ? 0.1 : 0);
+}
 
 interface Props {
   credentials: XtreamCredentials;
@@ -82,6 +104,24 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   }, [debouncedQuery, credentials]);
 
   const isSearching = debouncedQuery.trim().length > 0;
+
+  const trendingSeries = useMemo(() => {
+    if (Object.keys(tmdbMap).length === 0) return [];
+    return seriesList
+      .map(s => ({ series: s, score: getTrendingScore(`s:${s.series_id}`, tmdbMap, s.name) }))
+      .filter(s => s.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 15)
+      .map(s => s.series);
+  }, [seriesList, tmdbMap]);
+
+  const scoredSeries = useMemo(() => {
+    const list = isSearching ? searchResults : seriesList;
+    if (Object.keys(tmdbMap).length === 0) return list;
+    return [...list].sort((a, b) =>
+      getTrendingScore(`s:${b.series_id}`, tmdbMap, b.name) - getTrendingScore(`s:${a.series_id}`, tmdbMap, a.name)
+    );
+  }, [seriesList, searchResults, isSearching, tmdbMap]);
 
   // Series detail modal
   const [selectedSeries, setSelectedSeries] = useState<SeriesItem | null>(null);
@@ -229,12 +269,15 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               <button
                 key={cat.id}
                 onClick={() => setActiveCat(cat.id)}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                   activeCat === cat.id
                     ? 'bg-primary text-white shadow-lg shadow-primary/20'
                     : 'bg-white/5 text-text-secondary hover:bg-white/10 hover:text-white border border-white/10'
                 }`}
               >
+                {PLATFORM_LOGOS[cat.id]?.logo && (
+                  <img src={PLATFORM_LOGOS[cat.id].logo} alt="" className="h-4 w-auto" />
+                )}
                 {cat.name}
               </button>
             ))}
@@ -246,6 +289,23 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           </p>
         )}
       </div>
+
+      {/* Trending row */}
+      {!isSearching && !loading && trendingSeries.length >= 5 && (
+        <div className="px-4 pt-4 pb-2">
+          <h2 className="text-sm font-semibold text-white/80 mb-2 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            Trending Right Now
+          </h2>
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+            {trendingSeries.map(series => (
+              <div key={series.series_id} className="flex-shrink-0 w-[120px]">
+                <PosterCard title={series.name} poster={series.cover} rating={series.rating} tmdbData={tmdbMap[`s:${series.series_id}`]} onClick={() => setDetailSeries(series)} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Series grid */}
       {(isSearching ? searchLoading : loading) ? (
@@ -263,13 +323,13 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
             Retry
           </button>
         </div>
-      ) : (isSearching ? searchResults : seriesList).length === 0 ? (
+      ) : scoredSeries.length === 0 ? (
         <div className="flex items-center justify-center py-20 text-text-muted text-sm">
           {isSearching ? 'No series match your search' : 'No series found in this category'}
         </div>
       ) : (
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 p-4">
-          {(isSearching ? searchResults : seriesList).map((series) => (
+          {scoredSeries.map((series) => (
             <PosterCard
               key={series.series_id}
               title={series.name}

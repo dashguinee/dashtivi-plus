@@ -64,7 +64,6 @@ export function isAmbientEnabled(): boolean {
 /** Initialize ambient audio (call once, on user gesture) */
 export function initAmbient(): void {
   if (audio) return;
-  console.log('[ambient] init — URL:', AUDIO_URL);
   audio = new Audio();
   audio.src = AUDIO_URL;
   audio.loop = false; // Don't loop — rotate to next track
@@ -106,25 +105,19 @@ export function initAmbient(): void {
       if (step >= steps) { clearInterval(interval); if (audio) audio.volume = VOLUME; }
     }, 100);
   });
-  audio.addEventListener('error', (e) => {
-    console.error('[ambient] error:', audio?.error?.code, audio?.error?.message);
-  });
-  audio.addEventListener('playing', () => {
-    console.log('[ambient] PLAYING — vol:', audio?.volume, 'rate:', audio?.playbackRate);
-  });
+  audio.addEventListener('error', () => {});
+  audio.addEventListener('playing', () => {});
   isEnabled = true;
   try { localStorage.setItem(STORAGE_KEY, 'true'); } catch {}
 }
 
 /** Start playing (must be called from user gesture for autoplay policy) */
 export function startAmbient(): void {
-  console.log('[ambient] startAmbient');
   if (!audio) initAmbient();
   if (!audio) return;
   // Start silent, fade in over 3 seconds
   audio.volume = 0;
   audio.play().then(() => {
-    console.log('[ambient] play OK — fading in');
     if (audio) {
       audio.playbackRate = currentSpeed;
       try { audio.preservesPitch = false; } catch {}
@@ -140,9 +133,7 @@ export function startAmbient(): void {
         }
       }, 100);
     }
-  }).catch((err) => {
-    console.error('[ambient] play FAIL:', err.message);
-  });
+  }).catch(() => {});
   isEnabled = true;
 }
 

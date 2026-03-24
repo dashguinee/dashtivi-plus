@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { Download, Play, Search, X } from 'lucide-react';
 import type { XtreamCredentials, LiveCategory, VodStream } from '@/lib/xtream';
 import { getVodCategories, getVodStreams, buildVodUrl, getTmdbMap } from '@/lib/xtream';
@@ -20,6 +20,27 @@ const FEATURED_CATS = [
   { id: '88', name: 'Arabic' },
   { id: '772', name: 'Turkish 2026' },
 ];
+
+const PLATFORM_LOGOS: Record<string, { logo: string; color: string }> = {
+  '169': { logo: '/logos/netflix.svg', color: '#E50914' },
+  '168': { logo: '/logos/netflix.svg', color: '#E50914' },
+};
+
+function getTrendingScore(movie: VodStream, tmdbMap: Record<string, TmdbEntry>): number {
+  const tmdb = tmdbMap[`m:${movie.stream_id}`];
+  if (!tmdb) return 0;
+  const ratingScore = Math.min((tmdb.r || 0) / 10, 1);
+  let freshnessScore = 0.3;
+  const yearMatch = movie.name.match(/\((\d{4})\)/);
+  if (yearMatch) {
+    const year = parseInt(yearMatch[1], 10);
+    if (year >= 2026) freshnessScore = 1.0;
+    else if (year === 2025) freshnessScore = 0.85;
+    else if (year === 2024) freshnessScore = 0.7;
+    else if (year === 2023) freshnessScore = 0.5;
+  }
+  return ratingScore * 0.55 + freshnessScore * 0.35 + (tmdb.y ? 0.1 : 0);
+}
 
 interface Props {
   credentials: XtreamCredentials;
@@ -107,6 +128,22 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   const isSearching = debouncedQuery.trim().length > 0;
 
+  const trendingMovies = useMemo(() => {
+    if (Object.keys(tmdbMap).length === 0) return [];
+    return movies
+      .map(m => ({ movie: m, score: getTrendingScore(m, tmdbMap) }))
+      .filter(s => s.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 15)
+      .map(s => s.movie);
+  }, [movies, tmdbMap]);
+
+  const scoredMovies = useMemo(() => {
+    const list = isSearching ? searchResults : movies;
+    if (Object.keys(tmdbMap).length === 0) return list;
+    return [...list].sort((a, b) => getTrendingScore(b, tmdbMap) - getTrendingScore(a, tmdbMap));
+  }, [movies, searchResults, isSearching, tmdbMap]);
+
   // Load categories
   useEffect(() => {
     let mounted = true;
@@ -164,7 +201,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     }
   }
 
-  const displayMovies = isSearching ? searchResults : movies;
+  const displayMovies = isSearching ? searchResults : scoredMovies;
   const displayLoading = isSearching ? searchLoading : loading;
 
   return (
@@ -198,12 +235,15 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               <button
                 key={cat.id}
                 onClick={() => setActiveCat(cat.id)}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                   activeCat === cat.id
                     ? 'bg-primary text-white shadow-lg shadow-primary/20'
                     : 'bg-white/5 text-text-secondary hover:bg-white/10 hover:text-white border border-white/10'
                 }`}
               >
+                {PLATFORM_LOGOS[cat.id]?.logo && (
+                  <img src={PLATFORM_LOGOS[cat.id].logo} alt="" className="h-4 w-auto" />
+                )}
                 {cat.name}
               </button>
             ))}
@@ -219,6 +259,23 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           </p>
         )}
       </div>
+
+      {/* Trending row */}
+      {!isSearching && !loading && trendingMovies.length >= 5 && (
+        <div className="px-4 pt-4 pb-2">
+          <h2 className="text-sm font-semibold text-white/80 mb-2 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            Trending Right Now
+          </h2>
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
+            {trendingMovies.map(movie => (
+              <div key={movie.stream_id} className="flex-shrink-0 w-[120px]">
+                <PosterCard title={movie.name} poster={movie.stream_icon} rating={movie.rating} tmdbData={tmdbMap[`m:${movie.stream_id}`]} onClick={() => setDetailMovie(movie)} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Movie grid */}
       {displayLoading ? (

@@ -34,6 +34,8 @@ import { SkeletonRow } from '@/components/ui/LoadingSpinner';
 import { WelcomeStory } from '@/components/ui/WelcomeStory';
 import { setAmbientSpeed } from '@/lib/ambient-audio';
 import type { Channel, WatchHistoryEntry } from '@/types';
+import { PlatformShowcase, PLATFORMS } from '@/components/ui/PlatformShowcase';
+import { HexCard, HexRow, CLUB_COLORS } from '@/components/ui/HexCard';
 
 interface Props {
   credentials: XtreamCredentials;
@@ -168,6 +170,11 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const [retryKey, setRetryKey] = useState(0);
   const [trailerState, setTrailerState] = useState<{ youtubeKey: string; title: string; poster?: string; overview?: string } | null>(null);
   const [detailMovie, setDetailMovie] = useState<{ movie: VodStream; tmdbMap?: Record<string, TmdbEntry> } | null>(null);
+  const [platformData, setPlatformData] = useState<{ platform: typeof PLATFORMS[0]; items: { id: number; name: string; poster?: string; rating?: string }[]; tmdbMap?: Record<string, TmdbEntry> }[]>([]);
+  const [netflixHex, setNetflixHex] = useState<SeriesItem[]>([]);
+  const [dashOriginalsHex, setDashOriginalsHex] = useState<VodStream[]>([]);
+  const [fixturesHex, setFixturesHex] = useState<LiveStream[]>([]);
+  const [footballHex, setFootballHex] = useState<LiveStream[]>([]);
 
   const recentHistory = getRecent(10).filter(
     (h): h is WatchHistoryEntry & { name: string; url: string } =>
@@ -356,6 +363,86 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
     return () => { mounted = false; };
   }, [loading, rows, profile, credentials]);
 
+  // ── Hex Sections — independent loading ──────────────────────
+  useEffect(() => {
+    if (loading || rows.length === 0) return;
+    let mounted = true;
+
+    // Netflix hex — top 8 series
+    getSeries(credentials, '106').then(items => {
+      if (!mounted) return;
+      setNetflixHex(items.slice(0, 8));
+    }).catch(() => {});
+
+    // DASH Exclusives — Oscar Winners + Blockbusters
+    Promise.allSettled([getVodStreams(credentials, '240'), getVodStreams(credentials, '34')])
+      .then(results => {
+        if (!mounted) return;
+        const all: VodStream[] = [];
+        const seen = new Set<number>();
+        for (const r of results) {
+          if (r.status === 'fulfilled') {
+            for (const m of r.value) {
+              if (!seen.has(m.stream_id)) { seen.add(m.stream_id); all.push(m); }
+            }
+          }
+        }
+        setDashOriginalsHex(all.slice(0, 8));
+      });
+
+    // Hottest Fixtures — live sports
+    Promise.allSettled(['234', '85', '492'].map(c => getLiveStreams(credentials, c)))
+      .then(results => {
+        if (!mounted) return;
+        const all: LiveStream[] = [];
+        for (const r of results) {
+          if (r.status === 'fulfilled') all.push(...r.value);
+        }
+        const alive = all.filter(s => isChannelProbeAlive(s.stream_id));
+        setFixturesHex(alive.slice(0, 6));
+      });
+
+    // Discover Football — fan channels
+    getLiveStreams(credentials, '234').then(items => {
+      if (!mounted) return;
+      const fanKeywords = ['fc', 'tv', 'fan', 'club', 'united', 'city', 'lfc', 'mutv', 'arsenal', 'chelsea', 'barca', 'real madrid', 'milan', 'inter', 'psg', 'bayern', 'ajax', 'celtic', 'rangers', 'porto', 'benfica', 'sporting'];
+      const fans = items.filter(s => {
+        const nl = s.name.toLowerCase();
+        return fanKeywords.some(k => nl.includes(k)) && isChannelProbeAlive(s.stream_id);
+      });
+      setFootballHex(fans.slice(0, 8));
+    }).catch(() => {});
+
+    // Platform previews — load directly, no delay
+    (async () => {
+      if (!mounted) return;
+      try {
+        const previews = await Promise.all(
+          PLATFORMS.map(async (p) => {
+            try {
+              const results = await Promise.allSettled(
+                p.categoryIds.slice(0, 1).map(catId => getSeries(credentials, catId))
+              );
+              const items: { id: number; name: string; poster?: string; rating?: string }[] = [];
+              const seen = new Set<number>();
+              for (const r of results) {
+                if (r.status === 'fulfilled') {
+                  for (const s of r.value) {
+                    if (!seen.has(s.series_id)) { seen.add(s.series_id); items.push({ id: s.series_id, name: s.name, poster: s.cover, rating: s.rating }); }
+                  }
+                }
+              }
+              return { platform: p, items: items.slice(0, 4) };
+            } catch { return { platform: p, items: [] as any[] }; }
+          })
+        );
+        if (mounted) setPlatformData(previews.filter(p => p.items.length > 0));
+      } catch {}
+    })();
+
+    return () => { mounted = false; };
+  }, [loading, rows, credentials]);
+
   // ── Merge rows: smart rows prepended ──────────────────────────
   const allRows = [...smartRows, ...rows];
 
@@ -522,7 +609,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
       {/* ── Vee Smart Picks ─────────────────────────────────── */}
       {veePool.length > 0 && (
-        <section className="mt-6">
+        <section className="mt-6 mb-2">
           <VeeWidget
             items={veePool}
             onPlay={(item) => playMovie(item as unknown as VodStream)}
@@ -530,6 +617,144 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
             tmdbMap={veeTmdbMap}
           />
         </section>
+      )}
+
+      {/* ── Netflix Hex Collection ────────────────────────── */}
+      {netflixHex.length > 0 && (
+        <HexRow
+          title="Netflix"
+          titleGlow="#E50914"
+          titleIcon={<img src="/logos/netflix.svg" alt="" className="h-4 w-auto" />}
+          onSeeMore={() => navigate('/originals#netflix')}
+        >
+          {netflixHex.map((s) => (
+            <HexCard
+              key={s.series_id}
+              variant="netflix"
+              filled
+              title={s.name.replace(/\s*\(\d{4}\)\s*$/, '')}
+              icon={s.cover}
+              onClick={() => navigate('/originals#netflix')}
+            />
+          ))}
+        </HexRow>
+      )}
+
+      {/* ── Platform Originals Showcase ────────────────────── */}
+      {platformData.length > 0 && (
+        <PlatformShowcase
+          platforms={platformData}
+          onNavigate={navigate}
+        />
+      )}
+
+      {/* ── Hottest Fixtures — Live Sports Hex ────────────── */}
+      {fixturesHex.length > 0 && (
+        <HexRow
+          title="Hottest Fixtures"
+          titleGlow="#EF4444"
+          titleIcon={<Trophy className="w-4 h-4 text-red-400" />}
+          onSeeMore={() => navigate('/live')}
+        >
+          {fixturesHex.map((s) => (
+            <HexCard
+              key={s.stream_id}
+              variant="sports"
+              title={s.name}
+              icon={s.stream_icon}
+              isLive
+              onClick={() => {
+                const ch = {
+                  id: `live-${s.stream_id}`,
+                  name: s.name,
+                  url: buildLiveUrl(credentials, s.stream_id),
+                  logo: s.stream_icon,
+                  category: 'live' as const,
+                };
+                setCurrentChannel(ch.id);
+                onPlay(ch);
+              }}
+            />
+          ))}
+        </HexRow>
+      )}
+
+      {/* ── Discover Football — FC50 Perspective ─────────── */}
+      {footballHex.length > 0 && (
+        <HexRow
+          title="Discover Football"
+          titleGlow="#3B82F6"
+          titleIcon={<span className="text-blue-400">⚽</span>}
+          onSeeMore={() => navigate('/live')}
+        >
+          {footballHex.map((s, i) => {
+            const depth = i < 2 ? 1.0 : i < 4 ? 0.92 : i < 6 ? 0.85 : 0.78;
+            const nl = s.name.toLowerCase();
+            const clubKey = nl.includes('liverpool') || nl.includes('lfc') ? 'liverpool'
+              : nl.includes('man city') || nl.includes('manchester c') ? 'mancity'
+              : nl.includes('man u') || nl.includes('mutv') || nl.includes('manchester u') ? 'manutd'
+              : nl.includes('arsenal') ? 'arsenal'
+              : nl.includes('chelsea') ? 'chelsea'
+              : nl.includes('barca') || nl.includes('barcelona') ? 'barca'
+              : nl.includes('real madrid') ? 'realmadrid'
+              : nl.includes('psg') || nl.includes('paris') ? 'psg'
+              : nl.includes('bayern') ? 'bayern'
+              : null;
+            const club = clubKey ? CLUB_COLORS[clubKey] : null;
+            return (
+              <HexCard
+                key={s.stream_id}
+                variant={club ? 'club' : 'discover'}
+                clubColors={club ? { primary: club.primary, secondary: club.secondary } : undefined}
+                title={s.name}
+                subtitle={club?.name}
+                icon={s.stream_icon}
+                isLive
+                scale={depth}
+                onClick={() => {
+                  const ch = {
+                    id: `live-${s.stream_id}`,
+                    name: s.name,
+                    url: buildLiveUrl(credentials, s.stream_id),
+                    logo: s.stream_icon,
+                    category: 'live' as const,
+                  };
+                  setCurrentChannel(ch.id);
+                  onPlay(ch);
+                }}
+              />
+            );
+          })}
+        </HexRow>
+      )}
+
+      {/* ── DASH Exclusives Hex ─────────────────────────── */}
+      {dashOriginalsHex.length > 0 && (
+        <HexRow
+          title="DASH Exclusives"
+          titleGlow="#9D4EDD"
+          titleIcon={<span className="text-primary-light text-sm font-black">D+</span>}
+          onSeeMore={() => navigate('/movies')}
+        >
+          {dashOriginalsHex.map((m) => (
+            <HexCard
+              key={m.stream_id}
+              variant="dash"
+              filled
+              title={m.name.replace(/\s*\(\d{4}\)\s*$/, '')}
+              icon={m.stream_icon}
+              onClick={() => {
+                onPlay({
+                  id: `vod-${m.stream_id}`,
+                  name: m.name,
+                  url: buildVodUrl(credentials, m.stream_id, m.container_extension || 'mp4'),
+                  logo: m.stream_icon,
+                  category: 'movie',
+                });
+              }}
+            />
+          ))}
+        </HexRow>
       )}
 
       {/* ── Dynamic Collection Rows ──────────────────────────── */}
