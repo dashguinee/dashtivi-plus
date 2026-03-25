@@ -55,13 +55,17 @@ function loadStoredCode(): StoredAuth | null {
 
 async function lookupCode(code: string): Promise<LookupResult> {
   try {
+    // Use secure RPC function — never exposes table directly
     const res = await fetch(
-      `${SB_URL}/tivi_access_codes?code=eq.${encodeURIComponent(code)}&select=code,user_xtream,pass_xtream,tier,expires_at,max_streams,customer_name`,
+      `${SB_URL}/rpc/lookup_access_code`,
       {
+        method: 'POST',
         headers: {
           'apikey': SB_ANON,
           'Authorization': `Bearer ${SB_ANON}`,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ p_code: code.trim().toUpperCase() }),
       }
     );
     if (!res.ok) return { ok: false, reason: 'network' };
