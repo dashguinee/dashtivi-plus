@@ -665,9 +665,10 @@ export async function fetchServerProbeData(): Promise<ServerProbeData | null> {
   if (serverProbePromise) return serverProbePromise;
   serverProbePromise = (async () => {
     try {
-      // VPS has fresh probe data (hourly), Vercel copy may be stale — prefer VPS
-      let res = await fetch(`${PROXY}/probe-results.json`, { signal: AbortSignal.timeout(5000) }).catch(() => null);
-      if (!res?.ok) res = await fetch('/probe-results.json', { signal: AbortSignal.timeout(3000) });
+      // Vercel copy is from our deep-probe.cjs (accurate byte-level checks)
+      // VPS probe-results.json is broken (marks everything alive without real probing)
+      let res = await fetch('/probe-results.json', { signal: AbortSignal.timeout(3000) }).catch(() => null);
+      if (!res?.ok) res = await fetch(`${PROXY}/probe-results.json`, { signal: AbortSignal.timeout(5000) });
       if (!res.ok) return null;
       const data = await res.json() as ServerProbeData;
       if (!data.alive_set?.length) return null;
