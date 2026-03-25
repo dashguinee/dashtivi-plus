@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
-import { PosterCard } from './PosterCard';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 
 /** Platform config — brand identity for each streaming service */
@@ -76,6 +75,7 @@ export const PlatformShowcase: React.FC<Props> = React.memo(({ platforms, onNavi
 const PlatformCard = React.memo(function PlatformCard({
   platform,
   items,
+  tmdbMap,
   onTap,
 }: {
   platform: PlatformDef;
@@ -135,23 +135,10 @@ const PlatformCard = React.memo(function PlatformCard({
           <ChevronRight className="w-4 h-4 text-white/15 group-hover:text-white/40 transition-colors" />
         </div>
 
-        {/* Poster previews — 3 posters, more room to breathe */}
+        {/* Poster previews — 3 posters with TMDB fallback */}
         <div className="flex gap-2 px-4 pb-4">
           {previews.map((item) => (
-            <div
-              key={item.id}
-              className="flex-1 aspect-[2/3] rounded-xl overflow-hidden"
-              style={{
-                background: `${platform.color}08`,
-                border: `1px solid ${platform.color}12`,
-              }}
-            >
-              {item.poster ? (
-                <img src={item.poster} alt="" className="w-full h-full object-cover" loading="lazy" />
-              ) : (
-                <div className="w-full h-full" style={{ background: `${platform.color}06` }} />
-              )}
-            </div>
+            <PosterPreview key={item.id} item={item} color={platform.color} tmdbMap={tmdbMap} />
           ))}
           {previews.length < 3 && Array.from({ length: 3 - previews.length }).map((_, i) => (
             <div key={`e${i}`} className="flex-1 aspect-[2/3] rounded-xl" style={{ background: `${platform.color}06`, border: `1px solid ${platform.color}08` }} />
@@ -169,3 +156,35 @@ const PlatformCard = React.memo(function PlatformCard({
     </button>
   );
 });
+
+/** Poster with Xtream → proxy → TMDB fallback chain */
+function PosterPreview({ item, color, tmdbMap }: { item: { id: number; name: string; poster?: string }; color: string; tmdbMap?: Record<string, TmdbEntry> }) {
+  const [failed, setFailed] = useState(false);
+  const [tmdbFailed, setTmdbFailed] = useState(false);
+
+  // Clean Xtream poster URL
+  let safeSrc: string | null = null;
+  if (item.poster && !failed) {
+    const url = item.poster.replace('starshare.live:8080', 'datahub11.com:8080');
+    if (!url.includes('webhop.live') && !url.includes('paste.pics')) {
+      if (url.startsWith('https://')) safeSrc = url;
+      else if (url.startsWith('http://')) safeSrc = `https://stream.zionsynapse.online/?url=${encodeURIComponent(url)}`;
+    }
+  }
+
+  // TMDB fallback
+  const tmdb = tmdbMap?.[`s:${item.id}`] || tmdbMap?.[`m:${item.id}`];
+  const tmdbSrc = tmdb?.p ? `https://image.tmdb.org/t/p/w185${tmdb.p}` : null;
+
+  return (
+    <div className="flex-1 aspect-[2/3] rounded-xl overflow-hidden" style={{ background: `${color}06`, border: `1px solid ${color}10` }}>
+      {safeSrc && !failed ? (
+        <img src={safeSrc} alt="" className="w-full h-full object-cover" loading="lazy" onError={() => setFailed(true)} />
+      ) : tmdbSrc && !tmdbFailed ? (
+        <img src={tmdbSrc} alt="" className="w-full h-full object-cover" loading="lazy" onError={() => setTmdbFailed(true)} />
+      ) : (
+        <div className="w-full h-full" style={{ background: `${color}08` }} />
+      )}
+    </div>
+  );
+}

@@ -65,8 +65,11 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
   const badge = categoryId ? PLATFORM_BADGES[categoryId] : undefined;
   const platformLogo = categoryId ? PLATFORM_LOGOS[categoryId] : undefined;
   const [imgFailed, setImgFailed] = useState(false);
+  const [tmdbFailed, setTmdbFailed] = useState(false);
   const safePoster = getSafePoster(poster);
-  const hasPoster = safePoster && !imgFailed;
+  // TMDB poster fallback — uses poster_path from enrichment
+  const tmdbPoster = tmdbData?.p ? `https://image.tmdb.org/t/p/w342${tmdbData.p}` : null;
+  const hasPoster = (safePoster && !imgFailed) || (tmdbPoster && !tmdbFailed);
   const { clean: cleanTitle, year } = parseTitle(title);
 
   const displayRating = tmdbData?.r ? tmdbData.r.toFixed(1) : rating;
@@ -80,12 +83,21 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
       className="group relative w-full aspect-[2/3] rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-lg hover:shadow-primary/10 text-left"
       style={{ background: 'rgba(255,255,255,0.02)' }}
     >
-      {hasPoster ? (
+      {safePoster && !imgFailed ? (
         <img
           src={safePoster}
           alt={title}
           className="absolute inset-0 w-full h-full object-cover"
           onError={() => setImgFailed(true)}
+          loading="lazy"
+          decoding="async"
+        />
+      ) : tmdbPoster && !tmdbFailed ? (
+        <img
+          src={tmdbPoster}
+          alt={title}
+          className="absolute inset-0 w-full h-full object-cover"
+          onError={() => setTmdbFailed(true)}
           loading="lazy"
           decoding="async"
         />

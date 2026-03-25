@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Play, Search, X, ChevronRight, LayoutGrid } from 'lucide-react';
+import { Play, Search, X, ChevronRight, LayoutGrid, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart } from 'lucide-react';
 import type { XtreamCredentials, LiveCategory, LiveStream, GroupedChannel, FreeChannel } from '@/lib/xtream';
 import { getLiveCategories, getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortByIconQuality, fetchServerProbeData, seedProbeCacheFromServer, getFreeChannelsByExperience, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
 import {
@@ -91,7 +91,8 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
           getFreeChannels(),
         ]);
         const q = debouncedQuery.toLowerCase();
-        const xtreamResults = all.filter(s => s.name.toLowerCase().includes(q));
+        const xtreamResults = all.filter(s => s.name.toLowerCase().includes(q))
+          .filter(s => isChannelProbeAlive(s.stream_id));
         const freeResults = freeAll.filter(ch => ch.name.toLowerCase().includes(q));
         const freeAsLive = freeResults.map(freeToLiveStream);
         // Populate URL map for free results
@@ -231,7 +232,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const handlePlayFromList = useCallback(
     (stream: LiveStream, allStreams: LiveStream[]) => {
       const channels = allStreams
-        .filter(s => !isDead(`live-${s.stream_id}`))
+        .filter(s => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id))
         .map(s => ({
           id: `live-${s.stream_id}`,
           name: s.name,
@@ -448,8 +449,17 @@ function ThemeRow({
     <div className="mb-6">
       {/* Theme header */}
       <div className="flex items-center gap-2 px-4 mb-3">
-        <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${theme.gradient} flex items-center justify-center text-sm`}>
-          {theme.emoji}
+        <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${theme.gradient} flex items-center justify-center`}>
+          {({
+            sports: <Trophy className="w-3.5 h-3.5 text-white/80" />,
+            entertainment: <Sparkles className="w-3.5 h-3.5 text-white/80" />,
+            news: <Radio className="w-3.5 h-3.5 text-white/80" />,
+            kids: <Baby className="w-3.5 h-3.5 text-white/80" />,
+            movies247: <Film className="w-3.5 h-3.5 text-white/80" />,
+            music: <Music className="w-3.5 h-3.5 text-white/80" />,
+            documentary: <Globe className="w-3.5 h-3.5 text-white/80" />,
+            faith: <Heart className="w-3.5 h-3.5 text-white/80" />,
+          } as Record<string, React.ReactNode>)[theme.id] || <Sparkles className="w-3.5 h-3.5 text-white/80" />}
         </div>
         <h2 className="text-[15px] font-bold text-white">{theme.name}</h2>
         <span className="text-[11px] text-text-muted">{sorted.length}</span>
@@ -643,10 +653,12 @@ function SearchGrid({ streams, credentials, onPlay, freeUrlMap }: {
   onPlay: (channel: Channel) => void;
   freeUrlMap: Record<number, string>;
 }) {
+  const alive = streams.filter(s => isChannelProbeAlive(s.stream_id));
+
   const handlePlay = useCallback(
     (stream: LiveStream) => {
-      // Build playlist from search results
-      const channels = streams.map(s => ({
+      // Build playlist from alive search results
+      const channels = alive.map(s => ({
         id: `live-${s.stream_id}`,
         name: s.name,
         url: isFreeChannel(s.stream_id)
@@ -662,12 +674,12 @@ function SearchGrid({ streams, credentials, onPlay, freeUrlMap }: {
         onPlay(ch);
       }
     },
-    [streams, credentials, onPlay, freeUrlMap]
+    [alive, credentials, onPlay, freeUrlMap]
   );
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-4">
-      {streams.slice(0, 100).map((stream) => (
+      {alive.slice(0, 100).map((stream) => (
         <button
           key={stream.stream_id}
           onClick={() => handlePlay(stream)}

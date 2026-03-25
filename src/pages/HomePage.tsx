@@ -67,10 +67,10 @@ function timeAgo(ts: number): string {
 // ── Sport tabs config ─────────────────────────────────────────────
 
 const SPORT_TABS = [
-  { id: 'football', label: 'Football', icon: '⚽', color: '#9D4EDD', catIds: ['234'], keywords: ['fc', 'tv', 'fan', 'club', 'united', 'city', 'lfc', 'mutv', 'arsenal', 'chelsea', 'barca', 'real madrid', 'milan', 'inter', 'psg', 'bayern'] },
-  { id: 'basketball', label: 'Basketball', icon: '🏀', color: '#EF4444', catIds: ['773'], keywords: ['nba', 'basketball', 'lakers', 'celtics', 'warriors', 'nets', 'bulls', 'heat', 'bucks'] },
-  { id: 'nfl', label: 'NFL', icon: '🏈', color: '#3B82F6', catIds: ['516'], keywords: ['nfl', 'football', 'chiefs', 'eagles', 'cowboys', 'patriots', 'packers', '49ers'] },
-  { id: 'tennis', label: 'Tennis', icon: '🎾', color: '#F97316', catIds: ['342', '234'], keywords: ['tennis', 'atp', 'wta', 'wimbledon', 'roland', 'us open', 'australian open'] },
+  { id: 'football', label: 'Football', color: '#9D4EDD', catIds: ['234'], keywords: ['fc', 'tv', 'fan', 'club', 'united', 'city', 'lfc', 'mutv', 'arsenal', 'chelsea', 'barca', 'real madrid', 'milan', 'inter', 'psg', 'bayern'] },
+  { id: 'basketball', label: 'Basketball', color: '#EF4444', catIds: ['773'], keywords: ['nba', 'basketball', 'lakers', 'celtics', 'warriors', 'nets', 'bulls', 'heat', 'bucks'] },
+  { id: 'nfl', label: 'NFL', color: '#3B82F6', catIds: ['516'], keywords: ['nfl', 'football', 'chiefs', 'eagles', 'cowboys', 'patriots', 'packers', '49ers'] },
+  { id: 'tennis', label: 'Tennis', color: '#F97316', catIds: ['342', '234'], keywords: ['tennis', 'atp', 'wta', 'wimbledon', 'roland', 'us open', 'australian open'] },
 ];
 
 // ── Data loaders for each collection type ─────────────────────────
@@ -214,7 +214,6 @@ function DiscoverSports({ credentials, onPlay, navigate }: { credentials: Xtream
               color: 'rgba(255,255,255,0.35)',
             }}
           >
-            <span className="text-xs">{t.icon}</span>
             {t.label}
           </button>
         ))}
@@ -397,7 +396,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
             const smartCollection: SmartCollection = {
               id: 'smart-for-you',
               name: 'For You',
-              emoji: '\u2728',
+              emoji: '',
               description: 'Personalized picks based on your taste',
               type: 'smart-vod',
               contentType: 'vod',
@@ -429,7 +428,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
               const smartCollection: SmartCollection = {
                 id: 'smart-because-watched',
                 name: `Because You Watched ${cleanName}`,
-                emoji: '\uD83C\uDFAF',
+                emoji: '',
                 description: `Similar to ${cleanName}`,
                 type: 'smart-vod',
                 contentType: 'vod',
@@ -601,7 +600,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   // ── Render ──────────────────────────────────────────────────────
 
   return (
-    <div className="pt-16 pb-4">
+    <div className="pt-16 pb-4 animate-fade-in">
       {/* ── Hero Banner (time-aware) ── */}
       <div
         className="relative mb-2 overflow-hidden"
@@ -779,7 +778,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
       {/* ── Section Breaker: Sports ── */}
       <div className="flex flex-col items-center py-6 gap-3">
-        <div className="text-2xl" style={{ animation: 'sports-ball-float 3s ease-in-out infinite' }}>⚽</div>
+        <div className="w-3 h-3 rounded-full bg-primary/40" style={{ animation: 'sports-ball-float 3s ease-in-out infinite' }} />
         <span className="text-[10px] font-medium text-white/15 tracking-[4px] uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Sports Break</span>
       </div>
 

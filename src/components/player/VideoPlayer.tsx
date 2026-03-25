@@ -5,6 +5,7 @@ import { RefreshCw, AlertTriangle, Zap, ChevronLeft as ChevLeft, ChevronRight as
 import { useAdjacentChannels, usePlaylistState, setCurrentChannel } from '@/lib/playlist';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { SmartMatch } from './SmartMatch';
+import { EpgWidget } from './EpgWidget';
 import { getStreamQuality, setStreamQuality } from '@/lib/xtream';
 import type { Channel, PlayerState } from '@/types';
 
@@ -393,6 +394,13 @@ export const VideoPlayer: React.FC<Props> = ({
         isFullscreen={state.isFullscreen}
         isLive={!!state.channel?.url?.includes('/live?')}
         onGenreSwitch={onGenreSwitch}
+      />
+
+      {/* EPG Widget — bottom-left now playing + schedule */}
+      <EpgWidget
+        streamId={state.channel?.id ? parseInt(state.channel.id.replace(/^live-/, ''), 10) || null : null}
+        visible={controlsVisible}
+        isLive={!!state.channel?.url?.includes('/live?')}
       />
 
       {/* Smart Match — quality variants + family channels */}

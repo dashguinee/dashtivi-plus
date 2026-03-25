@@ -665,7 +665,9 @@ export async function fetchServerProbeData(): Promise<ServerProbeData | null> {
   if (serverProbePromise) return serverProbePromise;
   serverProbePromise = (async () => {
     try {
-      const res = await fetch(`${PROXY}/probe-results.json`, { signal: AbortSignal.timeout(5000) });
+      // Try local (Vercel-hosted) first, fall back to VPS
+      let res = await fetch('/probe-results.json', { signal: AbortSignal.timeout(3000) }).catch(() => null);
+      if (!res?.ok) res = await fetch(`${PROXY}/probe-results.json`, { signal: AbortSignal.timeout(5000) });
       if (!res.ok) return null;
       const data = await res.json() as ServerProbeData;
       if (!data.alive_set?.length) return null;

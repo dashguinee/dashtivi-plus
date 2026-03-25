@@ -1,7 +1,7 @@
 // TMDB data loaded from /tmdb-data.json via fetch (doesn't block main thread)
 export interface TmdbEntry {
   i: number; g: number[]; r: number;
-  y?: string; t?: number;
+  y?: string; t?: number; p?: string;
 }
 
 export const TMDB_MAP: Record<string, TmdbEntry> = {};

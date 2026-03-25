@@ -58,8 +58,6 @@ function getNetworkFamily(name: string): string | null {
   if (nl.includes('cartoon network')) return 'Cartoon Network';
   if (nl.includes('osn')) return 'OSN';
   if (nl.includes('star sport')) return 'Star Sports';
-  if (nl.includes('dstv')) return 'DStv';
-  if (nl.includes('canal+') || nl.includes('canal +')) return 'Canal+';
   if (nl.includes('showtime') || nl.includes('sho ')) return 'Showtime';
   if (nl.includes('sky news')) return 'Sky News';
   if (nl.includes('al jazeera')) return 'Al Jazeera';

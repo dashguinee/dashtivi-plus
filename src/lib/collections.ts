@@ -56,7 +56,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
   {
     id: 'live-sports',
     name: 'Live Sports',
-    emoji: '\u26BD',
+    emoji: '',
     description: 'Premier League, beIN, Sky Sports & more',
     type: 'live',
     categoryIds: [
@@ -72,7 +72,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
   {
     id: 'fresh-movies',
     name: 'Fresh Movies',
-    emoji: '\uD83C\uDFAC',
+    emoji: '',
     description: 'Just added — 2025 & 2026',
     type: 'vod',
     categoryIds: ['749', '597'], // English 2026, 2025
@@ -82,7 +82,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
   {
     id: 'kids-family',
     name: 'Kids & Family',
-    emoji: '\uD83E\uDDF8',
+    emoji: '',
     description: 'Nick, Disney, Cartoon Network & more',
     type: 'live',
     categoryIds: ['32', '410'],  // Kids (108ch), UK Kids (12ch)
@@ -92,7 +92,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
   {
     id: 'news-world',
     name: 'News & World',
-    emoji: '\uD83D\uDCF0',
+    emoji: '',
     description: 'CNN, BBC, Al Jazeera, Sky News',
     type: 'live',
     categoryIds: [
@@ -106,7 +106,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
   {
     id: 'cinema-4k',
     name: '4K Cinema',
-    emoji: '\uD83C\uDFA5',
+    emoji: '',
     description: 'Crystal clear blockbusters',
     type: 'vod',
     categoryIds: ['122', '34'],  // 4K, Blockbuster
@@ -116,7 +116,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
   {
     id: 'k-drama-turkish',
     name: 'Drama World',
-    emoji: '\uD83C\uDF1F',
+    emoji: '',
     description: 'K-Drama, Turkish & international series',
     type: 'series',
     categoryIds: ['267', '99'],  // Korean, Turkish
@@ -126,7 +126,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
   {
     id: 'nba-basketball',
     name: 'NBA',
-    emoji: '\uD83C\uDFC0',
+    emoji: '',
     description: 'Every game, every dunk',
     type: 'live',
     categoryIds: ['773', '516'],  // NBA League Pass, NFL
@@ -138,14 +138,14 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
 // ── Quick-tap Collection Cards (vibes navigation) ─────────────────
 
 export const COLLECTION_CARDS: CollectionCard[] = [
-  { id: 'sports', name: 'Sports', emoji: '\u26BD', gradient: 'from-primary/30 to-primary-dark/30', navigateTo: '/live' },
-  { id: 'news', name: 'News', emoji: '\uD83D\uDCF0', gradient: 'from-primary/20 to-white/5', navigateTo: '/live' },
-  { id: 'movies', name: 'Movies', emoji: '\uD83C\uDFAC', gradient: 'from-primary/25 to-primary-dark/25', navigateTo: '/movies' },
-  { id: 'series', name: 'Series', emoji: '\uD83D\uDCFA', gradient: 'from-primary/30 to-primary-dark/20', navigateTo: '/series' },
-  { id: 'africa', name: 'Africa', emoji: '\uD83C\uDF0D', gradient: 'from-accent/20 to-accent-gold/10', navigateTo: '/french' },
-  { id: 'kids', name: 'Kids', emoji: '\uD83E\uDDF8', gradient: 'from-primary-light/20 to-primary/15', navigateTo: '/live' },
-  { id: 'music', name: 'Music', emoji: '\uD83C\uDFB5', gradient: 'from-primary/25 to-primary-light/15', navigateTo: '/live' },
-  { id: 'faith', name: 'Faith', emoji: '\uD83D\uDE4F', gradient: 'from-accent-gold/15 to-primary/10', navigateTo: '/live' },
+  { id: 'sports', name: 'Sports', emoji: '', gradient: 'from-primary/30 to-primary-dark/30', navigateTo: '/live' },
+  { id: 'news', name: 'News', emoji: '', gradient: 'from-primary/20 to-white/5', navigateTo: '/live' },
+  { id: 'movies', name: 'Movies', emoji: '', gradient: 'from-primary/25 to-primary-dark/25', navigateTo: '/movies' },
+  { id: 'series', name: 'Series', emoji: '', gradient: 'from-primary/30 to-primary-dark/20', navigateTo: '/series' },
+  { id: 'africa', name: 'Africa', emoji: '', gradient: 'from-accent/20 to-accent-gold/10', navigateTo: '/french' },
+  { id: 'kids', name: 'Kids', emoji: '', gradient: 'from-primary-light/20 to-primary/15', navigateTo: '/live' },
+  { id: 'music', name: 'Music', emoji: '', gradient: 'from-primary/25 to-primary-light/15', navigateTo: '/live' },
+  { id: 'faith', name: 'Faith', emoji: '', gradient: 'from-accent-gold/15 to-primary/10', navigateTo: '/live' },
 ];
 
 // ── Time-aware Featured Hero ──────────────────────────────────────
@@ -242,7 +242,7 @@ export const LIVETV_THEMES: LiveTheme[] = [
   {
     id: 'sports',
     name: 'Sports',
-    emoji: '\u26BD',
+    emoji: '',
     categoryIds: [
       '234', '85', '353', '578', '5', '6', '342',
       '550', '138', '212', '356', '156', '137', '516', '483',
@@ -254,7 +254,7 @@ export const LIVETV_THEMES: LiveTheme[] = [
   {
     id: 'entertainment',
     name: 'Entertainment',
-    emoji: '\u2728',
+    emoji: '',
     categoryIds: [
       '3',    // UK Entertainment
       '2',    // USA
@@ -270,7 +270,7 @@ export const LIVETV_THEMES: LiveTheme[] = [
   {
     id: 'news',
     name: 'News',
-    emoji: '\uD83D\uDCF0',
+    emoji: '',
     categoryIds: [
       '82',   // English News
       '417',  // UK News
@@ -285,7 +285,7 @@ export const LIVETV_THEMES: LiveTheme[] = [
   {
     id: 'kids',
     name: 'Kids & Family',
-    emoji: '\uD83E\uDDF8',
+    emoji: '',
     categoryIds: [
       '32',   // Kids (108ch — Nick, Disney, CN, CBeebies, PBS)
       '410',  // UK Kids
@@ -296,7 +296,7 @@ export const LIVETV_THEMES: LiveTheme[] = [
   {
     id: 'movies247',
     name: 'Cinema 24/7',
-    emoji: '\uD83C\uDFAC',
+    emoji: '',
     categoryIds: [
       '275',  // English Movies 24/7
       '57',   // Netflix Movies 24/7
@@ -312,7 +312,7 @@ export const LIVETV_THEMES: LiveTheme[] = [
   {
     id: 'music',
     name: 'Music & Vibes',
-    emoji: '\uD83C\uDFB5',
+    emoji: '',
     categoryIds: [
       '416',  // UK Music
       '341',  // India Music
@@ -326,7 +326,7 @@ export const LIVETV_THEMES: LiveTheme[] = [
   {
     id: 'documentary',
     name: 'Discovery',
-    emoji: '\uD83C\uDF0E',
+    emoji: '',
     categoryIds: [
       '337',  // India Documentary
       '415',  // UK Documentary
@@ -337,7 +337,7 @@ export const LIVETV_THEMES: LiveTheme[] = [
   {
     id: 'faith',
     name: 'Faith',
-    emoji: '\uD83D\uDE4F',
+    emoji: '',
     categoryIds: [
       '123',  // Islamic (156ch)
       '561',  // Christian (16ch)

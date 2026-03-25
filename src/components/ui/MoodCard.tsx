@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface MoodCardProps {
-  emoji: string;
+  icon: React.ReactNode;
   label: string;
   gradient: string;
   neonColor: string;
@@ -10,7 +10,7 @@ interface MoodCardProps {
 }
 
 export const MoodCard: React.FC<MoodCardProps> = ({
-  emoji,
+  icon,
   label,
   gradient,
   neonColor,
@@ -38,7 +38,7 @@ export const MoodCard: React.FC<MoodCardProps> = ({
           : `0 0 10px ${neonColor}`,
       }}
     >
-      <span className="text-2xl">{emoji}</span>
+      <span className="text-white/90">{icon}</span>
       <span className="text-xs font-semibold text-white whitespace-nowrap">
         {label}
       </span>

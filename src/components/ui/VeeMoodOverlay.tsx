@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Search, Sparkles } from 'lucide-react';
+import { X, Search, Sparkles, Flame, Waves, Brain, Heart, Wine, Moon } from 'lucide-react';
 import { MoodCard } from './MoodCard';
 
 // ── Mood → TMDB genre mapping ──────────────────────────────────────
@@ -15,12 +15,12 @@ export const MOOD_GENRES: Record<string, number[]> = {
 };
 
 const MOOD_OPTIONS = [
-  { key: 'adrenaline', emoji: '\uD83D\uDD25', label: 'Adrenaline Rush', gradient: 'from-red-900/60 to-orange-900/60', neonColor: 'rgba(239,68,68,0.35)' },
-  { key: 'chill',      emoji: '\uD83C\uDF0A', label: 'Chill & Vibes',   gradient: 'from-cyan-900/60 to-teal-900/60',  neonColor: 'rgba(6,182,212,0.35)' },
-  { key: 'mind-games', emoji: '\uD83E\uDDE0', label: 'Mind Games',      gradient: 'from-purple-900/60 to-violet-900/60', neonColor: 'rgba(139,92,246,0.35)' },
-  { key: 'feel-good',  emoji: '\u2764\uFE0F', label: 'Feel Good',       gradient: 'from-pink-900/60 to-rose-900/60',   neonColor: 'rgba(244,63,94,0.35)' },
-  { key: 'date-night', emoji: '\uD83C\uDF39', label: 'Date Night',      gradient: 'from-rose-900/60 to-red-900/60',    neonColor: 'rgba(251,113,133,0.35)' },
-  { key: 'late-night', emoji: '\uD83C\uDF19', label: 'Late Night',      gradient: 'from-slate-900/60 to-zinc-900/60',  neonColor: 'rgba(100,116,139,0.35)' },
+  { key: 'adrenaline', icon: <Flame className="w-5 h-5" />,  label: 'Adrenaline Rush', gradient: 'from-red-900/60 to-orange-900/60', neonColor: 'rgba(239,68,68,0.35)' },
+  { key: 'chill',      icon: <Waves className="w-5 h-5" />,  label: 'Chill & Vibes',   gradient: 'from-cyan-900/60 to-teal-900/60',  neonColor: 'rgba(6,182,212,0.35)' },
+  { key: 'mind-games', icon: <Brain className="w-5 h-5" />,  label: 'Mind Games',      gradient: 'from-purple-900/60 to-violet-900/60', neonColor: 'rgba(139,92,246,0.35)' },
+  { key: 'feel-good',  icon: <Heart className="w-5 h-5" />,  label: 'Feel Good',       gradient: 'from-pink-900/60 to-rose-900/60',   neonColor: 'rgba(244,63,94,0.35)' },
+  { key: 'date-night', icon: <Wine className="w-5 h-5" />,   label: 'Date Night',      gradient: 'from-rose-900/60 to-red-900/60',    neonColor: 'rgba(251,113,133,0.35)' },
+  { key: 'late-night', icon: <Moon className="w-5 h-5" />,   label: 'Late Night',      gradient: 'from-slate-900/60 to-zinc-900/60',  neonColor: 'rgba(100,116,139,0.35)' },
 ];
 
 interface VeeMoodOverlayProps {
@@ -121,7 +121,7 @@ export const VeeMoodOverlay: React.FC<VeeMoodOverlayProps> = ({
           {MOOD_OPTIONS.map((mood) => (
             <MoodCard
               key={mood.key}
-              emoji={mood.emoji}
+              icon={mood.icon}
               label={mood.label}
               gradient={mood.gradient}
               neonColor={mood.neonColor}
