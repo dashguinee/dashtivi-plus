@@ -24,10 +24,16 @@ export const LoadingSpinner: React.FC<Props> = ({ size = 'md', text }) => {
 };
 
 export const FullPageLoader: React.FC = () => (
-  <div className="fixed inset-0 bg-bg flex items-center justify-center z-50">
-    <div className="flex flex-col items-center gap-6">
-      <div className="text-4xl font-bold text-gradient">DashTivi<span className="text-primary-light">+</span></div>
-      <LoadingSpinner size="lg" text="Loading..." />
+  <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: '#060609' }}>
+    <div className="text-center">
+      <h1>
+        <span className="text-[28px] font-black tracking-tight text-white uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>DASH</span>
+        <span className="text-[20px] font-light tracking-wide text-white/40" style={{ fontFamily: "'Outfit', sans-serif", marginLeft: '1px' }}>tivi</span>
+        <span className="text-primary-light text-[14px] font-bold ml-0.5">+</span>
+      </h1>
+      <div className="mt-4 mx-auto w-8 h-[2px] rounded-full overflow-hidden bg-white/5">
+        <div className="h-full w-full bg-primary/60 rounded-full" style={{ animation: 'loading-bar 1.5s ease-in-out infinite' }} />
+      </div>
     </div>
   </div>
 );

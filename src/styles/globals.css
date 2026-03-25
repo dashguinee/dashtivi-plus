@@ -562,6 +562,13 @@
     to { transform: rotate(360deg); }
   }
 
+  /* ═══ LOADING BAR — minimal progress indicator ═══ */
+  @keyframes loading-bar {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(0%); }
+    100% { transform: translateX(100%); }
+  }
+
   /* ═══ PLATFORM SHOWCASE — metallic beam sweep ═══ */
   @keyframes beam-sweep {
     0% { background-position: -100% 0; }
