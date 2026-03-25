@@ -302,22 +302,35 @@ export const VideoPlayer: React.FC<Props> = ({
         <DashCinemaLoader title={state.channel?.name} />
       )}
 
-      {/* Loading spinner — live TV only (VOD uses cinema intro above) */}
+      {/* Branded loading — covers the gap between tap and first frame */}
       {state.isLoading && !state.error && !state.isPlaying && !showCinemaIntro && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-12 h-12 border-3 border-white/20 border-t-primary rounded-full animate-spin" />
-            <p className="text-sm text-white/50">Connecting...</p>
+        <div className="absolute inset-0 flex items-center justify-center bg-[#060609] z-40">
+          <div className="text-center">
+            <h1 className="mb-3">
+              <span className="text-[24px] font-black tracking-tight text-white uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>DASH</span>
+              <span className="text-[18px] font-light tracking-wide text-white/40" style={{ fontFamily: "'Outfit', sans-serif" }}>tivi</span>
+              <span className="text-primary-light text-[13px] font-bold ml-0.5">+</span>
+            </h1>
+            {state.channel?.name && (
+              <p className="text-[11px] text-white/20 font-light tracking-wide max-w-[200px] mx-auto truncate">
+                {state.channel.name}
+              </p>
+            )}
+            <div className="mt-4 mx-auto w-10 h-[2px] rounded-full overflow-hidden bg-white/5">
+              <div className="h-full w-full bg-primary/50 rounded-full" style={{ animation: 'loading-bar 1.5s ease-in-out infinite' }} />
+            </div>
           </div>
         </div>
       )}
 
-      {/* Reconnecting — auto-retry in progress */}
+      {/* Reconnecting — branded, no generic spinner */}
       {state.error && state.error.includes('Retry') && !state.isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/70">
-          <div className="flex flex-col items-center gap-3">
-            <RefreshCw className="w-8 h-8 text-primary animate-spin" />
-            <p className="text-sm text-white/50">Reconnecting...</p>
+        <div className="absolute inset-0 flex items-center justify-center bg-[#060609]/90 z-40">
+          <div className="text-center">
+            <p className="text-[12px] text-white/25 font-light tracking-wide">Reconnecting</p>
+            <div className="mt-3 mx-auto w-8 h-[2px] rounded-full overflow-hidden bg-white/5">
+              <div className="h-full w-full bg-primary/40 rounded-full" style={{ animation: 'loading-bar 1.2s ease-in-out infinite' }} />
+            </div>
           </div>
         </div>
       )}
