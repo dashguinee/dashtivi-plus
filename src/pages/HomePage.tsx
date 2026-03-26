@@ -518,6 +518,8 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
     (async () => {
       if (!mounted) return;
       try {
+        const tmdbData = await getTmdbMap();
+        const TMDB = tmdbData?.TMDB_MAP || {};
         const previews = await Promise.all(
           PLATFORMS.map(async (p) => {
             try {
@@ -533,8 +535,15 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                   }
                 }
               }
-              return { platform: p, items: items.slice(0, 4) };
-            } catch { return { platform: p, items: [] as any[] }; }
+              // Prioritize items with posters (Xtream OR TMDB)
+              const withArt = items.filter(i => {
+                if (i.poster && !i.poster.includes('webhop') && !i.poster.includes('paste.pics')) return true;
+                const tmdb = TMDB[`s:${i.id}`];
+                return tmdb?.p;
+              });
+              const picked = withArt.length >= 3 ? withArt.slice(0, 3) : items.slice(0, 3);
+              return { platform: p, items: picked, tmdbMap: TMDB };
+            } catch { return { platform: p, items: [] as any[], tmdbMap: TMDB }; }
           })
         );
         if (mounted) setPlatformData(previews.filter(p => p.items.length > 0));
@@ -788,7 +797,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
         <section className="mb-2 py-3">
           <div className="flex items-center justify-between px-4 mb-2">
             <div className="flex items-baseline gap-2.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-400 mb-0.5 animate-pulse" style={{ boxShadow: '0 0 6px rgba(74,222,128,0.4)' }} />
+              <div className="w-1.5 h-1.5 rounded-full bg-red-400 mb-0.5 animate-pulse" style={{ boxShadow: '0 0 6px rgba(248,113,113,0.4)' }} />
               <h2 className="text-[20px] font-black tracking-tight text-white">Hottest Fixtures</h2>
             </div>
             <button onClick={() => navigate('/live')} className="text-[11px] text-white/30 hover:text-white/60 transition-colors">See All</button>
@@ -822,7 +831,8 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                 >
                   <ChannelIcon src={s.stream_icon} name={s.name} size="md" className="!w-10 !h-10 !rounded-full" />
                   {/* LIVE dot */}
-                  <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/80">
+                  <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full"
+                    style={{ background: 'linear-gradient(135deg, #F97316, #EF4444, #9D4EDD)' }}>
                     <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
                     <span className="text-[7px] font-bold text-white">LIVE</span>
                   </div>
@@ -1064,7 +1074,7 @@ function SectionHeader({
             className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mb-0.5 ${isLive ? 'animate-pulse' : ''}`}
             style={{
               background: isLive ? '#4ADE80' : isEntertainment ? '#9D4EDD' : '#7C3AED',
-              boxShadow: isLive ? '0 0 6px rgba(74,222,128,0.4)' : '0 0 6px rgba(157,78,221,0.3)',
+              boxShadow: isLive ? '0 0 6px rgba(248,113,113,0.4)' : '0 0 6px rgba(157,78,221,0.3)',
             }}
           />
           <h2
@@ -1128,8 +1138,8 @@ function CollectionRow({
               <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary/8"
                 style={{ background: 'rgba(255,255,255,0.02)' }}>
                 <ChannelIcon src={stream.stream_icon} name={stream.name} size="lg" className="!w-full !h-full !rounded-xl" />
-                <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-black/50 rounded text-[8px] font-semibold text-green-400">
-                  <span className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
+                <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-black/50 rounded text-[8px] font-semibold text-red-400">
+                  <span className="w-1 h-1 rounded-full bg-red-400 animate-pulse" />
                   LIVE
                 </div>
               </div>
