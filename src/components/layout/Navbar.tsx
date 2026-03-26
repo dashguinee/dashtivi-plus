@@ -33,16 +33,25 @@ export const Navbar: React.FC = () => {
       <nav
         className="lg:hidden fixed bottom-0 left-0 right-0 z-50"
         style={{
-          background: 'rgba(10, 10, 15, 0.95)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          borderTop: '1px solid rgba(157, 78, 221, 0.15)',
+          background: 'rgba(8, 8, 12, 0.92)',
+          backdropFilter: 'blur(12px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+          borderTop: '1px solid rgba(157, 78, 221, 0.08)',
+          boxShadow: '0 -4px 24px rgba(157, 78, 221, 0.06), 0 -1px 8px rgba(0,0,0,0.4)',
         }}
       >
+        {/* Purple neon glow behind — floating effect */}
+        <div className="absolute inset-x-0 -top-3 h-6 pointer-events-none" style={{
+          background: 'radial-gradient(ellipse 50% 100% at 50% 100%, rgba(157,78,221,0.08) 0%, transparent 70%)',
+        }} />
+
         <div className="flex items-center justify-around px-2 h-16 max-w-lg mx-auto safe-bottom">
           {navItems.map((item) => {
             const active = isActive(item.path);
             const Icon = item.icon;
+            // Primary tabs (Home, Live TV) are brighter inactive, secondary tabs slightly dimmer
+            const isPrimary = item.path === '/' || item.path === '/live';
+            const inactiveColor = isPrimary ? '#787878' : '#5A5A5A';
 
             return (
               <button
@@ -56,7 +65,7 @@ export const Navbar: React.FC = () => {
                     className="absolute -top-[1px] left-1/2 -translate-x-1/2 h-[2px] rounded-full transition-all duration-500"
                     style={{
                       width: '30px',
-                      background: 'var(--primary-purple-light, #C77DFF)',
+                      background: '#C77DFF',
                       boxShadow: '0 0 10px rgba(157, 78, 221, 0.6)',
                     }}
                   />
@@ -66,20 +75,21 @@ export const Navbar: React.FC = () => {
                   <Icon
                     className="transition-all duration-300"
                     style={{
-                      width: 24,
-                      height: 24,
-                      color: active ? '#C77DFF' : '#6B6B6B',
-                      filter: active ? 'drop-shadow(0 0 8px rgba(157, 78, 221, 0.5))' : 'none',
-                      transform: active ? 'scale(1.1)' : 'scale(1)',
+                      width: 22,
+                      height: 22,
+                      color: active ? '#C77DFF' : inactiveColor,
+                      filter: active ? 'drop-shadow(0 0 6px rgba(157, 78, 221, 0.4))' : 'none',
+                      transform: active ? 'scale(1.08)' : 'scale(1)',
                     }}
                     strokeWidth={active ? 2.5 : 1.8}
                   />
 
                   {item.isLive && (
                     <span
-                      className="absolute -top-0.5 -right-1.5 w-[6px] h-[6px] rounded-full bg-success"
+                      className="absolute -top-0.5 -right-1.5 w-[6px] h-[6px] rounded-full"
                       style={{
-                        boxShadow: active ? '0 0 6px rgba(0, 200, 83, 0.8)' : 'none',
+                        background: 'linear-gradient(135deg, #F97316, #EF4444)',
+                        boxShadow: active ? '0 0 6px rgba(239, 68, 68, 0.6)' : '0 0 4px rgba(239, 68, 68, 0.3)',
                         animation: 'live-ring 2s infinite',
                       }}
                     />
@@ -87,9 +97,9 @@ export const Navbar: React.FC = () => {
                 </div>
 
                 <span
-                  className="text-[11px] font-semibold tracking-wide transition-colors duration-300"
+                  className="text-[10px] font-semibold tracking-wide transition-colors duration-300"
                   style={{
-                    color: active ? '#C77DFF' : '#6B6B6B',
+                    color: active ? '#C77DFF' : inactiveColor,
                     letterSpacing: '0.5px',
                   }}
                 >
@@ -172,9 +182,10 @@ export const Navbar: React.FC = () => {
                   />
                   {item.isLive && (
                     <span
-                      className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-success"
+                      className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full"
                       style={{
-                        boxShadow: active ? '0 0 6px rgba(0, 200, 83, 0.8)' : 'none',
+                        background: 'linear-gradient(135deg, #F97316, #EF4444)',
+                        boxShadow: active ? '0 0 6px rgba(239, 68, 68, 0.6)' : 'none',
                         animation: 'live-ring 2s infinite',
                       }}
                     />
