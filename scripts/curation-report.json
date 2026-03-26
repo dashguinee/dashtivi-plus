@@ -1,0 +1,531 @@
+{
+  "ts": "2026-03-26T06:44:20Z",
+  "stats": {
+    "keep": 2074,
+    "noise": 2565,
+    "by_experience": {
+      "documentary": 81,
+      "entertainment": 650,
+      "movies": 162,
+      "kids": 87,
+      "news": 480,
+      "sports": 122,
+      "indian": 50,
+      "french": 15,
+      "music": 365,
+      "african": 46,
+      "arabic": 16
+    },
+    "by_tier": {
+      "standard": 1778,
+      "premium": 198,
+      "african": 98
+    },
+    "filter_reasons": {
+      "unclassified_general": 2147,
+      "filtered": 418
+    }
+  },
+  "filtered_sample": [
+    {
+      "name": "Kawanua TV (720p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Batam TV (480p) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "international"
+    },
+    {
+      "name": "Padang TV (720p) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "international"
+    },
+    {
+      "name": "Jawa Pos TV Semarang (720p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "JTV Kediri",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Jawa Pos TV Bali (576p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Jawa Pos TV (720p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Jawa Pos TV Jakarta (720p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "JTV (480p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Jogja Istimewa TV (720p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Jawa Pos TV Magelang (720p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Efarina TV (720p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "WLTV",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "CCTN 47 (1080p) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "international"
+    },
+    {
+      "name": "KCTV \uad11\uc8fc CH05 (720p) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "international"
+    },
+    {
+      "name": "RasoulallahTv (1080p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "EmanTv (1080p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Bandung TV (360p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "L\u00e2m \u0110\u1ed3ng TV (480p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "TeleRomaDue",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "TeleMajg",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "SBS JTV (406p) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "international"
+    },
+    {
+      "name": "TVRI Jakarta (576i) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "international"
+    },
+    {
+      "name": "Extra 86 TV (720p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Jambi TV (480p) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "international"
+    },
+    {
+      "name": "Sri Naga Sai Mandir",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Al Rayyan Al Qadeem (1080p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Teleiblea",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Nusantara TV (1080p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Majordomo TV with David Chang",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Al Rayyan (1080p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Teleitalia 41",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "TV Oasis Monay",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Fairuz (1080p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Azan TV \uf8ff\u00fc\u00e9\u00d8 \uf8ff\u00fc\u00ec\u00b0",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Big Time Plus (1080p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "WION (1080p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "NOTV New Orleans TV (720p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Tva Vicenza",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "MAGNA",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "RTV Oost",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Marka TV (720p) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "international"
+    },
+    {
+      "name": "Al Saudiya Alaan (1080p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Tele Piadena",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "TVRI Jawa Barat (480p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Telenova",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Televallo Trapani",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "TLT Molise",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Telecity Lombardia",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Orange Government Access TV (Orange CT) (720p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "TVRI Jawa Tengah (720p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Al Quran Al Kareem TV (360p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "R\u00e0dio Bocairent TV (1080p) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "international"
+    },
+    {
+      "name": "Televizija Slavonije i Baranje (STV)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Angers Tele",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "CINEVAULT: Westerns",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "L\u00edceum TV",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "AllBlk Gems",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "ION",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Tele Molise",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Al Jadeed (1080p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Al Ittihad (552p) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "international"
+    },
+    {
+      "name": "B Smart TV",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "KIX",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "YouDotGov",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "TVRI Jawa Timur (720p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "AraBel",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Rotana Radio Jordan Studio (1080p) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "international"
+    },
+    {
+      "name": "SBS",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "TVRI Kalimantan Barat (480p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "\u041b\u0414\u041f\u0420 \u0422\u0412 (1080p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "MBC Chungbuk (MBC \ucda9\ubd81) (720p) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "arabic"
+    },
+    {
+      "name": "732 Real Madrid",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "India Today",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Alcarria TV (576p) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "international"
+    },
+    {
+      "name": "Delta Evros",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Divya Bhajan",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "AssyriaSat (720p) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "international"
+    },
+    {
+      "name": "aurLife HD (614p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "ELSHINTA TV",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "SBS G1 (360p) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "international"
+    },
+    {
+      "name": "Tiny House Nation",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Omroep Gelderland",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Wanasah (1080p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Jan TV (576p)",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "NESN",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Kozoom",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "TVT",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "WE TV",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "SHOWTIME",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "TVGE",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "SEC NETWORK",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Fight TV",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Sky News Arabia (1080p) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "uk"
+    },
+    {
+      "name": "Tele Congo",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "BEST ACTION TV",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "La Tenda Tv",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "TM1",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "TENNIS CHANNEL",
+      "reason": "unclassified_general",
+      "culture": "international"
+    },
+    {
+      "name": "Watar TV (720p) [Not 24/7]",
+      "reason": "filtered",
+      "culture": "international"
+    }
+  ]
+}

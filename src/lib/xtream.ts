@@ -839,7 +839,7 @@ let freeChannelPromise: Promise<FreeChannel[]> | null = null;
 export function getFreeChannels(): Promise<FreeChannel[]> {
   if (freeChannelCache) return Promise.resolve(freeChannelCache);
   if (!freeChannelPromise) {
-    freeChannelPromise = fetch('/free-channels-verified.json')
+    freeChannelPromise = fetch('/free-channels-curated.json')
       .then(r => r.json())
       .then((data: FreeChannel[]) => { freeChannelCache = data; return data; })
       .catch(() => { freeChannelCache = []; return []; });
