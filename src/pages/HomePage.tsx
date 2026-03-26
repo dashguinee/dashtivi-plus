@@ -647,7 +647,6 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       <div className="px-4 mb-5">
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           {COLLECTION_CARDS.map((card) => {
-            // Only key categories get icons
             const IconMap: Record<string, React.ReactNode> = {
               sports: <Trophy className="w-3 h-3" />,
               news: <Radio className="w-3 h-3" />,

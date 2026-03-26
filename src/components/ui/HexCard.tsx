@@ -40,8 +40,8 @@ export const CLUB_COLORS: Record<string, { primary: string; secondary: string; n
 
 // ── Soft hex path (rounded corners via quadratic bezier) ─────────
 
-const HEX_OUTER = 'M50,3 L90,25 Q94,28 94,32 L94,68 Q94,72 90,75 L50,97 Q47,99 44,97 L10,75 Q6,72 6,68 L6,32 Q6,28 10,25 L44,3 Q47,1 50,3 Z';
-const HEX_INNER = 'M50,7 L86,27 Q89,29 89,32 L89,68 Q89,71 86,73 L50,93 Q48,94 46,93 L14,73 Q11,71 11,68 L11,32 Q11,29 14,27 L46,7 Q48,6 50,7 Z';
+const HEX_OUTER = 'M50,5 L85,24 Q95,30 95,38 L95,62 Q95,70 85,76 L50,95 Q45,98 40,95 L15,76 Q5,70 5,62 L5,38 Q5,30 15,24 L40,5 Q45,2 50,5 Z';
+const HEX_INNER = 'M50,9 L82,26 Q90,31 90,38 L90,62 Q90,69 82,74 L50,91 Q46,93 42,91 L18,74 Q10,69 10,62 L10,38 Q10,31 18,26 L42,9 Q46,7 50,9 Z';
 
 // ── HexCard Component ────────────────────────────────────────────
 
@@ -179,7 +179,7 @@ const HexCardInner: React.FC<HexCardProps> = ({
       <div
         className={`absolute inset-0 flex flex-col z-10 px-2 ${filled ? 'justify-end items-center' : 'justify-center items-center'}`}
         style={!filled && !isGate ? {
-          clipPath: 'polygon(50% 6%, 87% 27%, 90% 32%, 90% 68%, 87% 73%, 50% 94%, 13% 73%, 10% 68%, 10% 32%, 13% 27%)',
+          clipPath: 'polygon(50% 8%, 83% 26%, 91% 35%, 91% 65%, 83% 74%, 50% 92%, 17% 74%, 9% 65%, 9% 35%, 17% 26%)',
         } : undefined}
       >
         {children ? children : (

@@ -29,58 +29,59 @@ export const Navbar: React.FC = () => {
 
   return (
     <>
-      {/* MOBILE BOTTOM NAV — floating island */}
+      {/* MOBILE BOTTOM NAV — floating island with OG proportions */}
       <div className="lg:hidden fixed bottom-3 inset-x-3 z-50 safe-bottom">
         <nav
           className="relative rounded-2xl overflow-hidden"
           style={{
-            background: 'rgba(12, 12, 18, 0.88)',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            border: '1px solid rgba(157, 78, 221, 0.08)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.5), 0 0 40px rgba(157,78,221,0.04)',
+            background: 'rgba(10, 10, 15, 0.92)',
+            backdropFilter: 'blur(12px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+            border: '1px solid rgba(157, 78, 221, 0.1)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.5), 0 0 30px rgba(157,78,221,0.05)',
           }}
         >
-          <div className="flex items-center justify-around px-1 h-14">
+          <div className="flex items-center justify-around px-2 h-16">
             {navItems.map((item) => {
               const active = isActive(item.path);
               const Icon = item.icon;
-              const isPrimary = item.path === '/' || item.path === '/live';
-              const inactiveColor = isPrimary ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.28)';
 
               return (
                 <button
                   key={item.path}
                   onClick={() => navigate(item.path)}
-                  className="relative flex flex-col items-center gap-[3px] py-1 px-3 transition-all duration-300"
+                  className="relative flex flex-col items-center gap-0.5 py-1 px-3 transition-all duration-300"
                   aria-label={item.label}
                 >
                   {active && (
                     <div
-                      className="absolute inset-0 rounded-xl transition-all duration-500"
+                      className="absolute -top-[1px] left-1/2 -translate-x-1/2 h-[2px] rounded-full transition-all duration-500"
                       style={{
-                        background: 'rgba(157, 78, 221, 0.08)',
+                        width: '30px',
+                        background: '#C77DFF',
+                        boxShadow: '0 0 10px rgba(157, 78, 221, 0.6)',
                       }}
                     />
                   )}
 
-                  <div className="relative z-10">
+                  <div className="relative">
                     <Icon
                       className="transition-all duration-300"
                       style={{
-                        width: 20,
-                        height: 20,
-                        color: active ? '#C77DFF' : inactiveColor,
-                        filter: active ? 'drop-shadow(0 0 6px rgba(157, 78, 221, 0.4))' : 'none',
+                        width: 24,
+                        height: 24,
+                        color: active ? '#C77DFF' : '#6B6B6B',
+                        filter: active ? 'drop-shadow(0 0 8px rgba(157, 78, 221, 0.5))' : 'none',
+                        transform: active ? 'scale(1.1)' : 'scale(1)',
                       }}
                       strokeWidth={active ? 2.5 : 1.8}
                     />
 
                     {item.isLive && (
                       <span
-                        className="absolute -top-0.5 -right-1 w-[5px] h-[5px] rounded-full bg-primary"
+                        className="absolute -top-0.5 -right-1.5 w-[6px] h-[6px] rounded-full bg-primary"
                         style={{
-                          boxShadow: '0 0 4px rgba(157,78,221,0.6)',
+                          boxShadow: '0 0 6px rgba(157, 78, 221, 0.7)',
                           animation: 'live-ring 2s infinite',
                         }}
                       />
@@ -88,8 +89,11 @@ export const Navbar: React.FC = () => {
                   </div>
 
                   <span
-                    className="relative z-10 text-[9px] font-medium transition-colors duration-300"
-                    style={{ color: active ? '#C77DFF' : inactiveColor }}
+                    className="text-[11px] font-semibold tracking-wide transition-colors duration-300"
+                    style={{
+                      color: active ? '#C77DFF' : '#6B6B6B',
+                      letterSpacing: '0.5px',
+                    }}
                   >
                     {item.label}
                   </span>
