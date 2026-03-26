@@ -121,13 +121,13 @@ const PlatformCard = React.memo(function PlatformCard({
         {/* Platform header */}
         <div className="flex items-center gap-3 px-4 pt-4 pb-3">
           <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{
               background: `${platform.color}20`,
               boxShadow: `0 0 16px ${platform.color}25, inset 0 0 8px ${platform.color}10`,
             }}
           >
-            <img src={platform.logo} alt={platform.name} className="h-[18px] w-auto" loading="lazy" />
+            <img src={platform.logo} alt={platform.name} className="h-[24px] w-auto" loading="lazy" />
           </div>
           <div className="flex-1 min-w-0">
             <span className="text-[15px] font-bold text-white/95 tracking-tight">{platform.name}</span>

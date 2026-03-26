@@ -627,7 +627,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           <p className="text-white/35 text-[13px] mb-4 max-w-sm leading-relaxed">
             {recentHistory.length > 0
               ? hero.subtitle
-              : 'Premium live TV, movies, and series. Thousands of channels from around the world.'}
+              : 'Curated entertainment, live sports, and world cinema. Your experience starts here.'}
           </p>
           <button
             onClick={() => navigate(hero.navigateTo)}

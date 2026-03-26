@@ -29,87 +29,76 @@ export const Navbar: React.FC = () => {
 
   return (
     <>
-      {/* MOBILE BOTTOM NAV */}
-      <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50"
-        style={{
-          background: 'rgba(8, 8, 12, 0.92)',
-          backdropFilter: 'blur(12px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(12px) saturate(180%)',
-          borderTop: '1px solid rgba(157, 78, 221, 0.08)',
-          boxShadow: '0 -4px 24px rgba(157, 78, 221, 0.06), 0 -1px 8px rgba(0,0,0,0.4)',
-        }}
-      >
-        {/* Purple neon glow behind — floating effect */}
-        <div className="absolute inset-x-0 -top-3 h-6 pointer-events-none" style={{
-          background: 'radial-gradient(ellipse 50% 100% at 50% 100%, rgba(157,78,221,0.08) 0%, transparent 70%)',
-        }} />
+      {/* MOBILE BOTTOM NAV — floating island */}
+      <div className="lg:hidden fixed bottom-3 inset-x-3 z-50 safe-bottom">
+        <nav
+          className="relative rounded-2xl overflow-hidden"
+          style={{
+            background: 'rgba(12, 12, 18, 0.88)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(157, 78, 221, 0.08)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.5), 0 0 40px rgba(157,78,221,0.04)',
+          }}
+        >
+          <div className="flex items-center justify-around px-1 h-14">
+            {navItems.map((item) => {
+              const active = isActive(item.path);
+              const Icon = item.icon;
+              const isPrimary = item.path === '/' || item.path === '/live';
+              const inactiveColor = isPrimary ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.28)';
 
-        <div className="flex items-center justify-around px-2 h-16 max-w-lg mx-auto safe-bottom">
-          {navItems.map((item) => {
-            const active = isActive(item.path);
-            const Icon = item.icon;
-            // Primary tabs (Home, Live TV) are brighter inactive, secondary tabs slightly dimmer
-            const isPrimary = item.path === '/' || item.path === '/live';
-            const inactiveColor = isPrimary ? '#787878' : '#5A5A5A';
-
-            return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className="relative flex flex-col items-center gap-0.5 py-1 px-3 transition-all duration-300"
-                aria-label={item.label}
-              >
-                {active && (
-                  <div
-                    className="absolute -top-[1px] left-1/2 -translate-x-1/2 h-[2px] rounded-full transition-all duration-500"
-                    style={{
-                      width: '30px',
-                      background: '#C77DFF',
-                      boxShadow: '0 0 10px rgba(157, 78, 221, 0.6)',
-                    }}
-                  />
-                )}
-
-                <div className="relative">
-                  <Icon
-                    className="transition-all duration-300"
-                    style={{
-                      width: 22,
-                      height: 22,
-                      color: active ? '#C77DFF' : inactiveColor,
-                      filter: active ? 'drop-shadow(0 0 6px rgba(157, 78, 221, 0.4))' : 'none',
-                      transform: active ? 'scale(1.08)' : 'scale(1)',
-                    }}
-                    strokeWidth={active ? 2.5 : 1.8}
-                  />
-
-                  {item.isLive && (
-                    <span
-                      className="absolute -top-0.5 -right-1.5 w-[6px] h-[6px] rounded-full"
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className="relative flex flex-col items-center gap-[3px] py-1 px-3 transition-all duration-300"
+                  aria-label={item.label}
+                >
+                  {active && (
+                    <div
+                      className="absolute inset-0 rounded-xl transition-all duration-500"
                       style={{
-                        background: 'linear-gradient(135deg, #F97316, #EF4444)',
-                        boxShadow: active ? '0 0 6px rgba(239, 68, 68, 0.6)' : '0 0 4px rgba(239, 68, 68, 0.3)',
-                        animation: 'live-ring 2s infinite',
+                        background: 'rgba(157, 78, 221, 0.08)',
                       }}
                     />
                   )}
-                </div>
 
-                <span
-                  className="text-[10px] font-semibold tracking-wide transition-colors duration-300"
-                  style={{
-                    color: active ? '#C77DFF' : inactiveColor,
-                    letterSpacing: '0.5px',
-                  }}
-                >
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
+                  <div className="relative z-10">
+                    <Icon
+                      className="transition-all duration-300"
+                      style={{
+                        width: 20,
+                        height: 20,
+                        color: active ? '#C77DFF' : inactiveColor,
+                        filter: active ? 'drop-shadow(0 0 6px rgba(157, 78, 221, 0.4))' : 'none',
+                      }}
+                      strokeWidth={active ? 2.5 : 1.8}
+                    />
+
+                    {item.isLive && (
+                      <span
+                        className="absolute -top-0.5 -right-1 w-[5px] h-[5px] rounded-full bg-primary"
+                        style={{
+                          boxShadow: '0 0 4px rgba(157,78,221,0.6)',
+                          animation: 'live-ring 2s infinite',
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  <span
+                    className="relative z-10 text-[9px] font-medium transition-colors duration-300"
+                    style={{ color: active ? '#C77DFF' : inactiveColor }}
+                  >
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      </div>
 
       {/* DESKTOP SIDEBAR */}
       <aside
@@ -182,10 +171,9 @@ export const Navbar: React.FC = () => {
                   />
                   {item.isLive && (
                     <span
-                      className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full"
+                      className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-primary"
                       style={{
-                        background: 'linear-gradient(135deg, #F97316, #EF4444)',
-                        boxShadow: active ? '0 0 6px rgba(239, 68, 68, 0.6)' : 'none',
+                        boxShadow: active ? '0 0 6px rgba(157,78,221,0.6)' : 'none',
                         animation: 'live-ring 2s infinite',
                       }}
                     />

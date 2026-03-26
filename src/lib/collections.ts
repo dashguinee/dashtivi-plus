@@ -153,44 +153,44 @@ export const COLLECTION_CARDS: CollectionCard[] = [
 export function getFeaturedHero(): FeaturedHero {
   const hour = new Date().getHours();
 
-  // Morning (6am-12pm): News
+  // Morning (6am-12pm)
   if (hour >= 6 && hour < 12) {
     return {
       title: 'Good Morning',
-      subtitle: 'Catch up on what matters. Live news from around the world.',
-      cta: 'Watch News',
+      subtitle: 'Start your day informed. World-class news and morning entertainment.',
+      cta: 'Start Watching',
       navigateTo: '/live',
       gradient: 'from-blue-600/20 via-[#0A0A0A] to-sky-900/10',
     };
   }
 
-  // Afternoon (12pm-6pm): Movies
+  // Afternoon (12pm-6pm)
   if (hour >= 12 && hour < 18) {
     return {
       title: 'Afternoon Escape',
-      subtitle: 'Thousands of movies waiting. Pick something fresh.',
-      cta: 'Browse Movies',
+      subtitle: 'Award-winning movies and handpicked series. Your next favorite is here.',
+      cta: 'Explore',
       navigateTo: '/movies',
       gradient: 'from-amber-600/15 via-[#0A0A0A] to-orange-900/10',
     };
   }
 
-  // Evening (6pm-11pm): Sports or Entertainment
+  // Evening (6pm-11pm)
   if (hour >= 18 && hour < 23) {
     return {
       title: 'Prime Time',
-      subtitle: 'Live sports, new movies, and binge-worthy series. Your night starts here.',
-      cta: 'Watch Live',
+      subtitle: 'Live sports, fresh cinema, and curated series. Your evening, elevated.',
+      cta: 'Watch Now',
       navigateTo: '/live',
       gradient: 'from-primary/20 via-[#0A0A0A] to-primary-dark/10',
     };
   }
 
-  // Late night (11pm-6am): Series / Chill
+  // Late night (11pm-6am)
   return {
     title: 'Late Night',
-    subtitle: 'Perfect time for a series. Start something new tonight.',
-    cta: 'Find a Series',
+    subtitle: 'The best series for those who stay up. Something new awaits.',
+    cta: 'Dive In',
     navigateTo: '/series',
     gradient: 'from-indigo-600/15 via-[#0A0A0A] to-violet-900/10',
   };
