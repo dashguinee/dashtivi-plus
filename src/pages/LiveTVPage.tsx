@@ -34,14 +34,14 @@ const SPORTS_CAT_IDS = new Set([
 ]);
 
 // Map theme IDs to free channel experience tags
-const THEME_TO_EXPERIENCE: Record<string, string> = {
-  'sports': 'sports',
-  'news': 'news',
-  'entertainment': 'entertainment',
-  'kids': 'kids',
-  'movies247': 'movies',
-  'documentary': 'documentary',
-  'music': 'music',
+const THEME_TO_EXPERIENCE: Record<string, string[]> = {
+  'sports': ['sports'],
+  'news': ['news'],
+  'entertainment': ['entertainment', 'african', 'indian', 'arabic', 'french'],
+  'kids': ['kids'],
+  'movies247': ['movies'],
+  'documentary': ['documentary'],
+  'music': ['music'],
 };
 
 interface Props {
@@ -142,11 +142,11 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             const xtreamStreams = dedupeStreams(streams.flatMap(r => r.status === 'fulfilled' ? r.value : []));
 
             // Merge matching free channels
-            const experience = THEME_TO_EXPERIENCE[theme.id];
+            const experiences = THEME_TO_EXPERIENCE[theme.id];
             let freeStreams: FreeChannel[] = [];
-            if (experience) {
+            if (experiences) {
               const allFree = await freeChannelsPromise;
-              freeStreams = allFree.filter(ch => ch.experience === experience);
+              freeStreams = allFree.filter(ch => experiences.includes(ch.experience));
             }
             const freeAsLive = freeStreams.map(freeToLiveStream);
             return {
