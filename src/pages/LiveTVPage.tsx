@@ -7,6 +7,7 @@ import {
   CINEMA_TYPES, MUSIC_TYPES, DISCOVERY_TYPES, FAITH_TYPES,
 } from '@/lib/collections';
 import type { LiveTheme, SportType } from '@/lib/collections';
+import { getSmartThemeOrder, recordThemeWatch, dailyShuffle } from '@/lib/intelligence';
 
 // Map theme IDs to their child experience sub-tabs
 const THEME_SUBTYPES: Record<string, SportType[]> = {
@@ -109,6 +110,13 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
     search();
     return () => { mounted = false; };
   }, [debouncedQuery, credentials]);
+
+  // ── Smart theme ordering based on user affinity ─────────────────
+  const smartThemeOrder = React.useMemo(() => {
+    const defaultOrder = LIVETV_THEMES.map(t => t.id);
+    const orderedIds = getSmartThemeOrder(defaultOrder);
+    return orderedIds.map(id => LIVETV_THEMES.find(t => t.id === id)!).filter(Boolean);
+  }, []);
 
   // ── Load theme streams on mount (Xtream + free channels merged) ─
   useEffect(() => {
@@ -247,9 +255,13 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
       if (ch) {
         setCurrentChannel(ch.id);
         onPlay(ch);
+        // Track theme affinity
+        const catId = stream.category_id;
+        const themeId = smartThemeOrder.find(t => t.categoryIds.includes(catId))?.id;
+        if (themeId) recordThemeWatch(themeId);
       }
     },
-    [credentials, onPlay, freeUrlMap]
+    [credentials, onPlay, freeUrlMap, smartThemeOrder]
   );
 
   return (
@@ -305,7 +317,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             </div>
           ) : (
             <div className="pt-4">
-              {LIVETV_THEMES.map((theme) => (
+              {smartThemeOrder.map((theme) => (
                 <ThemeRow
                   key={theme.id}
                   theme={theme}

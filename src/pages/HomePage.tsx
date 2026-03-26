@@ -21,6 +21,7 @@ import {
   getFeaturedHero,
 } from '@/lib/collections';
 import type { Collection, SmartCollection } from '@/lib/collections';
+import { dailyShuffle } from '@/lib/intelligence';
 import { useWatchHistory } from '@/hooks/useWatchHistory';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { getForYouItems, getBecauseYouWatched } from '@/lib/recommend';
@@ -93,7 +94,7 @@ async function loadLiveCollection(
   for (const r of results) {
     if (r.status === 'fulfilled') all.push(...r.value);
   }
-  return shuffle(all).slice(0, collection.limit);
+  return dailyShuffle(all, collection.id).slice(0, collection.limit);
 }
 
 async function loadVodCollection(
@@ -144,7 +145,7 @@ async function loadSeriesCollection(
       }
     }
   }
-  return shuffle(all).slice(0, collection.limit);
+  return dailyShuffle(all, collection.id).slice(0, collection.limit);
 }
 
 // ── Types for loaded row data ─────────────────────────────────────
