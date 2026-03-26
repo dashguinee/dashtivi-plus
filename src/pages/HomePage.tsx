@@ -623,50 +623,50 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
         <div className={`absolute inset-0 bg-gradient-to-br ${hero.gradient}`} />
 
         <div className="relative z-10 flex flex-col justify-end h-full px-5 pb-5 max-w-2xl">
-          <h2 className="text-lg font-semibold text-white mb-0.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{hero.title}</h2>
-          <p className="text-text-secondary text-xs mb-3 max-w-md leading-relaxed">
+          <h2 className="text-[22px] font-bold text-white mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '-0.02em' }}>{hero.title}</h2>
+          <p className="text-white/35 text-[13px] mb-4 max-w-sm leading-relaxed">
             {recentHistory.length > 0
               ? hero.subtitle
               : 'Premium live TV, movies, and series. Thousands of channels from around the world.'}
           </p>
           <button
             onClick={() => navigate(hero.navigateTo)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-all duration-300 w-fit"
-            style={{ boxShadow: '0 0 20px rgba(157,78,221,0.3), 0 4px 12px rgba(157,78,221,0.2)' }}
+            className="flex items-center gap-2.5 px-6 py-3 rounded-2xl font-semibold text-[14px] tracking-wide hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 w-fit text-white"
+            style={{
+              background: 'linear-gradient(135deg, #9D4EDD 0%, #7B2CBF 60%, #6D28D9 100%)',
+              boxShadow: '0 0 24px rgba(157,78,221,0.35), 0 4px 16px rgba(157,78,221,0.25), inset 0 1px 0 rgba(255,255,255,0.1)',
+            }}
           >
-            <Play className="w-4 h-4" />
+            <Play className="w-4.5 h-4.5" fill="white" />
             {hero.cta}
           </button>
         </div>
       </div>
 
-      {/* ── Quick Navigation — floating pills ───────────────────── */}
+      {/* ── Quick Navigation — clean pills ───────────────────── */}
       <div className="px-4 mb-5">
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
           {COLLECTION_CARDS.map((card) => {
+            // Only key categories get icons
             const IconMap: Record<string, React.ReactNode> = {
-              sports: <Trophy className="w-3.5 h-3.5" />,
-              news: <Radio className="w-3.5 h-3.5" />,
-              movies: <Film className="w-3.5 h-3.5" />,
-              series: <MonitorPlay className="w-3.5 h-3.5" />,
-              africa: <Globe className="w-3.5 h-3.5" />,
-              kids: <Sparkles className="w-3.5 h-3.5" />,
-              music: <Music className="w-3.5 h-3.5" />,
-              faith: <Heart className="w-3.5 h-3.5" />,
+              sports: <Trophy className="w-3 h-3" />,
+              news: <Radio className="w-3 h-3" />,
+              africa: <Globe className="w-3 h-3" />,
+              faith: <Heart className="w-3 h-3" />,
             };
+            const icon = IconMap[card.id];
             return (
               <button
                 key={card.id}
                 onClick={() => navigate(card.navigateTo)}
-                className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-300 hover:scale-[1.03] active:scale-[0.97]"
+                className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-[7px] rounded-full transition-all duration-300 hover:scale-[1.02] active:scale-[0.97]"
                 style={{
-                  background: 'rgba(157,78,221,0.06)',
-                  border: '1px solid rgba(157,78,221,0.1)',
-                  boxShadow: '0 0 8px rgba(157,78,221,0.04)',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.06)',
                 }}
               >
-                <span className="text-primary-light/70">{IconMap[card.id]}</span>
-                <span className="text-[12px] font-medium text-white/70 whitespace-nowrap">{card.name}</span>
+                {icon && <span className="text-white/40">{icon}</span>}
+                <span className="text-[11px] font-medium text-white/50 whitespace-nowrap">{card.name}</span>
               </button>
             );
           })}
