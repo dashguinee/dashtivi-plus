@@ -12,13 +12,17 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       const old = keys.filter((k) => k !== CACHE_NAME);
-      if (old.length) console.log('[SW] Purging old caches:', old.join(', '));
-      return Promise.all(old.map((k) => caches.delete(k)));
-    }).then(() => {
-      self.clients.matchAll({ type: 'window' }).then((tabs) => {
-        console.log('[SW] Signaling ' + tabs.length + ' tab(s) to reload');
-        tabs.forEach((tab) => tab.postMessage({ type: 'SW_UPDATED' }));
-      });
+      if (old.length) {
+        console.log('[SW] Purging old caches:', old.join(', '));
+        return Promise.all(old.map((k) => caches.delete(k))).then(() => {
+          // Only signal update when replacing an old version, not on first install
+          self.clients.matchAll({ type: 'window' }).then((tabs) => {
+            console.log('[SW] Signaling ' + tabs.length + ' tab(s) to reload');
+            tabs.forEach((tab) => tab.postMessage({ type: 'SW_UPDATED' }));
+          });
+        });
+      }
+      console.log('[SW] Fresh install — no update signal');
     })
   );
   self.clients.claim();
