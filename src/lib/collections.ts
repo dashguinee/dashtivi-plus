@@ -151,36 +151,65 @@ export interface FeaturedHero {
 // ── Homepage Row Collections ──────────────────────────────────────
 
 export const HOMEPAGE_COLLECTIONS: Collection[] = [
-  // 1. HOOK — freshest content, universal appeal
-  {
-    id: 'fresh-movies',
-    name: 'Just Dropped',
-    emoji: '',
-    description: 'Just added — 2025 & 2026',
-    type: 'vod',
-    categoryIds: ['749', '597'], // English 2026, 2025
-    limit: 15,
-    navigateTo: '/movies',
-  },
-  // 2. ENERGY — live sports, always a draw
+  // 1. IDENTITY — what makes us different. African content nobody else has
   {
     id: 'live-sports',
     name: 'Live Sports',
     emoji: '',
-    description: 'Premier League, beIN, Sky Sports & more',
+    description: 'beIN 4K, SuperSport, Sky Sports, EPL',
     type: 'live',
     categoryIds: [
-      '85',   // beIN Sports (124ch, 39 gems, 36 4K)
+      '345',  // DStv Super (32ch — SuperSport FHD, African sports backbone)
+      '85',   // beIN Sports (124ch, 39 gems, 36 4K — strongest package)
       '353',  // Sky Sports UK (29ch, 26 gems)
       '578',  // Real 4K (31ch — UHD Sky Sports, LaLiga)
-      '234',  // Football (28ch, 19 gems — SuperSport, Sky, TNT)
-      '345',  // DStv Super (32ch — SuperSport FHD)
+      '234',  // Football (28ch — SuperSport, Sky, TNT)
       '492',  // EPL (21ch — match day team channels)
     ],
     limit: 15,
     navigateTo: '/live',
   },
-  // 3. DEPTH — series for the binge crowd
+  // 2. HOOK — fresh cinema, universal draw
+  {
+    id: 'fresh-movies',
+    name: 'Just Dropped',
+    emoji: '',
+    description: 'Fresh 2025 & 2026 releases',
+    type: 'vod',
+    categoryIds: ['749', '597'], // English 2026, 2025
+    limit: 15,
+    navigateTo: '/movies',
+  },
+  // 3. MOTHERLAND — Canal+, DSTV, BBC, HBO. The global village
+  {
+    id: 'world-cinema',
+    name: 'The Global Village',
+    emoji: '',
+    description: 'Canal+, DSTV, BBC, HBO, MBC — all in one place',
+    type: 'live',
+    categoryIds: [
+      '336',  // AFRICA CANAL+ (247ch — French African powerhouse)
+      '343',  // DSTV Entertainment (84ch — African drama, Mzansi Magic)
+      '2',    // USA (93ch — HBO, Starz, Showtime)
+      '3',    // UK Entertainment (39ch — Ch4, Comedy Central, Sky)
+      '414',  // UK General (26ch — BBC One FHD, ITV FHD)
+      '86',   // MBC Arabic (46ch — MBC 1-5, Drama, Max)
+    ],
+    limit: 15,
+    navigateTo: '/french',
+  },
+  // 4. PREMIUM — 4K signals quality, builds confidence
+  {
+    id: 'cinema-4k',
+    name: '4K Experience',
+    emoji: '',
+    description: 'Ultra HD blockbusters — crystal clear',
+    type: 'vod',
+    categoryIds: ['122', '34'],  // 4K, Blockbuster
+    limit: 15,
+    navigateTo: '/movies',
+  },
+  // 5. DEPTH — binge material keeps them coming back
   {
     id: 'k-drama-turkish',
     name: 'Binge-Worthy',
@@ -191,42 +220,12 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     limit: 15,
     navigateTo: '/series',
   },
-  // 4. WORLD — broadens the palette, shows range
-  {
-    id: 'world-cinema',
-    name: 'Around the World',
-    emoji: '',
-    description: 'France, Africa, Arabic, India & more',
-    type: 'live',
-    categoryIds: [
-      '2',    // USA (93ch — HBO, Starz, Showtime)
-      '3',    // UK Entertainment (39ch — Ch4, Comedy Central, Sky)
-      '414',  // UK General (26ch — BBC One FHD, ITV FHD)
-      '11',   // France (162ch — Canal+, TF1, M6, Trace)
-      '343',  // DStv Entertainment (84ch — African drama, Mzansi)
-      '86',   // MBC Arabic (46ch — MBC 1-5, Drama, Max)
-      '247',  // India Entertainment (20ch — Star Plus, Colors)
-    ],
-    limit: 15,
-    navigateTo: '/french',
-  },
-  // 5. PREMIUM — 4K flex, signals quality
-  {
-    id: 'cinema-4k',
-    name: '4K Experience',
-    emoji: '',
-    description: 'Crystal clear blockbusters in Ultra HD',
-    type: 'vod',
-    categoryIds: ['122', '34'],  // 4K, Blockbuster
-    limit: 15,
-    navigateTo: '/movies',
-  },
-  // 6. INFORM — grounding, trust-building
+  // 6. INFORM — trust anchor, shows we're serious
   {
     id: 'news-world',
     name: 'Stay Informed',
     emoji: '',
-    description: 'CNN, BBC, Al Jazeera, Sky News',
+    description: 'CNN, BBC, Al Jazeera 4K, Sky News',
     type: 'live',
     categoryIds: [
       '82',   // English News (22ch — CNN HD, BBC News, Sky News)
@@ -236,12 +235,12 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     limit: 12,
     navigateTo: '/live',
   },
-  // 7. WARMTH — family, softens the end
+  // 7. WARMTH — ends on family, softens the scroll
   {
     id: 'kids-family',
     name: 'Kids & Family',
     emoji: '',
-    description: 'Nick, Disney, Cartoon Network & more',
+    description: 'Disney 4K, Nickelodeon, Cartoon Network',
     type: 'live',
     categoryIds: [
       '410',  // UK Kids (12ch — Cartoon Network FHD, CBeebies, Nick)
