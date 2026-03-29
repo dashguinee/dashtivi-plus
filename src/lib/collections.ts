@@ -7,6 +7,104 @@
  * Category IDs are from the Starshare/Xtream API.
  */
 
+// ── Hidden Channels ─────────────────────────────────────────────────
+/** Channels to never show — separators, misplaced, noise.
+ *  Sourced from master-curation-map.md 2026-03-29. */
+export const HIDDEN_STREAM_IDS = new Set([
+  // German feed separators (not real channels — section headers like "======")
+  659186, // ============ Sky Germany (HEVC) Local Streams ============
+  659215, // ============ Sky Germany (H.264) Local Streams ============
+  659254, // ============ MAGNETA Germany Local Streams ============
+  659425, // ============ Sky Sport & Bundesliga HEVC Local Streams ============
+  659464, // ============ Sky Sport & Bundesliga H.264 Local Streams ============
+  // Misplaced: Bloomberg in UK Kids category
+  148214, // UKFHD : Bloomberg — financial news, not kids content
+]);
+
+// ── Cherry-Picked Curated Experiences ──────────��────────────────────
+
+/** "Best of Live" — the 15 channels that make DashTivi+ shine.
+ *  Hand-picked mix: 3 sports, 3 news, 3 entertainment, 2 kids, 2 music, 2 documentary.
+ *  These are the channels where someone tunes in and says "wow, this works." */
+export const BEST_OF_LIVE: number[] = [
+  // Sports gems
+  652310,  // beIN SPORTS 4K 1 — Arabic football in true 4K
+  186597,  // SKY SPORTS MAIN EVENT FHD — Premier League flagship
+  771,     // SUPERSPORTS PREMIER LEAGUE (FHD) — African SuperSport
+  // News gems
+  148282,  // UK FHD : CNN — CNN International crystal clear
+  319261,  // Al Jazeera 4K — stunning quality
+  148365,  // UK HD : BBC News — trusted, reliable
+  // Entertainment gems
+  148219,  // UK FHD : BBC One — dramas, entertainment, culture
+  34158,   // UK: SKY ATLANTIC FHD — HBO/Sky originals
+  659000,  // FRA | TF1 HD (Local) — French #1 channel for Guinea market
+  // Kids gems
+  148211,  // Cartoon Network FHD — kids retention
+  19741,   // IN: Disney Channel (4K) — wow factor
+  // Music gems
+  5809,    // UK: MTV HD — universal brand
+  319388,  // Music: Rotana Music HD — Arabic music king
+  // Documentary gems
+  97095,   // UK: Discovery (FHD) — curiosity driver
+  98872,   // IN: DISCOVERY (4K) — jaw-dropping nature in 4K
+];
+
+/** "African Vibes" — Trace, SuperSport, DStv, beIN for the Motherland.
+ *  Free African HLS channels are loaded separately by culture='africa'. */
+export const AFRICAN_VIBES_IDS: number[] = [
+  // Trace channels (France feed — African music/culture/sports)
+  659163,  // Trace Africa HD
+  659164,  // Trace Urban HD
+  659165,  // Trace Caribbean HD
+  659166,  // Trace Gospel HD
+  659167,  // Trace Toca HD
+  659138,  // Trace Sport Stars HD
+  319395,  // Music: Trace Urban (Arabic Music feed)
+  // African SuperSport (football is king in West Africa)
+  771,     // SUPERSPORTS PREMIER LEAGUE (FHD)
+  776,     // SUPERSPORTS FOOTBALL (FHD)
+  768,     // SUPERSPORTS LALIGA (FHD)
+  777,     // SuperSport Rugby (FHD)
+  // DStv Super (African sports backbone)
+  157940,  // DSTV SUPERSPORTS PREMIER LEAGUE (FHD)
+  157942,  // DSTV SUPERSPORTS FOOTBALL (FHD)
+  // Azam Sports (East Africa)
+  647773,  // AZAM Azam Sports 1
+  647775,  // AZAM Azam Sports 2
+  // beIN (French + English — massive in West Africa)
+  652345,  // beIN Sports English 1 1080
+  652347,  // beIN Sports French HD1 1080
+  652310,  // beIN SPORTS 4K 1
+];
+
+/** "Canal+ Collection" — all Canal+ feeds across France + Poland.
+ *  Organized: Premium, Sport, Film, Series, Docs, Kids. */
+export const CANAL_PLUS_IDS: number[] = [
+  // France
+  659021,  // Canal+ Sport 360
+  659102,  // Canal J HD (kids)
+  // Poland — main package
+  660191,  // Canal+ 1 FHD
+  660194,  // Canal+ PREMIUM FHD
+  660195,  // Canal+ FILM FHD
+  660196,  // Canal+ Seriale FHD
+  660200,  // Canal+ SPORT 1 FHD
+  // Poland — extras (event overflow)
+  660205,  // Canal+ EXTRA 1 FHD
+  660206,  // Canal+ EXTRA 2 FHD
+  660207,  // Canal+ EXTRA 3 FHD
+  660208,  // Canal+ EXTRA 4 FHD
+  660209,  // Canal+ EXTRA 5 FHD
+  660210,  // Canal+ EXTRA 6 FHD
+  // Poland — PlayerPL (streaming versions)
+  660563,  // Canal+ Dokument FHD
+  660564,  // Canal+ Sport FHD
+  660565,  // Canal+ Sport 2 FHD
+  660566,  // Canal+ Sport 3 FHD
+  660567,  // Canal+ Sport 4 FHD
+];
+
 // ── Types ─────────────────────────────────────────────────────────
 
 export interface Collection {
@@ -54,24 +152,8 @@ export interface FeaturedHero {
 
 export const HOMEPAGE_COLLECTIONS: Collection[] = [
   {
-    id: 'live-sports',
-    name: 'Live Sports',
-    emoji: '',
-    description: 'Premier League, beIN, Sky Sports & more',
-    type: 'live',
-    categoryIds: [
-      '234',  // Football
-      '85',   // beIN Sports
-      '353',  // Sky Sports UK 4K
-      '578',  // Real 4K
-      '492',  // EPL
-    ],
-    limit: 15,
-    navigateTo: '/live',
-  },
-  {
     id: 'fresh-movies',
-    name: 'Fresh Movies',
+    name: 'Just Dropped',
     emoji: '',
     description: 'Just added — 2025 & 2026',
     type: 'vod',
@@ -80,42 +162,38 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     navigateTo: '/movies',
   },
   {
+    id: 'live-sports',
+    name: 'Live Sports',
+    emoji: '',
+    description: 'Premier League, beIN, Sky Sports & more',
+    type: 'live',
+    categoryIds: [
+      '85',   // beIN Sports (124ch, 39 gems, 36 4K — strongest sports package)
+      '353',  // Sky Sports UK (29ch, 26 gems — premium FHD/HD)
+      '578',  // Real 4K (31ch — true UHD Sky Sports, LaLiga)
+      '234',  // Football (28ch, 19 gems — SuperSport, Sky, TNT)
+      '345',  // DStv Super (32ch — SuperSport FHD, African sports backbone)
+      '492',  // EPL (21ch — match day team channels)
+    ],
+    limit: 15,
+    navigateTo: '/live',
+  },
+  {
     id: 'kids-family',
     name: 'Kids & Family',
     emoji: '',
     description: 'Nick, Disney, Cartoon Network & more',
     type: 'live',
-    categoryIds: ['32', '410'],  // Kids (108ch), UK Kids (12ch)
-    limit: 15,
-    navigateTo: '/live',
-  },
-  {
-    id: 'news-world',
-    name: 'News & World',
-    emoji: '',
-    description: 'CNN, BBC, Al Jazeera, Sky News',
-    type: 'live',
     categoryIds: [
-      '82',   // English News
-      '417',  // UK News
-      '165',  // Arabic News
+      '410',  // UK Kids (12ch, 11 gems — Cartoon Network FHD, CBeebies, Nick)
+      '32',   // Kids (46ch, 29 gems — Disney 4K, Nick, CN, CBeebies)
     ],
-    limit: 12,
-    navigateTo: '/live',
-  },
-  {
-    id: 'cinema-4k',
-    name: '4K Cinema',
-    emoji: '',
-    description: 'Crystal clear blockbusters',
-    type: 'vod',
-    categoryIds: ['122', '34'],  // 4K, Blockbuster
     limit: 15,
-    navigateTo: '/movies',
+    navigateTo: '/live',
   },
   {
     id: 'k-drama-turkish',
-    name: 'Drama World',
+    name: 'Binge-Worthy',
     emoji: '',
     description: 'K-Drama, Turkish & international series',
     type: 'series',
@@ -124,14 +202,43 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     navigateTo: '/series',
   },
   {
-    id: 'nba-basketball',
-    name: 'NBA',
+    id: 'news-world',
+    name: 'Stay Informed',
     emoji: '',
-    description: 'Every game, every dunk',
+    description: 'CNN, BBC, Al Jazeera, Sky News',
     type: 'live',
-    categoryIds: ['773', '516'],  // NBA League Pass, NFL
+    categoryIds: [
+      '82',   // English News (22ch, 14 gems — CNN HD, BBC News, Sky News)
+      '417',  // UK News (15ch, 11 gems — CNBC FHD, CNN FHD, Al Jazeera FHD)
+      '165',  // Arabic News (44ch, 12 gems — Al Jazeera 4K, France 24 Arabic)
+    ],
     limit: 12,
     navigateTo: '/live',
+  },
+  {
+    id: 'cinema-4k',
+    name: '4K Experience',
+    emoji: '',
+    description: 'Crystal clear blockbusters in Ultra HD',
+    type: 'vod',
+    categoryIds: ['122', '34'],  // 4K, Blockbuster
+    limit: 15,
+    navigateTo: '/movies',
+  },
+  {
+    id: 'world-cinema',
+    name: 'Around the World',
+    emoji: '',
+    description: 'France, Africa, Arabic, India & more',
+    type: 'live',
+    categoryIds: [
+      '11',   // France (162ch, 86% alive — Canal+, TF1, M6, Trace)
+      '343',  // DStv Entertainment (84ch — African drama, lifestyle, Mzansi)
+      '86',   // MBC Arabic (46ch, 86% alive — MBC 1-5, Action, Drama, Max)
+      '247',  // India Entertainment (20ch, 54% alive — Star Plus, Colors, Sony)
+    ],
+    limit: 15,
+    navigateTo: '/french',
   },
 ];
 
@@ -139,10 +246,10 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
 
 export const COLLECTION_CARDS: CollectionCard[] = [
   { id: 'sports', name: 'Sports', emoji: '', gradient: 'from-primary/30 to-primary-dark/30', navigateTo: '/live' },
-  { id: 'news', name: 'News', emoji: '', gradient: 'from-primary/20 to-white/5', navigateTo: '/live' },
   { id: 'movies', name: 'Movies', emoji: '', gradient: 'from-primary/25 to-primary-dark/25', navigateTo: '/movies' },
-  { id: 'series', name: 'Series', emoji: '', gradient: 'from-primary/30 to-primary-dark/20', navigateTo: '/series' },
+  { id: 'news', name: 'News', emoji: '', gradient: 'from-primary/20 to-white/5', navigateTo: '/live' },
   { id: 'africa', name: 'Africa', emoji: '', gradient: 'from-accent/20 to-accent-gold/10', navigateTo: '/french' },
+  { id: 'series', name: 'Series', emoji: '', gradient: 'from-primary/30 to-primary-dark/20', navigateTo: '/series' },
   { id: 'kids', name: 'Kids', emoji: '', gradient: 'from-primary-light/20 to-primary/15', navigateTo: '/live' },
   { id: 'music', name: 'Music', emoji: '', gradient: 'from-primary/25 to-primary-light/15', navigateTo: '/live' },
   { id: 'faith', name: 'Faith', emoji: '', gradient: 'from-accent-gold/15 to-primary/10', navigateTo: '/live' },
@@ -199,31 +306,31 @@ export function getFeaturedHero(): FeaturedHero {
 // ── Movie Featured Categories (reordered for audience) ────────────
 
 export const MOVIE_FEATURED_CATS = [
-  { id: '749', name: 'New 2026' },        // 214 movies
-  { id: '597', name: '2025 Hits' },       // 2,120 movies
-  { id: '525', name: '2024' },            // 2,614 movies
+  { id: '749', name: 'New 2026' },        // 239 movies
+  { id: '597', name: '2025 Hits' },       // 2,127 movies
+  { id: '525', name: '2024' },            // 2,617 movies
   { id: '122', name: '4K' },              // 1,058 movies
   { id: '34', name: 'Blockbuster' },      // 1,002 movies
   { id: '240', name: 'Award Winners' },   // 142 movies
-  { id: '95', name: 'Turkish' },          // 853 movies (was 772 → only 28)
-  { id: '33', name: 'Bollywood' },        // 2,683 movies (was 168 → only 51)
-  { id: '69', name: 'Kids' },             // 440 movies
-  { id: '96', name: 'Arabic Sub' },       // 684 movies (was 88 → only 3)
+  { id: '95', name: 'Turkish' },          // 854 movies
+  { id: '33', name: 'Bollywood' },        // 2,683 movies
+  { id: '69', name: 'Kids' },             // 441 movies
+  { id: '96', name: 'Arabic Sub' },       // 684 movies
   { id: '148', name: 'Horror' },          // 188 movies
 ];
 
 // ── Series Featured Categories ────────────────────────────────────
 
 export const SERIES_FEATURED_CATS = [
-  { id: '106', name: 'Netflix' },         // 2,532 series
-  { id: '108', name: 'Prime Video' },     // 1,574 series
-  { id: '102', name: 'Disney+' },         // 810 series (was 654 → only 49)
-  { id: '188', name: 'HBO' },             // 380 series
+  { id: '106', name: 'Netflix' },         // 2,543 series
+  { id: '108', name: 'Prime Video' },     // 1,580 series
+  { id: '102', name: 'Disney+' },         // 818 series
+  { id: '188', name: 'HBO' },             // 381 series
   { id: '114', name: 'Apple TV+' },       // 346 series
   { id: '209', name: 'Hulu' },            // 334 series
   { id: '202', name: 'BBC' },             // 315 series
   { id: '249', name: 'Paramount+' },      // 154 series
-  { id: '99', name: 'Turkish' },          // 1,130 series
+  { id: '99', name: 'Turkish' },          // 1,142 series
   { id: '267', name: 'Korean' },          // 235 series
 ];
 
@@ -233,6 +340,7 @@ export interface LiveTheme {
   id: string;
   name: string;
   emoji: string;
+  description?: string;
   categoryIds: string[];
   gradient: string;
   glowColor: string;
@@ -243,10 +351,29 @@ export const LIVETV_THEMES: LiveTheme[] = [
     id: 'sports',
     name: 'Sports',
     emoji: '',
+    description: 'beIN, Sky Sports, SuperSport & more',
     categoryIds: [
-      '234', '85', '353', '578', '5', '6', '342',
-      '550', '138', '212', '356', '156', '137', '516', '483',
-      '139', '492', '773', '726', '328',
+      '85',   // beIN Sports (124ch, 39 gems, 36 4K — strongest sports package)
+      '578',  // Real 4K (31ch — true UHD Sky Sports, LaLiga TV)
+      '353',  // Sky Sports UK (29ch, 26 gems — FHD/HD, all disciplines)
+      '483',  // Sky Sports (additional feeds)
+      '234',  // Football (28ch, 19 gems — SuperSport, Sky, TNT, club channels)
+      '345',  // DStv Super (32ch — SuperSport FHD, African sports backbone)
+      '427',  // DStv Super (additional — SuperSport HD)
+      '492',  // EPL (21ch — match day team channels)
+      '5',    // Cricket (57ch, 37 gems)
+      '6',    // Sports General
+      '342',  // Tennis/Racing
+      '550',  // Rugby (20ch, 19 gems — Sky Sport NZ FHD)
+      '138',  // Boxing
+      '212',  // Fighting
+      '356',  // India Sports
+      '156',  // Arabic Sports
+      '137',  // Wrestling
+      '516',  // NFL (match day)
+      '139',  // More sports
+      '726',  // Additional sports
+      '328',  // Misc sports
     ],
     gradient: 'from-primary to-primary-dark',
     glowColor: 'shadow-primary/20',
@@ -255,13 +382,16 @@ export const LIVETV_THEMES: LiveTheme[] = [
     id: 'entertainment',
     name: 'Entertainment',
     emoji: '',
+    description: 'UK, USA, Canal+ & French channels',
     categoryIds: [
-      '3',    // UK Entertainment
-      '2',    // USA
+      '3',    // UK Entertainment (39ch, 8 gems — Ch4, Ch5, Comedy Central, Sky)
+      '414',  // UK General (26ch, 16 gems — BBC One FHD, ITV FHD)
+      '2',    // USA (93ch, 42 gems — HBO, Starz, Showtime)
+      '11',   // France (162ch, 86% alive — Canal+, TF1, M6, France 2/3/5)
+      '39',   // Poland (192ch — Canal+ Premium/Film/Sport/Seriale FHD)
       '247',  // India Entertainment
-      '19',   // UK Asian
-      '414',  // UK General
-      '338',  // India Entertainment
+      '338',  // India Entertainment (additional)
+      '19',   // UK Asian (38ch, 9 gems)
       '24',   // US 24/7
     ],
     gradient: 'from-primary/80 to-primary-dark/80',
@@ -271,13 +401,14 @@ export const LIVETV_THEMES: LiveTheme[] = [
     id: 'news',
     name: 'News',
     emoji: '',
+    description: 'CNN, BBC, Al Jazeera, Sky News',
     categoryIds: [
-      '82',   // English News
-      '417',  // UK News
-      '165',  // Arabic News
-      '730',  // Indian News
-      '77',   // Indian News (additional)
-      '98',   // Pakistan News
+      '82',   // English News (22ch, 14 gems — CNN HD, BBC News, Sky News, Fox)
+      '417',  // UK News (15ch, 11 gems — CNBC FHD, CNN FHD, Sky News HD)
+      '165',  // Arabic News (44ch, 12 gems — Al Jazeera 4K/HD, France 24 Arabic)
+      '730',  // Indian News (Malayalam)
+      '77',   // Indian News (47ch, 5 gems — NDTV, CNN News 18)
+      '98',   // Pakistan News (47ch)
     ],
     gradient: 'from-primary-dark to-primary/70',
     glowColor: 'shadow-primary-dark/20',
@@ -286,36 +417,51 @@ export const LIVETV_THEMES: LiveTheme[] = [
     id: 'kids',
     name: 'Kids & Family',
     emoji: '',
+    description: 'Disney, Nick, Cartoon Network',
     categoryIds: [
-      '32',   // Kids (108ch — Nick, Disney, CN, CBeebies, PBS)
-      '410',  // UK Kids
+      '410',  // UK Kids (12ch, 11 gems — CN FHD, CBeebies FHD, Nick FHD, Sky Kids FHD)
+      '32',   // Kids (46ch, 29 gems — Disney 4K, Nick 4K, CN HD, CBeebies)
     ],
     gradient: 'from-primary-light to-primary',
     glowColor: 'shadow-primary-light/20',
   },
   {
     id: 'movies247',
-    name: 'Cinema 24/7',
+    name: 'Movie Channels',
     emoji: '',
+    description: '24/7 cinema from beIN, Netflix, Bollywood',
     categoryIds: [
+      '87',   // beIN Movies (29ch, 8 gems — 4K + HD, Cinema + Series + Drama)
       '275',  // English Movies 24/7
       '57',   // Netflix Movies 24/7
+      '340',  // India English Movies (29ch, 11 gems — Star Movies 4K, Colors Infinity 4K)
+      '339',  // India Hindi Movies (23ch, 10 gems — Sony Max 4K, Star Gold 4K)
       '282',  // Bollywood Movies 24/7
-      '87',   // beIN Movies (31ch)
       '280',  // Amazon Movies 24/7
-      '339',  // India Hindi Movies
-      '340',  // India English Movies
     ],
     gradient: 'from-primary-dark/90 to-accent/30',
     glowColor: 'shadow-primary-dark/20',
   },
   {
+    id: 'faith',
+    name: 'Faith',
+    emoji: '',
+    description: 'Islamic & Christian channels',
+    categoryIds: [
+      '123',  // Islamic (62ch)
+      '561',  // Christian (16ch)
+    ],
+    gradient: 'from-accent-gold/40 to-primary/30',
+    glowColor: 'shadow-accent-gold/20',
+  },
+  {
     id: 'music',
     name: 'Music & Vibes',
     emoji: '',
+    description: 'MTV, Bollywood Beats, Arabic Vibes',
     categoryIds: [
       '416',  // UK Music
-      '341',  // India Music
+      '341',  // India Music (11ch, 4 gems)
       '555',  // Arabic Music
       '270',  // Bollywood Singers 24/7
       '287',  // Punjabi Singers 24/7
@@ -324,26 +470,33 @@ export const LIVETV_THEMES: LiveTheme[] = [
     glowColor: 'shadow-primary/20',
   },
   {
-    id: 'documentary',
-    name: 'Discovery',
+    id: 'premium4k',
+    name: 'Premium 4K',
     emoji: '',
+    description: 'Ultra HD sports, movies & docs',
     categoryIds: [
-      '337',  // India Documentary
-      '415',  // UK Documentary
+      '578',  // Real 4K (31ch — Sky Sports UHD, LaLiga TV UHD, Sport TV UHD)
+      '85',   // beIN Sports (36 4K channels — beIN 4K 1-9, Alkass 4K, Xtra 4K)
+      '87',   // beIN Movies (14 4K channels — beIN Movies 4K 1-4, Series 4K)
+      '337',  // India Documentary (7 4K — Discovery, NatGeo, Animal Planet)
+      '340',  // India English Movies (11 4K — Star Movies, Colors Infinity)
+      '339',  // India Hindi Movies (8 4K — Sony Max, Star Gold, Colors Cineplex)
+      '356',  // India Sports (9 4K — Star Sports, Sony Ten)
+    ],
+    gradient: 'from-accent-gold/30 to-primary-dark/40',
+    glowColor: 'shadow-accent-gold/20',
+  },
+  {
+    id: 'documentary',
+    name: 'Docs & Discovery',
+    emoji: '',
+    description: 'Discovery, NatGeo, Sky History',
+    categoryIds: [
+      '415',  // UK Documentary (19ch, 18 gems — Discovery FHD, Sky History, NatGeo, Sky Nature)
+      '337',  // India Documentary (23ch, 17 gems — Discovery 4K, NatGeo 4K, Animal Planet 4K)
     ],
     gradient: 'from-primary-dark/80 to-primary/60',
     glowColor: 'shadow-primary-dark/20',
-  },
-  {
-    id: 'faith',
-    name: 'Faith',
-    emoji: '',
-    categoryIds: [
-      '123',  // Islamic (156ch)
-      '561',  // Christian (16ch)
-    ],
-    gradient: 'from-accent-gold/40 to-primary/30',
-    glowColor: 'shadow-accent-gold/20',
   },
 ];
 
@@ -357,17 +510,16 @@ export interface SportType {
 
 // Child experiences within Sports — DASH-branded rooms
 export const SPORT_TYPES: SportType[] = [
-  { id: 'all', name: 'All Sports', categoryIds: ['234', '85', '353', '578', '5', '6', '342', '550', '138', '212', '356', '156', '137', '516', '483', '139', '492', '773', '726', '328'] },
-  { id: 'football', name: 'Football Non-Stop', categoryIds: ['234', '492'] },
-  { id: 'bein', name: 'beIN Zone', categoryIds: ['85'] },
-  { id: 'nba', name: 'Take a Hoop', categoryIds: ['773'] },
-  { id: 'cricket', name: 'Cricket Ground', categoryIds: ['5'] },
-  { id: 'nfl', name: 'NFL', categoryIds: ['516'] },
+  { id: 'all', name: 'All Sports', categoryIds: ['85', '578', '353', '483', '234', '345', '427', '492', '5', '6', '342', '550', '138', '212', '356', '156', '137', '516', '139', '726', '328'] },
+  { id: 'football', name: 'Football Non-Stop', categoryIds: ['492', '85', '234', '345'] },  // EPL team channels, beIN, general football, DStv SuperSport
+  { id: 'bein', name: 'beIN Zone', categoryIds: ['85'] },   // 93% alive, all premium — 4K/FHD/HD
+  { id: 'sky', name: 'Sky Sports', categoryIds: ['578', '353', '483'] },  // 4K first, then FHD, then additional
+  { id: 'cricket', name: 'Cricket Ground', categoryIds: ['5'] },  // 57ch, 37 gems
+  { id: 'nfl', name: 'NFL', categoryIds: ['516'] },  // match day only — 5% alive outside game days
   { id: 'fans', name: 'Fans Space', categoryIds: ['234'] },  // LFC TV, MUTV, team channels
-  { id: 'africa', name: 'African Football', categoryIds: ['234'] },
-  { id: 'sky', name: 'Sky Sports', categoryIds: ['353', '483', '578'] },
+  { id: 'africa', name: 'African Football', categoryIds: ['234', '345', '427'] },  // SuperSport + DStv Super — African sports backbone
   { id: 'racing', name: 'Speed', categoryIds: ['342'] },
-  { id: 'rugby', name: 'Rugby', categoryIds: ['550'] },
+  { id: 'rugby', name: 'Rugby', categoryIds: ['550'] },  // 20ch, 19 gems — Sky Sport NZ
   { id: 'more', name: 'More', categoryIds: ['138', '212', '726', '328', '6'] },
 ];
 
@@ -375,30 +527,31 @@ export const SPORT_TYPES: SportType[] = [
 // Same SportType interface reused for all child experiences
 
 export const ENTERTAINMENT_TYPES: SportType[] = [
-  { id: 'all', name: 'All', categoryIds: ['3', '2', '247', '19', '414', '338', '24'] },
-  { id: 'usa', name: 'USA Tonight', categoryIds: ['2'] },
-  { id: 'uk', name: 'UK Lounge', categoryIds: ['3', '414'] },
-  { id: 'african', name: 'African Drama', categoryIds: [] },  // Free channels (experience: entertainment, culture: africa)
-  { id: 'reality', name: 'Reality Rush', categoryIds: [] },    // Free channels (experience: general)
+  { id: 'all', name: 'All', categoryIds: ['3', '414', '2', '11', '39', '247', '338', '19', '24'] },
+  { id: 'uk', name: 'UK Lounge', categoryIds: ['414', '3'] },       // BBC, ITV, Ch4, Sky
+  { id: 'usa', name: 'USA Tonight', categoryIds: ['2'] },           // HBO, Starz, Showtime
+  { id: 'french', name: 'Canal+ & France', categoryIds: ['11', '39'] },  // Canal+ via France + Poland feeds, TF1, M6, Arte
+  { id: 'african', name: 'African Drama', categoryIds: [] },        // Free channels (experience: entertainment, culture: africa)
+  { id: 'reality', name: 'Reality Rush', categoryIds: [] },         // Free channels (experience: general)
   { id: 'asian', name: 'Asian Vibes', categoryIds: ['247', '338', '19'] },
 ];
 
 export const KIDS_TYPES: SportType[] = [
-  { id: 'all', name: 'All', categoryIds: ['32', '410'] },
+  { id: 'all', name: 'All', categoryIds: ['410', '32'] },           // UK Kids first (11 gems, FHD quality), then main Kids
   { id: 'cartoons', name: 'Cartoon World', categoryIds: ['32'] },
   { id: 'littleones', name: 'Little Ones', categoryIds: ['32'] },   // Filtered by name: baby, rhyme, panda
   { id: 'adventure', name: 'Adventure', categoryIds: ['32'] },      // Filtered by name: avatar, paw patrol, spongebob
-  { id: 'ukkids', name: 'UK Kids', categoryIds: ['410'] },
+  { id: 'ukkids', name: 'UK Kids', categoryIds: ['410'] },          // CN FHD, CBeebies FHD, Nick FHD, Sky Kids FHD
 ];
 
 export const CINEMA_TYPES: SportType[] = [
-  { id: 'all', name: 'All', categoryIds: ['275', '57', '282', '87', '280', '339', '340'] },
+  { id: 'all', name: 'All', categoryIds: ['87', '340', '339', '275', '57', '282', '280'] },  // beIN Movies (gems) first, then India (4K), then 24/7
+  { id: 'bein', name: 'beIN Cinema', categoryIds: ['87'] },          // 29ch, 8 gems — 4K + HD, Cinema + Series + Drama
   { id: 'action', name: 'Action Vault', categoryIds: ['275'] },     // Filtered: action/thriller channels
   { id: 'comedy', name: 'Comedy Corner', categoryIds: ['275'] },    // Filtered: comedy channels
   { id: 'horror', name: 'Horror Room', categoryIds: ['275'] },      // Filtered: horror channels
   { id: 'bollywood', name: 'Bollywood Palace', categoryIds: ['282', '339'] },
   { id: 'netflix', name: 'Netflix Loop', categoryIds: ['57'] },
-  { id: 'bein', name: 'beIN Cinema', categoryIds: ['87'] },
 ];
 
 export const MUSIC_TYPES: SportType[] = [
@@ -411,10 +564,10 @@ export const MUSIC_TYPES: SportType[] = [
 ];
 
 export const DISCOVERY_TYPES: SportType[] = [
-  { id: 'all', name: 'All', categoryIds: ['337', '415'] },
+  { id: 'all', name: 'All', categoryIds: ['415', '337'] },           // UK Docs first (18 gems — Discovery FHD, NatGeo, Sky History/Nature)
   { id: 'wild', name: 'Wild Planet', categoryIds: ['337', '415'] },  // Filtered: animal, natgeo, bbc earth
   { id: 'science', name: 'Science Lab', categoryIds: ['337', '415'] }, // Filtered: discovery, science
-  { id: 'history', name: 'History Vault', categoryIds: ['337', '415'] }, // Filtered: history, sky history
+  { id: 'history', name: 'History Vault', categoryIds: ['415', '337'] }, // UK History first (Sky History FHD), then India History
   { id: 'crime', name: 'Crime Files', categoryIds: ['415'] },        // Filtered: investigation, court
 ];
 
@@ -436,7 +589,14 @@ export interface RegionGenre {
 
 export const REGION_GENRES: Record<string, RegionGenre[]> = {
   motherland: [
-    { id: 'all', name: 'All', categoryIds: ['345', '427', '343', '428', '430', '347'] },
+    { id: 'all', name: 'All', categoryIds: ['336', '428', '343', '427', '345', '85', '11'] },  // Canal+ Africa + DStv Ent + DStv Sports + beIN + France (incl. Trace Africa/Urban/Gospel)
+    { id: 'sports', name: 'Sports', categoryIds: ['427', '345', '85', '234'] },  // DStv Super FHD + DStv Super + beIN (Arabic football massive in West Africa) + Football (SuperSport PL/LaLiga)
+    { id: 'entertainment', name: 'Entertainment', categoryIds: ['428', '343', '336'] },  // DStv Ent FHD + DStv Ent + Canal+ Africa
+    { id: 'music', name: 'Music', categoryIds: ['336', '11'] },        // Canal+ Africa music + France feed (Trace Africa HD, Trace Urban HD, Trace Gospel HD, NRJ Hits, M6 Music)
+    { id: 'french', name: 'French', categoryIds: ['11', '336'] },      // France (Canal+, TF1, M6, Trace) + Canal+ Africa francophone
+    { id: 'news', name: 'News', categoryIds: ['431', '346', '165'] },  // DStv News FHD + DStv News + Arabic News (Al Jazeera)
+    { id: 'kids', name: 'Kids', categoryIds: ['430', '347'] },         // DStv Kids FHD + DStv Kids
+    { id: 'movies', name: 'Movies', categoryIds: ['429', '344', '87'] }, // DStv Movies FHD + DStv Movies + beIN Movies
   ],
   sahara: [
     { id: 'all', name: 'All', categoryIds: ['86', '165', '156', '87', '13'] },
@@ -506,8 +666,7 @@ export const REGION_GENRES: Record<string, RegionGenre[]> = {
     { id: '247', name: '24/7', categoryIds: ['24'] },
   ],
   pacific: [
-    { id: 'all', name: 'All', categoryIds: ['90', '54'] },
-    { id: 'philippines', name: 'Philippines', categoryIds: ['90'] },
+    { id: 'all', name: 'All', categoryIds: ['54'] },  // 90 (Philippines) removed — 1/124 alive
     { id: 'australia', name: 'Australia', categoryIds: ['54'] },
   ],
   americas: [
@@ -520,3 +679,119 @@ export const REGION_GENRES: Record<string, RegionGenre[]> = {
     { id: 'netflix', name: 'Netflix Loop', categoryIds: ['57'] },
   ],
 };
+
+// ── Premium 4K Sub-types ─────────────────────────────────────────
+
+export const PREMIUM4K_TYPES: SportType[] = [
+  { id: 'all', name: 'All 4K', categoryIds: ['578', '85', '87', '337', '340', '339', '356'] },
+  { id: 'sports', name: 'Sports 4K', categoryIds: ['578', '85', '356'] },       // Sky Sports UHD, beIN 4K, India Sports 4K
+  { id: 'movies', name: 'Movies 4K', categoryIds: ['87', '340', '339'] },       // beIN Movies 4K, India English/Hindi Movies 4K
+  { id: 'docs', name: 'Docs 4K', categoryIds: ['337'] },                        // Discovery 4K, NatGeo 4K, Animal Planet 4K
+];
+
+// ── Premium Gem Channels ─────────────────────────────────────────
+/** Premium channels to always surface first within any category listing.
+ *  Stream IDs sourced from the 2026-03-28 channel curation probe. */
+export const GEM_STREAM_IDS = new Set([
+  // ── beIN Sports 4K (Arabic football, top tier) ──
+  652310, 652311, 652312, 652313, 652314, 652315, 652316, 652317, 652318,
+  // beIN Sports FHD
+  652333, 652334, 652335, 652336, 652337, 652338, 652339, 652340, 652341,
+  // beIN English & French
+  652345, 652346, 652347, 652348,
+  // beIN Global 4K
+  652322,
+  // beIN Max 4K
+  652395, 652396, 652397, 652398,
+
+  // ── Sky Sports UK (FHD — strongest UK sports) ──
+  186597,  // SKY SPORTS MAIN EVENT FHD
+  186604,  // SKY SPORTS PREMIER LEAGUE FHD
+  186612,  // SKY SPORTS FOOTBALL FHD
+  186606,  // SKY SPORTS CRICKET FHD
+  186616,  // SKY SPORTS F1 FHD
+  186614,  // SKY SPORTS GOLF FHD
+  186622,  // SKY SPORTS MIX FHD
+  186624,  // SKY SPORTS NEWS FHD
+  186620,  // SKY SPORTS Plus FHD
+
+  // ── Real 4K (true UHD streams) ──
+  581305,  // UHD SKY SPORTS MAIN EVENT
+  581306,  // UHD SKY SPORTS F1
+  581307,  // UHD SKY SPORTS 1
+  688273,  // UHD SKY SPORTS 2
+  688283,  // UHD SKY SPORT DE
+  688284,  // UHD SKY SPORT BUNDESLIGA DE
+  688310,  // UHD M+ LALIGA TV
+
+  // ── TNT Sports (Champions League) ──
+  186628,  // TNT SPORT 2 FHD
+  186629,  // TNT SPORT 3 FHD
+  186630,  // TNT SPORT 4 FHD
+  199487,  // TNT SPORT 1 HD
+
+  // ── Football gems ──
+  138713,  // BEIN SPORTS English 1 (4k)
+  23342,   // Sky Sports Premier League (FHD)
+  23334,   // Sky Sports Football (FHD)
+  771,     // SUPERSPORTS PREMIER LEAGUE (FHD)
+  776,     // SUPERSPORTS FOOTBALL (FHD)
+  768,     // SUPERSPORTS LALIGA (FHD)
+  29,      // MUTV HD
+  30,      // LIVERPOOL FC HD
+
+  // ── News gems ──
+  710,     // USA: CNN HD
+  1059,    // UK: BBC NEWS HD
+  1060,    // UK: SKY NEWS
+  51,      // USA: Fox News
+  5666,    // AL JAZEERA HD
+  1095,    // US: CNBC HD
+  871,     // US: MSNBC
+  148282,  // UK FHD: CNN
+  148251,  // UKFHD: Al Jazeera
+  148365,  // UK HD: BBC News
+  148335,  // UKHD: Sky News
+
+  // ── UK Entertainment gems ──
+  258,     // UK: CHANNEL 4 HD
+  259,     // UK: CHANNEL 5 HD
+  260,     // UK: COMEDY CENTRAL HD
+
+  // ── UK Kids gems ──
+  148211,  // Cartoon Network FHD
+  148212,  // UK FHD: CBeebies
+  148256,  // UK FHD: Nick Jr
+  148190,  // UK FHD: Nickelodeon
+  148222,  // UK FHD: Sky Kids
+
+  // ── Kids gems ──
+  19741,   // IN: Disney Channel (4K)
+  20925,   // IN: DISNEY INTERNATIONAL (4K)
+  98880,   // IN: NICK (4K)
+  8,       // IN: CARTOON NETWORK HD
+  1066,    // UK: CARTOON NETWORK HD
+  49,      // USA: DISNEY JR HD
+
+  // ── beIN Movies gems ──
+  274145,  // beIN MOVIES 4K 1
+  274146,  // beIN MOVIES 4K 2
+  274147,  // beIN MOVIES 4K 3
+  274148,  // beIN MOVIES 4K 4
+  274199,  // Bein Movies HD1
+  274200,  // Bein Movies HD2
+  274201,  // Bein Movies HD3
+  274202,  // Bein Movies HD4
+
+  // ── UK Movies gems (Sky Cinema) ──
+  34158,   // UK: SKY ATLANTIC FHD
+  34170,   // UK: SKY CINEMA ACTION (FHD)
+  34169,   // UK: SKY CINEMA COMEDY (FHD)
+  34164,   // UK: SKY CINEMA DRAMA (FHD)
+  34171,   // UK: SKY CINEMA ANIMATION (FHD)
+
+  // ── Eurosport ──
+  186637,  // EUROSPORT 1 FHD
+  186638,  // EUROSPORT 2 FHD
+  23348,   // Eurosport 2 (FHD)
+]);

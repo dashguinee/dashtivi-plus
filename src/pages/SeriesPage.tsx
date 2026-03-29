@@ -1,58 +1,73 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { Play, X, Download, Search } from 'lucide-react';
-import type { XtreamCredentials, LiveCategory, SeriesItem, SeriesInfo, Episode } from '@/lib/xtream';
-import { getSeriesCategories, getSeries, getSeriesInfo, buildSeriesUrl, getTmdbMap } from '@/lib/xtream';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { Play, X, Download, Search, SlidersHorizontal } from 'lucide-react';
+import type { XtreamCredentials, SeriesItem, SeriesInfo, Episode } from '@/lib/xtream';
+import { getSeries, getSeriesInfo, buildSeriesUrl, getTmdbMap } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { PosterCard } from '@/components/ui/PosterCard';
 import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { SERIES_TABS, GENRE_FILTERS, SORT_MODES, type SortMode } from '@/lib/series-collections';
+import { t, useLanguage } from '@/i18n';
+import type { TranslationKey } from '@/i18n';
 import type { Channel } from '@/types';
 
-// Featured series categories (IDs from Starshare API)
-const FEATURED_CATS = [
-  { id: '106', name: 'Netflix' },
-  { id: '108', name: 'Amazon Prime' },
-  { id: '188', name: 'HBO Max' },
-  { id: '654', name: 'Disney+' },
-  { id: '114', name: 'Apple TV+' },
-  { id: '209', name: 'Hulu' },
-  { id: '249', name: 'Paramount+' },
-  { id: '110', name: 'Starz' },
-  { id: '369', name: 'Australian' },
-];
-
-const PLATFORM_HEROES: Record<string, { logo: string; bg: string }> = {
-  '106': { logo: '/logos/netflix-text.svg', bg: 'linear-gradient(135deg, rgba(229,9,20,0.12) 0%, rgba(10,10,15,0.95) 50%, rgba(229,9,20,0.06) 100%)' },
-  '108': { logo: '/logos/prime-text.svg', bg: 'linear-gradient(135deg, rgba(0,168,225,0.12) 0%, rgba(10,10,15,0.95) 50%, rgba(0,168,225,0.06) 100%)' },
-  '188': { logo: '/logos/hbo.svg', bg: 'linear-gradient(135deg, rgba(157,78,221,0.12) 0%, rgba(10,10,15,0.95) 50%, rgba(157,78,221,0.06) 100%)' },
-  '654': { logo: '/logos/disney-plus.svg', bg: 'linear-gradient(135deg, rgba(17,60,207,0.12) 0%, rgba(10,10,15,0.95) 50%, rgba(17,60,207,0.06) 100%)' },
-  '114': { logo: '/logos/apple-tv.svg', bg: 'linear-gradient(135deg, rgba(161,161,170,0.08) 0%, rgba(10,10,15,0.95) 50%, rgba(161,161,170,0.04) 100%)' },
-  '209': { logo: '/logos/hulu.svg', bg: 'linear-gradient(135deg, rgba(28,231,131,0.12) 0%, rgba(10,10,15,0.95) 50%, rgba(28,231,131,0.06) 100%)' },
-  '249': { logo: '/logos/paramount.svg', bg: 'linear-gradient(135deg, rgba(0,100,255,0.12) 0%, rgba(10,10,15,0.95) 50%, rgba(0,100,255,0.06) 100%)' },
-  '110': { logo: '/logos/starz.svg', bg: 'linear-gradient(135deg, rgba(255,179,0,0.08) 0%, rgba(10,10,15,0.95) 50%, rgba(255,179,0,0.04) 100%)' },
+// ── i18n mood row mapping ─────────────────────────────────────────
+const MOOD_NAME_MAP: Record<string, TranslationKey> = {
+  'Binge All Night': 'bingeAllNight',
+  'Cozy Night In': 'cozyNightIn',
+  'Gets You Hooked': 'getsYouHooked',
+  'Light & Easy': 'lightEasy',
+  'Quick Episodes': 'quickEpisodes',
+  'Masterpiece TV': 'masterpieceTV',
 };
 
-const PLATFORM_LOGOS: Record<string, { logo: string; color: string }> = {
-  '106': { logo: '/logos/netflix-3d.png', color: '#E50914' },
-  '108': { logo: '/logos/prime-3d.webp', color: '#00A8E1' },
-  '188': { logo: '/logos/hbo.svg', color: '#9D4EDD' },
-  '654': { logo: '/logos/disney-plus.svg', color: '#113CCF' },
-  '114': { logo: '/logos/apple-tv.svg', color: '#1d1d1f' },
-  '209': { logo: '/logos/hulu.svg', color: '#1CE783' },
-  '249': { logo: '/logos/paramount.svg', color: '#0064FF' },
-  '110': { logo: '/logos/starz.svg', color: '#1a1a2e' },
+const SORT_NAME_MAP: Record<string, TranslationKey> = {
+  'Smart': 'sortSmart',
+  'Top Rated': 'sortTopRated',
+  'Newest': 'sortNewest',
+  'A-Z': 'sortAZ',
 };
 
-function getTrendingScore(tmdbKey: string, tmdbMap: Record<string, TmdbEntry>, name: string): number {
-  const tmdb = tmdbMap[tmdbKey];
+const GENRE_NAME_MAP: Record<string, TranslationKey> = {
+  'All': 'genreAll', 'Drama': 'genreDrama', 'Comedy': 'genreComedy',
+  'Crime': 'genreCrime', 'Thriller': 'genreThriller', 'Action': 'genreAction',
+  'Sci-Fi': 'genreSciFi', 'Mystery': 'genreMystery', 'Romance': 'genreRomance',
+  'Animation': 'genreAnimation', 'Documentary': 'genreDocumentary', 'Family': 'genreFamily',
+  'Horror': 'genreHorror', 'Reality': 'genreReality', 'War': 'genreWar',
+  'Western': 'genreWestern',
+};
+
+const TAB_NAME_MAP: Record<string, TranslationKey> = {
+  'Platform Originals': 'tabPlatformOriginals',
+  'Turkish': 'tabTurkish',
+  'Korean': 'tabKorean',
+  'Anime': 'tabAnime',
+};
+
+// ── Scoring ──────────────────────────────────────────────────────
+
+function getTrendingScore(series: SeriesItem, tmdbMap: Record<string, TmdbEntry>): number {
+  const tmdb = tmdbMap[`s:${series.series_id}`];
   if (!tmdb) return 0;
   const ratingScore = Math.min((tmdb.r || 0) / 10, 1);
-  const yearMatch = name.match(/\((\d{4})\)/);
-  const year = yearMatch ? parseInt(yearMatch[1]) : 0;
-  const age = 2026 - year;
-  const freshnessScore = age <= 0 ? 1.0 : age === 1 ? 0.85 : age === 2 ? 0.7 : age === 3 ? 0.5 : 0.3;
+  let freshnessScore = 0.3;
+  const yearMatch = series.name.match(/\((\d{4})\)/);
+  if (yearMatch) {
+    const year = parseInt(yearMatch[1], 10);
+    if (year >= 2026) freshnessScore = 1.0;
+    else if (year === 2025) freshnessScore = 0.85;
+    else if (year === 2024) freshnessScore = 0.7;
+    else if (year === 2023) freshnessScore = 0.5;
+  }
   return ratingScore * 0.55 + freshnessScore * 0.35 + (tmdb.y ? 0.1 : 0);
 }
+
+function parseYear(name: string): number {
+  const m = name.match(/\((\d{4})\)/);
+  return m ? parseInt(m[1], 10) : 0;
+}
+
+// ── Component ────────────────────────────────────────────────────
 
 interface Props {
   credentials: XtreamCredentials;
@@ -60,87 +75,222 @@ interface Props {
 }
 
 export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
-  const [categories, setCategories] = useState<LiveCategory[]>([]);
-  const [activeCat, setActiveCat] = useState<string>(FEATURED_CATS[0].id);
+  const { lang } = useLanguage();
+  // Tab state
+  const [activeParent, setActiveParent] = useState(SERIES_TABS[0].id);
+  const [activeSubtab, setActiveSubtab] = useState(SERIES_TABS[0].subtabs[0].id);
+  const [activeGenre, setActiveGenre] = useState(0); // 0 = All
+  const [sortMode, setSortMode] = useState<SortMode>('smart');
+
+  // Pagination
+  const PAGE_SIZE = 50;
+  const [displayLimit, setDisplayLimit] = useState(PAGE_SIZE);
+  const subtabScrollRef = useRef<HTMLDivElement>(null);
+  const genreScrollRef = useRef<HTMLDivElement>(null);
+
+  // Data
   const [seriesList, setSeriesList] = useState<SeriesItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [detailSeries, setDetailSeries] = useState<SeriesItem | null>(null);
-  const [tmdbMap, setTmdbMap] = useState<Record<string, TmdbEntry>>({});
+  const [seriesError, setSeriesError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
 
   // Search
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SeriesItem[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
-  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const [searchTruncated, setSearchTruncated] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Detail + TMDB
+  const [detailSeries, setDetailSeries] = useState<SeriesItem | null>(null);
+  const [tmdbMap, setTmdbMap] = useState<Record<string, TmdbEntry>>({});
+
+  // Series episode picker modal
+  const [selectedSeries, setSelectedSeries] = useState<SeriesItem | null>(null);
+  const [seriesInfo, setSeriesInfo] = useState<SeriesInfo | null>(null);
+  const [activeSeason, setActiveSeason] = useState<string>('');
+  const [loadingInfo, setLoadingInfo] = useState(false);
+  const [episodesUnavailable, setEpisodesUnavailable] = useState(false);
+
+  // ── Derived ──────────────────────────────────────────────────
+
+  const currentParent = useMemo(() =>
+    SERIES_TABS.find(t => t.id === activeParent) || SERIES_TABS[0], [activeParent]);
+
+  const currentSubtab = useMemo(() =>
+    currentParent.subtabs.find(s => s.id === activeSubtab) || currentParent.subtabs[0],
+    [currentParent, activeSubtab]);
+
+  const isSearching = debouncedQuery.trim().length > 0;
+  const hasTmdb = Object.keys(tmdbMap).length > 0;
+
+  // ── Effects ──────────────────────────────────────────────────
+
+  useEffect(() => { getTmdbMap().then(m => m && setTmdbMap(m.TMDB_MAP)); }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // Reset displayLimit when navigation changes
   useEffect(() => {
-    if (!debouncedQuery.trim() || !credentials) {
-      setSearchResults([]);
-      return;
+    setDisplayLimit(PAGE_SIZE);
+  }, [activeParent, activeSubtab, activeGenre]);
+
+  // Parent change -> reset subtab, genre, scroll
+  useEffect(() => {
+    const parent = SERIES_TABS.find(t => t.id === activeParent);
+    if (parent) {
+      setActiveSubtab(parent.subtabs[0].id);
+      setActiveGenre(0);
+      setSortMode('smart');
+      subtabScrollRef.current?.scrollTo({ left: 0, behavior: 'smooth' });
+      genreScrollRef.current?.scrollTo({ left: 0, behavior: 'smooth' });
     }
+  }, [activeParent]);
+
+  // Fetch series for subtab (multi-category fetch + merge + dedup)
+  useEffect(() => {
     let mounted = true;
-    async function search() {
-      setSearchLoading(true);
+    const catIds = currentSubtab.categoryIds;
+    if (!catIds.length) { setSeriesList([]); setLoading(false); return; }
+
+    async function load() {
+      setLoading(true);
+      setSeriesError(false);
       try {
-        // Search across all featured categories
-        const results = await Promise.allSettled(
-          FEATURED_CATS.map(c => getSeries(credentials!, c.id).catch(() => []))
-        );
-        const all: SeriesItem[] = [];
-        const seen = new Set<number>();
-        for (const r of results) {
-          if (r.status === 'fulfilled') {
-            for (const s of r.value) {
-              if (!seen.has(s.series_id)) { seen.add(s.series_id); all.push(s); }
+        if (catIds.length === 1) {
+          const result = await getSeries(credentials, catIds[0]);
+          if (mounted) setSeriesList(result);
+        } else {
+          const results = await Promise.allSettled(catIds.map(id => getSeries(credentials, id)));
+          if (!mounted) return;
+          const seen = new Set<number>();
+          const merged: SeriesItem[] = [];
+          for (const r of results) {
+            if (r.status === 'fulfilled') {
+              for (const s of r.value) {
+                if (!seen.has(s.series_id)) { seen.add(s.series_id); merged.push(s); }
+              }
             }
           }
+          setSeriesList(merged);
         }
-        const q = debouncedQuery.toLowerCase();
-        const filtered = all.filter(s => s.name.toLowerCase().includes(q));
-        if (mounted) setSearchResults(filtered);
       } catch {
-        if (mounted) setSearchResults([]);
+        if (mounted) { setSeriesList([]); setSeriesError(true); }
       } finally {
-        if (mounted) setSearchLoading(false);
+        if (mounted) setLoading(false);
       }
+    }
+    load();
+    return () => { mounted = false; };
+  }, [credentials, currentSubtab, retryKey]);
+
+  // Search scoped to current parent
+  useEffect(() => {
+    if (!debouncedQuery.trim()) { setSearchResults([]); return; }
+    let mounted = true;
+    const q = debouncedQuery.toLowerCase();
+    const LIMIT = 50;
+
+    async function search() {
+      setSearchLoading(true);
+      setSearchTruncated(false);
+      try {
+        if (q.length < 3) {
+          // Short query — filter current list only
+          const filtered = seriesList.filter(s => s.name.toLowerCase().includes(q));
+          if (mounted) { setSearchResults(filtered.slice(0, LIMIT)); setSearchTruncated(filtered.length > LIMIT); }
+        } else {
+          // Longer query — search across parent's searchCategoryIds
+          const results = await Promise.allSettled(
+            currentParent.searchCategoryIds.map(id => getSeries(credentials, id).catch(() => [] as SeriesItem[]))
+          );
+          const seen = new Set<number>();
+          const unique: SeriesItem[] = [];
+          for (const r of results) {
+            if (r.status === 'fulfilled') {
+              for (const s of r.value) { if (!seen.has(s.series_id)) { seen.add(s.series_id); unique.push(s); } }
+            }
+          }
+          const filtered = unique.filter(s => s.name.toLowerCase().includes(q));
+          if (mounted) { setSearchResults(filtered.slice(0, LIMIT)); setSearchTruncated(filtered.length > LIMIT); }
+        }
+      } catch { if (mounted) setSearchResults([]); }
+      finally { if (mounted) setSearchLoading(false); }
     }
     search();
     return () => { mounted = false; };
-  }, [debouncedQuery, credentials]);
+  }, [debouncedQuery, credentials, seriesList, currentParent]);
 
-  const isSearching = debouncedQuery.trim().length > 0;
+  // ── Genre filter + Sort (the smart layer) ────────────────────
 
-  // ── Mood Rows — cross-platform series intelligence ──────────
-  const [moodPool, setMoodPool] = useState<SeriesItem[]>([]);
+  const filteredAndSorted = useMemo(() => {
+    const source = isSearching ? searchResults : seriesList;
 
-  useEffect(() => {
-    if (Object.keys(tmdbMap).length === 0) return;
-    let mounted = true;
-    Promise.allSettled(['106', '108', '188', '102', '114'].map(c => getSeries(credentials, c)))
-      .then(results => {
-        if (!mounted) return;
-        const all: SeriesItem[] = [];
-        const seen = new Set<number>();
-        for (const r of results) {
-          if (r.status === 'fulfilled') {
-            for (const s of r.value) {
-              if (!seen.has(s.series_id)) { seen.add(s.series_id); all.push(s); }
-            }
-          }
-        }
-        setMoodPool(all);
+    // Step 1: Genre filter (TMDB-powered)
+    let filtered = source;
+    if (activeGenre !== 0 && hasTmdb) {
+      filtered = source.filter(s => {
+        const tmdb = tmdbMap[`s:${s.series_id}`];
+        return tmdb?.g?.includes(activeGenre);
       });
-    return () => { mounted = false; };
-  }, [tmdbMap, credentials]);
+    }
+
+    // Step 2: Sort
+    if (!hasTmdb || sortMode === 'name') {
+      if (sortMode === 'name') return [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+      return filtered;
+    }
+
+    return [...filtered].sort((a, b) => {
+      const ta = tmdbMap[`s:${a.series_id}`];
+      const tb = tmdbMap[`s:${b.series_id}`];
+      if (sortMode === 'rating') return (tb?.r || 0) - (ta?.r || 0);
+      if (sortMode === 'newest') return parseYear(b.name) - parseYear(a.name);
+      // smart: trending score
+      return getTrendingScore(b, tmdbMap) - getTrendingScore(a, tmdbMap);
+    });
+  }, [seriesList, searchResults, isSearching, activeGenre, sortMode, tmdbMap, hasTmdb]);
+
+  // ── Genre counts (how many series per genre in current view) ──
+
+  const genreCounts = useMemo(() => {
+    if (!hasTmdb) return {};
+    const source = isSearching ? searchResults : seriesList;
+    const counts: Record<number, number> = {};
+    for (const s of source) {
+      const tmdb = tmdbMap[`s:${s.series_id}`];
+      if (tmdb?.g) {
+        for (const g of tmdb.g) counts[g] = (counts[g] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [seriesList, searchResults, isSearching, tmdbMap, hasTmdb]);
+
+  // Only show genre filters that have content
+  const activeGenreFilters = useMemo(() =>
+    GENRE_FILTERS.filter(g => g.id === 0 || (genreCounts[g.id] || 0) > 0),
+    [genreCounts]);
+
+  // ── Trending row (Platform Originals only) ───────────────────
+
+  const trendingSeries = useMemo(() => {
+    if (activeParent !== 'platforms' || !hasTmdb) return [];
+    return seriesList
+      .map(s => ({ series: s, score: getTrendingScore(s, tmdbMap) }))
+      .filter(s => s.score > 0.5)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 15)
+      .map(s => s.series);
+  }, [seriesList, tmdbMap, activeParent, hasTmdb]);
+
+  // ── Mood rows (Platform Originals first tab only) ─────────────
 
   const moodRows = useMemo(() => {
-    if (moodPool.length === 0 || Object.keys(tmdbMap).length === 0) return [];
+    if (activeParent !== 'platforms' || !hasTmdb || seriesList.length === 0) return [];
     const hour = new Date().getHours();
     const defs = [
       ...(hour >= 18 || hour < 6 ? [
@@ -157,96 +307,26 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       { id: 'masterpiece', name: 'Masterpiece TV', genres: [18, 80, 10768], min: 8.0 },
     ];
     return defs.map(d => {
-      const filtered = moodPool
-        .filter(s => {
-          const t = tmdbMap[`s:${s.series_id}`];
-          return t && t.r >= d.min && t.g.some(g => d.genres.includes(g));
-        })
+      const items = seriesList
+        .filter(s => { const t = tmdbMap[`s:${s.series_id}`]; return t && t.r >= d.min && t.g.some(g => d.genres.includes(g)); })
         .sort((a, b) => (tmdbMap[`s:${b.series_id}`]?.r || 0) - (tmdbMap[`s:${a.series_id}`]?.r || 0))
         .slice(0, 12);
-      return filtered.length >= 4 ? { ...d, items: filtered } : null;
+      return items.length >= 4 ? { ...d, items } : null;
     }).filter(Boolean) as { id: string; name: string; items: SeriesItem[] }[];
-  }, [moodPool, tmdbMap]);
+  }, [seriesList, tmdbMap, activeParent, hasTmdb]);
 
-  const trendingSeries = useMemo(() => {
-    if (Object.keys(tmdbMap).length === 0) return [];
-    return seriesList
-      .map(s => ({ series: s, score: getTrendingScore(`s:${s.series_id}`, tmdbMap, s.name) }))
-      .filter(s => s.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 15)
-      .map(s => s.series);
-  }, [seriesList, tmdbMap]);
+  // ── Series detail handlers ────────────────────────────────────
 
-  const scoredSeries = useMemo(() => {
-    const list = isSearching ? searchResults : seriesList;
-    if (Object.keys(tmdbMap).length === 0) return list;
-    return [...list].sort((a, b) =>
-      getTrendingScore(`s:${b.series_id}`, tmdbMap, b.name) - getTrendingScore(`s:${a.series_id}`, tmdbMap, a.name)
-    );
-  }, [seriesList, searchResults, isSearching, tmdbMap]);
-
-  // Series detail modal
-  const [selectedSeries, setSelectedSeries] = useState<SeriesItem | null>(null);
-  const [seriesInfo, setSeriesInfo] = useState<SeriesInfo | null>(null);
-  const [activeSeason, setActiveSeason] = useState<string>('');
-  const [loadingInfo, setLoadingInfo] = useState(false);
-  const [episodesUnavailable, setEpisodesUnavailable] = useState(false);
-  const [seriesError, setSeriesError] = useState(false);
-  const [retryKey, setRetryKey] = useState(0);
-
-  // #18: 15-second timeout for episodes loading (MKV on slow networks needs FFmpeg probe time)
+  // 15-second timeout for episodes loading
   useEffect(() => {
     if (!loadingInfo) return;
     const t = setTimeout(() => {
-      // If still loading after 15s, mark episodes as unavailable
       setEpisodesUnavailable(true);
       setLoadingInfo(false);
     }, 15000);
     return () => clearTimeout(t);
   }, [loadingInfo]);
 
-  // Lazy-load TMDB map for detail modal metadata
-  useEffect(() => {
-    getTmdbMap().then(m => m && setTmdbMap(m.TMDB_MAP));
-  }, []);
-
-  // Load categories
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      try {
-        const cats = await getSeriesCategories(credentials);
-        if (mounted) setCategories(cats);
-      } catch {
-        // silent
-      }
-    }
-    load();
-    return () => { mounted = false; };
-  }, [credentials]);
-
-  // Load series for active category
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      setLoading(true);
-      setSeriesError(false);
-      try {
-        const result = await getSeries(credentials, activeCat);
-        if (mounted) setSeriesList(result);
-      } catch {
-        // #13: show error state on failure
-        if (mounted) { setSeriesList([]); setSeriesError(true); }
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-    load();
-    return () => { mounted = false; };
-  }, [credentials, activeCat, retryKey]);
-
-  // Load series info when selected
   const handleSelectSeries = useCallback(
     async (series: SeriesItem) => {
       setSelectedSeries(series);
@@ -256,10 +336,8 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       try {
         const info = await getSeriesInfo(credentials, series.series_id);
         setSeriesInfo(info);
-        // API returns episodes under 'episodes' key, keyed by season number
         const seasonKeys = Object.keys(info.episodes || {});
         if (seasonKeys.length > 0) setActiveSeason(seasonKeys[0]);
-        // #18: episodes loaded — cancel the timeout by clearing loadingInfo
         setLoadingInfo(false);
       } catch {
         setEpisodesUnavailable(true);
@@ -283,124 +361,159 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     [credentials, onPlay, selectedSeries]
   );
 
-  const closeModal = () => {
+  const closeEpisodeModal = () => {
     setSelectedSeries(null);
     setSeriesInfo(null);
     setActiveSeason('');
     setEpisodesUnavailable(false);
   };
 
-  // Merge featured + API categories
-  const displayCats: { id: string; name: string }[] = [...FEATURED_CATS];
-  const featuredIds = new Set(FEATURED_CATS.map((c) => c.id));
-  for (const cat of categories) {
-    if (!featuredIds.has(cat.category_id)) {
-      displayCats.push({ id: cat.category_id, name: cat.category_name });
-    }
-  }
-
   const seasons = seriesInfo ? Object.keys(seriesInfo.episodes || {}) : [];
   const episodes = seriesInfo && activeSeason ? seriesInfo.episodes[activeSeason] || [] : [];
 
-  return (
-    <div className="pt-16 pb-4">
-      {/* Platform Hero Banner — shows when a platform category is active */}
-      {!isSearching && PLATFORM_HEROES[activeCat] && (
-        <div
-          className="mx-4 mb-3 rounded-xl flex items-center justify-center overflow-hidden"
-          style={{
-            height: 80,
-            background: PLATFORM_HEROES[activeCat].bg,
-          }}
-        >
-          <img src={PLATFORM_HEROES[activeCat].logo} alt="" className="h-8 w-auto" />
-        </div>
-      )}
+  // ── Handlers ─────────────────────────────────────────────────
 
-      {/* Search + Category pills */}
-      <div className="sticky top-14 z-20 py-3 px-4 bg-[#0A0A0A]/90 backdrop-blur-lg border-b border-white/5">
-        {/* Search input */}
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" />
-          <input
-            ref={searchInputRef}
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search series..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-text-secondary focus:outline-none focus:border-primary/50 focus:bg-white/[0.07] transition-all"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => { setSearchQuery(''); searchInputRef.current?.focus(); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-            >
-              <X className="w-3 h-3 text-text-secondary" />
-            </button>
-          )}
-        </div>
-        {!isSearching && (
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-            {displayCats.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCat(cat.id)}
-                className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  activeCat === cat.id
-                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                    : 'bg-white/5 text-text-secondary hover:bg-white/10 hover:text-white border border-white/10'
-                }`}
-              >
-                {PLATFORM_LOGOS[cat.id]?.logo && (
-                  <img src={PLATFORM_LOGOS[cat.id].logo} alt="" className="h-4 w-auto" />
-                )}
-                {cat.name}
+  const handleParentChange = useCallback((id: string) => {
+    setActiveParent(id);
+    setSearchQuery('');
+    setDebouncedQuery('');
+  }, []);
+
+  const displayLoading = isSearching ? searchLoading : loading;
+
+  // ── Render ───────────────────────────────────────────────────
+
+  return (
+    <div className="pt-16 pb-32">
+      {/* ── Sticky header ── */}
+      <div className="sticky top-14 z-20 bg-[#0A0A0A]/95 backdrop-blur-lg border-b border-white/5">
+        {/* Search */}
+        <div className="px-4 pt-4 pb-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder={t(lang, 'searchSeries')}
+              className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-text-secondary focus:outline-none focus:border-primary/50 focus:bg-white/[0.07] transition-[border-color,background-color] duration-300"
+            />
+            {searchQuery && (
+              <button onClick={() => { setSearchQuery(''); searchInputRef.current?.focus(); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+                <X className="w-3 h-3 text-text-secondary" />
               </button>
-            ))}
+            )}
           </div>
+        </div>
+
+        {!isSearching && (
+          <>
+            {/* Parent tabs */}
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide px-4 pb-2">
+              {SERIES_TABS.map(tab => (
+                <button key={tab.id} onClick={() => handleParentChange(tab.id)}
+                  className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[13px] font-semibold transition-[color,background-color,border-color] duration-300 ${
+                    activeParent === tab.id
+                      ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                      : 'bg-white/[0.04] text-white/40 hover:bg-white/[0.08] hover:text-white/60'
+                  }`}>
+                  {TAB_NAME_MAP[tab.name] ? t(lang, TAB_NAME_MAP[tab.name]) : tab.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Subtabs */}
+            {currentParent.subtabs.length > 1 && (
+              <div ref={subtabScrollRef} className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-2 pt-0.5">
+                {currentParent.subtabs.map(sub => (
+                  <button key={sub.id} onClick={() => { setActiveSubtab(sub.id); setActiveGenre(0); }}
+                    className={`flex-shrink-0 px-3 py-1 rounded-lg text-[12px] font-medium transition-[color,background-color] duration-300 ${
+                      activeSubtab === sub.id
+                        ? 'bg-white/10 text-white border border-white/15'
+                        : 'text-white/30 hover:text-white/50'
+                    }`}>
+                    {sub.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Genre filter pills (TMDB-powered) */}
+            {!loading && seriesList.length > 0 && activeGenreFilters.length > 2 && (
+              <div ref={genreScrollRef} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide px-4 pb-2.5 pt-0.5">
+                {activeGenreFilters.map(g => (
+                  <button key={g.id} onClick={() => setActiveGenre(g.id)}
+                    className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-medium transition-colors duration-300 ${
+                      activeGenre === g.id
+                        ? 'bg-primary/20 text-primary-light border border-primary/30'
+                        : 'text-white/20 hover:text-white/40'
+                    }`}>
+                    {GENRE_NAME_MAP[g.name] ? t(lang, GENRE_NAME_MAP[g.name]) : g.name}
+                    {g.id !== 0 && genreCounts[g.id] && (
+                      <span className="text-[9px] opacity-50">{genreCounts[g.id]}</span>
+                    )}
+                  </button>
+                ))}
+
+                {/* Sort toggle */}
+                <div className="flex-shrink-0 ml-auto pl-2 border-l border-white/5">
+                  <button onClick={() => {
+                    const modes: SortMode[] = ['smart', 'rating', 'newest', 'name'];
+                    const next = modes[(modes.indexOf(sortMode) + 1) % modes.length];
+                    setSortMode(next);
+                  }}
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] text-white/25 hover:text-white/50 transition-colors">
+                    <SlidersHorizontal className="w-3 h-3" />
+                    {(() => { const sm = SORT_MODES.find(s => s.id === sortMode); return sm && SORT_NAME_MAP[sm.name] ? t(lang, SORT_NAME_MAP[sm.name]) : sm?.name; })()}
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
+
         {isSearching && (
-          <p className="text-xs text-text-secondary pb-1">
-            {searchLoading ? 'Searching...' : `${searchResults.length} series found`}
-          </p>
+          <div className="px-4 pb-2">
+            <p className="text-xs text-text-secondary">
+              {searchLoading ? t(lang, 'searchingEllipsis') : searchTruncated ? t(lang, 'top50Results') : `${searchResults.length} ${t(lang, 'found')}`}
+            </p>
+          </div>
         )}
       </div>
 
-      {/* Trending row */}
-      {!isSearching && !loading && trendingSeries.length >= 5 && (
+      {/* ── Trending row ── */}
+      {!isSearching && !loading && activeGenre === 0 && trendingSeries.length >= 5 && (
         <div className="px-4 pt-4 pb-2">
           <h2 className="text-sm font-semibold text-white/80 mb-2 flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-            Trending Right Now
+            {t(lang, 'trendingRightNow')}
           </h2>
           <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
-            {trendingSeries.map(series => (
-              <div key={series.series_id} className="flex-shrink-0 w-[120px]">
-                <PosterCard title={series.name} poster={series.cover} rating={series.rating} tmdbData={tmdbMap[`s:${series.series_id}`]} onClick={() => setDetailSeries(series)} />
+            {trendingSeries.map(s => (
+              <div key={s.series_id} className="flex-shrink-0 w-[120px]">
+                <PosterCard title={s.name} poster={s.cover} rating={s.rating}
+                  tmdbData={tmdbMap[`s:${s.series_id}`]} onClick={() => setDetailSeries(s)} />
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Mood rows — cross-platform series intelligence */}
-      {!isSearching && moodRows.length > 0 && (
-        <div className="space-y-6 py-4 mb-2">
+      {/* ── Mood rows ── */}
+      {!isSearching && activeGenre === 0 && moodRows.length > 0 && (
+        <div className="space-y-5 py-3 mb-4">
           {moodRows.map(row => (
             <section key={row.id}>
-              <div className="px-4 mb-3">
-                <h3 className="text-[15px] font-semibold text-white/50" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{row.name}</h3>
+              <div className="px-4 mb-2">
+                <h3 className="text-[15px] font-semibold text-white/50" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{MOOD_NAME_MAP[row.name] ? t(lang, MOOD_NAME_MAP[row.name]) : row.name}</h3>
               </div>
               <div className="flex gap-3.5 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-2">
-                {row.items.map(series => (
-                  <div key={series.series_id} className="flex-shrink-0 w-[108px]">
-                    <PosterCard
-                      title={series.name}
-                      poster={series.cover}
-                      rating={series.rating}
-                      tmdbData={tmdbMap[`s:${series.series_id}`]}
-                      onClick={() => setDetailSeries(series)}
-                    />
+                {row.items.map(s => (
+                  <div key={s.series_id} className="flex-shrink-0 w-[108px]">
+                    <PosterCard title={s.name} poster={s.cover} rating={s.rating}
+                      tmdbData={tmdbMap[`s:${s.series_id}`]} onClick={() => setDetailSeries(s)} />
                   </div>
                 ))}
               </div>
@@ -410,43 +523,66 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         </div>
       )}
 
-      {/* Series grid */}
-      {(isSearching ? searchLoading : loading) ? (
-        <div className="flex items-center justify-center py-20">
-          <LoadingSpinner size="lg" text="Loading series..." />
-        </div>
-      ) : seriesError && !isSearching ? (
-        // #13: error state for failed fetch
-        <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <p className="text-text-muted text-sm">Unable to load — tap to retry</p>
-          <button
-            onClick={() => { setSeriesError(false); setLoading(true); setRetryKey(k => k + 1); }}
-            className="px-5 py-2.5 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors"
-          >
-            Retry
-          </button>
-        </div>
-      ) : scoredSeries.length === 0 ? (
-        <div className="flex items-center justify-center py-20 text-text-muted text-sm">
-          {isSearching ? 'No series match your search' : 'No series found in this category'}
-        </div>
-      ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 p-4">
-          {scoredSeries.map((series) => (
-            <PosterCard
-              key={series.series_id}
-              title={series.name}
-              poster={series.cover}
-              rating={series.rating}
-              categoryId={isSearching ? undefined : activeCat}
-              tmdbData={tmdbMap[`s:${series.series_id}`]}
-              onClick={() => setDetailSeries(series)}
-            />
-          ))}
+      {/* ── Active filter indicator ── */}
+      {activeGenre !== 0 && !loading && (
+        <div className="px-4 pt-3 pb-1 flex items-center gap-2">
+          <span className="text-xs text-white/30">
+            {filteredAndSorted.length} {(() => { const gn = GENRE_FILTERS.find(g => g.id === activeGenre)?.name; return gn && GENRE_NAME_MAP[gn] ? t(lang, GENRE_NAME_MAP[gn]) : gn; })()} {t(lang, 'seriesLabel')}
+          </span>
+          <button onClick={() => setActiveGenre(0)} className="text-[10px] text-primary/60 hover:text-primary">{t(lang, 'clearFilter')}</button>
         </div>
       )}
 
-      {/* ContentDetailModal — metadata + trailer, opens episode picker on play */}
+      {/* ── Series grid ── */}
+      {displayLoading ? (
+        <div className="flex items-center justify-center py-24">
+          <LoadingSpinner size="lg" text={isSearching ? t(lang, 'searching') : t(lang, 'loadingSeries')} />
+        </div>
+      ) : seriesError && !isSearching ? (
+        <div className="flex flex-col items-center justify-center py-24 gap-4">
+          <p className="text-text-muted text-sm">{t(lang, 'unableToLoadRetry')}</p>
+          <button onClick={() => { setSeriesError(false); setLoading(true); setRetryKey(k => k + 1); }}
+            className="px-5 py-2.5 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors">{t(lang, 'retry')}</button>
+        </div>
+      ) : filteredAndSorted.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-24 text-text-muted text-sm gap-2">
+          {isSearching ? t(lang, 'noSeriesMatch') : activeGenre !== 0 ? (
+            <>
+              <span>{t(lang, 'noSeriesGenre')}</span>
+              <button onClick={() => setActiveGenre(0)} className="text-primary text-xs">{t(lang, 'showAll')}</button>
+            </>
+          ) : t(lang, 'noSeriesInCategory')}
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 p-4">
+            {filteredAndSorted.slice(0, displayLimit).map(series => (
+              <PosterCard
+                key={series.series_id}
+                title={series.name}
+                poster={series.cover}
+                rating={series.rating}
+                tmdbData={tmdbMap[`s:${series.series_id}`]}
+                onClick={() => setDetailSeries(series)}
+              />
+            ))}
+          </div>
+
+          {/* Show More button */}
+          {filteredAndSorted.length > displayLimit && (
+            <div className="flex justify-center mt-4 mb-2 pb-6">
+              <button
+                onClick={() => setDisplayLimit(l => l + PAGE_SIZE)}
+                className="px-6 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white/60 hover:bg-white/10 hover:text-white transition-[color,background-color] duration-300 show-more-breathe"
+              >
+                {t(lang, 'showMore')} ({filteredAndSorted.length - displayLimit} {t(lang, 'remaining')})
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── ContentDetailModal — metadata + trailer, opens episode picker on play ── */}
       {detailSeries && (
         <ContentDetailModal
           streamId={detailSeries.series_id}
@@ -465,9 +601,9 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         />
       )}
 
-      {/* Series Detail Modal */}
+      {/* ── Series Episode Picker Modal ── */}
       {selectedSeries && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center" onClick={() => setSelectedSeries(null)}>
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center" onClick={() => closeEpisodeModal()}>
           <div className="w-full max-w-lg max-h-[85vh] bg-[#141414] rounded-t-2xl sm:rounded-2xl overflow-hidden animate-slide-up border border-white/10" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="relative h-48 overflow-hidden">
@@ -482,7 +618,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent" />
               <button
-                onClick={closeModal}
+                onClick={closeEpisodeModal}
                 className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -494,12 +630,11 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
             {loadingInfo ? (
               <div className="flex items-center justify-center py-12">
-                <LoadingSpinner size="md" text="Loading episodes..." />
+                <LoadingSpinner size="md" text={t(lang, 'loadingEpisodes')} />
               </div>
             ) : episodesUnavailable ? (
-              // #18: show when episodes failed or timed out
               <div className="flex items-center justify-center py-12 text-text-muted text-sm">
-                Episodes unavailable
+                {t(lang, 'episodesUnavailable')}
               </div>
             ) : (
               <div className="p-4 overflow-y-auto max-h-[50vh]">
@@ -516,7 +651,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                             : 'bg-white/5 text-text-secondary hover:bg-white/10'
                         }`}
                       >
-                        Season {s}
+                        {t(lang, 'season')} {s}
                       </button>
                     ))}
                   </div>
@@ -527,7 +662,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                   {episodes.map((ep) => (
                     <div
                       key={ep.id}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-primary/20 transition-all text-left group"
+                      className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-primary/20 transition-[background-color,border-color] duration-300 text-left group"
                     >
                       <button
                         onClick={() => handlePlayEpisode(ep)}
@@ -540,7 +675,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                         className="flex-1 min-w-0 text-left"
                       >
                         <p className="text-sm font-medium text-white truncate">
-                          {ep.title || `Episode ${ep.episode_num}`}
+                          {ep.title || `${t(lang, 'episode')} ${ep.episode_num}`}
                         </p>
                         <p className="text-xs text-text-muted">
                           S{ep.season} E{ep.episode_num} &middot; {ep.container_extension?.toUpperCase() || 'MP4'}
@@ -553,7 +688,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                           window.open(url, '_blank', 'noopener,noreferrer');
                         }}
                         className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 hover:bg-white/10 transition-colors"
-                        title="Download"
+                        title={t(lang, 'download')}
                       >
                         <Download className="w-4 h-4 text-text-secondary" />
                       </button>
@@ -561,7 +696,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                   ))}
                   {episodes.length === 0 && (
                     <p className="text-sm text-text-muted text-center py-4">
-                      No episodes available
+                      {t(lang, 'noEpisodes')}
                     </p>
                   )}
                 </div>

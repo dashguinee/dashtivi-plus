@@ -1,36 +1,63 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { preloadReady } from '@/lib/preloader';
 
 interface Props {
   onComplete: () => void;
+  authReady?: boolean;
 }
 
-export const SplashScreen: React.FC<Props> = ({ onComplete }) => {
+export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) => {
   const [phase, setPhase] = useState<'dark' | 'brand' | 'ready' | 'exit'>('dark');
+  const authRef = useRef(authReady);
+  authRef.current = authReady;
 
   useEffect(() => {
-    const timers = [
-      setTimeout(() => setPhase('brand'), 500),
-      setTimeout(() => setPhase('ready'), 3500),
-      setTimeout(() => setPhase('exit'), 4500),
-      setTimeout(() => onComplete(), 5200),
-      setTimeout(() => onComplete(), 10000), // failsafe
-    ];
-    return () => timers.forEach(clearTimeout);
+    // Remove the HTML pre-splash (it served its purpose — no white flash)
+    document.getElementById('pre-splash')?.remove();
+
+    // Phase 1: dark → brand
+    const t1 = setTimeout(() => setPhase('brand'), 300);
+
+    // Phase 2: wait for assets + auth + minimum brand time
+    const minBrandTime = new Promise<void>(r => setTimeout(r, 2200));
+
+    Promise.all([minBrandTime, preloadReady]).then(() => {
+      // Wait for auth with 3s max — don't hang on slow Supabase
+      const authStart = Date.now();
+      const proceed = () => {
+        setPhase('ready');
+        setTimeout(() => setPhase('exit'), 500);
+        setTimeout(() => onComplete(), 1100);
+      };
+      const waitForAuth = () => {
+        if (authRef.current || Date.now() - authStart > 3000) {
+          proceed();
+        } else {
+          setTimeout(waitForAuth, 80);
+        }
+      };
+      waitForAuth();
+    });
+
+    // Failsafe
+    const failsafe = setTimeout(() => onComplete(), 8000);
+
+    return () => { clearTimeout(t1); clearTimeout(failsafe); };
   }, [onComplete]);
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-700 ${
+      className={`fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-600 ${
         phase === 'exit' ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
       style={{ background: '#060609' }}
     >
-      {/* Purple pulse — expands slowly */}
+      {/* Purple pulse */}
       <div
-        className="absolute rounded-full transition-all duration-[2000ms] ease-out"
+        className="absolute rounded-full transition-[transform,opacity] duration-[2000ms] ease-out"
         style={{
           width: 300, height: 300,
-          background: 'radial-gradient(circle, rgba(157,78,221,0.1) 0%, transparent 60%)',
+          background: 'radial-gradient(circle, rgba(157,78,221,0.08) 0%, transparent 60%)',
           transform: phase === 'dark' ? 'scale(0)' : phase === 'ready' || phase === 'exit' ? 'scale(1.5)' : 'scale(1)',
           opacity: phase === 'exit' ? 0 : phase === 'dark' ? 0 : 1,
         }}
@@ -38,7 +65,7 @@ export const SplashScreen: React.FC<Props> = ({ onComplete }) => {
 
       {/* Wordmark */}
       <div
-        className={`relative z-10 text-center transition-all duration-700 ${
+        className={`relative z-10 text-center transition-[opacity,transform] duration-600 ${
           phase === 'dark' ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
         }`}
       >
@@ -48,10 +75,10 @@ export const SplashScreen: React.FC<Props> = ({ onComplete }) => {
           <span className="text-primary-light text-[18px] font-bold ml-1">+</span>
         </h1>
 
-        {/* Loading bar — appears after brand, shows progress */}
+        {/* Loading bar */}
         <div
           className={`mt-5 mx-auto w-12 h-[2px] rounded-full overflow-hidden transition-opacity duration-500 ${
-            phase === 'brand' ? 'opacity-100' : phase === 'ready' || phase === 'exit' ? 'opacity-0' : 'opacity-0'
+            phase === 'brand' ? 'opacity-100' : 'opacity-0'
           }`}
           style={{ background: 'rgba(255,255,255,0.04)' }}
         >

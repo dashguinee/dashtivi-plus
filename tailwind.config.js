@@ -35,7 +35,7 @@ export default {
           green: '#06FFA5',
           'neon-blue': '#00D4FF',
         },
-        success: '#00C853',
+        success: '#9D4EDD',
         warning: '#FFB300',
         error: '#FF5252',
         text: {
@@ -46,6 +46,11 @@ export default {
       },
       fontFamily: {
         sans: ['Outfit', 'system-ui', '-apple-system', 'sans-serif'],
+      },
+      transitionTimingFunction: {
+        'spring': 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+        'soft-land': 'cubic-bezier(0.22, 1, 0.36, 1)',
+        'expo-out': 'cubic-bezier(0.16, 1, 0.3, 1)',
       },
       animation: {
         'pulse-live': 'pulse-live 2s ease-in-out infinite',
@@ -58,7 +63,7 @@ export default {
         'portal-pulse-red': 'portal-pulse-red 5s ease-in-out infinite',
         'portal-pulse-blue': 'portal-pulse-blue 2.5s ease-in-out infinite',
         'mood-pop': 'mood-pop 0.3s ease-out',
-        'shimmer': 'shimmer 2s linear infinite',
+        'shimmer': 'shimmer 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
       keyframes: {
         'pulse-live': {
@@ -70,12 +75,12 @@ export default {
           to: { opacity: '1' },
         },
         'fade-in-up': {
-          from: { opacity: '0', transform: 'translateY(30px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
+          from: { opacity: '0', transform: 'scale(0.96)' },
+          to: { opacity: '1', transform: 'scale(1)' },
         },
         'slide-up': {
-          from: { opacity: '0', transform: 'translateY(20px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
+          from: { opacity: '0', transform: 'scale(0.97)' },
+          to: { opacity: '1', transform: 'scale(1)' },
         },
         'glow': {
           from: { boxShadow: '0 0 5px rgba(157, 78, 221, 0.2)' },

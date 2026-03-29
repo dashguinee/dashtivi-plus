@@ -138,8 +138,8 @@ export const VeeMoodOverlay: React.FC<VeeMoodOverlayProps> = ({
             className={`
               flex items-center gap-2 px-6 py-3 rounded-xl
               bg-gradient-to-r from-purple-900/50 via-primary/30 to-purple-900/50
-              border transition-all duration-300
-              hover:scale-105 active:scale-95
+              border transition-[transform,border-color,box-shadow] duration-300
+              hover:scale-[1.03] active:scale-95
               ${selectedMood === 'surprise'
                 ? 'border-primary-light/60'
                 : 'border-white/15 hover:border-primary/40'
@@ -159,7 +159,7 @@ export const VeeMoodOverlay: React.FC<VeeMoodOverlayProps> = ({
         {/* Search input */}
         <form onSubmit={handleSearchSubmit} className="px-2">
           <div
-            className="relative rounded-xl overflow-hidden border border-white/15 transition-all focus-within:border-white/30"
+            className="relative rounded-xl overflow-hidden border border-white/15 transition-[border-color] focus-within:border-white/30"
             style={{
               boxShadow: `0 0 10px ${accentGlow}`,
             }}

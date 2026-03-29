@@ -7,10 +7,11 @@ import {
   Maximize,
   Minimize,
   PictureInPicture2,
-  Settings,
   X,
   ChevronLeft,
   Download,
+  Waves,
+  Zap,
 } from 'lucide-react';
 import type { PlayerState } from '@/types';
 import { getStreamQuality, setStreamQuality } from '@/lib/xtream';
@@ -59,20 +60,13 @@ export const PlayerControls: React.FC<Props> = ({
   subsOn,
   onToggleSubs,
 }) => {
-  const [showQuality, setShowQuality] = useState(false);
   const [showVolume, setShowVolume] = useState(false);
+  const [streamQuality, setQuality] = useState<StreamQuality>(getStreamQuality());
   const volumeRef = useRef<HTMLDivElement>(null);
 
   const category = state.channel?.category?.toLowerCase() ?? '';
   const isVod = category === 'movie' || category === 'series';
-
-  // Close quality menu on click outside
-  useEffect(() => {
-    if (!showQuality) return;
-    const handler = () => setShowQuality(false);
-    setTimeout(() => document.addEventListener('click', handler), 0);
-    return () => document.removeEventListener('click', handler);
-  }, [showQuality]);
+  const isFlow = streamQuality === 'eco';
 
   return (
     <div
@@ -120,7 +114,7 @@ export const PlayerControls: React.FC<Props> = ({
       <div className="flex-1 flex items-center justify-center">
         <button
           onClick={onTogglePlay}
-          className="w-16 h-16 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center hover:bg-primary transition-all hover:scale-110 active:scale-95 shadow-lg shadow-primary/30"
+          className="w-16 h-16 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center hover:bg-primary transition-[transform,background-color] duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-primary/30"
         >
           {state.isPlaying ? (
             <Pause className="w-8 h-8 text-white" />
@@ -157,7 +151,7 @@ export const PlayerControls: React.FC<Props> = ({
                 style={{ width: `${Math.min(100, (state.currentTime / state.duration) * 100)}%` }}
               />
               <div
-                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 group-active:opacity-100 group-active:w-6 group-active:h-6 transition-all duration-200"
+                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 group-active:opacity-100 group-active:w-6 group-active:h-6 transition-[opacity,width,height] duration-300"
                 style={{ left: `calc(${Math.min(100, (state.currentTime / state.duration) * 100)}% - 8px)` }}
               />
             </div>
@@ -205,7 +199,7 @@ export const PlayerControls: React.FC<Props> = ({
 
               {/* Volume slider */}
               <div
-                className={`overflow-hidden transition-all duration-200 ${
+                className={`overflow-hidden transition-[width,opacity] duration-300 ${
                   showVolume ? 'w-20 opacity-100 ml-1' : 'w-0 opacity-0'
                 }`}
               >
@@ -227,7 +221,27 @@ export const PlayerControls: React.FC<Props> = ({
                 LIVE
               </span>
             )}
-            {/* Eco mode indicator */}
+
+            {/* StreamFlow toggle — direct, no menu */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                const next: StreamQuality = isFlow ? 'hd' : 'eco';
+                setStreamQuality(next);
+                setQuality(next);
+                onQualityChange(next, next === 'eco' ? 1 : 0);
+              }}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ml-2 transition-colors duration-300 ${
+                isFlow
+                  ? 'bg-primary/20 text-primary-light border border-primary/30'
+                  : 'bg-white/10 text-white/60 border border-white/10'
+              }`}
+            >
+              {isFlow ? <Waves className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
+              <span className="text-[11px] font-semibold tracking-wide">
+                {isFlow ? 'Flow' : 'HD'}
+              </span>
+            </button>
           </div>
 
           <div className="flex items-center gap-1">
@@ -246,23 +260,6 @@ export const PlayerControls: React.FC<Props> = ({
                 <Download className="w-5 h-5" />
               </button>
             )}
-
-            {/* Quality selector */}
-            <div className="relative">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowQuality(!showQuality);
-                }}
-                className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
-
-              {showQuality && (
-                <StreamQualityMenu onClose={() => setShowQuality(false)} onApplyNow={onQualityChange} />
-              )}
-            </div>
 
             {/* CC / Subtitles */}
             {hasSubs && onToggleSubs && (
@@ -302,49 +299,6 @@ export const PlayerControls: React.FC<Props> = ({
   );
 };
 
-function StreamQualityMenu({ onClose, onApplyNow }: { onClose: () => void; onApplyNow: (quality: string, index: number) => void }) {
-  const [current, setCurrent] = useState<StreamQuality>(getStreamQuality());
-
-  const toggle = (applyNow: boolean) => {
-    const next: StreamQuality = current === 'hd' ? 'eco' : 'hd';
-    setStreamQuality(next);
-    setCurrent(next);
-    onClose();
-    if (applyNow) {
-      // Signal quality change which triggers reconnect
-      onApplyNow(next, next === 'eco' ? 1 : 0);
-    }
-  };
-
-  return (
-    <div className="absolute bottom-12 right-0 bg-bg-surface border border-white/10 rounded-xl shadow-2xl py-2 min-w-[170px] animate-slide-up">
-      <p className="text-[10px] font-medium text-text-muted uppercase px-3 pb-1">
-        Stream Quality
-      </p>
-      <button
-        onClick={(e) => { e.stopPropagation(); toggle(true); }}
-        className="w-full text-left px-3 py-2.5 hover:bg-bg-hover transition-colors"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <span className={`text-sm font-medium ${current === 'eco' ? 'text-primary-light' : 'text-white'}`}>
-              {current === 'eco' ? 'Eco Mode' : 'HD'}
-            </span>
-            <p className="text-[10px] text-text-muted mt-0.5">
-              {current === 'eco' ? 'Low data · smooth on 3G' : 'Full quality · source'}
-            </p>
-          </div>
-          <div className={`w-9 h-5 rounded-full transition-colors ${current === 'eco' ? 'bg-primary' : 'bg-white/20'}`}>
-            <div className={`w-4 h-4 rounded-full bg-white mt-0.5 transition-transform ${current === 'eco' ? 'translate-x-4.5 ml-[18px]' : 'ml-0.5'}`} />
-          </div>
-        </div>
-      </button>
-      <p className="text-[9px] text-text-muted px-3 pt-1 border-t border-white/5 mt-1">
-        Applies immediately — stream will reconnect
-      </p>
-    </div>
-  );
-}
 
 /** Header brand — swaps from "DASH · Tivi+" to "DASH · 2h 36m" after 2s */
 function HeaderBrand({ duration, isVod }: { duration: number; isVod: boolean }) {
@@ -359,7 +313,7 @@ function HeaderBrand({ duration, isVod }: { duration: number; isVod: boolean }) 
   const formatted = duration > 0 ? formatTime(duration) : null;
 
   return (
-    <span className="transition-all duration-500">
+    <span className="transition-opacity duration-500">
       <span className="font-bold tracking-wider text-primary-light">DASH</span>
       <span className="text-white/30"> · </span>
       <span className="text-white/40">

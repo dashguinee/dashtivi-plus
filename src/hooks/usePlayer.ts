@@ -1,9 +1,17 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { markDead, markAlive } from '@/hooks/useChannelHealth';
-import { onStreamSuccess, onStreamFail, getStreamQuality } from '@/lib/xtream';
+import { onStreamSuccess, onStreamFail, getStreamQuality, setStreamQuality } from '@/lib/xtream';
 import { createHlsPlayer } from '@/lib/hls';
 import type { HlsInstance } from '@/lib/hls';
 import type { Channel, PlayerState } from '@/types';
+
+export interface StreamLimitInfo {
+  activeChannel: string;
+  upgrade: {
+    secondScreen: { label: string; discount: string; screens: number };
+    familyPlan: { label: string; discount: string; screens: number };
+  };
+}
 
 export function usePlayer() {
   const [state, setState] = useState<PlayerState>({
@@ -21,6 +29,7 @@ export function usePlayer() {
     duration: 0,
   });
 
+  const [streamLimit, setStreamLimit] = useState<StreamLimitInfo | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const destroyRef = useRef<(() => void) | null>(null);
   const hlsRef = useRef<HlsInstance | null>(null);
@@ -39,10 +48,22 @@ export function usePlayer() {
   }, []);
 
   const playChannel = useCallback(
-    (channel: Channel) => {
+    async (channel: Channel) => {
+      const video = videoRef.current;
+      const isSwitch = !!video && !!video.src && !video.paused;
+
+      // Smooth audio fade-out before killing stream (500ms — matches visual transition)
+      if (isSwitch && video) {
+        const startVol = video.volume;
+        const steps = 10;
+        for (let i = 1; i <= steps; i++) {
+          video.volume = Math.max(0, startVol * (1 - i / steps));
+          await new Promise(r => setTimeout(r, 50));
+        }
+      }
+
       // Full cleanup — kill any existing stream
       cleanup();
-      const video = videoRef.current;
       if (video) {
         video.onerror = null;
         video.onplaying = null;
@@ -50,23 +71,24 @@ export function usePlayer() {
         video.load();
       }
 
-      setState({
+      // Preserve fullscreen + pip + mute state across channel switches
+      setState((prev) => ({
         channel,
         isPlaying: false,
-        isMuted: false,
-        volume: 1,
-        isFullscreen: false,
-        isPiP: false,
+        isMuted: prev.isMuted,
+        volume: prev.volume,
+        isFullscreen: prev.isFullscreen,
+        isPiP: prev.isPiP,
         quality: 'Auto',
         qualities: ['Auto'],
         isLoading: true,
         error: null,
         currentTime: 0,
         duration: 0,
-      });
+      }));
 
       // Small delay to ensure video element is clean
-      requestAnimationFrame(() => {
+      requestAnimationFrame(async () => {
         const video = videoRef.current;
         if (!video) return;
 
@@ -96,7 +118,24 @@ export function usePlayer() {
             video.onerror = null;
           };
         } else {
-          // Xtream proxy channels — existing behavior
+          // Xtream proxy channels — pre-flight to detect stream limit
+          if (isLive) {
+            try {
+              const probe = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(3000) });
+              if (probe.status === 409) {
+                const data = await probe.json();
+                if (data.error === 'stream_limit') {
+                  setStreamLimit({ activeChannel: data.activeChannel, upgrade: data.upgrade });
+                  setState((prev) => ({ ...prev, isLoading: false, error: null }));
+                  return;
+                }
+              }
+              // Got a valid response — cancel it, let video element handle the actual stream
+              probe.body?.cancel();
+            } catch { /* timeout or network — let video element try anyway */ }
+          }
+          setStreamLimit(null);
+          video.volume = 0.65; // Start warm, not silent — subtle ramp to full
           video.src = url;
           video.play().catch(() => {});
 
@@ -135,11 +174,110 @@ export function usePlayer() {
           const idMatch = url.match(/[?&]id=(\d+)/);
           if (idMatch) onStreamSuccess(parseInt(idMatch[1]));
           setState((prev) => ({ ...prev, isPlaying: true, isLoading: false, error: null }));
+          // Smooth audio fade-in (500ms — matches visual transition)
+          const targetVol = video.muted ? 0 : 1;
+          if (video.volume < targetVol) {
+            let v = video.volume;
+            const step = (targetVol - v) / 10;
+            const fadeIn = setInterval(() => {
+              v = Math.min(targetVol, v + step);
+              video.volume = v;
+              if (v >= targetVol) clearInterval(fadeIn);
+            }, 50);
+          }
         };
         video.onpause = () => setState((prev) => ({ ...prev, isPlaying: false }));
         video.onwaiting = () => {
           setState((prev) => ({ ...prev, isLoading: true }));
         };
+
+        // ── Adaptive quality ladder for live channels ──
+        // Tiers: eco (480p) → 720p → 1080p → direct (passthrough)
+        // Starts at current setting, measures bandwidth, steps up safely.
+        // Any buffering at a tier → step back down permanently to previous tier.
+        if (isLive) {
+          type QTier = 'eco' | '720' | '1080' | 'direct';
+          const TIERS: QTier[] = ['eco', '720', '1080', 'direct'];
+          const TIER_LABELS: Record<QTier, string> = { eco: '480p', '720': '720p', '1080': '1080p', direct: 'HD' };
+          const TIER_PARAMS: Record<QTier, string> = { eco: '&q=eco', '720': '&q=720', '1080': '&q=1080', direct: '' };
+
+          // Start at eco or current setting
+          const startQuality = getStreamQuality();
+          let currentTier: QTier = startQuality === 'eco' ? 'eco' : 'direct';
+          let maxTier: QTier = 'direct'; // ceiling — drops on failure
+          let stableStart = 0;
+          let bufferCount = 0;
+          const STABLE_TIME = 8000; // 8s stable before stepping up
+          const BUFFER_LIMIT = 2; // 2 buffers at any tier → step down
+
+          setState((prev) => ({ ...prev, quality: TIER_LABELS[currentTier] }));
+
+          const buildUrl = (tier: QTier) => {
+            const base = url.replace(/&q=(eco|720|1080)/, '');
+            return base + TIER_PARAMS[tier];
+          };
+
+          const switchTo = (tier: QTier) => {
+            currentTier = tier;
+            bufferCount = 0;
+            stableStart = 0;
+            setState((prev) => ({ ...prev, quality: TIER_LABELS[tier], isLoading: true }));
+            video.src = buildUrl(tier);
+            video.play().catch(() => {});
+          };
+
+          const stepDown = () => {
+            const idx = TIERS.indexOf(currentTier);
+            if (idx > 0) {
+              maxTier = TIERS[idx - 1]; // lock ceiling
+              switchTo(TIERS[idx - 1]);
+            }
+          };
+
+          const stepUp = () => {
+            const idx = TIERS.indexOf(currentTier);
+            const maxIdx = TIERS.indexOf(maxTier);
+            if (idx < maxIdx) {
+              switchTo(TIERS[idx + 1]);
+            }
+          };
+
+          const checkUpgrade = () => {
+            if (!video || video.paused) return;
+            const idx = TIERS.indexOf(currentTier);
+            const maxIdx = TIERS.indexOf(maxTier);
+            if (idx >= maxIdx) return; // already at ceiling
+
+            if (!stableStart) { stableStart = Date.now(); return; }
+            if (Date.now() - stableStart < STABLE_TIME) return;
+
+            // Check buffer health
+            const buffered = video.buffered;
+            if (buffered.length > 0) {
+              const ahead = buffered.end(buffered.length - 1) - video.currentTime;
+              if (ahead >= 3) stepUp();
+            }
+          };
+
+          const adaptiveInterval = setInterval(checkUpgrade, 2000);
+
+          const origWaiting = video.onwaiting;
+          video.onwaiting = () => {
+            stableStart = 0;
+            bufferCount++;
+            if (bufferCount >= BUFFER_LIMIT && TIERS.indexOf(currentTier) > 0) {
+              stepDown();
+            }
+            setState((prev) => ({ ...prev, isLoading: true }));
+          };
+
+          const origDestroy = destroyRef.current;
+          destroyRef.current = () => {
+            clearInterval(adaptiveInterval);
+            if (origDestroy) origDestroy();
+          };
+        }
+
         // VOD time tracking — skip for live (infinite duration, no seek bar)
         let lastTimeUpdate = 0;
         video.ontimeupdate = () => {
@@ -309,6 +447,8 @@ export function usePlayer() {
     };
   }, []);
 
+  const dismissStreamLimit = useCallback(() => setStreamLimit(null), []);
+
   return useMemo(() => ({
     state,
     videoRef,
@@ -322,5 +462,7 @@ export function usePlayer() {
     changeQuality,
     seek,
     stop,
-  }), [state, playChannel, togglePlay, toggleMute, setVolume, toggleFullscreen, togglePiP, changeQuality, seek, stop]);
+    streamLimit,
+    dismissStreamLimit,
+  }), [state, playChannel, togglePlay, toggleMute, setVolume, toggleFullscreen, togglePiP, changeQuality, seek, stop, streamLimit, dismissStreamLimit]);
 }

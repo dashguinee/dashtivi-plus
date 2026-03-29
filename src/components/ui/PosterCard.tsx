@@ -1,7 +1,8 @@
-import React, { useState, memo } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { Star, Clock, Clapperboard } from 'lucide-react';
 
 import type { TmdbEntry } from '../../lib/tmdb-map.generated';
+import { safeImageUrl } from '../../lib/xtream';
 
 interface Props {
   title: string;
@@ -34,16 +35,7 @@ const PLATFORM_BADGES: Record<string, { label: string; bg: string; text: string 
 };
 
 function getSafePoster(url?: string): string | null {
-  if (url) {
-    if (url.includes('webhop.live') || url.includes('imdb.com') || url.includes('wikia.nocookie.net') || url.includes('paste.pics')) {
-      // Fall through to TMDB
-    } else {
-      const fixed = url.replace('starshare.live:8080', 'datahub11.com:8080');
-      if (fixed.startsWith('https://')) return fixed;
-      if (fixed.startsWith('http://')) return `https://stream.zionsynapse.online/?url=${encodeURIComponent(fixed)}`;
-    }
-  }
-  return null;
+  return safeImageUrl(url);
 }
 
 function parseTitle(raw: string): { clean: string; year: string | null } {
@@ -66,6 +58,8 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
   const platformLogo = categoryId ? PLATFORM_LOGOS[categoryId] : undefined;
   const [imgFailed, setImgFailed] = useState(false);
   const [tmdbFailed, setTmdbFailed] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const onImgLoad = useCallback(() => setImgLoaded(true), []);
   const safePoster = getSafePoster(poster);
   // TMDB poster fallback — uses poster_path from enrichment
   const tmdbPoster = tmdbData?.p ? `https://image.tmdb.org/t/p/w342${tmdbData.p}` : null;
@@ -80,14 +74,15 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
   return (
     <button
       onClick={onClick}
-      className="group relative w-full aspect-[2/3] rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-lg hover:shadow-primary/10 text-left"
+      className="group relative w-full aspect-[2/3] rounded-xl overflow-hidden text-left card-press hover:scale-[1.03] active:scale-[0.96]"
       style={{ background: 'rgba(255,255,255,0.02)' }}
     >
       {safePoster && !imgFailed ? (
         <img
           src={safePoster}
           alt={title}
-          className="absolute inset-0 w-full h-full object-cover"
+          className={`absolute inset-0 w-full h-full object-cover img-settle ${imgLoaded ? 'loaded' : ''}`}
+          onLoad={onImgLoad}
           onError={() => setImgFailed(true)}
           loading="lazy"
           decoding="async"
@@ -96,7 +91,8 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
         <img
           src={tmdbPoster}
           alt={title}
-          className="absolute inset-0 w-full h-full object-cover"
+          className={`absolute inset-0 w-full h-full object-cover img-settle ${imgLoaded ? 'loaded' : ''}`}
+          onLoad={onImgLoad}
           onError={() => setTmdbFailed(true)}
           loading="lazy"
           decoding="async"

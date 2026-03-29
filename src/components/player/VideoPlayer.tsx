@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { PlayerControls } from './PlayerControls';
-import { RefreshCw, AlertTriangle, Zap, ChevronLeft as ChevLeft, ChevronRight as ChevRight } from 'lucide-react';
+import { RefreshCw, AlertTriangle, Waves, ChevronLeft as ChevLeft, ChevronRight as ChevRight } from 'lucide-react';
 import { useAdjacentChannels, usePlaylistState, setCurrentChannel } from '@/lib/playlist';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { SmartMatch } from './SmartMatch';
@@ -105,7 +105,7 @@ export const VideoPlayer: React.FC<Props> = ({
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     hideTimerRef.current = setTimeout(() => {
       if (state.isPlaying) setControlsVisible(false);
-    }, 3000);
+    }, 4500);
   }, [state.isPlaying]);
 
   // Show controls when paused
@@ -302,9 +302,11 @@ export const VideoPlayer: React.FC<Props> = ({
         <DashCinemaLoader title={state.channel?.name} />
       )}
 
-      {/* Branded loading — covers the gap between tap and first frame */}
+      {/* Branded loading — soft overlay on channel switch, full screen on first load */}
       {state.isLoading && !state.error && !state.isPlaying && !showCinemaIntro && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#060609] z-40">
+        <div className={`absolute inset-0 flex items-center justify-center z-40 transition-opacity duration-500 ${
+          state.channel ? 'bg-[#060609]/80 backdrop-blur-sm' : 'bg-[#060609]'
+        }`}>
           <div className="text-center">
             <h1 className="mb-3">
               <span className="text-[24px] font-black tracking-tight text-white uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>DASH</span>
@@ -354,20 +356,20 @@ export const VideoPlayer: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Eco mode suggestion — shows after repeated buffering */}
+      {/* StreamFlow suggestion — shows after repeated buffering */}
       {showEcoPrompt && (
         <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 animate-slide-up">
           <div className="flex items-center gap-3 px-4 py-3 bg-black/90 border border-primary/30 rounded-2xl backdrop-blur-sm shadow-lg">
-            <Zap className="w-5 h-5 text-primary-light flex-shrink-0" />
+            <Waves className="w-5 h-5 text-primary-light flex-shrink-0" />
             <div>
-              <p className="text-sm text-white font-medium">Slow connection?</p>
-              <p className="text-[11px] text-white/50">Switch to Eco for smooth playback</p>
+              <p className="text-sm text-white font-medium">Unstable connection</p>
+              <p className="text-[11px] text-white/50">Switch to StreamFlow for smooth playback</p>
             </div>
             <button
               onClick={handleSwitchToEco}
               className="px-4 py-1.5 bg-primary rounded-lg text-xs font-bold text-white hover:bg-primary-light transition-colors flex-shrink-0"
             >
-              Eco
+              Flow
             </button>
             <button
               onClick={() => setShowEcoPrompt(false)}
@@ -419,14 +421,14 @@ export const VideoPlayer: React.FC<Props> = ({
       {/* Smart Match — quality variants + family channels */}
       <SmartMatchOverlay
         channel={state.channel}
-        visible={controlsVisible}
+        visible={controlsVisible && !showEcoPrompt}
         isLive={!!state.channel?.url?.includes('/live?')}
         onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
       />
 
       {/* Channel carousel — concave arc conveyor belt */}
       <ChannelCarousel
-        visible={controlsVisible}
+        visible={controlsVisible && !showEcoPrompt}
         isLive={!!state.channel?.url?.includes('/live?')}
         onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
       />
@@ -636,12 +638,12 @@ function ChannelArrows({
           aria-label={`Previous: ${prev.name}`}
         >
           {/* Gradient edge glow on hover */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="relative w-9 h-9 rounded-full flex items-center justify-center
                           bg-black/25 backdrop-blur-sm border border-white/8
                           group-hover:bg-primary/15 group-hover:border-primary/40
                           group-hover:shadow-lg group-hover:shadow-primary/25
-                          group-active:scale-90 transition-all duration-200">
+                          group-active:scale-90 transition-[transform,background-color,border-color,box-shadow] duration-300">
             <ChevLeft
               className="w-5 h-5 text-white/50 group-hover:text-primary-light transition-colors"
               style={{ filter: 'drop-shadow(0 0 4px rgba(157, 78, 221, 0.3))' }}
@@ -660,12 +662,12 @@ function ChannelArrows({
                       ${controlsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
           aria-label={`Next: ${next.name}`}
         >
-          <div className="absolute inset-0 bg-gradient-to-l from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+          <div className="absolute inset-0 bg-gradient-to-l from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="relative w-9 h-9 rounded-full flex items-center justify-center
                           bg-black/25 backdrop-blur-sm border border-white/8
                           group-hover:bg-primary/15 group-hover:border-primary/40
                           group-hover:shadow-lg group-hover:shadow-primary/25
-                          group-active:scale-90 transition-all duration-200">
+                          group-active:scale-90 transition-[transform,background-color,border-color,box-shadow] duration-300">
             <ChevRight
               className="w-5 h-5 text-white/50 group-hover:text-primary-light transition-colors"
               style={{ filter: 'drop-shadow(0 0 4px rgba(157, 78, 221, 0.3))' }}
@@ -698,7 +700,7 @@ function ChannelHints({
         <button
           onClick={(e) => { e.stopPropagation(); setCurrentChannel(prev.id); onSwitch(prev); }}
           className={`absolute top-[56px] left-3 z-35 flex items-center gap-2 px-2 py-1.5 rounded-xl
-                      transition-all duration-300
+                      transition-opacity duration-300
                       ${visible ? 'opacity-70 hover:opacity-100' : 'opacity-0 pointer-events-none'}`}
           style={{
             background: 'rgba(0, 0, 0, 0.4)',
@@ -720,7 +722,7 @@ function ChannelHints({
         <button
           onClick={(e) => { e.stopPropagation(); setCurrentChannel(next.id); onSwitch(next); }}
           className={`absolute top-[56px] right-14 z-35 flex items-center gap-2 px-2 py-1.5 rounded-xl
-                      transition-all duration-300
+                      transition-opacity duration-300
                       ${visible ? 'opacity-70 hover:opacity-100' : 'opacity-0 pointer-events-none'}`}
           style={{
             background: 'rgba(0, 0, 0, 0.4)',
@@ -753,7 +755,7 @@ function LandscapeGenreBar({
   onGenreSwitch?: (themeId: string) => void;
 }) {
   const themes = [
-    { id: 'sports',        name: 'Sports',        gradient: 'from-green-500 to-emerald-700' },
+    { id: 'sports',        name: 'Sports',        gradient: 'from-red-500 to-orange-700' },
     { id: 'news',          name: 'News',           gradient: 'from-blue-500 to-sky-700' },
     { id: 'entertainment', name: 'Entertainment',  gradient: 'from-purple-500 to-violet-700' },
     { id: 'kids',          name: 'Kids',           gradient: 'from-pink-500 to-rose-600' },
@@ -776,7 +778,7 @@ function LandscapeGenreBar({
   return (
     <div
       className={`absolute bottom-[130px] sm:bottom-[140px] left-0 right-0 z-30
-                  transition-all duration-300
+                  transition-[opacity,transform] duration-300
                   ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}
     >
       {/* Glass container */}
@@ -796,7 +798,7 @@ function LandscapeGenreBar({
               key={theme.id}
               onClick={() => handlePill(theme.id)}
               className={`flex-shrink-0 text-[10px] px-3 py-1.5 rounded-full font-medium
-                          transition-all duration-200 active:scale-95
+                          transition-[transform,color,border-color] duration-300 active:scale-95
                           bg-black/30 backdrop-blur-sm text-white/50 border border-white/[0.08]
                           hover:text-white/80 hover:border-white/20`}
             >
@@ -864,7 +866,7 @@ function ChannelCarousel({
 
   return (
     <div
-      className={`absolute bottom-[72px] sm:bottom-[80px] left-0 right-0 z-30 transition-all duration-300
+      className={`absolute bottom-[72px] sm:bottom-[80px] left-0 right-0 z-30 transition-[opacity,transform] duration-300
                   ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
     >
       {/* Glass background */}
@@ -895,7 +897,7 @@ function ChannelCarousel({
                 key={ch.id}
                 data-chid={ch.id}
                 onClick={() => { if (!isCurrent) onSwitch(ch); }}
-                className={`flex-shrink-0 flex items-center gap-1.5 pl-1 pr-2.5 py-1.5 rounded-xl transition-all duration-300
+                className={`flex-shrink-0 flex items-center gap-1.5 pl-1 pr-2.5 py-1.5 rounded-xl transition-[transform,background-color,border-color,box-shadow] duration-300
                   ${isCurrent
                     ? 'bg-primary/20 border border-primary/50 shadow-md shadow-primary/20'
                     : 'bg-white/[0.04] border border-transparent hover:bg-white/[0.08] hover:border-white/15 active:scale-95'

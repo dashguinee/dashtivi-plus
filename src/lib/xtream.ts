@@ -3,6 +3,27 @@ const PROXY = (import.meta.env.VITE_PROXY_URL || 'https://stream.zionsynapse.onl
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 const FETCH_TIMEOUT = 10000; // 10s timeout for API calls
 
+/**
+ * Sanitize any image URL from Xtream API — handles dead domains, HTTP→proxy, blocked hosts.
+ * Returns HTTPS URL safe for browser rendering, or null if unsalvageable.
+ */
+export function safeImageUrl(url?: string | null): string | null {
+  if (!url) return null;
+  // Fix common URL corruption
+  let u = url.replace(/^ttps:/, 'https:').replace(/"$/, '');
+  // Replace dead starshare domain
+  u = u.replace('starshare.live:8080', 'datahub11.com:8080');
+  // Block known junk hosts
+  if (u.includes('webhop.live') || u.includes('imdb.com') || u.includes('wikia.nocookie.net') || u.includes('paste.pics') || u.includes('tensports.com.pk')) {
+    return null;
+  }
+  // Already HTTPS — safe
+  if (u.startsWith('https://')) return u;
+  // HTTP — proxy through VPS
+  if (u.startsWith('http://')) return `${PROXY}/?url=${encodeURIComponent(u)}`;
+  return null;
+}
+
 export interface XtreamCredentials {
   username: string;
   password: string;
@@ -129,8 +150,10 @@ function evictOldestCaches(): void {
   } catch { /* ignore */ }
 }
 
+function enc(s: string) { return encodeURIComponent(s); }
+
 function apiUrl(c: XtreamCredentials, action: string, extra = ''): string {
-  return `${PROXY}/api?action=${action}&u=${c.username}&p=${c.password}${extra}`;
+  return `${PROXY}/api?action=${action}&u=${enc(c.username)}&p=${enc(c.password)}${extra}`;
 }
 
 async function cachedFetch<T>(key: string, url: string): Promise<T> {
@@ -236,16 +259,20 @@ export function getTmdbMap(): Promise<TmdbMapData | null> {
   return tmdbMapPromise;
 }
 
-/** Patch empty stream_icon from the generated logo map */
+/** Patch empty stream_icon from the generated logo map, and filter hidden channels */
 async function enrichIcons(streams: LiveStream[]): Promise<LiveStream[]> {
   const map = await getLogoMap();
+  const result: LiveStream[] = [];
   for (const s of streams) {
+    // Skip hidden channels (separators, misplaced, noise)
+    if (HIDDEN_STREAM_IDS.has(s.stream_id)) continue;
     if (!s.stream_icon || s.stream_icon.trim() === '') {
       const mapped = map[String(s.stream_id)];
       if (mapped) s.stream_icon = mapped;
     }
+    result.push(s);
   }
-  return streams;
+  return result;
 }
 
 export async function getLiveStreams(c: XtreamCredentials, catId: string): Promise<LiveStream[]> {
@@ -350,25 +377,25 @@ export function buildLiveUrl(c: XtreamCredentials, streamId: number, quality?: S
   const q = quality || getStreamQuality();
   // hd = video passthrough (zero CPU, source quality)
   // eco = 480p re-encode (1.2 Mbps, works on slow connections)
-  return `${PROXY}/live?id=${streamId}&u=${c.username}&p=${c.password}${q === 'eco' ? '&q=eco' : ''}`;
+  return `${PROXY}/live?id=${streamId}&u=${enc(c.username)}&p=${enc(c.password)}${q === 'eco' ? '&q=eco' : ''}`;
 }
 
 export function buildVodUrl(c: XtreamCredentials, streamId: number, ext = 'mp4'): string {
   const q = getStreamQuality();
   if (ext === 'mkv' || ext === 'avi') {
     // MKV/AVI → FFmpeg remux on VPS (eco = 1080p re-encode for slow connections)
-    return `${PROXY}/vod?id=${streamId}&u=${c.username}&p=${c.password}&ext=${ext}&type=movie${q === 'eco' ? '&q=eco' : ''}`;
+    return `${PROXY}/vod?id=${streamId}&u=${enc(c.username)}&p=${enc(c.password)}&ext=${ext}&type=movie${q === 'eco' ? '&q=eco' : ''}`;
   }
-  const url = `${STREAM_BASE}/movie/${c.username}/${c.password}/${streamId}.${ext}`;
+  const url = `${STREAM_BASE}/movie/${enc(c.username)}/${enc(c.password)}/${streamId}.${ext}`;
   return `${PROXY}?url=${encodeURIComponent(url)}`;
 }
 
 export function buildSeriesUrl(c: XtreamCredentials, episodeId: number, ext = 'mp4'): string {
   const q = getStreamQuality();
   if (ext === 'mkv' || ext === 'avi') {
-    return `${PROXY}/vod?id=${episodeId}&u=${c.username}&p=${c.password}&ext=${ext}&type=series${q === 'eco' ? '&q=eco' : ''}`;
+    return `${PROXY}/vod?id=${episodeId}&u=${enc(c.username)}&p=${enc(c.password)}&ext=${ext}&type=series${q === 'eco' ? '&q=eco' : ''}`;
   }
-  const url = `${STREAM_BASE}/series/${c.username}/${c.password}/${episodeId}.${ext}`;
+  const url = `${STREAM_BASE}/series/${enc(c.username)}/${enc(c.password)}/${episodeId}.${ext}`;
   return `${PROXY}?url=${encodeURIComponent(url)}`;
 }
 
@@ -450,7 +477,7 @@ export async function batchHealthCheck(c: XtreamCredentials, streamIds: number[]
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000);
-      const url = `${PROXY}/live?id=${id}&u=${c.username}&p=${c.password}`;
+      const url = `${PROXY}/live?id=${id}&u=${enc(c.username)}&p=${enc(c.password)}`;
       const res = await fetch(url, { signal: controller.signal });
       clearTimeout(timeout);
 
@@ -818,6 +845,20 @@ function iconScore(icon: string): number {
   if (icon.startsWith('https://')) return 2;
   if (icon.startsWith('http://')) return 1;
   return 0;
+}
+
+// --- Gem-first sort (premium channels surface first) ---
+import { GEM_STREAM_IDS, HIDDEN_STREAM_IDS } from './collections';
+
+/** Sort channels with gems first, then by icon quality */
+export function sortGemsFirst<T extends { stream_id: number; stream_icon: string }>(streams: T[]): T[] {
+  return [...streams].sort((a, b) => {
+    const aGem = GEM_STREAM_IDS.has(a.stream_id) ? 100 : 0;
+    const bGem = GEM_STREAM_IDS.has(b.stream_id) ? 100 : 0;
+    if (aGem !== bGem) return bGem - aGem;
+    // Fallback to icon quality
+    return iconScore(b.stream_icon) - iconScore(a.stream_icon);
+  });
 }
 
 // --- Free HLS Channels ---

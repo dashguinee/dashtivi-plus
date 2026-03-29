@@ -1,7 +1,8 @@
 import React, { useEffect, useCallback, useState } from 'react';
 import { Play, Star, Clock, Heart, X } from 'lucide-react';
+import { t, useLanguage } from '@/i18n';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
-import type { XtreamCredentials } from '@/lib/xtream';
+import { safeImageUrl, type XtreamCredentials } from '@/lib/xtream';
 
 // ── TMDB genre map (subset — loaded inline to avoid async dependency) ──
 const TMDB_GENRES: Record<number, string> = {
@@ -46,15 +47,8 @@ function formatRuntime(minutes: number): string {
 
 /** Resolve poster URL — TMDB w780 for backdrops, fallback to stream icon */
 function getBackdropUrl(poster?: string, tmdbPoster?: string): string | null {
-  // Prefer TMDB high-res poster for the backdrop
   if (tmdbPoster) return `https://image.tmdb.org/t/p/w780${tmdbPoster}`;
-  if (poster) {
-    // Rewrite dead starshare domain
-    const fixed = poster.replace('starshare.live:8080', 'datahub11.com:8080');
-    if (fixed.startsWith('https://')) return fixed;
-    if (fixed.startsWith('http://')) return `https://stream.zionsynapse.online/?url=${encodeURIComponent(fixed)}`;
-  }
-  return null;
+  return safeImageUrl(poster);
 }
 
 export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
@@ -68,6 +62,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   onPlay,
   onClose,
 }) => {
+  const { lang } = useLanguage();
   // ── Fetch VOD info for real duration + description ──────────
   const [vodDescription, setVodDescription] = useState<string | null>(null);
   const [vodDuration, setVodDuration] = useState<number | null>(null);
@@ -189,7 +184,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
                   style={{ backgroundSize: '200% 100%' }}
                 />
                 <span className="relative z-10 text-white font-bold text-sm tracking-wide flex items-center justify-center gap-2">
-                  <Play className="w-4 h-4" /> Watch Now
+                  <Play className="w-4 h-4" /> {t(lang, 'watchNow')}
                 </span>
               </div>
             </div>
@@ -223,7 +218,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
               </span>
             )}
             <span className="px-2 py-0.5 rounded-md bg-primary/20 text-primary-light text-xs font-semibold uppercase">
-              {type}
+              {type === 'movie' ? t(lang, 'typeMovie') : t(lang, 'typeSeries')}
             </span>
           </div>
 
@@ -245,10 +240,10 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
           <div className="flex gap-3 mb-4">
             <button
               onClick={() => onPlay(knownDurationSeconds)}
-              className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-primary to-primary-light rounded-xl font-bold text-white text-sm shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all active:scale-[0.98]"
+              className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-primary to-primary-light rounded-xl font-bold text-white text-sm shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-[transform,box-shadow] active:scale-[0.98]"
             >
               <Play className="w-5 h-5 fill-white" />
-              Play Now
+              {t(lang, 'playNow')}
             </button>
             <button
               className="w-14 flex items-center justify-center rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition-colors"
@@ -268,8 +263,8 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
           {/* Director + Cast */}
           {(vodDirector || vodCast) && (
             <div className="text-xs text-white/30 space-y-1">
-              {vodDirector && <p>Director: <span className="text-white/50">{vodDirector}</span></p>}
-              {vodCast && <p>Cast: <span className="text-white/50">{vodCast.split(',').slice(0, 4).join(', ')}</span></p>}
+              {vodDirector && <p>{t(lang, 'director')}: <span className="text-white/50">{vodDirector}</span></p>}
+              {vodCast && <p>{t(lang, 'cast')}: <span className="text-white/50">{vodCast.split(',').slice(0, 4).join(', ')}</span></p>}
             </div>
           )}
         </div>

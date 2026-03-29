@@ -1,11 +1,13 @@
 import React, { useState, useCallback } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { t, useLanguage } from '@/i18n';
 
 interface Props {
   onLogin: (code: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const AccessCodeLogin: React.FC<Props> = ({ onLogin }) => {
+  const { lang } = useLanguage();
   const [code, setCode] = useState('');
   const [showCode, setShowCode] = useState(false);
   const [error, setError] = useState('');
@@ -15,7 +17,7 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin }) => {
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (!code.trim()) {
-        setError('Please enter your access code');
+        setError(t(lang, 'pleaseEnterCode'));
         return;
       }
 
@@ -25,11 +27,11 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin }) => {
       try {
         const result = await onLogin(code);
         if (!result.success) {
-          setError(result.error ?? 'Invalid access code');
+          setError(result.error ?? t(lang, 'invalidCode'));
           setLoading(false);
         }
       } catch {
-        setError('Connection error — check your internet');
+        setError(t(lang, 'connectionError'));
         setLoading(false);
       }
     },
@@ -63,7 +65,7 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin }) => {
               <span className="text-primary-light text-[18px] font-bold ml-0.5">+</span>
             </h1>
             <p className="text-[11px] text-white/20 tracking-[5px] uppercase font-light">
-              Premium Streaming
+              {t(lang, 'premiumStreaming')}
             </p>
           </div>
 
@@ -80,7 +82,7 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin }) => {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-[11px] text-white/30 font-medium tracking-wide uppercase mb-2 ml-1">
-                  Access Code
+                  {t(lang, 'accessCode')}
                 </label>
                 <div className="relative">
                   <input
@@ -89,7 +91,7 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin }) => {
                     onChange={(e) => setCode(e.target.value)}
                     placeholder="DASH-SL-001"
                     autoFocus
-                    className="w-full py-4 px-5 pr-12 bg-white/[0.03] border border-white/[0.06] rounded-xl text-white text-[15px] outline-none transition-all duration-300 placeholder:text-white/20 focus:border-primary/40 focus:bg-white/[0.05] focus:shadow-[0_0_0_3px_rgba(157,78,221,0.1)]"
+                    className="w-full py-4 px-5 pr-12 bg-white/[0.03] border border-white/[0.06] rounded-xl text-white text-[15px] outline-none transition-[border-color,background-color,box-shadow] duration-300 placeholder:text-white/20 focus:border-primary/40 focus:bg-white/[0.05] focus:shadow-[0_0_0_3px_rgba(157,78,221,0.1)]"
                     style={{ fontFamily: "'Space Grotesk', monospace" }}
                   />
                   <button
@@ -109,7 +111,7 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin }) => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 rounded-xl font-semibold text-[13px] tracking-[2px] uppercase transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-white"
+                className="w-full py-4 rounded-xl font-semibold text-[13px] tracking-[2px] uppercase transition-[transform,opacity] duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-white"
                 style={{
                   background: 'linear-gradient(135deg, #9D4EDD 0%, #7B2CBF 100%)',
                   boxShadow: '0 4px 20px rgba(157,78,221,0.3), 0 0 30px rgba(157,78,221,0.15)',
@@ -118,10 +120,10 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin }) => {
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Verifying
+                    {t(lang, 'verifying')}
                   </span>
                 ) : (
-                  'Enter'
+                  t(lang, 'enter')
                 )}
               </button>
             </form>
@@ -130,7 +132,7 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin }) => {
           {/* Footer */}
           <div className="mt-6 text-center">
             <p className="text-white/12 text-[10px] tracking-[3px] uppercase font-light">
-              Enter the code from your DASH subscription
+              {t(lang, 'enterCodeFromDash')}
             </p>
           </div>
         </div>

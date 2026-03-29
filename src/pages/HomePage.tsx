@@ -1,6 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Play, ChevronRight, Tv, Clock, Trophy, Radio, Film, MonitorPlay, Globe, Sparkles, Music, Heart } from 'lucide-react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { Play, ChevronRight, Clock, Trophy, Radio, Globe, Music, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { t, useLanguage } from '@/i18n';
+import type { Lang, TranslationKey } from '@/i18n';
 import type { XtreamCredentials, LiveStream, VodStream, SeriesItem } from '@/lib/xtream';
 import {
   getLiveStreams,
@@ -13,6 +15,8 @@ import {
   seedProbeCacheFromServer,
   isChannelProbeAlive,
   getTmdbMap,
+  safeImageUrl,
+  sortGemsFirst,
 } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import {
@@ -36,7 +40,10 @@ import { SkeletonRow } from '@/components/ui/LoadingSpinner';
 import { setAmbientSpeed } from '@/lib/ambient-audio';
 import type { Channel, WatchHistoryEntry } from '@/types';
 import { PlatformShowcase, PLATFORMS } from '@/components/ui/PlatformShowcase';
-import { HexCard, HexRow, CLUB_COLORS } from '@/components/ui/HexCard';
+import { FeedSection } from '@/components/ui/FeedSection';
+import { HexCard } from '@/components/ui/HexCard';
+import { useScrollReveal } from '@/hooks/useScrollReveal';
+import { useScrollFocus } from '@/hooks/useScrollFocus';
 
 interface Props {
   credentials: XtreamCredentials;
@@ -52,34 +59,88 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function timeAgo(ts: number): string {
-  if (!ts || !isFinite(ts) || isNaN(ts)) return 'Recently';
+function timeAgo(ts: number, lang: Lang): string {
+  if (!ts || !isFinite(ts) || isNaN(ts)) return t(lang, 'recently');
   const diff = Date.now() - ts;
-  if (!isFinite(diff) || isNaN(diff)) return 'Recently';
+  if (!isFinite(diff) || isNaN(diff)) return t(lang, 'recently');
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t(lang, 'justNow');
+  if (mins < 60) return `${mins}${t(lang, 'minsAgo')}`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return `${hours}${t(lang, 'hoursAgo')}`;
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return `${days}${t(lang, 'daysAgo')}`;
 }
 
 // ── Sport tabs config ─────────────────────────────────────────────
 
 const SPORT_TABS = [
-  { id: 'football', label: 'Football', color: '#9D4EDD', catIds: ['234'], keywords: ['fc', 'tv', 'fan', 'club', 'united', 'city', 'lfc', 'mutv', 'arsenal', 'chelsea', 'barca', 'real madrid', 'milan', 'inter', 'psg', 'bayern'] },
-  { id: 'basketball', label: 'Basketball', color: '#EF4444', catIds: ['773'], keywords: ['nba', 'basketball', 'lakers', 'celtics', 'warriors', 'nets', 'bulls', 'heat', 'bucks'] },
-  { id: 'nfl', label: 'NFL', color: '#3B82F6', catIds: ['516'], keywords: ['nfl', 'football', 'chiefs', 'eagles', 'cowboys', 'patriots', 'packers', '49ers'] },
-  { id: 'tennis', label: 'Tennis', color: '#F97316', catIds: ['342', '234'], keywords: ['tennis', 'atp', 'wta', 'wimbledon', 'roland', 'us open', 'australian open'] },
+  { id: 'football', labelKey: 'football' as TranslationKey, color: '#9D4EDD', catIds: ['234'], keywords: ['fc', 'fan', 'club', 'united', 'lfc', 'mutv', 'arsenal', 'chelsea', 'barca', 'real madrid', 'milan', 'inter', 'psg', 'bayern'] },
+  { id: 'bein', labelKey: 'beinZone' as TranslationKey, color: '#EF4444', catIds: ['85'], keywords: ['bein', 'sports', 'football', 'champions', 'league', 'la liga', 'serie a', 'ligue 1'] },
+  { id: 'tennis', labelKey: 'tennis' as TranslationKey, color: '#F97316', catIds: ['342', '234'], keywords: ['tennis', 'atp', 'wta', 'wimbledon', 'roland', 'us open', 'australian open'] },
 ];
+
+// ── i18n mapping: collection names → translation keys ────────────
+const COLLECTION_NAME_MAP: Record<string, TranslationKey> = {
+  'Live Sports': 'liveSports',
+  'Just Dropped': 'justDropped',
+  'Kids & Family': 'kidsFamily',
+  'Stay Informed': 'stayInformed',
+  '4K Experience': 'fourKExperience',
+  'Binge-Worthy': 'bingeWorthy',
+  'Around the World': 'aroundTheWorld',
+};
+
+const HERO_TITLE_MAP: Record<string, TranslationKey> = {
+  'Good Morning': 'heroGoodMorning',
+  'Afternoon Escape': 'heroAfternoonEscape',
+  'Prime Time': 'heroPrimeTime',
+  'Late Night': 'heroLateNight',
+};
+
+const HERO_SUBTITLE_MAP: Record<string, TranslationKey> = {
+  'Start your day informed. World-class news and morning entertainment.': 'heroGoodMorningSubtitle',
+  'Award-winning movies and handpicked series. Your next favorite is here.': 'heroAfternoonSubtitle',
+  'Live sports, fresh cinema, and curated series. Your evening, elevated.': 'heroPrimeTimeSubtitle',
+  'The best series for those who stay up. Something new awaits.': 'heroLateNightSubtitle',
+};
+
+const HERO_CTA_MAP: Record<string, TranslationKey> = {
+  'Start Watching': 'heroCTAStartWatching',
+  'Explore': 'heroCTAExplore',
+  'Watch Now': 'heroCTAWatchNow',
+  'Dive In': 'heroCTADiveIn',
+};
+
+const PILL_NAME_MAP: Record<string, TranslationKey> = {
+  'Sports': 'sports',
+  'News': 'news',
+  'Movies': 'movies',
+  'Series': 'series',
+  'Africa': 'africa',
+  'Kids': 'kids',
+  'Music': 'music',
+  'Faith': 'faith',
+};
+
+// ── i18n mapping: collection descriptions → translation keys ────
+const COLLECTION_DESC_MAP: Record<string, TranslationKey> = {
+  'Live Sports': 'liveSportsDesc',
+  'Just Dropped': 'justDroppedDesc',
+  'Kids & Family': 'kidsFamilyDesc',
+  'Stay Informed': 'stayInformedDesc',
+  '4K Experience': 'fourKExperienceDesc',
+  'Binge-Worthy': 'bingeWorthyDesc',
+  'Around the World': 'aroundTheWorldDesc',
+};
 
 // ── Data loaders for each collection type ─────────────────────────
 
 async function loadLiveCollection(
   credentials: XtreamCredentials,
   collection: Collection,
-  healthCatIds: string[]
+  healthCatIds: string[],
+  cache?: Record<string, LiveStream[]>
 ): Promise<LiveStream[]> {
   // Only load categories that are actually live
   const activeCats = collection.categoryIds.filter(
@@ -88,13 +149,21 @@ async function loadLiveCollection(
   if (activeCats.length === 0) return [];
 
   const results = await Promise.allSettled(
-    activeCats.slice(0, 4).map((catId) => getLiveStreams(credentials, catId))
+    activeCats.slice(0, 4).map((catId) => {
+      if (cache && cache[catId]) return Promise.resolve(cache[catId]);
+      return getLiveStreams(credentials, catId).then(items => {
+        if (cache) cache[catId] = items;
+        return items;
+      });
+    })
   );
   const all: LiveStream[] = [];
   for (const r of results) {
     if (r.status === 'fulfilled') all.push(...r.value);
   }
-  return dailyShuffle(all, collection.id).slice(0, collection.limit);
+  // Shuffle for variety, then pin gems to the front
+  const shuffled = dailyShuffle(all, collection.id);
+  return sortGemsFirst(shuffled).slice(0, collection.limit);
 }
 
 async function loadVodCollection(
@@ -160,7 +229,8 @@ interface RowData {
 
 // ── Discover Sports — tabbed sport channels ──────────────────────
 
-function DiscoverSports({ credentials, onPlay, navigate }: { credentials: XtreamCredentials; onPlay: (ch: Channel) => void; navigate: (path: string) => void }) {
+function DiscoverSports({ credentials, onPlay, navigate, categoryCache }: { credentials: XtreamCredentials; onPlay: (ch: Channel) => void; navigate: (path: string) => void; categoryCache: React.MutableRefObject<Record<string, LiveStream[]>> }) {
+  const { lang } = useLanguage();
   const [activeTab, setActiveTab] = useState(SPORT_TABS[0].id);
   const [channels, setChannels] = useState<Record<string, LiveStream[]>>({});
 
@@ -169,12 +239,19 @@ function DiscoverSports({ credentials, onPlay, navigate }: { credentials: Xtream
   useEffect(() => {
     if (channels[activeTab]) return;
     let mounted = true;
-    Promise.allSettled(tab.catIds.map(c => getLiveStreams(credentials, c)))
+    // Use shared category cache to avoid duplicate fetches for the same catId
+    Promise.allSettled(tab.catIds.map(c => {
+      if (categoryCache.current[c]) return Promise.resolve(categoryCache.current[c]);
+      return getLiveStreams(credentials, c).then(items => {
+        categoryCache.current[c] = items;
+        return items;
+      });
+    }))
       .then(results => {
         if (!mounted) return;
         const all: LiveStream[] = [];
         for (const r of results) {
-          if (r.status === 'fulfilled') all.push(...r.value);
+          if (r.status === 'fulfilled') all.push(...(r.value as LiveStream[]));
         }
         const filtered = all.filter(s => {
           const nl = s.name.toLowerCase();
@@ -188,40 +265,40 @@ function DiscoverSports({ credentials, onPlay, navigate }: { credentials: Xtream
   const items = channels[activeTab] || [];
 
   return (
-    <section className="mb-2 py-3">
-      <div className="flex items-center justify-between px-4 mb-3">
-        <div className="flex items-baseline gap-2">
-          <div className="w-1.5 h-1.5 rounded-full mb-0.5" style={{ background: tab.color, boxShadow: `0 0 6px ${tab.color}60` }} />
-          <h2 className="text-[20px] font-black tracking-tight text-white">Discover</h2>
+    <section className="mb-2 py-3 reveal">
+      <div className="flex flex-col items-center mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full" style={{ background: tab.color, boxShadow: `0 0 6px ${tab.color}60` }} />
+          <h2 className="text-[20px] font-black tracking-tight text-white">{t(lang, 'discover')}</h2>
         </div>
-        <button onClick={() => navigate('/live')} className="text-[11px] text-white/20 hover:text-white/50 transition-colors tracking-wide">More</button>
+        <button onClick={() => navigate('/live')} className="text-[11px] text-white/20 hover:text-white/50 transition-colors tracking-wide mt-1">{t(lang, 'more')}</button>
       </div>
 
       {/* Sport tabs */}
-      <div className="flex gap-2 px-4 mb-3">
-        {SPORT_TABS.map(t => (
+      <div className="flex gap-2 justify-center px-4 mb-3">
+        {SPORT_TABS.map(st => (
           <button
-            key={t.id}
-            onClick={() => setActiveTab(t.id)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-300"
-            style={activeTab === t.id ? {
-              background: `${t.color}18`,
-              border: `1px solid ${t.color}30`,
+            key={st.id}
+            onClick={() => setActiveTab(st.id)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-colors duration-300"
+            style={activeTab === st.id ? {
+              background: `${st.color}18`,
+              border: `1px solid ${st.color}30`,
               color: 'rgba(255,255,255,0.9)',
-              boxShadow: `0 0 10px ${t.color}15`,
+              boxShadow: `0 0 10px ${st.color}15`,
             } : {
               background: 'rgba(255,255,255,0.03)',
               border: '1px solid rgba(255,255,255,0.06)',
               color: 'rgba(255,255,255,0.35)',
             }}
           >
-            {t.label}
+            {t(lang, st.labelKey)}
           </button>
         ))}
       </div>
 
       {/* Channels */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-3 items-end">
+      <div data-focus-lens className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3 items-end">
         {items.length > 0 ? items.map((s, i) => {
           const depth = i < 2 ? 1.0 : i < 4 ? 0.93 : i < 6 ? 0.87 : 0.8;
           return (
@@ -259,6 +336,7 @@ function DiscoverSports({ credentials, onPlay, navigate }: { credentials: Xtream
 // ── Main Component ────────────────────────────────────────────────
 
 export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
+  const { lang } = useLanguage();
   const navigate = useNavigate();
   const { getRecent } = useWatchHistory();
   const { profile } = useUserProfile();
@@ -277,6 +355,9 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const [fixturesHex, setFixturesHex] = useState<LiveStream[]>([]);
   const [footballHex, setFootballHex] = useState<LiveStream[]>([]);
 
+  // Shared cache: prevents duplicate fetches for the same live category (e.g. 234 = Football)
+  const categoryCache = useRef<Record<string, LiveStream[]>>({});
+
   const recentHistory = getRecent(10).filter(
     (h): h is WatchHistoryEntry & { name: string; url: string } =>
       !!h.name && !!h.url
@@ -294,56 +375,65 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
     async function load() {
       setError(false);
+      console.log('[HOME] Loading started');
+      const t0 = Date.now();
       try {
         // Fetch health + probe data in parallel
         const [health, probeData] = await Promise.all([
           fetchVpsHealth(),
           fetchServerProbeData(),
         ]);
+        console.log('[HOME] Health + probe loaded in', Date.now() - t0, 'ms — live categories:', (health.liveCategories || []).length);
         if (probeData) seedProbeCacheFromServer(probeData);
         const liveCatIds: string[] = health.liveCategories || [];
 
-        // Load all collections in parallel
+        // Load collections progressively — each row appears as it resolves
+        let anyLoaded = false;
+        console.log('[HOME] Loading', HOMEPAGE_COLLECTIONS.length, 'collections...');
         const rowPromises = HOMEPAGE_COLLECTIONS.map(async (collection) => {
+          const ct0 = Date.now();
           const rowData: RowData = { collection };
           try {
             if (collection.type === 'live') {
-              rowData.liveStreams = await loadLiveCollection(credentials, collection, liveCatIds);
+              rowData.liveStreams = await loadLiveCollection(credentials, collection, liveCatIds, categoryCache.current);
             } else if (collection.type === 'vod') {
               rowData.vodStreams = await loadVodCollection(credentials, collection);
             } else if (collection.type === 'series') {
               rowData.seriesItems = await loadSeriesCollection(credentials, collection);
             }
-          } catch {
-            // Individual row failure is OK — just show empty
+          } catch (err) {
+            console.warn('[HOME] Row failed:', collection.id, err);
           }
-          return rowData;
+          const count = (rowData.liveStreams?.length || 0) + (rowData.vodStreams?.length || 0) + (rowData.seriesItems?.length || 0);
+          console.log('[HOME] Row ready:', collection.id, '—', count, 'items in', Date.now() - ct0, 'ms');
+          // Append this row immediately when it resolves
+          if (!mounted) return;
+          const hasContent = count > 0;
+          if (hasContent) {
+            anyLoaded = true;
+            setLoading(false);
+            setRows(prev => {
+              if (prev.some(r => r.collection.id === collection.id)) return prev;
+              // Insert in original HOMEPAGE_COLLECTIONS order
+              const ordered = [...prev, rowData].sort((a, b) => {
+                const ai = HOMEPAGE_COLLECTIONS.findIndex(c => c.id === a.collection.id);
+                const bi = HOMEPAGE_COLLECTIONS.findIndex(c => c.id === b.collection.id);
+                return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+              });
+              return ordered;
+            });
+          }
         });
 
-        const results = await Promise.allSettled(rowPromises);
+        await Promise.allSettled(rowPromises);
         if (!mounted) return;
-
-        const loadedRows: RowData[] = [];
-        for (const r of results) {
-          if (r.status === 'fulfilled') {
-            const row = r.value;
-            // Only include rows that have content
-            const hasContent =
-              (row.liveStreams && row.liveStreams.length > 0) ||
-              (row.vodStreams && row.vodStreams.length > 0) ||
-              (row.seriesItems && row.seriesItems.length > 0);
-            if (hasContent) loadedRows.push(row);
-          }
-        }
-
-        if (loadedRows.length === 0) {
-          setError(true);
-        } else {
-          setRows(loadedRows);
-        }
-      } catch {
+        console.log('[HOME] All collections done in', Date.now() - t0, 'ms — loaded:', anyLoaded);
+        if (!anyLoaded) setError(true);
+      } catch (err) {
+        console.error('[HOME] Fatal load error:', err);
         if (mounted) setError(true);
       } finally {
+        console.log('[HOME] Load complete — total:', Date.now() - t0, 'ms');
         if (mounted) setLoading(false);
       }
     }
@@ -356,8 +446,9 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   useEffect(() => {
     // Only run after main rows loaded + profile exists
-    if (loading || rows.length === 0 || !profile) return;
-    const userProfile = profile; // capture non-null for async closure
+    // Start immediately — don't wait for main rows or profile
+    if (!credentials) return;
+    const userProfile = profile; // may be null on first visit
     let mounted = true;
 
     async function loadSmartRows() {
@@ -391,14 +482,14 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
         const newSmartRows: RowData[] = [];
 
         // "For You" row
-        if (moviePool.length > 0) {
+        if (moviePool.length > 0 && userProfile) {
           const forYou = getForYouItems(moviePool, 'movie', userProfile, TMDB_MAP, 15);
           if (forYou.length > 0) {
             const smartCollection: SmartCollection = {
               id: 'smart-for-you',
-              name: 'For You',
+              name: '__forYou__',
               emoji: '',
-              description: 'Personalized picks based on your taste',
+              description: '__forYouDesc__',
               type: 'smart-vod',
               contentType: 'vod',
               navigateTo: '/movies',
@@ -412,7 +503,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
         }
 
         // "Because You Watched" row
-        if (userProfile.lastWatched.length > 0) {
+        if (userProfile && userProfile.lastWatched.length > 0) {
           const lastItem = userProfile.lastWatched.find((w) => w.genres.length > 0);
           if (lastItem && moviePool.length > 0) {
             const similar = getBecauseYouWatched(
@@ -428,9 +519,9 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
               const cleanName = lastItem.name.replace(/\s*\(\d{4}\)\s*$/, '');
               const smartCollection: SmartCollection = {
                 id: 'smart-because-watched',
-                name: `Because You Watched ${cleanName}`,
+                name: `__becauseYouWatched__ ${cleanName}`,
                 emoji: '',
-                description: `Similar to ${cleanName}`,
+                description: `__similarTo__ ${cleanName}`,
                 type: 'smart-vod',
                 contentType: 'vod',
                 navigateTo: '/movies',
@@ -462,7 +553,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
     loadSmartRows();
     return () => { mounted = false; };
-  }, [loading, rows, profile, credentials]);
+  }, [credentials]);
 
   // ── Hex Sections — independent loading ──────────────────────
   useEffect(() => {
@@ -491,22 +582,34 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
         setDashOriginalsHex(all.slice(0, 20));
       });
 
-    // Hottest Fixtures — live sports
-    Promise.allSettled(['234', '85', '492'].map(c => getLiveStreams(credentials, c)))
+    // Hottest Fixtures — live sports (uses shared categoryCache)
+    Promise.allSettled(['234', '85', '492'].map(c => {
+      if (categoryCache.current[c]) return Promise.resolve(categoryCache.current[c]);
+      return getLiveStreams(credentials, c).then(items => {
+        categoryCache.current[c] = items;
+        return items;
+      });
+    }))
       .then(results => {
         if (!mounted) return;
         const all: LiveStream[] = [];
         for (const r of results) {
-          if (r.status === 'fulfilled') all.push(...r.value);
+          if (r.status === 'fulfilled') all.push(...(r.value as LiveStream[]));
         }
         const alive = all.filter(s => isChannelProbeAlive(s.stream_id));
         setFixturesHex(alive.slice(0, 6));
       });
 
-    // Discover Football — fan channels
-    getLiveStreams(credentials, '234').then(items => {
+    // Discover Football — fan channels (uses shared categoryCache, cleaned keywords)
+    const fetchFootball = categoryCache.current['234']
+      ? Promise.resolve(categoryCache.current['234'])
+      : getLiveStreams(credentials, '234').then(items => {
+          categoryCache.current['234'] = items;
+          return items;
+        });
+    fetchFootball.then(items => {
       if (!mounted) return;
-      const fanKeywords = ['fc', 'tv', 'fan', 'club', 'united', 'city', 'lfc', 'mutv', 'arsenal', 'chelsea', 'barca', 'real madrid', 'milan', 'inter', 'psg', 'bayern', 'ajax', 'celtic', 'rangers', 'porto', 'benfica', 'sporting'];
+      const fanKeywords = ['fc', 'fan', 'club', 'united', 'lfc', 'mutv', 'arsenal', 'chelsea', 'barca', 'real madrid', 'milan', 'inter', 'psg', 'bayern', 'ajax', 'celtic', 'rangers', 'porto', 'benfica', 'sporting'];
       const fans = items.filter(s => {
         const nl = s.name.toLowerCase();
         return fanKeywords.some(k => nl.includes(k)) && isChannelProbeAlive(s.stream_id);
@@ -607,10 +710,14 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
     });
   }, [onPlay]);
 
+  // ── Scroll reveal ──────────────────────────────────────────────
+  const scrollRef = useScrollReveal([loading, rows, smartRows, platformData, fixturesHex]);
+  useScrollFocus();
+
   // ── Render ──────────────────────────────────────────────────────
 
   return (
-    <div className="pt-16 pb-4 animate-fade-in">
+    <div ref={scrollRef} className="pt-16 pb-32">
       {/* ── Hero Banner (time-aware) ── */}
       <div
         className="relative mb-2 overflow-hidden"
@@ -623,29 +730,29 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
         <div className={`absolute inset-0 bg-gradient-to-br ${hero.gradient}`} />
 
         <div className="relative z-10 flex flex-col justify-end h-full px-5 pb-5 max-w-2xl">
-          <h2 className="text-[22px] font-bold text-white mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '-0.02em' }}>{hero.title}</h2>
-          <p className="text-white/35 text-[13px] mb-4 max-w-sm leading-relaxed">
+          <h2 className="text-[22px] font-bold text-white mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif", letterSpacing: '-0.02em' }}>{HERO_TITLE_MAP[hero.title] ? t(lang, HERO_TITLE_MAP[hero.title]) : hero.title}</h2>
+          <p className="text-[11px] mb-4 max-w-sm leading-relaxed hero-subtitle-reveal">
             {recentHistory.length > 0
-              ? hero.subtitle
-              : 'Curated entertainment, live sports, and world cinema. Your experience starts here.'}
+              ? (HERO_SUBTITLE_MAP[hero.subtitle] ? t(lang, HERO_SUBTITLE_MAP[hero.subtitle]) : hero.subtitle)
+              : t(lang, 'heroDefault')}
           </p>
           <button
             onClick={() => navigate(hero.navigateTo)}
-            className="flex items-center gap-2.5 px-6 py-3 rounded-2xl font-semibold text-[14px] tracking-wide hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 w-fit text-white"
+            className="flex items-center gap-2.5 px-6 py-3 rounded-2xl font-semibold text-[14px] tracking-wide spring-press w-fit text-white"
             style={{
               background: 'linear-gradient(135deg, #9D4EDD 0%, #7B2CBF 60%, #6D28D9 100%)',
               boxShadow: '0 0 24px rgba(157,78,221,0.35), 0 4px 16px rgba(157,78,221,0.25), inset 0 1px 0 rgba(255,255,255,0.1)',
             }}
           >
             <Play className="w-4.5 h-4.5" fill="white" />
-            {hero.cta}
+            {HERO_CTA_MAP[hero.cta] ? t(lang, HERO_CTA_MAP[hero.cta]) : hero.cta}
           </button>
         </div>
       </div>
 
       {/* ── Quick Navigation — clean pills ───────────────────── */}
-      <div className="px-4 mb-5">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+      <div className="px-4 mb-5 reveal">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth-x pb-1">
           {COLLECTION_CARDS.map((card) => {
             const IconMap: Record<string, React.ReactNode> = {
               sports: <Trophy className="w-3 h-3" />,
@@ -658,14 +765,14 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
               <button
                 key={card.id}
                 onClick={() => navigate(card.navigateTo)}
-                className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-[7px] rounded-full transition-all duration-300 hover:scale-[1.02] active:scale-[0.97]"
+                className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-[7px] rounded-full card-press hover:scale-[1.02] active:scale-[0.97]"
                 style={{
                   background: 'rgba(255,255,255,0.03)',
                   border: '1px solid rgba(255,255,255,0.06)',
                 }}
               >
                 {icon && <span className="text-white/40">{icon}</span>}
-                <span className="text-[11px] font-medium text-white/50 whitespace-nowrap">{card.name}</span>
+                <span className="text-[11px] font-medium text-white/50 whitespace-nowrap">{PILL_NAME_MAP[card.name] ? t(lang, PILL_NAME_MAP[card.name]) : card.name}</span>
               </button>
             );
           })}
@@ -674,17 +781,18 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
       {/* ── Continue Watching ─────────────────────────────────── */}
       {recentHistory.length > 0 && (
-        <section className="mb-6">
-          <SectionHeader emoji="" title="Continue Watching" icon={<Clock className="w-4 h-4 text-primary-light" />} />
+        <section className="mb-6 reveal">
+          <SectionHeader emoji="" title={t(lang, 'continueWatching')} icon={<Clock className="w-4 h-4 text-primary-light" />} />
           <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-2">
-            {recentHistory.map((entry) => (
+            {recentHistory.map((entry, idx) => (
               <button
                 key={entry.channelId}
                 onClick={() => playHistoryItem(entry)}
                 className="flex-shrink-0 w-40 group"
+                style={idx < 12 ? { animation: `vee-card-in 0.7s cubic-bezier(0.4, 0, 0.2, 1) ${idx * 90}ms both` } : undefined}
               >
                 <div
-                  className="relative aspect-video rounded-xl overflow-hidden mb-2 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary/10"
+                  className="relative aspect-video rounded-xl overflow-hidden mb-2 transition-shadow duration-300 group-hover:shadow-lg group-hover:shadow-primary/10"
                   style={{ background: 'rgba(255,255,255,0.03)' }}
                 >
                   <ChannelIcon
@@ -698,11 +806,11 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                   </div>
                   {entry.category && (
                     <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/50 rounded text-[9px] font-semibold text-white/80 uppercase tracking-wide">
-                      {entry.category === 'live' ? 'Live' : entry.category === 'movie' ? 'Movie' : entry.category}
+                      {entry.category === 'live' ? t(lang, 'live') : entry.category === 'movie' ? t(lang, 'movie') : entry.category === 'series' ? t(lang, 'typeSeries') : entry.category}
                     </div>
                   )}
                   <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-black/50 rounded text-[9px] text-white/50">
-                    {timeAgo(entry.watchedAt)}
+                    {timeAgo(entry.watchedAt, lang)}
                   </div>
                 </div>
                 <p className="text-xs text-text-secondary truncate group-hover:text-white transition-colors">
@@ -715,34 +823,42 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       )}
 
       {/* ── Zone divider ── */}
-      <div className="mx-8 my-2 h-[0.5px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.08), transparent)' }} />
+      <div className="mx-8 my-1 h-[0.5px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.06), transparent)' }} />
 
       {/* ── Vee Smart Picks ─────────────────────────────────── */}
-      {veePool.length > 0 && (
-        <section className="mt-6 mb-2">
+      {/* V1 LOCKDOWN: always render container to prevent layout shift when data loads */}
+      <section className={`mt-6 mb-2 transition-opacity duration-500 ${veePool.length > 0 ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
+        {veePool.length > 0 && (
           <VeeWidget
             items={veePool}
             onPlay={(item) => playMovie(item as unknown as VodStream)}
             onTrailer={(key, title, poster, overview) => setTrailerState({ youtubeKey: key, title, poster, overview })}
             tmdbMap={veeTmdbMap}
           />
-        </section>
-      )}
+        )}
+      </section>
 
       {/* ── Zone divider ── */}
       <div className="mx-8 my-2 h-[0.5px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.06), transparent)' }} />
 
+      {/* ── DASH Feed — curated community experience ── */}
+      <FeedSection />
+
       {/* ── Platform Originals Showcase ────────────────────── */}
-      {platformData.length > 0 && (
-        <PlatformShowcase
-          platforms={platformData}
-          onNavigate={navigate}
-        />
-      )}
+      {/* V1 LOCKDOWN: fade in without shifting layout */}
+      <div className={`transition-opacity duration-500 ${platformData.length > 0 ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden'}`}>
+        {platformData.length > 0 && (
+          <PlatformShowcase
+            platforms={platformData}
+            onNavigate={navigate}
+          />
+        )}
+      </div>
 
       {/* ── Because You Watched — intimate, grey-orange, firefly glow ──── */}
+      {/* V1 LOCKDOWN: fade in without shifting layout */}
       {becauseRow && becauseRow.vodStreams && (
-        <section className="mb-1 relative">
+        <section className="mb-1 relative reveal">
           <div className="px-4 mb-3">
             <p className="text-[11px] font-bold tracking-[3px] uppercase" style={{
               background: 'linear-gradient(90deg, rgba(210,180,140,0.5), rgba(255,200,150,0.4), rgba(210,180,140,0.3))',
@@ -750,7 +866,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
             }}>
-              {becauseRow.collection.name.replace('Because You Watched ', 'SINCE YOU LIKED ')}
+              {becauseRow.collection.name.replace('__becauseYouWatched__ ', `${t(lang, 'sinceYouLiked')} `)}
             </p>
           </div>
           <div className="relative">
@@ -763,7 +879,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                 animation: 'firefly-glide 12s cubic-bezier(0.4, 0, 0.2, 1) infinite',
               }}
             />
-            <div className="flex gap-5 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-3">
+            <div data-focus-lens className="flex gap-5 overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3">
               {becauseRow.vodStreams.map((movie) => {
                 const tmdb = becauseRow.tmdbMap?.[`m:${movie.stream_id}`];
                 return (
@@ -788,20 +904,21 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       {/* ── Section Breaker: Sports ── */}
       <div className="flex flex-col items-center py-6 gap-3">
         <div className="w-3 h-3 rounded-full bg-primary/40" style={{ animation: 'sports-ball-float 3s ease-in-out infinite' }} />
-        <span className="text-[10px] font-medium text-white/15 tracking-[4px] uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Sports Break</span>
+        <span className="text-[10px] font-medium text-white/15 tracking-[4px] uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{t(lang, 'sportsBreak')}</span>
       </div>
 
       {/* ── Hottest Fixtures — soft glowing circles ────────── */}
+      {/* V1 LOCKDOWN: collapse to 0 height when empty, fade in when loaded */}
       {fixturesHex.length > 0 && (
-        <section className="mb-2 py-3">
-          <div className="flex items-center justify-between px-4 mb-2">
-            <div className="flex items-baseline gap-2.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-red-400 mb-0.5 animate-pulse" style={{ boxShadow: '0 0 6px rgba(248,113,113,0.4)' }} />
-              <h2 className="text-[20px] font-black tracking-tight text-white">Hottest Fixtures</h2>
+        <section className="mb-2 py-3 reveal" style={{ contain: 'layout' }}>
+          <div className="flex flex-col items-center mb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-400 live-badge-pulse" style={{ boxShadow: '0 0 6px rgba(248,113,113,0.4)' }} />
+              <h2 className="text-[20px] font-black tracking-tight text-white">{t(lang, 'hottestFixtures')}</h2>
             </div>
-            <button onClick={() => navigate('/live')} className="text-[11px] text-white/30 hover:text-white/60 transition-colors">See All</button>
+            <button onClick={() => navigate('/live')} className="text-[11px] text-white/30 hover:text-white/60 transition-colors mt-1">{t(lang, 'seeAll')}</button>
           </div>
-          <div className="flex gap-4 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-3 items-center">
+          <div data-focus-lens className="flex gap-4 overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x justify-center px-4 pb-3 items-center">
             {fixturesHex.map((s) => (
               <button
                 key={s.stream_id}
@@ -816,7 +933,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                   setCurrentChannel(ch.id);
                   onPlay(ch);
                 }}
-                className="flex-shrink-0 flex flex-col items-center gap-2 group transition-transform duration-300 hover:scale-[1.06] active:scale-[0.96]"
+                className="flex-shrink-0 flex flex-col items-center gap-2 group card-press hover:scale-[1.03] active:scale-[0.96]"
                 style={{ width: 90 }}
               >
                 {/* Circle with soft glow */}
@@ -832,8 +949,8 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                   {/* LIVE dot */}
                   <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full"
                     style={{ background: 'linear-gradient(135deg, #F97316, #EF4444, #9D4EDD)' }}>
-                    <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
-                    <span className="text-[7px] font-bold text-white">LIVE</span>
+                    <span className="w-1 h-1 rounded-full bg-white live-badge-pulse" />
+                    <span className="text-[7px] font-bold text-white">{t(lang, 'live').toUpperCase()}</span>
                   </div>
                 </div>
                 {/* Name */}
@@ -847,32 +964,33 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       )}
 
       {/* ── Discover Sports — tabbed: Football, Basketball, NFL, Tennis ── */}
-      <DiscoverSports credentials={credentials} onPlay={onPlay} navigate={navigate} />
+      <DiscoverSports credentials={credentials} onPlay={onPlay} navigate={navigate} categoryCache={categoryCache} />
 
       {/* ── Section Breaker: Back to Entertainment ── */}
       <div className="flex flex-col items-center py-6 gap-2">
         <div className="flex items-center gap-3">
           <div className="w-8 h-[0.5px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.3))' }} />
-          <span className="text-[11px] font-medium text-white/20 tracking-[3px] uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>Dive Right Back In</span>
+          <span className="text-[11px] font-medium text-white/20 tracking-[3px] uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{t(lang, 'diveRightBackIn')}</span>
           <div className="w-8 h-[0.5px]" style={{ background: 'linear-gradient(270deg, transparent, rgba(157,78,221,0.3))' }} />
         </div>
       </div>
 
       {/* ── DASH Exclusives — cinema ticket cards (4 posters per ticket) ── */}
       {dashOriginalsHex.length > 0 && (
-        <section className="mb-2 py-3">
+        <section className="mb-2 py-3 reveal" style={{ contain: 'layout' }}>
           <div className="flex items-center justify-between px-4 mb-3">
             <div className="flex items-baseline gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-primary mb-0.5" style={{ boxShadow: '0 0 6px rgba(157,78,221,0.4)' }} />
-              <h2 className="text-[20px] font-black tracking-tight text-white">DASH Exclusives</h2>
+              <h2 className="text-[20px] font-black tracking-tight text-white">{t(lang, 'dashExclusives')}</h2>
             </div>
-            <button onClick={() => navigate('/movies')} className="text-[11px] text-white/30 hover:text-white/60 transition-colors">See All</button>
+            <button onClick={() => navigate('/movies')} className="text-[11px] text-white/30 hover:text-white/60 transition-colors">{t(lang, 'seeAll')}</button>
           </div>
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-3 items-end">
+          <div data-focus-lens className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3 items-end">
 
-            {/* ── Art Ticket — non-clickable, 4 posters, shimmer ── */}
-            <div
-              className="flex-shrink-0 relative rounded-2xl overflow-hidden"
+            {/* ── Art Ticket — clickable, 4 posters, shimmer ── */}
+            <button
+              onClick={() => navigate('/movies')}
+              className="flex-shrink-0 relative rounded-2xl overflow-hidden cursor-pointer card-press hover:scale-[1.03] active:scale-[0.97]"
               style={{
                 width: 270,
                 height: 165,
@@ -882,8 +1000,8 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
               <div className="flex h-full">
                 {dashOriginalsHex.slice(0, 4).map((m) => (
                   <div key={m.stream_id} className="flex-1 relative overflow-hidden">
-                    {m.stream_icon ? (
-                      <img src={m.stream_icon} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    {safeImageUrl(m.stream_icon) ? (
+                      <img src={safeImageUrl(m.stream_icon)!} alt="" className="w-full h-full object-cover" loading="lazy" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/15 to-primary-dark/10" />
                     )}
@@ -898,10 +1016,10 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
               </div>
               <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{ boxShadow: 'inset 0 0 20px rgba(0,0,0,0.3)' }} />
               <div className="absolute bottom-0 inset-x-0 px-3 pb-2 pointer-events-none">
-                <p className="text-[9px] font-bold text-primary-light/40 tracking-widest uppercase text-center">D+ Collection</p>
+                <p className="text-[9px] font-bold text-primary-light/40 tracking-widest uppercase text-center">{t(lang, 'dPlusCollection')}</p>
               </div>
               <div className="absolute top-0 inset-x-0 h-[1px]" style={{ background: 'linear-gradient(90deg, transparent 10%, rgba(157,78,221,0.2) 50%, transparent 90%)' }} />
-            </div>
+            </button>
 
             {/* ── Portrait Cards — gradual scale reduction at tail ── */}
             {dashOriginalsHex.slice(4).map((m, i, arr) => {
@@ -920,7 +1038,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                       category: 'movie',
                     });
                   }}
-                  className="flex-shrink-0 relative rounded-xl overflow-hidden transition-transform duration-300 hover:scale-[1.05] active:scale-[0.97]"
+                  className="flex-shrink-0 relative rounded-xl overflow-hidden card-press hover:scale-[1.03] active:scale-[0.97]"
                   style={{
                     width: 95 * arriving,
                     height: 142 * arriving,
@@ -928,8 +1046,8 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                     animationDelay: pulseDelay,
                   }}
                 >
-                  {m.stream_icon ? (
-                    <img src={m.stream_icon} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  {safeImageUrl(m.stream_icon) ? (
+                    <img src={safeImageUrl(m.stream_icon)!} alt="" className="w-full h-full object-cover" loading="lazy" />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary-dark/10" />
                   )}
@@ -952,24 +1070,25 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       <div className="mx-8 my-2 h-[0.5px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.06), transparent)' }} />
 
       {/* ── Dynamic Collection Rows ──────────────────────────── */}
-      {loading ? (
-        <div className="space-y-8 px-1">
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
+      {loading && allRows.length === 0 && !error && (
+        <div className="flex justify-center py-12">
+          <div className="w-8 h-[2px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)' }}>
+            <div className="h-full w-full bg-primary/30 rounded-full" style={{ animation: 'loading-bar 1.5s ease-in-out infinite' }} />
+          </div>
         </div>
-      ) : error ? (
+      )}
+      {error ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <p className="text-text-muted text-sm">Unable to load — tap to retry</p>
+          <p className="text-text-muted text-sm">{t(lang, 'unableToLoadTapRetry')}</p>
           <button
             onClick={() => { setLoading(true); setRetryKey((k) => k + 1); }}
             className="px-5 py-2.5 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors"
           >
-            Retry
+            {t(lang, 'retry')}
           </button>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4">
           {allRows.map((row, i) => (
             <React.Fragment key={row.collection.id}>
               {/* Breaker after Fresh Movies */}
@@ -977,7 +1096,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                 <div className="flex flex-col items-center py-5 gap-2">
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-[0.5px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.25))' }} />
-                    <span className="text-[10px] font-bold text-white/15 tracking-[3px] uppercase">Get in Your Comfort Zone</span>
+                    <span className="text-[10px] font-bold text-white/15 tracking-[3px] uppercase">{t(lang, 'getInComfortZone')}</span>
                     <div className="w-6 h-[0.5px]" style={{ background: 'linear-gradient(270deg, transparent, rgba(157,78,221,0.25))' }} />
                   </div>
                 </div>
@@ -987,7 +1106,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                 <div className="flex flex-col items-center py-5 gap-2">
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-[0.5px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.25))' }} />
-                    <span className="text-[10px] font-bold text-white/15 tracking-[3px] uppercase">Try Something New</span>
+                    <span className="text-[10px] font-bold text-white/15 tracking-[3px] uppercase">{t(lang, 'trySomethingNew')}</span>
                     <div className="w-6 h-[0.5px]" style={{ background: 'linear-gradient(270deg, transparent, rgba(157,78,221,0.25))' }} />
                   </div>
                 </div>
@@ -1042,6 +1161,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           onClose={() => setTrailerState(null)}
         />
       )}
+
     </div>
   );
 };
@@ -1051,36 +1171,51 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 function SectionHeader({
   emoji,
   title,
+  subtitle,
   icon,
   seeAllTo,
   onNavigate,
 }: {
   emoji: string;
   title: string;
+  subtitle?: string;
   icon?: React.ReactNode;
   seeAllTo?: string;
   onNavigate?: (path: string) => void;
 }) {
+  const { lang } = useLanguage();
+  // Translate collection name if a mapping exists
+  const translatedTitle = COLLECTION_NAME_MAP[title]
+    ? t(lang, COLLECTION_NAME_MAP[title])
+    : title.startsWith('__forYou__') ? t(lang, 'forYou')
+    : title.startsWith('__becauseYouWatched__') ? `${t(lang, 'becauseYouWatched')} ${title.replace('__becauseYouWatched__ ', '')}`
+    : title;
+
+  // Translate collection description if a mapping exists
+  const translatedSubtitle = COLLECTION_DESC_MAP[title]
+    ? t(lang, COLLECTION_DESC_MAP[title])
+    : subtitle || undefined;
+
   // Thin accent line under the title — different color per section vibe
   const isLive = title.includes('Sports') || title.includes('NBA') || title.includes('Fixtures');
-  const isEntertainment = title.includes('Movies') || title.includes('Cinema') || title.includes('Drama');
+  const isEntertainment = title.includes('Movies') || title.includes('Cinema') || title.includes('Drama') || title.includes('Dropped') || title.includes('Binge') || title.includes('4K') || title.includes('World');
 
   return (
     <div className="px-4 mb-3">
       <div className="flex items-center justify-between">
         <div className="flex items-baseline gap-2">
           <div
-            className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mb-0.5 ${isLive ? 'animate-pulse' : ''}`}
+            className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mb-0.5 ${isLive ? 'live-badge-pulse' : ''}`}
             style={{
-              background: isLive ? '#4ADE80' : isEntertainment ? '#9D4EDD' : '#7C3AED',
-              boxShadow: isLive ? '0 0 6px rgba(248,113,113,0.4)' : '0 0 6px rgba(157,78,221,0.3)',
+              background: isLive ? '#EF4444' : isEntertainment ? '#9D4EDD' : '#7C3AED',
+              boxShadow: isLive ? '0 0 6px rgba(239,68,68,0.4)' : '0 0 6px rgba(157,78,221,0.3)',
             }}
           />
           <h2
             className="text-[20px] font-black tracking-tight text-white"
             style={{ textShadow: '0 0 40px rgba(157,78,221,0.08)' }}
           >
-            {title}
+            {translatedTitle}
           </h2>
         </div>
         {seeAllTo && onNavigate && (
@@ -1088,11 +1223,14 @@ function SectionHeader({
             onClick={() => onNavigate(seeAllTo)}
             className="flex items-center gap-1 text-[11px] text-white/20 hover:text-white/50 transition-colors tracking-wide"
           >
-            More
+            {t(lang, 'more')}
             <ChevronRight className="w-3 h-3" />
           </button>
         )}
       </div>
+      {translatedSubtitle && (
+        <p className="text-[11px] text-white/25 mt-0.5 pl-3.5">{translatedSubtitle}</p>
+      )}
     </div>
   );
 }
@@ -1112,6 +1250,7 @@ function CollectionRow({
   onOpenDetail?: (movie: VodStream, tmdbMap?: Record<string, TmdbEntry>) => void;
   onNavigate: (path: string) => void;
 }) {
+  const { lang } = useLanguage();
   const { collection } = row;
 
   // ── Live channel row — wider landscape cards ────────────────
@@ -1119,27 +1258,28 @@ function CollectionRow({
     const aliveStreams = row.liveStreams.filter(s => isChannelProbeAlive(s.stream_id));
     if (aliveStreams.length === 0) return null;
     return (
-      <section className="mb-1">
+      <section className="mb-1 reveal">
         <SectionHeader
           emoji={collection.emoji}
           title={collection.name}
+          subtitle={'description' in collection ? collection.description : undefined}
           seeAllTo={collection.navigateTo}
           onNavigate={onNavigate}
         />
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-3">
+        <div data-focus-lens className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3">
           {aliveStreams.map((stream, i) => (
             <button
               key={stream.stream_id}
               onClick={() => onPlayLive(stream, aliveStreams)}
               className="flex-shrink-0 group"
-              style={{ width: i === 0 ? 160 : 140 }}
+              style={{ width: i === 0 ? 160 : 140, ...(i < 12 ? { animation: `vee-card-in 0.7s cubic-bezier(0.4, 0, 0.2, 1) ${i * 90}ms both` } : {}) }}
             >
-              <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary/8"
+              <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 transition-shadow duration-300 group-hover:shadow-lg group-hover:shadow-primary/8"
                 style={{ background: 'rgba(255,255,255,0.02)' }}>
                 <ChannelIcon src={stream.stream_icon} name={stream.name} size="lg" className="!w-full !h-full !rounded-xl" />
                 <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-black/50 rounded text-[8px] font-semibold text-red-400">
-                  <span className="w-1 h-1 rounded-full bg-red-400 animate-pulse" />
-                  LIVE
+                  <span className="w-1 h-1 rounded-full bg-red-400 live-badge-pulse" />
+                  {t(lang, 'live').toUpperCase()}
                 </div>
               </div>
               <p className="text-[10px] text-white/40 truncate group-hover:text-white/70 transition-colors">{stream.name}</p>
@@ -1153,18 +1293,19 @@ function CollectionRow({
   // ── Smart VOD row — larger spotlight cards (personalized) ─────
   if (collection.type === 'smart-vod' && row.vodStreams) {
     return (
-      <section className="mb-1">
+      <section className="mb-1 reveal">
         <SectionHeader
           emoji={collection.emoji}
           title={collection.name}
+          subtitle={'description' in collection ? collection.description : undefined}
           seeAllTo={collection.navigateTo}
           onNavigate={onNavigate}
         />
-        <div className="flex gap-3.5 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-3">
+        <div data-focus-lens className="flex gap-3.5 overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3">
           {row.vodStreams.map((movie, i) => {
             const tmdb = row.tmdbMap?.[`m:${movie.stream_id}`];
             return (
-              <div key={movie.stream_id} className="flex-shrink-0" style={{ width: i === 0 ? 140 : 125 }}>
+              <div key={movie.stream_id} className="flex-shrink-0" style={{ width: i === 0 ? 140 : 125, ...(i < 12 ? { animation: `vee-card-in 0.7s cubic-bezier(0.4, 0, 0.2, 1) ${i * 90}ms both` } : {}) }}>
                 <PosterCard
                   title={movie.name}
                   poster={movie.stream_icon}
@@ -1183,16 +1324,17 @@ function CollectionRow({
   // ── Movie row — standard portrait with depth ──────────────────
   if (collection.type === 'vod' && row.vodStreams) {
     return (
-      <section className="mb-1">
+      <section className="mb-1 reveal">
         <SectionHeader
           emoji={collection.emoji}
           title={collection.name}
+          subtitle={'description' in collection ? collection.description : undefined}
           seeAllTo={collection.navigateTo}
           onNavigate={onNavigate}
         />
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-3">
-          {row.vodStreams.map((movie) => (
-            <div key={movie.stream_id} className="flex-shrink-0 w-[115px]">
+        <div data-focus-lens className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3">
+          {row.vodStreams.map((movie, i) => (
+            <div key={movie.stream_id} className="flex-shrink-0 w-[115px]" style={i < 12 ? { animation: `vee-card-in 0.7s cubic-bezier(0.4, 0, 0.2, 1) ${i * 90}ms both` } : undefined}>
               <PosterCard
                 title={movie.name}
                 poster={movie.stream_icon}
@@ -1209,16 +1351,17 @@ function CollectionRow({
   // ── Series row — taller portrait cards ─────────────────────────
   if (collection.type === 'series' && row.seriesItems) {
     return (
-      <section className="mb-1">
+      <section className="mb-1 reveal">
         <SectionHeader
           emoji={collection.emoji}
           title={collection.name}
+          subtitle={'description' in collection ? collection.description : undefined}
           seeAllTo={collection.navigateTo}
           onNavigate={onNavigate}
         />
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-3">
-          {row.seriesItems.map((series) => (
-            <div key={series.series_id} className="flex-shrink-0 w-[110px]">
+        <div data-focus-lens className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3">
+          {row.seriesItems.map((series, i) => (
+            <div key={series.series_id} className="flex-shrink-0 w-[110px]" style={i < 12 ? { animation: `vee-card-in 0.7s cubic-bezier(0.4, 0, 0.2, 1) ${i * 90}ms both` } : undefined}>
               <PosterCard
                 title={series.name}
                 poster={series.cover}

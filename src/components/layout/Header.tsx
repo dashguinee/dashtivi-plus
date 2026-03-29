@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Tv, LogOut, Volume2, VolumeX } from 'lucide-react';
 import { toggleAmbient } from '@/lib/ambient-audio';
+import { LangToggle } from '@/components/ui/LangToggle';
+import { useLanguage } from '@/i18n';
 
 interface Props {
   onLogout?: () => void;
 }
 
 export const Header: React.FC<Props> = ({ onLogout }) => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/';
@@ -15,11 +18,13 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 safe-top">
+      {/* PERF FIX: replaced glass-strong with solid bg on non-home pages.
+          backdrop-filter: blur(40px) on a sticky header recalculates every scroll frame. */}
       <div
-        className={`flex items-center justify-between px-4 py-3 transition-all duration-500 ${
+        className={`flex items-center justify-between px-4 py-3 transition-[background-color,border-color] duration-500 ${
           isHome
             ? 'bg-gradient-to-b from-black/60 via-black/30 to-transparent'
-            : 'glass-strong'
+            : 'bg-[rgba(10,10,10,0.95)] border-b border-white/[0.06]'
         }`}
       >
         {/* Logo */}
@@ -34,25 +39,25 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
         {/* Welcome — only on Home */}
         {isHome && (
           <div className="absolute inset-x-0 flex justify-center pointer-events-none">
-            <span className="text-[12px] font-light tracking-[5px] uppercase" style={{ animation: 'welcome-blink 6s ease-in-out infinite', color: 'rgba(255,255,255,0.35)' }}>Welcome</span>
+            <span className="text-[12px] font-light tracking-[5px] uppercase" style={{ animation: 'welcome-blink 6s ease-in-out infinite', color: 'rgba(255,255,255,0.35)' }}>{t('welcome')}</span>
           </div>
         )}
 
         {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-1">
           {[
-            { path: '/', label: 'Home' },
-            { path: '/live', label: 'Live TV' },
-            { path: '/movies', label: 'Movies' },
-            { path: '/series', label: 'Series' },
-            { path: '/french', label: 'French' },
+            { path: '/', label: t('navHome') },
+            { path: '/live', label: t('navLiveTV') },
+            { path: '/movies', label: t('navMovies') },
+            { path: '/series', label: t('navSeries') },
+            { path: '/french', label: t('navFrench') },
           ].map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-[color,background-color] duration-300 ${
                   isActive
                     ? 'text-white bg-white/5'
                     : 'text-text-secondary hover:text-white hover:bg-white/5'
@@ -73,7 +78,7 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
               setAmbientOn(on);
             }}
             className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
-            title={ambientOn ? 'Mute ambient' : 'Play ambient'}
+            title={ambientOn ? t('muteAmbient') : t('playAmbient')}
           >
             {ambientOn ? (
               <svg width="18" height="16" viewBox="0 0 18 16" className="text-primary-light">
@@ -86,10 +91,11 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
               </svg>
             )}
           </button>
+          <LangToggle />
           {onLogout && (
             <button
               onClick={onLogout}
-              className="w-9 h-9 rounded-xl glass-light flex items-center justify-center hover:bg-white/10 transition-all"
+              className="w-9 h-9 rounded-xl glass-light flex items-center justify-center hover:bg-white/10 transition-colors"
               aria-label="Logout"
               title="Logout"
             >

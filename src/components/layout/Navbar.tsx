@@ -1,112 +1,130 @@
-import React from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Tv, Film, PlayCircle, Globe } from 'lucide-react';
+import { Home, Tv, Clapperboard, PlayCircle, Globe } from 'lucide-react';
+import { useLanguage } from '@/i18n';
+import type { TranslationKey } from '@/i18n';
 
 interface NavItem {
   path: string;
-  label: string;
+  labelKey: TranslationKey;
   icon: React.FC<React.SVGProps<SVGSVGElement> & { size?: string | number }>;
   isLive?: boolean;
 }
 
-const navItems: NavItem[] = [
-  { path: '/', label: 'Home', icon: Home },
-  { path: '/live', label: 'Live TV', icon: Tv, isLive: true },
-  { path: '/movies', label: 'Movies', icon: Film },
-  { path: '/series', label: 'Series', icon: PlayCircle },
-  { path: '/french', label: 'WorldEX', icon: Globe },
+const NAV_ITEMS: NavItem[] = [
+  { path: '/', labelKey: 'navHome', icon: Home },
+  { path: '/live', labelKey: 'navLiveTV', icon: Tv, isLive: true },
+  { path: '/movies', labelKey: 'navMovies', icon: Clapperboard },
+  { path: '/series', labelKey: 'navSeries', icon: PlayCircle },
+  { path: '/french', labelKey: 'navWorldEX', icon: Globe },
 ];
 
 export const Navbar: React.FC = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarHover, setSidebarHover] = React.useState(false);
+  const [sidebarHover, setSidebarHover] = useState(false);
+  const [navGlow, setNavGlow] = useState(false);
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
   };
 
+  const handleTap = useCallback((path: string) => {
+    navigate(path);
+    setNavGlow(true);
+    setTimeout(() => setNavGlow(false), 2000);
+  }, [navigate]);
+
   return (
     <>
-      {/* MOBILE BOTTOM NAV — floating island with OG proportions */}
-      <div className="lg:hidden fixed bottom-3 inset-x-3 z-50 safe-bottom">
-        <nav
-          className="relative rounded-2xl overflow-hidden"
+      {/* MOBILE BOTTOM NAV — OG dasuperhub style */}
+      <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 pointer-events-none">
+        <div
+          className="backdrop-blur-2xl max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto transition-[background-color,border-color,box-shadow] duration-500"
           style={{
-            background: 'rgba(10, 10, 15, 0.92)',
-            backdropFilter: 'blur(12px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(12px) saturate(180%)',
-            border: '1px solid rgba(157, 78, 221, 0.1)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.5), 0 0 30px rgba(157,78,221,0.05)',
+            background: navGlow
+              ? 'linear-gradient(135deg, rgba(157,78,221,0.15) 0%, rgba(10,10,15,0.95) 50%, rgba(157,78,221,0.1) 100%)'
+              : 'rgba(10, 10, 15, 0.92)',
+            border: navGlow
+              ? '1px solid rgba(157, 78, 221, 0.5)'
+              : '1px solid rgba(157, 78, 221, 0.12)',
+            boxShadow: navGlow
+              ? '0 0 30px rgba(157, 78, 221, 0.4), 0 0 60px rgba(157, 78, 221, 0.15), inset 0 1px 0 rgba(255,255,255,0.08)'
+              : '0 4px 24px rgba(0,0,0,0.5), 0 0 30px rgba(157,78,221,0.05)',
           }}
         >
-          <div className="flex items-center justify-around px-2 h-16">
-            {navItems.map((item) => {
-              const active = isActive(item.path);
-              const Icon = item.icon;
+          {NAV_ITEMS.map((item) => {
+            const active = isActive(item.path);
+            const Icon = item.icon;
 
-              return (
-                <button
-                  key={item.path}
-                  onClick={() => navigate(item.path)}
-                  className="relative flex flex-col items-center gap-0.5 py-1 px-3 transition-all duration-300"
-                  aria-label={item.label}
+            return (
+              <button
+                key={item.path}
+                onClick={() => handleTap(item.path)}
+                className="relative flex flex-col items-center justify-center flex-1 h-full transition-colors"
+              >
+                {/* Icon — lifts up when active */}
+                <div
+                  className="relative transition-[transform,color,filter] duration-300"
+                  style={{
+                    transform: active ? 'translateY(-2px) scale(1.12)' : 'scale(1)',
+                    color: active ? '#C77DFF' : 'rgba(255,255,255,0.35)',
+                    filter: active ? 'drop-shadow(0 0 8px rgba(157, 78, 221, 0.5))' : 'none',
+                  }}
                 >
-                  {active && (
-                    <div
-                      className="absolute -top-[1px] left-1/2 -translate-x-1/2 h-[2px] rounded-full transition-all duration-500"
+                  <Icon
+                    style={{ width: 22, height: 22 }}
+                    strokeWidth={active ? 2.4 : 1.8}
+                  />
+
+                  {/* Live TV pulse dot */}
+                  {item.isLive && (
+                    <span
+                      className="absolute -top-0.5 -right-1.5 w-[6px] h-[6px] rounded-full"
                       style={{
-                        width: '30px',
                         background: '#C77DFF',
-                        boxShadow: '0 0 10px rgba(157, 78, 221, 0.6)',
+                        boxShadow: '0 0 6px rgba(157, 78, 221, 0.8)',
+                        animation: 'live-ring 2s infinite',
                       }}
                     />
                   )}
+                </div>
 
-                  <div className="relative">
-                    <Icon
-                      className="transition-all duration-300"
-                      style={{
-                        width: 24,
-                        height: 24,
-                        color: active ? '#C77DFF' : '#6B6B6B',
-                        filter: active ? 'drop-shadow(0 0 8px rgba(157, 78, 221, 0.5))' : 'none',
-                        transform: active ? 'scale(1.1)' : 'scale(1)',
-                      }}
-                      strokeWidth={active ? 2.5 : 1.8}
-                    />
+                {/* Label — fades in when active */}
+                <span
+                  className="text-[10px] font-medium tracking-wide transition-[color,opacity,margin] duration-300"
+                  style={{
+                    color: active ? '#C77DFF' : 'rgba(255,255,255,0.35)',
+                    opacity: active ? 1 : 0,
+                    marginTop: active ? 3 : 0,
+                    height: active ? 'auto' : 0,
+                    overflow: 'hidden',
+                  }}
+                >
+                  {t(item.labelKey)}
+                </span>
 
-                    {item.isLive && (
-                      <span
-                        className="absolute -top-0.5 -right-1.5 w-[6px] h-[6px] rounded-full bg-primary"
-                        style={{
-                          boxShadow: '0 0 6px rgba(157, 78, 221, 0.7)',
-                          animation: 'live-ring 2s infinite',
-                        }}
-                      />
-                    )}
-                  </div>
-
-                  <span
-                    className="text-[11px] font-semibold tracking-wide transition-colors duration-300"
+                {/* Bottom dot indicator */}
+                {active && (
+                  <div
+                    className="absolute bottom-1.5 w-5 h-[2px] rounded-full transition-[background-color,box-shadow] duration-300"
                     style={{
-                      color: active ? '#C77DFF' : '#6B6B6B',
-                      letterSpacing: '0.5px',
+                      background: navGlow ? '#a855f7' : '#9D4EDD',
+                      boxShadow: '0 0 6px rgba(157, 78, 221, 0.5)',
                     }}
-                  >
-                    {item.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </nav>
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* DESKTOP SIDEBAR */}
       <aside
-        className="hidden lg:flex fixed left-0 top-0 bottom-0 z-40 flex-col transition-all duration-300 ease-out"
+        className="hidden lg:flex fixed left-0 top-0 bottom-0 z-40 flex-col transition-[width] duration-300 ease-out"
         style={{
           width: sidebarHover ? 220 : 72,
           background: 'rgba(10, 10, 15, 0.90)',
@@ -129,7 +147,7 @@ export const Navbar: React.FC = () => {
             <Tv className="w-4 h-4 text-white fill-white" />
           </div>
           <div
-            className="overflow-hidden transition-all duration-300"
+            className="overflow-hidden transition-[width,opacity] duration-300"
             style={{ width: sidebarHover ? 'auto' : 0, opacity: sidebarHover ? 1 : 0 }}
           >
             <span className="text-lg font-bold whitespace-nowrap tracking-tight">
@@ -141,7 +159,7 @@ export const Navbar: React.FC = () => {
 
         {/* Main items */}
         <div className="flex-1 flex flex-col gap-1 px-3 pt-6 overflow-hidden">
-          {navItems.map((item) => {
+          {NAV_ITEMS.map((item) => {
             const active = isActive(item.path);
             const Icon = item.icon;
 
@@ -149,7 +167,7 @@ export const Navbar: React.FC = () => {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className="relative flex items-center gap-3 h-11 rounded-xl transition-all duration-200 group"
+                className="relative flex items-center gap-3 h-11 rounded-xl transition-[background-color,color,padding] duration-300 group"
                 style={{
                   paddingLeft: sidebarHover ? 12 : 0,
                   justifyContent: sidebarHover ? 'flex-start' : 'center',
@@ -185,10 +203,10 @@ export const Navbar: React.FC = () => {
                 </div>
 
                 <span
-                  className="text-sm font-medium whitespace-nowrap overflow-hidden transition-all duration-300"
+                  className="text-sm font-medium whitespace-nowrap overflow-hidden transition-[width,opacity] duration-300"
                   style={{ width: sidebarHover ? 'auto' : 0, opacity: sidebarHover ? 1 : 0 }}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </span>
               </button>
             );
@@ -197,7 +215,7 @@ export const Navbar: React.FC = () => {
 
         {/* DASH branding on expand */}
         <div
-          className="px-3 pb-4 flex-shrink-0 overflow-hidden transition-all duration-300"
+          className="px-3 pb-4 flex-shrink-0 overflow-hidden transition-[max-height,opacity] duration-300"
           style={{ maxHeight: sidebarHover ? 96 : 0, opacity: sidebarHover ? 1 : 0 }}
         >
           <div

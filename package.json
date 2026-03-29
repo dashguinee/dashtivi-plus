@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node -e \"import('fs').then(f=>{let s=f.readFileSync('public/sw.js','utf8');s=s.replace(/tivi-cache-v\\d+/,'tivi-cache-v'+Date.now());f.writeFileSync('public/sw.js',s)})\" && tsc -b && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { Play, Download, X, Search, ChevronRight } from 'lucide-react';
+import { Play, Download, X } from 'lucide-react';
 import type { XtreamCredentials, SeriesItem, SeriesInfo, Episode, VodStream } from '@/lib/xtream';
-import { getSeries, getVodStreams, getSeriesInfo, buildSeriesUrl, buildVodUrl, getTmdbMap } from '@/lib/xtream';
+import { getSeries, getSeriesInfo, buildSeriesUrl, getTmdbMap } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { PosterCard } from '@/components/ui/PosterCard';
 import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
@@ -143,7 +143,7 @@ export const PlatformsPage: React.FC<Props> = ({ credentials, onPlay }) => {
               <button
                 key={p.id}
                 onClick={() => setActivePlatform(p.id)}
-                className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-300 relative overflow-hidden"
+                className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-[background-color,border-color,color] duration-300 relative overflow-hidden"
                 style={{
                   background: isActive
                     ? `linear-gradient(135deg, ${p.color}30, ${p.colorEnd}20)`
@@ -298,7 +298,7 @@ export const PlatformsPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 )}
                 <div className="space-y-2">
                   {episodes.map((ep) => (
-                    <div key={ep.id} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-primary/20 transition-all text-left group">
+                    <div key={ep.id} className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-primary/20 transition-[background-color,border-color] duration-300 text-left group">
                       <button onClick={() => handlePlayEpisode(ep)} className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
                         <Play className="w-4 h-4 text-primary-light ml-0.5" />
                       </button>

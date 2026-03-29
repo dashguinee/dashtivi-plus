@@ -30,13 +30,13 @@ export const EpgWidget: React.FC<Props> = React.memo(({ streamId, visible, isLiv
 
   return (
     <div
-      className={`absolute bottom-[72px] sm:bottom-[80px] left-2 z-30 transition-all duration-500 ease-out
+      className={`absolute bottom-[72px] sm:bottom-[80px] left-2 z-30 transition-[opacity,transform] duration-500 ease-out
                   ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}
       style={{ maxWidth: expanded ? 280 : 200 }}
       onClick={(e) => e.stopPropagation()}
     >
       <div
-        className="rounded-xl overflow-hidden transition-all duration-500 ease-out"
+        className="rounded-xl overflow-hidden transition-[max-height,opacity] duration-500 ease-out"
         style={{
           background: 'rgba(10, 10, 15, 0.8)',
           backdropFilter: 'blur(8px)',
@@ -56,7 +56,7 @@ export const EpgWidget: React.FC<Props> = React.memo(({ streamId, visible, isLiv
           >
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                 <span className="text-[9px] text-white/40 uppercase tracking-wider font-medium">Now</span>
               </div>
               {expanded
@@ -70,7 +70,7 @@ export const EpgWidget: React.FC<Props> = React.memo(({ streamId, visible, isLiv
             {/* Progress bar */}
             <div className="mt-1.5 h-[2px] rounded-full bg-white/[0.06] overflow-hidden">
               <div
-                className="h-full rounded-full bg-primary/60 transition-all duration-1000"
+                className="h-full rounded-full bg-primary/60 transition-[width] duration-1000"
                 style={{ width: `${progress}%` }}
               />
             </div>

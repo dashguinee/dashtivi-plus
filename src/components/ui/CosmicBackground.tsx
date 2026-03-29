@@ -9,6 +9,9 @@ export const CosmicBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    // Skip star canvas on mobile — too subtle to notice, saves GPU
+    if (window.innerWidth < 768) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -24,7 +27,10 @@ export const CosmicBackground: React.FC = () => {
     };
 
     const initStars = () => {
-      const count = Math.floor((canvas.width * canvas.height) / 8000);
+      // PERF FIX: cap star count at 120 — on large screens the old formula
+      // could create 250+ stars, each drawn every frame. 120 is visually identical.
+      const raw = Math.floor((canvas.width * canvas.height) / 8000);
+      const count = Math.min(raw, 120);
       stars = Array.from({ length: count }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
@@ -36,6 +42,7 @@ export const CosmicBackground: React.FC = () => {
     };
 
     const draw = (time: number) => {
+      if (document.hidden) { animId = requestAnimationFrame(draw); return; }
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       for (const star of stars) {
@@ -71,10 +78,7 @@ export const CosmicBackground: React.FC = () => {
       {/* Star field canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 opacity-60" />
 
-      {/* Floating gradient orbs */}
-      <div className="cosmic-orb cosmic-orb-1" />
-      <div className="cosmic-orb cosmic-orb-2" />
-      <div className="cosmic-orb cosmic-orb-3" />
+      {/* Orbs removed — ambient blobs in App.tsx handle the glow now */}
 
       {/* Subtle aurora band */}
       <div className="absolute top-0 left-0 right-0 h-[40vh] bg-gradient-to-b from-primary/[0.03] via-transparent to-transparent" />

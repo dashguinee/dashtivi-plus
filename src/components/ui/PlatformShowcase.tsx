@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
+import { safeImageUrl } from '@/lib/xtream';
+import { useLanguage } from '@/i18n';
 
 /** Platform config — brand identity for each streaming service */
 export interface PlatformDef {
@@ -36,10 +38,11 @@ interface Props {
 
 /** Premium platform showcase — metallic beam borders, brand color fades */
 export const PlatformShowcase: React.FC<Props> = React.memo(({ platforms, onNavigate, onTapPlatform }) => {
+  const { t } = useLanguage();
   if (platforms.length === 0) return null;
 
   return (
-    <section className="mb-6">
+    <section className="mb-4">
       {/* Section header */}
       <div className="flex items-center justify-between px-4 mb-3">
         <div className="flex items-baseline gap-2.5">
@@ -50,19 +53,21 @@ export const PlatformShowcase: React.FC<Props> = React.memo(({ platforms, onNavi
           onClick={() => onNavigate('/originals')}
           className="flex items-center gap-1 text-[11px] text-white/20 hover:text-white/50 transition-colors tracking-wide"
         >
-          More
+          {t('more')}
           <ChevronRight className="w-3 h-3" />
         </button>
       </div>
+      <p className="text-[11px] text-white/25 px-4 -mt-2 mb-3">{t('originalsSubtitle')}</p>
 
       {/* Platform cards — horizontal scroll */}
       <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-3">
-        {platforms.map(({ platform, items, tmdbMap }) => (
+        {platforms.map(({ platform, items, tmdbMap }, i) => (
           <PlatformCard
             key={platform.id}
             platform={platform}
             items={items}
             tmdbMap={tmdbMap}
+            index={i}
             onTap={() => onTapPlatform ? onTapPlatform(platform.id) : onNavigate(`/originals#${platform.id}`)}
           />
         ))}
@@ -76,22 +81,27 @@ const PlatformCard = React.memo(function PlatformCard({
   platform,
   items,
   tmdbMap,
+  index = 0,
   onTap,
 }: {
   platform: PlatformDef;
   items: { id: number; name: string; poster?: string; rating?: string }[];
   tmdbMap?: Record<string, TmdbEntry>;
+  index?: number;
   onTap: () => void;
 }) {
+  const { t } = useLanguage();
   const previews = items.slice(0, 3);
+  const isNetflix = platform.id === 'netflix';
 
   return (
     <button
       onClick={onTap}
-      className="flex-shrink-0 relative group rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+      className="flex-shrink-0 relative group rounded-2xl overflow-hidden card-press hover:scale-[1.02] active:scale-[0.97]"
       style={{
         width: 240,
         boxShadow: `0 4px 20px ${platform.color}12, 0 0 0 1px ${platform.color}18`,
+        animation: `platform-card-in 0.9s cubic-bezier(0.4, 0, 0.2, 1) ${index * 90}ms both`,
       }}
     >
       {/* Brand gradient fill — the signature look */}
@@ -101,6 +111,16 @@ const PlatformCard = React.memo(function PlatformCard({
           background: `linear-gradient(160deg, ${platform.color}22 0%, ${platform.colorEnd}15 35%, rgba(10,10,15,0.97) 70%)`,
         }}
       />
+
+      {/* Netflix bottom red gradient accent */}
+      {isNetflix && (
+        <div
+          className="absolute bottom-0 left-0 right-0 h-16 rounded-b-2xl pointer-events-none z-[1]"
+          style={{
+            background: 'linear-gradient(to top, rgba(229,9,20,0.12) 0%, rgba(229,9,20,0.04) 50%, transparent 100%)',
+          }}
+        />
+      )}
 
       {/* Subtle beam sweep on border */}
       <div
@@ -131,6 +151,9 @@ const PlatformCard = React.memo(function PlatformCard({
           </div>
           <div className="flex-1 min-w-0">
             <span className="text-[15px] font-bold text-white/95 tracking-tight">{platform.name}</span>
+            {isNetflix && (
+              <span className="block text-[9px] text-[#E50914]/60 font-medium mt-0.5">{t('openNetflix')}</span>
+            )}
           </div>
           <ChevronRight className="w-4 h-4 text-white/15 group-hover:text-white/40 transition-colors" />
         </div>
@@ -162,15 +185,7 @@ function PosterPreview({ item, color, tmdbMap }: { item: { id: number; name: str
   const [failed, setFailed] = useState(false);
   const [tmdbFailed, setTmdbFailed] = useState(false);
 
-  // Clean Xtream poster URL
-  let safeSrc: string | null = null;
-  if (item.poster && !failed) {
-    const url = item.poster.replace('starshare.live:8080', 'datahub11.com:8080');
-    if (!url.includes('webhop.live') && !url.includes('paste.pics')) {
-      if (url.startsWith('https://')) safeSrc = url;
-      else if (url.startsWith('http://')) safeSrc = `https://stream.zionsynapse.online/?url=${encodeURIComponent(url)}`;
-    }
-  }
+  const safeSrc = !failed ? safeImageUrl(item.poster) : null;
 
   // TMDB fallback
   const tmdb = tmdbMap?.[`s:${item.id}`] || tmdbMap?.[`m:${item.id}`];

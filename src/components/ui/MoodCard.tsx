@@ -24,7 +24,7 @@ export const MoodCard: React.FC<MoodCardProps> = ({
         relative flex flex-col items-center justify-center gap-2
         rounded-xl px-4 py-5 min-w-[100px]
         bg-gradient-to-br ${gradient}
-        border transition-all duration-300 ease-out
+        border transition-[transform,border-color] duration-300 ease-out
         hover:scale-105 active:scale-95
         animate-mood-pop
         ${selected

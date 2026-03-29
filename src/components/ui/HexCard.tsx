@@ -95,7 +95,7 @@ const HexCardInner: React.FC<HexCardProps> = ({
   return (
     <button
       onClick={onClick}
-      className={`relative flex-shrink-0 group transition-transform duration-300 hover:scale-[1.05] active:scale-[0.97] ${glowAnim} ${className}`}
+      className={`relative flex-shrink-0 group card-press hover:scale-[1.03] active:scale-[0.97] ${glowAnim} ${className}`}
       style={{ width: 140 * scale, height: 160 * scale }}
     >
       {isGate ? (

@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Play, Search, X, ChevronRight, LayoutGrid, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart } from 'lucide-react';
+import { t, useLanguage } from '@/i18n';
 import type { XtreamCredentials, LiveCategory, LiveStream, GroupedChannel, FreeChannel } from '@/lib/xtream';
-import { getLiveCategories, getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortByIconQuality, fetchServerProbeData, seedProbeCacheFromServer, getFreeChannelsByExperience, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
+import { getLiveCategories, getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
 import {
   LIVETV_THEMES, SPORT_TYPES, ENTERTAINMENT_TYPES, KIDS_TYPES,
-  CINEMA_TYPES, MUSIC_TYPES, DISCOVERY_TYPES, FAITH_TYPES,
+  CINEMA_TYPES, MUSIC_TYPES, DISCOVERY_TYPES, FAITH_TYPES, PREMIUM4K_TYPES,
 } from '@/lib/collections';
 import type { LiveTheme, SportType } from '@/lib/collections';
-import { getSmartThemeOrder, recordThemeWatch, dailyShuffle } from '@/lib/intelligence';
+import { getSmartThemeOrder, recordThemeWatch } from '@/lib/intelligence';
 
 // Map theme IDs to their child experience sub-tabs
 const THEME_SUBTYPES: Record<string, SportType[]> = {
@@ -18,6 +19,7 @@ const THEME_SUBTYPES: Record<string, SportType[]> = {
   'music': MUSIC_TYPES,
   'documentary': DISCOVERY_TYPES,
   'faith': FAITH_TYPES,
+  'premium4k': PREMIUM4K_TYPES,
   'news': [], // News doesn't need sub-tabs
 };
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
@@ -42,6 +44,7 @@ const THEME_TO_EXPERIENCE: Record<string, string[]> = {
   'movies247': ['movies'],
   'documentary': ['documentary'],
   'music': ['music'],
+  'premium4k': ['sports', 'movies', 'documentary'],
 };
 
 interface Props {
@@ -50,12 +53,18 @@ interface Props {
 }
 
 export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
+  const { lang } = useLanguage();
+
+
   // ── Search state ──────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [searchResults, setSearchResults] = useState<LiveStream[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Probe staleness ─────────────────────────────────────────────
+  const [probeStale, setProbeStale] = useState(false);
 
   // ── Theme state (Discover mode) ───────────────────────────────
   const [themeStreams, setThemeStreams] = useState<Record<string, LiveStream[]>>({});
@@ -127,7 +136,18 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
           fetchVpsHealth(),
           fetchServerProbeData(),
         ]);
-        if (probeData) seedProbeCacheFromServer(probeData);
+        if (probeData) {
+          seedProbeCacheFromServer(probeData);
+          // Check if probe data is stale (>48h old or no timestamp)
+          const STALE_MS = 48 * 60 * 60 * 1000;
+          const probeTs = probeData.ts ? new Date(probeData.ts).getTime() : 0;
+          if (!probeTs || Date.now() - probeTs > STALE_MS) {
+            setProbeStale(true);
+          }
+        } else {
+          // No probe data at all — treat as stale
+          setProbeStale(true);
+        }
 
         // Load free channels in parallel with Xtream themes
         const freeChannelsPromise = getFreeChannels();
@@ -265,9 +285,9 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
   );
 
   return (
-    <div className="pt-16 pb-4 min-h-screen">
+    <div className="pt-16 pb-32 min-h-screen">
       {/* ── Search bar ───────────────────────────────────────────── */}
-      <div className="sticky top-14 z-20 py-3 px-4 bg-[#0A0A0A]/90 backdrop-blur-lg border-b border-white/5">
+      <div className="sticky top-14 z-20 py-4 px-4 bg-[#0A0A0A]/90 backdrop-blur-lg border-b border-white/5">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" />
           <input
@@ -275,8 +295,8 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search channels..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-text-secondary focus:outline-none focus:border-primary/50 focus:bg-white/[0.07] transition-all"
+            placeholder={t(lang, 'searchChannels')}
+            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-text-secondary focus:outline-none focus:border-primary/50 focus:bg-white/[0.07] transition-colors"
           />
           {searchQuery && (
             <button
@@ -289,21 +309,29 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
         </div>
         {isSearching && (
           <p className="text-xs text-text-secondary mt-2">
-            {searchLoading ? 'Searching...' : `${searchResults.length} channel${searchResults.length !== 1 ? 's' : ''} found`}
+            {searchLoading ? t(lang, 'searching') : `${searchResults.length} ${searchResults.length !== 1 ? t(lang, 'channelsFound') : t(lang, 'channelFound')}`}
           </p>
         )}
       </div>
+
+      {/* ── Stale probe warning ────────────────────────────────── */}
+      {probeStale && !themesLoading && (
+        <div className="flex items-center gap-1.5 px-4 py-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-white/20 animate-pulse" />
+          <span className="text-xs text-white/25">{t(lang, 'channelDataUpdating')}</span>
+        </div>
+      )}
 
       {/* ── Content ──────────────────────────────────────────────── */}
       {isSearching ? (
         /* Search results */
         searchLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <LoadingSpinner size="lg" text="Searching channels..." />
+          <div className="flex items-center justify-center py-24">
+            <LoadingSpinner size="lg" text={t(lang, 'searching')} />
           </div>
         ) : searchResults.length === 0 ? (
-          <div className="flex items-center justify-center py-20 text-text-muted text-sm">
-            No channels match your search
+          <div className="flex items-center justify-center py-24 text-text-muted text-sm">
+            {t(lang, 'noChannelsMatch')}
           </div>
         ) : (
           <SearchGrid streams={searchResults} credentials={credentials} onPlay={onPlay} freeUrlMap={freeUrlMap} />
@@ -312,8 +340,8 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
         <>
           {/* ── Theme Rows (Discover) ──────────────────────────── */}
           {themesLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <LoadingSpinner size="lg" text="Loading channels..." />
+            <div className="flex items-center justify-center py-24">
+              <LoadingSpinner size="lg" text={t(lang, 'loadingChannels')} />
             </div>
           ) : (
             <div className="pt-4">
@@ -337,7 +365,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
           <div className="px-4 mt-4">
             <button
               onClick={() => setShowBrowse(!showBrowse)}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all duration-200 ${
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-colors duration-300 ${
                 showBrowse
                   ? 'bg-primary/10 border-primary/25 text-white'
                   : 'bg-white/[0.03] border-white/8 text-text-secondary hover:bg-white/[0.06] hover:text-white'
@@ -345,9 +373,9 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             >
               <div className="flex items-center gap-2.5">
                 <LayoutGrid className="w-4 h-4" />
-                <span className="text-sm font-medium">Browse All Categories</span>
+                <span className="text-sm font-medium">{t(lang, 'browseAllCategories')}</span>
               </div>
-              <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${showBrowse ? 'rotate-90' : ''}`} />
+              <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${showBrowse ? 'rotate-90' : ''}`} />
             </button>
           </div>
 
@@ -367,22 +395,22 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
               {/* Browse grid */}
               {browseLoading ? (
-                <div className="flex items-center justify-center py-16">
-                  <LoadingSpinner size="md" text="Loading..." />
+                <div className="flex items-center justify-center py-24">
+                  <LoadingSpinner size="md" text={t(lang, 'loading')} />
                 </div>
               ) : browseError ? (
-                <div className="flex flex-col items-center justify-center py-16 gap-3">
-                  <p className="text-text-muted text-sm">Unable to load</p>
+                <div className="flex flex-col items-center justify-center py-24 gap-3">
+                  <p className="text-text-muted text-sm">{t(lang, 'unableToLoad')}</p>
                   <button
                     onClick={() => setBrowseError(false)}
                     className="px-4 py-2 bg-primary rounded-xl text-sm font-medium hover:bg-primary-light transition-colors"
                   >
-                    Retry
+                    {t(lang, 'retry')}
                   </button>
                 </div>
               ) : browseStreams.length === 0 ? (
-                <div className="flex items-center justify-center py-16 text-text-muted text-sm">
-                  No channels in this category
+                <div className="flex items-center justify-center py-24 text-text-muted text-sm">
+                  {t(lang, 'noChannelsInCategory')}
                 </div>
               ) : (
                 <BrowseGrid
@@ -425,6 +453,7 @@ function ThemeRow({
   onPlay: (stream: LiveStream, allStreams: LiveStream[]) => void;
   onThemeSelect?: (themeId: string) => void;
 }) {
+  const { lang } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<string>('all');
 
@@ -454,11 +483,11 @@ function ThemeRow({
     });
     return filtered.find(s => s.stream_id === best.streamId) || filtered[0];
   }).filter(Boolean);
-  const sorted = sortByIconQuality(deduped);
+  const sorted = sortGemsFirst(deduped);
   const displayed = expanded ? sorted : sorted.slice(0, 25);
 
   return (
-    <div className="mb-6">
+    <div className="mb-8">
       {/* Theme header */}
       <div className="flex items-center gap-2 px-4 mb-3">
         <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${theme.gradient} flex items-center justify-center`}>
@@ -470,6 +499,7 @@ function ThemeRow({
             movies247: <Film className="w-3.5 h-3.5 text-white/80" />,
             music: <Music className="w-3.5 h-3.5 text-white/80" />,
             documentary: <Globe className="w-3.5 h-3.5 text-white/80" />,
+            premium4k: <Sparkles className="w-3.5 h-3.5 text-white/80" />,
             faith: <Heart className="w-3.5 h-3.5 text-white/80" />,
           } as Record<string, React.ReactNode>)[theme.id] || <Sparkles className="w-3.5 h-3.5 text-white/80" />}
         </div>
@@ -483,8 +513,8 @@ function ThemeRow({
           }}
           className="ml-auto flex items-center gap-0.5 text-xs text-primary-light hover:text-white transition-colors"
         >
-          {expanded ? 'See less' : 'See all'}
-          <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`} />
+          {expanded ? t(lang, 'seeLess') : t(lang, 'seeAll')}
+          <ChevronRight className={`w-3 h-3 transition-transform duration-300 ${expanded ? 'rotate-90' : ''}`} />
         </button>
       </div>
 
@@ -495,7 +525,7 @@ function ThemeRow({
             <button
               key={sub.id}
               onClick={() => setActiveSubTab(sub.id)}
-              className={`flex-shrink-0 text-[10px] px-2.5 py-1 rounded-full transition-all duration-150 ${
+              className={`flex-shrink-0 text-[10px] px-2.5 py-1 rounded-full transition-colors duration-300 ${
                 activeSubTab === sub.id
                   ? `bg-gradient-to-r ${theme.gradient} text-white border border-white/20`
                   : 'bg-white/5 text-white/50 border border-transparent hover:text-white/80'
@@ -516,8 +546,8 @@ function ThemeRow({
             className="flex-shrink-0 w-[88px] group"
           >
             <div className="relative w-[88px] h-[60px] rounded-xl bg-white/[0.04] border border-white/8 flex items-center justify-center overflow-hidden
-                            group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/10 group-hover:scale-[1.05]
-                            active:scale-95 transition-all duration-200">
+                            group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/10 group-hover:scale-[1.03]
+                            active:scale-95 transition-colors duration-300">
               <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" />
               {/* Play hover overlay */}
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-xl">
@@ -554,6 +584,7 @@ function BrowseGrid({
   credentials: XtreamCredentials;
   onPlay: (stream: LiveStream, allStreams: LiveStream[]) => void;
 }) {
+  const { lang } = useLanguage();
   const [selectedGroup, setSelectedGroup] = useState<GroupedChannel | null>(null);
   const [, setProbeVersion] = useState(0);
 
@@ -570,7 +601,7 @@ function BrowseGrid({
   }, [streams, credentials]);
 
   const alive = streams.filter(s => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id));
-  const sorted = sortByIconQuality(alive);
+  const sorted = sortGemsFirst(alive);
   const grouped = groupChannelsByQuality(sorted);
 
   const playVariant = (streamId: number, name: string, icon: string) => {
@@ -590,12 +621,12 @@ function BrowseGrid({
 
   return (
     <>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
         {grouped.map((group) => (
           <button
             key={group.name}
             onClick={() => handleTap(group)}
-            className="group relative bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col items-center gap-2 hover:bg-white/10 hover:border-primary/30 transition-all duration-200"
+            className="group relative bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col items-center gap-2 hover:bg-white/10 hover:border-primary/30 transition-colors duration-300"
           >
             <ChannelIcon src={group.icon} name={group.name} size="md" />
             <p className="text-xs text-text-secondary text-center truncate w-full group-hover:text-white transition-colors">
@@ -631,7 +662,7 @@ function BrowseGrid({
               <ChannelIcon src={selectedGroup.icon} name={selectedGroup.name} size="md" />
               <div>
                 <h3 className="font-semibold text-white">{selectedGroup.name}</h3>
-                <p className="text-xs text-white/40">Select quality</p>
+                <p className="text-xs text-white/40">{t(lang, 'selectQuality')}</p>
               </div>
             </div>
             <div className="flex flex-col gap-2">
@@ -641,7 +672,7 @@ function BrowseGrid({
                 <button
                   key={v.streamId}
                   onClick={() => playVariant(v.streamId, v.name, v.icon)}
-                  className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/30 transition-all"
+                  className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/30 transition-colors"
                 >
                   <span className="text-sm text-white">{v.quality}</span>
                   <span className={`text-xs font-bold px-2 py-1 rounded ${QUALITY_COLORS[v.quality] || QUALITY_COLORS.HD}`}>
@@ -690,12 +721,12 @@ function SearchGrid({ streams, credentials, onPlay, freeUrlMap }: {
   );
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
       {alive.slice(0, 100).map((stream) => (
         <button
           key={stream.stream_id}
           onClick={() => handlePlay(stream)}
-          className="group relative bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col items-center gap-2 hover:bg-white/10 hover:border-primary/30 transition-all duration-200"
+          className="group relative bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col items-center gap-2 hover:bg-white/10 hover:border-primary/30 transition-colors duration-300"
         >
           <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" />
           <p className="text-xs text-text-secondary text-center truncate w-full group-hover:text-white transition-colors">
@@ -718,7 +749,7 @@ function CategoryPill({ label, active, onClick }: { label: string; active: boole
   return (
     <button
       onClick={onClick}
-      className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+      className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-300 ${
         active
           ? 'bg-primary text-white shadow-lg shadow-primary/20'
           : 'bg-white/5 text-text-secondary hover:bg-white/10 hover:text-white border border-white/10'

@@ -148,7 +148,7 @@ export const SmartMatch: React.FC<SmartMatchProps> = ({
 
   return (
     <div
-      className={`absolute bottom-[130px] sm:bottom-[140px] left-0 right-0 z-30 transition-all duration-300
+      className={`absolute bottom-[130px] sm:bottom-[140px] left-0 right-0 z-30 transition-[opacity,transform] duration-300
                   ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'}`}
     >
       <div
@@ -244,7 +244,7 @@ function QualityCard({
       onClick={onClick}
       disabled={isCurrent}
       className={`flex-shrink-0 flex items-center gap-1.5 pl-1 pr-2.5 py-1.5 rounded-xl
-                  border transition-all duration-200
+                  border transition-[transform,filter,background-color,border-color] duration-300
                   ${isCurrent ? 'cursor-default' : 'hover:brightness-125 active:scale-95'}
                   ${style.bg} ${style.border}`}
     >
@@ -285,7 +285,7 @@ function FamilyCard({
       className="flex-shrink-0 flex items-center gap-1.5 pl-1 pr-2.5 py-1.5 rounded-xl
                  bg-white/[0.04] border border-transparent
                  hover:bg-white/[0.08] hover:border-white/15
-                 active:scale-95 transition-all duration-200"
+                 active:scale-95 transition-[transform,background-color,border-color] duration-300"
     >
       <div className="w-6 h-6 flex-shrink-0">
         <ChannelIcon src={channel.logo} name={channel.name} size="sm" className="!w-6 !h-6 !text-[8px] !rounded-md" />

@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { Flame, Compass, Play, Star, Clapperboard } from 'lucide-react';
 import { VeeMoodOverlay, MOOD_GENRES } from './VeeMoodOverlay';
 import type { TmdbEntry } from '../../lib/tmdb-map.generated';
+import { safeImageUrl } from '../../lib/xtream';
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -22,17 +23,9 @@ interface VeeWidgetProps {
 
 // ── Helpers ────────────────────────────────────────────────────────
 
-const DEAD_DOMAINS = ['webhop.live', 'imdb.com', 'wikia.nocookie.net', 'paste.pics'];
-
 function getSafePoster(url?: string, tmdbPoster?: string): string | null {
-  if (url) {
-    const isDead = DEAD_DOMAINS.some((d) => url.includes(d));
-    if (!isDead) {
-      const fixed = url.replace('starshare.live:8080', 'datahub11.com:8080');
-      if (fixed.startsWith('https://')) return fixed;
-      if (fixed.startsWith('http://')) return `https://stream.zionsynapse.online/?url=${encodeURIComponent(fixed)}`;
-    }
-  }
+  const safe = safeImageUrl(url);
+  if (safe) return safe;
   if (tmdbPoster) return `https://image.tmdb.org/t/p/w342${tmdbPoster}`;
   return null;
 }
@@ -106,9 +99,10 @@ const VeeCard: React.FC<{
   item: VeeItem;
   tmdb?: TmdbEntry;
   neonColor: string;
+  index?: number;
   onPlay: () => void;
   onTrailer?: (youtubeKey: string, title: string, poster?: string, overview?: string) => void;
-}> = ({ item, tmdb, neonColor, onPlay, onTrailer }) => {
+}> = ({ item, tmdb, neonColor, index = 0, onPlay, onTrailer }) => {
   const [imgFailed, setImgFailed] = useState(false);
   const poster = getSafePoster(item.stream_icon, undefined);
   const hasPoster = poster && !imgFailed;
@@ -120,10 +114,11 @@ const VeeCard: React.FC<{
   return (
     <button
       onClick={onPlay}
-      className="group relative flex-shrink-0 w-[140px] aspect-[2/3] rounded-xl overflow-hidden bg-white/5 border transition-all duration-300 hover:scale-[1.04] text-left"
+      className="group relative flex-shrink-0 w-[140px] aspect-[2/3] rounded-xl overflow-hidden bg-white/5 border text-left card-press hover:scale-[1.03] active:scale-[0.96]"
       style={{
         borderColor: `${neonColor}33`,
         boxShadow: `0 0 8px ${neonColor}22`,
+        animation: `vee-card-in 0.8s cubic-bezier(0.4, 0, 0.2, 1) ${index * 90}ms both`,
       }}
     >
       {hasPoster ? (
@@ -148,7 +143,7 @@ const VeeCard: React.FC<{
 
 
       {/* Play icon on hover */}
-      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <div className="w-9 h-9 rounded-full bg-primary/80 flex items-center justify-center">
           <Play className="w-4 h-4 text-white ml-0.5" />
         </div>
@@ -336,6 +331,7 @@ export const VeeWidget: React.FC<VeeWidgetProps> = ({
                 item={item}
                 tmdb={tmdb}
                 neonColor={neonColor}
+                index={index}
                 onPlay={() => onPlay(item)}
                 onTrailer={onTrailer}
               />

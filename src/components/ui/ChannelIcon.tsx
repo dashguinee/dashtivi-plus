@@ -1,4 +1,5 @@
-import React, { useState, memo } from 'react';
+import React, { useState, useCallback, memo } from 'react';
+import { safeImageUrl } from '../../lib/xtream';
 
 interface Props {
   src?: string;
@@ -86,24 +87,17 @@ const sizes = {
 export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', className = '' }: Props) {
   const [failed, setFailed] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const onLoad = useCallback(() => setLoaded(true), []);
   const letter = name.charAt(0).toUpperCase();
   const color = getColor(name);
 
-  // Sanitize common URL issues (missing 'h', trailing quotes)
-  // Sanitize common URL issues (missing 'h', trailing quotes, dead starshare domain)
-  const cleanSrc = src?.replace(/^ttps:/, 'https:').replace(/"$/, '').replace('starshare.live:8080', 'datahub11.com:8080') || '';
-
-  // Priority: 1. HTTPS src from API  2. tv-logo CDN  3. Proxied HTTP  4. Letter avatar
+  // Priority: 1. safeImageUrl (handles dead domains, HTTP proxy)  2. tv-logo CDN  3. Letter avatar
   let safeSrc: string | null = null;
   if (!failed) {
-    if (cleanSrc?.startsWith('https://') && !cleanSrc.includes('webhop.live') && !cleanSrc.includes('paste.pics') && !cleanSrc.includes('tensports.com.pk')) {
-      safeSrc = cleanSrc;
-    } else if (!logoFailed) {
-      const logoUrl = findLogoUrl(name);
-      if (logoUrl) safeSrc = logoUrl;
-    }
-    if (!safeSrc && cleanSrc?.startsWith('http://') && !cleanSrc.includes('webhop.live')) {
-      safeSrc = `https://stream.zionsynapse.online/?url=${encodeURIComponent(cleanSrc)}`;
+    safeSrc = safeImageUrl(src);
+    if (!safeSrc && !logoFailed) {
+      safeSrc = findLogoUrl(name);
     }
   }
 
@@ -112,7 +106,8 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
       <img
         src={safeSrc}
         alt={name}
-        className={`${sizes[size]} rounded-xl object-contain bg-white/5 p-1 ${className}`}
+        className={`${sizes[size]} rounded-xl object-contain bg-white/5 p-1 transition-opacity duration-400 ${loaded ? 'opacity-100' : 'opacity-0'} ${className}`}
+        onLoad={onLoad}
         onError={() => {
           // If tv-logo CDN failed, try next in chain
           if (safeSrc?.includes('tv-logos')) setLogoFailed(true);
