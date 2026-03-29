@@ -433,11 +433,16 @@ export const LIVETV_THEMES: LiveTheme[] = [
       '212',  // Fighting
       '356',  // India Sports
       '156',  // Arabic Sports
-      '137',  // Wrestling
+      '137',  // Fox Australia Sports (8 alive)
       '516',  // NFL (match day)
-      '139',  // More sports
-      '726',  // Additional sports
-      '328',  // Misc sports
+      '139',  // UK Sports Mix (10ch)
+      '726',  // MLS (49 alive)
+      '328',  // MLB (32 alive)
+      '190',  // PPV Live Events (72ch)
+      '807',  // IPL 2026 (9ch)
+      '808',  // PSL 2026 (2ch)
+      '542',  // Optus Sports (11 alive)
+      '543',  // Spark Sports (8 alive)
     ],
     gradient: 'from-primary to-primary-dark',
     glowColor: 'shadow-primary/20',
@@ -485,6 +490,8 @@ export const LIVETV_THEMES: LiveTheme[] = [
     categoryIds: [
       '410',  // UK Kids (12ch, 11 gems — CN FHD, CBeebies FHD, Nick FHD, Sky Kids FHD)
       '32',   // Kids (46ch, 29 gems — Disney 4K, Nick 4K, CN HD, CBeebies)
+      '347',  // DSTV Kids (13ch)
+      '430',  // DSTV Kids FHD (15ch)
     ],
     gradient: 'from-primary-light to-primary',
     glowColor: 'shadow-primary-light/20',
@@ -502,6 +509,9 @@ export const LIVETV_THEMES: LiveTheme[] = [
       '339',  // India Hindi Movies (23ch, 10 gems — Sony Max 4K, Star Gold 4K)
       '282',  // Bollywood Movies 24/7
       '280',  // Amazon Movies 24/7
+      '413',  // UK Movies (41 alive — Sky Cinema)
+      '344',  // DSTV Movies (7ch)
+      '429',  // DSTV Movies FHD (9ch)
     ],
     gradient: 'from-primary-dark/90 to-accent/30',
     glowColor: 'shadow-primary-dark/20',
@@ -840,16 +850,19 @@ export const BROWSE_EXPERIENCES: BrowseExperience[] = [
     categoryIds: [
       '86',   // MBC Arabic (53ch)
       '180',  // Egypt (69ch)
-      '751',  // Iran (110ch)
-      '129',  // Iraq (65ch)
+      '751',  // Iran (97 alive)
+      '129',  // Iraq (63 alive)
       '13',   // ARABIC (13ch)
       '549',  // Lebanon (24ch)
       '554',  // Morocco (19ch)
       '553',  // Algeria (25ch)
       '548',  // Syria (24ch)
-      '556',  // UAE (26ch)
+      '556',  // UAE (25 alive)
       '83',   // Qatar (10ch)
       '227',  // Oman (1ch)
+      '178',  // Kuwait (17ch)
+      '181',  // Saudi Arabia (44ch)
+      '175',  // Shahed Box (34ch)
       '165',  // Arabic News
       '156',  // Arabic Sports
       '555',  // Arabic Music
@@ -894,6 +907,7 @@ export const BROWSE_EXPERIENCES: BrowseExperience[] = [
       '292',  // Bangla Movies 24/7 (8ch)
       '42',   // Sri Lanka (36ch)
       '64',   // Nepal (87ch)
+      '28',   // Afghanistan (17 alive)
     ],
   },
   {
@@ -915,49 +929,84 @@ export const BROWSE_EXPERIENCES: BrowseExperience[] = [
     name: 'Europe',
     icon: 'map',
     categoryIds: [
+      '15',   // Germany (277 alive)
+      '25',   // Turkey (263 alive)
+      '20',   // EXYU (240 alive)
+      '71',   // Russian (196 alive)
       '14',   // Italy (45ch)
       '16',   // Portugal (157ch)
       '39',   // Poland (192ch)
       '35',   // Romania (79ch)
+      '63',   // Sweden (48 alive)
       '582',  // Finland (32ch)
       '132',  // Israel (116ch)
       '141',  // New Zealand (5ch)
+    ],
+  },
+  {
+    id: 'asia-pacific',
+    name: 'Asia Pacific',
+    icon: 'compass',
+    categoryIds: [
       '90',   // Philippines (124ch)
+      '101',  // Indonesia (91 alive)
+      '48',   // Malaysia (200ch — probe will filter dead)
+    ],
+  },
+  {
+    id: 'sports-all',
+    name: 'All Sports',
+    icon: 'trophy',
+    categoryIds: [
+      '85',   // beIN Sports (132ch)
+      '578',  // Real 4K (35ch)
+      '353',  // Sky Sports UK 4K (10ch)
+      '483',  // Sky Sports UK (32ch)
+      '234',  // Football (31ch)
+      '345',  // DStv Super (32ch)
+      '427',  // DStv Super FHD (34ch)
+      '492',  // EPL (31ch)
+      '5',    // Cricket (59ch)
+      '6',    // Sports General
+      '342',  // Tennis/Racing
+      '550',  // Rugby (20ch)
+      '138',  // Boxing
+      '212',  // Fighting
+      '356',  // India Sports
+      '156',  // Arabic Sports
+      '137',  // Fox Australia Sports (8ch)
+      '516',  // NFL
+      '139',  // UK Sports Mix (10ch)
+      '726',  // MLS (49ch)
+      '328',  // MLB (32ch)
+      '190',  // PPV Live Events (72ch)
+      '807',  // IPL 2026 (9ch)
+      '808',  // PSL 2026 (2ch)
+      '542',  // Optus Sports (11 alive)
+      '543',  // Spark Sports (8 alive)
     ],
   },
 ];
 
-// Dead categories — hidden from Browse, no channels alive
+// Dead categories — truly dead or empty, verified 2026-03-30 probe.
+// Categories removed from this list if probe found alive channels.
 export const DEAD_CATEGORY_IDS = new Set([
-  '579',  // Denmark
-  '28',   // Afghanistan
-  '29',   // Albania
-  '54',   // Australia
-  '60',   // Austria
-  '66',   // Brasil
-  '44',   // Bulgaria
-  '31',   // Canada
-  '741',  // Canada Live Event
-  '425',  // Caribbean
-  '774',  // Czech
-  '20',   // EXYU
-  '15',   // Germany
-  '10',   // Greek
-  '101',  // Indonesia
-  '178',  // Kuwait
-  '48',   // Malaysia
-  '773',  // NBA League Pass
-  '21',   // Netherlands
-  '583',  // Norway
-  '360',  // Pakistani Singers 24/7
-  '213',  // Premium
-  '71',   // Russian
-  '181',  // Saudi Arabia
-  '175',  // Shahed Box
-  '542',  // Sports Optus
-  '543',  // Sports Spark
-  '63',   // Sweden
-  '25',   // Turkey
+  '579',  // Denmark (0 alive)
+  '29',   // Albania (0 alive — all 343 dead)
+  '54',   // Australia (0 alive — use Fox Sports 137 instead)
+  '60',   // Austria (0 alive)
+  '66',   // Brasil (0 alive)
+  '44',   // Bulgaria (0 alive)
+  '31',   // Canada (0 alive)
+  '741',  // Canada Live Event (0 alive)
+  '425',  // Caribbean (0 alive)
+  '774',  // Czech (0 alive)
+  '10',   // Greek (0 alive)
+  '773',  // NBA League Pass (0 alive — use 516 NFL for US sports)
+  '21',   // Netherlands (0 alive)
+  '583',  // Norway (0 alive)
+  '360',  // Pakistani Singers 24/7 (0 alive — use 287 Punjabi Singers)
+  '213',  // Premium (0 alive)
 ]);
 
 // ── Premium Gem Channels ─────────────────────────────────────────
