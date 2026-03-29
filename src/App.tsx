@@ -33,20 +33,73 @@ const FrenchPage = lazy(() => import('@/pages/FrenchPage').then((m) => ({ defaul
 const WelcomePage = lazy(() => import('@/pages/WelcomePage').then((m) => ({ default: m.WelcomePage })));
 const PlatformsPage = lazy(() => import('@/pages/PlatformsPage').then((m) => ({ default: m.PlatformsPage })));
 
+// Build-time version stamp — compared against remote version.json
+const APP_VERSION = __APP_VERSION__;
+
 function UpdateButton() {
   const [available, setAvailable] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState(false);
 
   useEffect(() => {
-    const handler = () => { console.log('[UPDATE] Button shown'); setAvailable(true); };
-    window.addEventListener('tivi-update-available', handler);
-    return () => window.removeEventListener('tivi-update-available', handler);
+    // Also listen for SW-based updates as fallback
+    const swHandler = () => setAvailable(true);
+    window.addEventListener('tivi-update-available', swHandler);
+
+    // Remote version gate — polls every 2 minutes
+    let active = true;
+    async function checkVersion() {
+      try {
+        const res = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.version && data.version !== APP_VERSION) {
+          console.log('[UPDATE] Remote version:', data.version, '| Local:', APP_VERSION);
+          if (data.force) {
+            console.log('[UPDATE] Force update — reloading now');
+            setForceUpdate(true);
+            // Clear caches then reload
+            if ('caches' in window) {
+              const keys = await caches.keys();
+              await Promise.all(keys.map(k => caches.delete(k)));
+            }
+            window.location.reload();
+          } else {
+            setAvailable(true);
+          }
+        }
+      } catch { /* offline or error — skip */ }
+    }
+
+    checkVersion();
+    const interval = setInterval(() => { if (active) checkVersion(); }, 2 * 60 * 1000);
+    return () => { active = false; clearInterval(interval); window.removeEventListener('tivi-update-available', swHandler); };
   }, []);
+
+  if (forceUpdate) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-[#060609] flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-lg font-bold text-white mb-2">Updating DashTivi+</h1>
+          <div className="w-10 h-[2px] mx-auto rounded-full overflow-hidden bg-white/5">
+            <div className="h-full w-full bg-primary/50 rounded-full" style={{ animation: 'loading-bar 1.5s ease-in-out infinite' }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!available) return null;
 
   return (
     <button
-      onClick={() => { console.log('[UPDATE] User tapped — reloading'); window.location.reload(); }}
+      onClick={async () => {
+        console.log('[UPDATE] User tapped — clearing caches and reloading');
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+        window.location.reload();
+      }}
       className="fixed bottom-20 right-4 z-[9998] flex items-center gap-2 px-4 py-2.5 rounded-full
                  bg-primary/15 border border-primary/30 backdrop-blur-md
                  shadow-lg shadow-primary/20

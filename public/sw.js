@@ -72,6 +72,9 @@ self.addEventListener('fetch', (event) => {
   // Only handle GET requests
   if (request.method !== 'GET') return;
 
+  // --- NETWORK-ONLY: version gate (must always be fresh) ---
+  if (url.includes('version.json')) return;
+
   // --- NETWORK-ONLY: API calls, streaming, external services ---
   // Never cache these — they are live data or stream segments
   if (

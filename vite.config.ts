@@ -1,9 +1,16 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import fs from 'fs'
+
+// Read version from version.json — stamped into app at build time
+const versionData = JSON.parse(fs.readFileSync('public/version.json', 'utf8'));
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __APP_VERSION__: JSON.stringify(versionData.version),
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
