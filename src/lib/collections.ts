@@ -7,18 +7,73 @@
  * Category IDs are from the Starshare/Xtream API.
  */
 
+// ── Channel Relocation Map ──────────────────────────────────────────
+// Channels that Starshare put in the wrong category.
+// Key = stream_id, Value = experience they SHOULD appear in.
+// enrichIcons() injects these into the correct experience at render time.
+export const RELOCATE_MAP: Record<number, string> = {
+  // Bloomberg → news (was in Kids 410, UHD 578, various)
+  148214: 'news',    // UKFHD: Bloomberg (from Kids)
+  466663: 'news',    // Bloomberg UHD (from UHD Sports 578)
+
+  // Sports channels buried in USA Entertainment (cat 2)
+  34071: 'sports',   // ESPN HD
+  34072: 'sports',   // ESPN 2 HD
+  34073: 'sports',   // ESPN U
+  34074: 'sports',   // Fox Sports 1
+  34076: 'sports',   // Fox Sports 2
+  34080: 'sports',   // WWE Network
+  34081: 'sports',   // NBA TV
+  34082: 'sports',   // NBA Network
+  34083: 'sports',   // NHL Network
+  34084: 'sports',   // MLB Network
+  34085: 'sports',   // NFL Network
+  34086: 'sports',   // NFL RedZone
+  34087: 'sports',   // UFC Fight Pass
+  34088: 'sports',   // Red Bull TV
+  34089: 'sports',   // beIN Sports La Liga
+
+  // Non-sports in UHD Sports (cat 578)
+  466660: 'movies247',     // KINO Cinema Ultra HD
+  466661: 'europe',        // RTL DE UHD
+  466662: 'europe',        // PRO7SAT.1 DE UHD
+  466664: 'europe',        // RAI 1 IT UHD
+  466665: 'europe',        // LA 1 ES UHD
+  466666: 'documentary',   // Odisea ES UHD
+  466667: 'europe',        // TRT TR UHD
+  466668: 'entertainment', // Fashion TV UHD
+
+  // Al Rabiaa Iraq non-sports in Arabic Sports (cat 156)
+  605085: 'faith',         // Al Rabiaa Quran
+  605087: 'arabic',        // Al Rabiaa Series
+  605088: 'arabic',        // Al Rabiaa Variety
+  605089: 'music',         // Al Rabiaa Music
+  605090: 'movies247',     // Al Rabiaa Movies
+  605091: 'documentary',   // Al Rabiaa Geo
+
+  // Sky Sports News → sports (was in News cat 82)
+  23: 'sports',            // Sky Sports News FHD
+
+  // Euronews → news (was in Sports SD cat 139)
+  148676: 'news',          // Euronews
+};
+
 // ── Hidden Channels ─────────────────────────────────────────────────
-/** Channels to never show — separators, misplaced, noise.
- *  Sourced from master-curation-map.md 2026-03-29. */
+/** Channels to never show — separators, ghosts, placeholders, true junk.
+ *  Deep audit 2026-03-30. */
 export const HIDDEN_STREAM_IDS = new Set([
-  // German feed separators (not real channels — section headers like "======")
-  659186, // ============ Sky Germany (HEVC) Local Streams ============
-  659215, // ============ Sky Germany (H.264) Local Streams ============
-  659254, // ============ MAGNETA Germany Local Streams ============
-  659425, // ============ Sky Sport & Bundesliga HEVC Local Streams ============
-  659464, // ============ Sky Sport & Bundesliga H.264 Local Streams ============
-  // Misplaced: Bloomberg in UK Kids category
-  148214, // UKFHD : Bloomberg — financial news, not kids content
+  // German feed separators (not real channels)
+  659186, 659215, 659254, 659425, 659464,
+
+  // MLS dead placeholders (year 2098 expiry, no content)
+  613068, 613069, 613070, 613071, 613072, 613073, 613074,
+  613075, 613076, 613077, 613078, 613079, 613080,
+
+  // NFL "No Scheduled Event" ghost slots
+  428135, 428136, 428151, 428152, 428153, 428154,
+
+  // Internal/exposed test streams
+  636113, 636114, 196347,
 ]);
 
 // ── Cherry-Picked Curated Experiences ──────────��────────────────────

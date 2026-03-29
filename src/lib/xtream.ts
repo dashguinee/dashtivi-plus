@@ -259,13 +259,15 @@ export function getTmdbMap(): Promise<TmdbMapData | null> {
   return tmdbMapPromise;
 }
 
-/** Patch empty stream_icon from the generated logo map, and filter hidden channels */
+/** Patch empty stream_icon from the generated logo map, filter hidden, tag relocated */
 async function enrichIcons(streams: LiveStream[]): Promise<LiveStream[]> {
   const map = await getLogoMap();
   const result: LiveStream[] = [];
   for (const s of streams) {
-    // Skip hidden channels (separators, misplaced, noise)
+    // Skip hidden channels (separators, ghosts, junk)
     if (HIDDEN_STREAM_IDS.has(s.stream_id)) continue;
+    // Skip relocated channels (they'll appear in their correct experience instead)
+    if (RELOCATE_MAP[s.stream_id]) continue;
     if (!s.stream_icon || s.stream_icon.trim() === '') {
       const mapped = map[String(s.stream_id)];
       if (mapped) s.stream_icon = mapped;
@@ -273,6 +275,13 @@ async function enrichIcons(streams: LiveStream[]): Promise<LiveStream[]> {
     result.push(s);
   }
   return result;
+}
+
+/** Get channels that were relocated TO a specific experience */
+export function getRelocatedChannels(experience: string): number[] {
+  return Object.entries(RELOCATE_MAP)
+    .filter(([, exp]) => exp === experience)
+    .map(([id]) => Number(id));
 }
 
 export async function getLiveStreams(c: XtreamCredentials, catId: string): Promise<LiveStream[]> {
@@ -848,7 +857,7 @@ function iconScore(icon: string): number {
 }
 
 // --- Gem-first sort (premium channels surface first) ---
-import { GEM_STREAM_IDS, HIDDEN_STREAM_IDS } from './collections';
+import { GEM_STREAM_IDS, HIDDEN_STREAM_IDS, RELOCATE_MAP } from './collections';
 
 /** Sort channels with gems first, then by icon quality */
 export function sortGemsFirst<T extends { stream_id: number; stream_icon: string }>(streams: T[]): T[] {
