@@ -112,7 +112,7 @@ function cacheSet<T>(key: string, data: T): void {
     const entry: CacheEntry<T> = { data, ts: Date.now() };
     const json = JSON.stringify(entry);
     // Skip caching if single entry > 200KB (large category responses)
-    if (json.length > 200_000) return;
+    if (json.length > 500_000) return;
     localStorage.setItem(`xtream_${key}`, json);
   } catch (e) {
     if (e instanceof DOMException && e.name === 'QuotaExceededError') {
@@ -122,7 +122,7 @@ function cacheSet<T>(key: string, data: T): void {
       try {
         const entry: CacheEntry<T> = { data, ts: Date.now() };
         const json = JSON.stringify(entry);
-        if (json.length < 200_000) localStorage.setItem(`xtream_${key}`, json);
+        if (json.length < 500_000) localStorage.setItem(`xtream_${key}`, json);
       } catch { /* give up */ }
     }
   }

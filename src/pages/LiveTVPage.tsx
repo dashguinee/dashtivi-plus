@@ -666,7 +666,7 @@ function SearchGrid({ streams, credentials, onPlay, freeUrlMap }: {
   onPlay: (channel: Channel) => void;
   freeUrlMap: Record<number, string>;
 }) {
-  const alive = streams.filter(s => isChannelProbeAlive(s.stream_id));
+  const alive = streams.filter(s => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id));
 
   const handlePlay = useCallback(
     (stream: LiveStream) => {

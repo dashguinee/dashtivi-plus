@@ -142,14 +142,14 @@ async function loadLiveCollection(
   healthCatIds: string[],
   cache?: Record<string, LiveStream[]>
 ): Promise<LiveStream[]> {
-  // Only load categories that are actually live
+  // Load ALL categories (removed .slice(0,4) — was hiding Football/EPL)
   const activeCats = collection.categoryIds.filter(
     (id) => healthCatIds.length === 0 || healthCatIds.includes(id)
   );
   if (activeCats.length === 0) return [];
 
   const results = await Promise.allSettled(
-    activeCats.slice(0, 4).map((catId) => {
+    activeCats.map((catId) => {
       if (cache && cache[catId]) return Promise.resolve(cache[catId]);
       return getLiveStreams(credentials, catId).then(items => {
         if (cache) cache[catId] = items;
@@ -161,8 +161,9 @@ async function loadLiveCollection(
   for (const r of results) {
     if (r.status === 'fulfilled') all.push(...r.value);
   }
-  // Shuffle for variety, then pin gems to the front
-  const shuffled = dailyShuffle(all, collection.id);
+  // Filter probe-dead BEFORE slicing — so limit is always fully filled
+  const alive = all.filter(s => isChannelProbeAlive(s.stream_id));
+  const shuffled = dailyShuffle(alive.length > 0 ? alive : all, collection.id);
   return sortGemsFirst(shuffled).slice(0, collection.limit);
 }
 
