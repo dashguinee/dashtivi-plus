@@ -689,6 +689,217 @@ export const PREMIUM4K_TYPES: SportType[] = [
   { id: 'docs', name: 'Docs 4K', categoryIds: ['337'] },                        // Discovery 4K, NatGeo 4K, Animal Planet 4K
 ];
 
+// ── Browse Experiences ───────────────────────────────────────────
+// Replaces raw Starshare categories with curated experience groups.
+// Every live category mapped. Dead categories excluded.
+// A category can appear in multiple experiences.
+
+export interface BrowseExperience {
+  id: string;
+  name: string;
+  icon: string;       // Lucide icon name hint for the UI
+  categoryIds: string[];
+}
+
+export const BROWSE_EXPERIENCES: BrowseExperience[] = [
+  {
+    id: 'africa',
+    name: 'Africa',
+    icon: 'globe',
+    categoryIds: [
+      '336',  // AFRICA CANAL+ (247ch)
+      '343',  // DSTV Entertainment (84ch)
+      '428',  // DSTV Entertainment FHD (72ch)
+      '344',  // DSTV Movies (7ch)
+      '429',  // DSTV Movies FHD (9ch)
+      '347',  // DSTV Kids (13ch)
+      '430',  // DSTV Kids FHD (15ch)
+      '346',  // DSTV News (17ch)
+      '431',  // DSTV News FHD (5ch)
+      '345',  // DSTV Super — SuperSport (already in Sports theme too)
+      '427',  // DSTV Super FHD
+    ],
+  },
+  {
+    id: 'arabic',
+    name: 'Arabic & MENA',
+    icon: 'moon',
+    categoryIds: [
+      '13',   // ARABIC (13ch)
+      '86',   // MBC Arabic (53ch)
+      '180',  // Egypt (69ch)
+      '129',  // Iraq (65ch)
+      '751',  // Iran (110ch)
+      '549',  // Lebanon (24ch)
+      '554',  // Morocco (19ch)
+      '553',  // Algeria (25ch)
+      '548',  // Syria (24ch)
+      '556',  // UAE (26ch)
+      '83',   // Qatar (10ch)
+      '227',  // Oman (1ch)
+      '165',  // Arabic News (already in News theme)
+      '156',  // Arabic Sports (already in Sports theme)
+      '555',  // Arabic Music (already in Music theme)
+      '87',   // beIN Movies (already in Movies theme)
+      '123',  // Islamic (already in Faith theme)
+    ],
+  },
+  {
+    id: 'south-asian',
+    name: 'South Asia',
+    icon: 'landmark',
+    categoryIds: [
+      '247',  // India Entertainment
+      '338',  // India Entertainment (additional)
+      '18',   // Indian SD (49ch)
+      '340',  // India English Movies (29ch)
+      '339',  // India Hindi Movies (23ch)
+      '337',  // India Documentary (23ch)
+      '356',  // India Sports
+      '341',  // India Music (11ch)
+      '77',   // Indian News (47ch)
+      '730',  // Malayalam News (29ch)
+      '728',  // Malayalam Entertainment (33ch)
+      '729',  // Malayalam Movies (65ch)
+      '732',  // Tamil Entertainment (67ch)
+      '733',  // Tamil Movies (37ch)
+      '731',  // Tamil News (11ch)
+      '72',   // Tamil (6ch)
+      '73',   // Telugu (51ch)
+      '290',  // Telugu Movies 24/7 (28ch)
+      '81',   // Kannada (40ch)
+      '291',  // Kannada Movies 24/7 (31ch)
+      '76',   // Gujarati (20ch)
+      '75',   // Marathi (32ch)
+      '405',  // Oriya (16ch)
+      '140',  // Assam (8ch)
+      '560',  // Bhojpuri (4ch)
+      '19',   // UK Asian (38ch)
+      '194',  // USA Asian (35ch)
+      '9',    // Bangla (88ch)
+      '292',  // Bangla Movies 24/7 (8ch)
+      '42',   // Sri Lanka (36ch)
+      '64',   // Nepal (87ch)
+    ],
+  },
+  {
+    id: 'pakistan',
+    name: 'Pakistan',
+    icon: 'star',
+    categoryIds: [
+      '4',    // Pakistan (44ch)
+      '98',   // Pakistan News (47ch)
+      '350',  // Pak Drama 24/7 (13ch)
+      '272',  // Pakistani Movies 24/7 (4ch)
+      '7',    // Punjabi (83ch)
+      '285',  // Punjabi Movies 24/7 (9ch)
+      '287',  // Punjabi Singers 24/7 (already in Music theme)
+    ],
+  },
+  {
+    id: 'europe',
+    name: 'Europe',
+    icon: 'map',
+    categoryIds: [
+      '14',   // Italy (45ch)
+      '35',   // Romania (79ch)
+      '582',  // Finland (32ch)
+      '16',   // Portugal (157ch)
+      '39',   // Poland (192ch — already in Entertainment theme)
+      '132',  // Israel (116ch)
+      '141',  // New Zealand (5ch)
+    ],
+  },
+  {
+    id: 'asia-pacific',
+    name: 'Asia Pacific',
+    icon: 'compass',
+    categoryIds: [
+      '90',   // Philippines (124ch)
+    ],
+  },
+  {
+    id: 'sports-events',
+    name: 'Live Events',
+    icon: 'trophy',
+    categoryIds: [
+      '190',  // PPV Live Match Time (72ch)
+      '807',  // IPL 2026 (9ch)
+      '808',  // PSL 2026 (2ch)
+    ],
+  },
+  {
+    id: 'movies-247',
+    name: 'Movies 24/7',
+    icon: 'film',
+    categoryIds: [
+      '275',  // English Movies 24/7
+      '57',   // Netflix Movies 24/7
+      '280',  // Amazon Movies 24/7
+      '274',  // Bollywood Movies/Actors 24/7 (65ch)
+      '282',  // Bollywood Movies 24/7
+      '283',  // Hindi Web Series 24/7 (14ch)
+      '349',  // 24x7 Live (34ch)
+      '413',  // UK Movies (42ch)
+    ],
+  },
+  {
+    id: 'uk-usa',
+    name: 'UK & USA',
+    icon: 'tv',
+    categoryIds: [
+      '2',    // USA (93ch)
+      '3',    // UK Entertainment (39ch)
+      '414',  // UK General (26ch)
+      '413',  // UK Movies (42ch)
+      '24',   // US 24/7
+      '411',  // HUB Premier (11ch)
+    ],
+  },
+  {
+    id: 'french',
+    name: 'French',
+    icon: 'languages',
+    categoryIds: [
+      '11',   // France (162ch)
+      '336',  // AFRICA CANAL+ (247ch — French African content)
+    ],
+  },
+];
+
+// Dead categories — hidden from Browse, no channels alive
+export const DEAD_CATEGORY_IDS = new Set([
+  '579',  // Denmark
+  '28',   // Afghanistan
+  '29',   // Albania
+  '54',   // Australia
+  '60',   // Austria
+  '66',   // Brasil
+  '44',   // Bulgaria
+  '31',   // Canada
+  '741',  // Canada Live Event
+  '425',  // Caribbean
+  '774',  // Czech
+  '20',   // EXYU
+  '15',   // Germany
+  '10',   // Greek
+  '101',  // Indonesia
+  '178',  // Kuwait
+  '48',   // Malaysia
+  '773',  // NBA League Pass
+  '21',   // Netherlands
+  '583',  // Norway
+  '360',  // Pakistani Singers 24/7
+  '213',  // Premium
+  '71',   // Russian
+  '181',  // Saudi Arabia
+  '175',  // Shahed Box
+  '542',  // Sports Optus
+  '543',  // Sports Spark
+  '63',   // Sweden
+  '25',   // Turkey
+]);
+
 // ── Premium Gem Channels ─────────────────────────────────────────
 /** Premium channels to always surface first within any category listing.
  *  Stream IDs sourced from the 2026-03-28 channel curation probe. */

@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Play, Search, X, ChevronRight, LayoutGrid, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart } from 'lucide-react';
 import { t, useLanguage } from '@/i18n';
-import type { XtreamCredentials, LiveCategory, LiveStream, GroupedChannel, FreeChannel } from '@/lib/xtream';
-import { getLiveCategories, getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
+import type { XtreamCredentials, LiveStream, GroupedChannel, FreeChannel } from '@/lib/xtream';
+import { getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
 import {
   LIVETV_THEMES, SPORT_TYPES, ENTERTAINMENT_TYPES, KIDS_TYPES,
   CINEMA_TYPES, MUSIC_TYPES, DISCOVERY_TYPES, FAITH_TYPES, PREMIUM4K_TYPES,
+  BROWSE_EXPERIENCES, DEAD_CATEGORY_IDS,
 } from '@/lib/collections';
-import type { LiveTheme, SportType } from '@/lib/collections';
+import type { LiveTheme, SportType, BrowseExperience } from '@/lib/collections';
 import { getSmartThemeOrder, recordThemeWatch } from '@/lib/intelligence';
 
 // Map theme IDs to their child experience sub-tabs
@@ -29,11 +30,6 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { isDead } from '@/hooks/useChannelHealth';
 import type { Channel } from '@/types';
 
-// Sports category IDs to merge into one "Sports" pill in Browse mode
-const SPORTS_CAT_IDS = new Set([
-  '75', '76', '77', '78', '79', '80', '81', '82', '83', '84',
-  '184', '185', '186', '187', '188',
-]);
 
 // Map theme IDs to free channel experience tags
 const THEME_TO_EXPERIENCE: Record<string, string[]> = {
@@ -73,10 +69,9 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // ── Free channel URL map (stream_id -> HLS URL) ────────────
   const [freeUrlMap, setFreeUrlMap] = useState<Record<number, string>>({});
 
-  // ── Browse state ──────────────────────────────────────────────
+  // ── Browse state (experience-based, not raw categories) ────────
   const [showBrowse, setShowBrowse] = useState(false);
-  const [categories, setCategories] = useState<LiveCategory[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>('');
+  const [activeExperience, setActiveExperience] = useState<string>(BROWSE_EXPERIENCES[0].id);
   const [browseStreams, setBrowseStreams] = useState<LiveStream[]>([]);
   const [browseLoading, setBrowseLoading] = useState(false);
   const [browseError, setBrowseError] = useState(false);
@@ -197,55 +192,30 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
     return () => { mounted = false; };
   }, [credentials]);
 
-  // ── Load categories for Browse mode ───────────────────────────
+  // ── Load browse streams for active experience ──────────────────
   useEffect(() => {
-    if (!showBrowse || categories.length > 0) return;
-    let mounted = true;
-    async function load() {
-      try {
-        const [cats, healthData] = await Promise.all([
-          getLiveCategories(credentials),
-          fetchVpsHealth(),
-        ]);
-        if (!mounted) return;
-        const seen = new Set<string>();
-        const merged: LiveCategory[] = [];
-        let hasSports = false;
-        for (const cat of cats) {
-          if (isCategoryDead(healthData, cat.category_id)) continue;
-          if (SPORTS_CAT_IDS.has(cat.category_id)) {
-            if (!hasSports) { merged.push({ category_id: 'sports', category_name: 'Sports' }); hasSports = true; }
-          } else if (!seen.has(cat.category_id)) {
-            seen.add(cat.category_id);
-            merged.push(cat);
-          }
-        }
-        setCategories(merged);
-        if (merged.length > 0 && !activeCategory) setActiveCategory(merged[0].category_id);
-      } catch { /* silent */ }
-    }
-    load();
-    return () => { mounted = false; };
-  }, [showBrowse, credentials, categories.length, activeCategory]);
-
-  // ── Load browse streams for active category ───────────────────
-  useEffect(() => {
-    if (!showBrowse || !activeCategory) return;
+    if (!showBrowse || !activeExperience) return;
+    const exp = BROWSE_EXPERIENCES.find(e => e.id === activeExperience);
+    if (!exp) return;
     let mounted = true;
     async function load() {
       setBrowseLoading(true);
       setBrowseError(false);
       try {
-        let result: LiveStream[];
-        if (activeCategory === 'sports') {
-          const promises = Array.from(SPORTS_CAT_IDS).map(id =>
-            getLiveStreams(credentials, id).catch(() => [] as LiveStream[])
-          );
-          result = (await Promise.all(promises)).flat();
-        } else {
-          result = await getLiveStreams(credentials, activeCategory);
+        const promises = exp!.categoryIds
+          .filter(id => !DEAD_CATEGORY_IDS.has(id))
+          .map(id => getLiveStreams(credentials, id).catch(() => [] as LiveStream[]));
+        const results = await Promise.all(promises);
+        if (!mounted) return;
+        // Dedup by stream_id, gems first
+        const seen = new Set<number>();
+        const all: LiveStream[] = [];
+        for (const batch of results) {
+          for (const s of batch) {
+            if (!seen.has(s.stream_id)) { seen.add(s.stream_id); all.push(s); }
+          }
         }
-        if (mounted) setBrowseStreams(result);
+        setBrowseStreams(sortGemsFirst(all));
       } catch {
         if (mounted) { setBrowseStreams([]); setBrowseError(true); }
       } finally {
@@ -254,7 +224,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
     }
     load();
     return () => { mounted = false; };
-  }, [showBrowse, activeCategory, credentials]);
+  }, [showBrowse, activeExperience, credentials]);
 
   // ── Play handler with playlist context ────────────────────────
   const handlePlayFromList = useCallback(
@@ -381,14 +351,14 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
           {showBrowse && (
             <div className="mt-4">
-              {/* Category pills */}
+              {/* Experience pills */}
               <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-3">
-                {categories.map((cat) => (
+                {BROWSE_EXPERIENCES.map((exp) => (
                   <CategoryPill
-                    key={cat.category_id}
-                    label={cat.category_name}
-                    active={activeCategory === cat.category_id}
-                    onClick={() => setActiveCategory(cat.category_id)}
+                    key={exp.id}
+                    label={exp.name}
+                    active={activeExperience === exp.id}
+                    onClick={() => setActiveExperience(exp.id)}
                   />
                 ))}
               </div>
