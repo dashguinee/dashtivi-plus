@@ -12,19 +12,21 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
   authRef.current = authReady;
 
   useEffect(() => {
+    console.log('[SPLASH] Starting — authReady:', authReady);
     // Remove the HTML pre-splash (it served its purpose — no white flash)
     document.getElementById('pre-splash')?.remove();
 
     // Phase 1: dark → brand
     const t1 = setTimeout(() => setPhase('brand'), 300);
 
-    // Phase 2: wait for assets + auth + minimum brand time
+    // Phase 2: wait for assets + minimum brand time (auth has 3s max)
     const minBrandTime = new Promise<void>(r => setTimeout(r, 2200));
 
     Promise.all([minBrandTime, preloadReady]).then(() => {
-      // Wait for auth with 3s max — don't hang on slow Supabase
+      console.log('[SPLASH] Assets ready — waiting for auth (3s max)');
       const authStart = Date.now();
       const proceed = () => {
+        console.log('[SPLASH] Proceeding — authReady:', authRef.current);
         setPhase('ready');
         setTimeout(() => setPhase('exit'), 500);
         setTimeout(() => onComplete(), 1100);
@@ -39,8 +41,8 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
       waitForAuth();
     });
 
-    // Failsafe
-    const failsafe = setTimeout(() => onComplete(), 8000);
+    // Failsafe — never stuck longer than 6s
+    const failsafe = setTimeout(() => { console.log('[SPLASH] Failsafe triggered'); onComplete(); }, 6000);
 
     return () => { clearTimeout(t1); clearTimeout(failsafe); };
   }, [onComplete]);
