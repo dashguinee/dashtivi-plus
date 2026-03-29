@@ -151,6 +151,7 @@ export interface FeaturedHero {
 // ── Homepage Row Collections ──────────────────────────────────────
 
 export const HOMEPAGE_COLLECTIONS: Collection[] = [
+  // 1. HOOK — freshest content, universal appeal
   {
     id: 'fresh-movies',
     name: 'Just Dropped',
@@ -161,6 +162,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     limit: 15,
     navigateTo: '/movies',
   },
+  // 2. ENERGY — live sports, always a draw
   {
     id: 'live-sports',
     name: 'Live Sports',
@@ -168,29 +170,17 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     description: 'Premier League, beIN, Sky Sports & more',
     type: 'live',
     categoryIds: [
-      '85',   // beIN Sports (124ch, 39 gems, 36 4K — strongest sports package)
-      '353',  // Sky Sports UK (29ch, 26 gems — premium FHD/HD)
-      '578',  // Real 4K (31ch — true UHD Sky Sports, LaLiga)
+      '85',   // beIN Sports (124ch, 39 gems, 36 4K)
+      '353',  // Sky Sports UK (29ch, 26 gems)
+      '578',  // Real 4K (31ch — UHD Sky Sports, LaLiga)
       '234',  // Football (28ch, 19 gems — SuperSport, Sky, TNT)
-      '345',  // DStv Super (32ch — SuperSport FHD, African sports backbone)
+      '345',  // DStv Super (32ch — SuperSport FHD)
       '492',  // EPL (21ch — match day team channels)
     ],
     limit: 15,
     navigateTo: '/live',
   },
-  {
-    id: 'kids-family',
-    name: 'Kids & Family',
-    emoji: '',
-    description: 'Nick, Disney, Cartoon Network & more',
-    type: 'live',
-    categoryIds: [
-      '410',  // UK Kids (12ch, 11 gems — Cartoon Network FHD, CBeebies, Nick)
-      '32',   // Kids (46ch, 29 gems — Disney 4K, Nick, CN, CBeebies)
-    ],
-    limit: 15,
-    navigateTo: '/live',
-  },
+  // 3. DEPTH — series for the binge crowd
   {
     id: 'k-drama-turkish',
     name: 'Binge-Worthy',
@@ -201,20 +191,26 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     limit: 15,
     navigateTo: '/series',
   },
+  // 4. WORLD — broadens the palette, shows range
   {
-    id: 'news-world',
-    name: 'Stay Informed',
+    id: 'world-cinema',
+    name: 'Around the World',
     emoji: '',
-    description: 'CNN, BBC, Al Jazeera, Sky News',
+    description: 'France, Africa, Arabic, India & more',
     type: 'live',
     categoryIds: [
-      '82',   // English News (22ch, 14 gems — CNN HD, BBC News, Sky News)
-      '417',  // UK News (15ch, 11 gems — CNBC FHD, CNN FHD, Al Jazeera FHD)
-      '165',  // Arabic News (44ch, 12 gems — Al Jazeera 4K, France 24 Arabic)
+      '2',    // USA (93ch — HBO, Starz, Showtime)
+      '3',    // UK Entertainment (39ch — Ch4, Comedy Central, Sky)
+      '414',  // UK General (26ch — BBC One FHD, ITV FHD)
+      '11',   // France (162ch — Canal+, TF1, M6, Trace)
+      '343',  // DStv Entertainment (84ch — African drama, Mzansi)
+      '86',   // MBC Arabic (46ch — MBC 1-5, Drama, Max)
+      '247',  // India Entertainment (20ch — Star Plus, Colors)
     ],
-    limit: 12,
-    navigateTo: '/live',
+    limit: 15,
+    navigateTo: '/french',
   },
+  // 5. PREMIUM — 4K flex, signals quality
   {
     id: 'cinema-4k',
     name: '4K Experience',
@@ -225,20 +221,34 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     limit: 15,
     navigateTo: '/movies',
   },
+  // 6. INFORM — grounding, trust-building
   {
-    id: 'world-cinema',
-    name: 'Around the World',
+    id: 'news-world',
+    name: 'Stay Informed',
     emoji: '',
-    description: 'France, Africa, Arabic, India & more',
+    description: 'CNN, BBC, Al Jazeera, Sky News',
     type: 'live',
     categoryIds: [
-      '11',   // France (162ch, 86% alive — Canal+, TF1, M6, Trace)
-      '343',  // DStv Entertainment (84ch — African drama, lifestyle, Mzansi)
-      '86',   // MBC Arabic (46ch, 86% alive — MBC 1-5, Action, Drama, Max)
-      '247',  // India Entertainment (20ch, 54% alive — Star Plus, Colors, Sony)
+      '82',   // English News (22ch — CNN HD, BBC News, Sky News)
+      '417',  // UK News (15ch — CNBC FHD, CNN FHD)
+      '165',  // Arabic News (44ch — Al Jazeera 4K, France 24)
+    ],
+    limit: 12,
+    navigateTo: '/live',
+  },
+  // 7. WARMTH — family, softens the end
+  {
+    id: 'kids-family',
+    name: 'Kids & Family',
+    emoji: '',
+    description: 'Nick, Disney, Cartoon Network & more',
+    type: 'live',
+    categoryIds: [
+      '410',  // UK Kids (12ch — Cartoon Network FHD, CBeebies, Nick)
+      '32',   // Kids (46ch — Disney 4K, Nick, CN, CBeebies)
     ],
     limit: 15,
-    navigateTo: '/french',
+    navigateTo: '/live',
   },
 ];
 
@@ -702,6 +712,46 @@ export interface BrowseExperience {
 }
 
 export const BROWSE_EXPERIENCES: BrowseExperience[] = [
+  // Broadest / strongest first — what most users tap
+  {
+    id: 'uk-usa',
+    name: 'UK & USA',
+    icon: 'tv',
+    categoryIds: [
+      '2',    // USA (93ch — HBO, Starz, Showtime)
+      '3',    // UK Entertainment (39ch — Ch4, Comedy Central, Sky)
+      '414',  // UK General (26ch — BBC One FHD, ITV FHD)
+      '413',  // UK Movies (42ch)
+      '24',   // US 24/7
+      '411',  // HUB Premier (11ch)
+    ],
+  },
+  {
+    id: 'movies-247',
+    name: 'Movies 24/7',
+    icon: 'film',
+    categoryIds: [
+      '275',  // English Movies 24/7
+      '57',   // Netflix Movies 24/7
+      '280',  // Amazon Movies 24/7
+      '413',  // UK Movies (42ch)
+      '274',  // Bollywood Movies/Actors 24/7 (65ch)
+      '282',  // Bollywood Movies 24/7
+      '283',  // Hindi Web Series 24/7 (14ch)
+      '349',  // 24x7 Live (34ch)
+    ],
+  },
+  {
+    id: 'sports-events',
+    name: 'Live Events',
+    icon: 'trophy',
+    categoryIds: [
+      '190',  // PPV Live Match Time (72ch)
+      '807',  // IPL 2026 (9ch)
+      '808',  // PSL 2026 (2ch)
+    ],
+  },
+  // Cultural anchors — Africa & French together for SL/Guinea audience
   {
     id: 'africa',
     name: 'Africa',
@@ -716,8 +766,17 @@ export const BROWSE_EXPERIENCES: BrowseExperience[] = [
       '430',  // DSTV Kids FHD (15ch)
       '346',  // DSTV News (17ch)
       '431',  // DSTV News FHD (5ch)
-      '345',  // DSTV Super — SuperSport (already in Sports theme too)
+      '345',  // DSTV Super — SuperSport
       '427',  // DSTV Super FHD
+    ],
+  },
+  {
+    id: 'french',
+    name: 'French',
+    icon: 'languages',
+    categoryIds: [
+      '11',   // France (162ch — Canal+, TF1, M6)
+      '336',  // AFRICA CANAL+ (247ch — French African)
     ],
   },
   {
@@ -725,11 +784,11 @@ export const BROWSE_EXPERIENCES: BrowseExperience[] = [
     name: 'Arabic & MENA',
     icon: 'moon',
     categoryIds: [
-      '13',   // ARABIC (13ch)
       '86',   // MBC Arabic (53ch)
       '180',  // Egypt (69ch)
-      '129',  // Iraq (65ch)
       '751',  // Iran (110ch)
+      '129',  // Iraq (65ch)
+      '13',   // ARABIC (13ch)
       '549',  // Lebanon (24ch)
       '554',  // Morocco (19ch)
       '553',  // Algeria (25ch)
@@ -737,13 +796,14 @@ export const BROWSE_EXPERIENCES: BrowseExperience[] = [
       '556',  // UAE (26ch)
       '83',   // Qatar (10ch)
       '227',  // Oman (1ch)
-      '165',  // Arabic News (already in News theme)
-      '156',  // Arabic Sports (already in Sports theme)
-      '555',  // Arabic Music (already in Music theme)
-      '87',   // beIN Movies (already in Movies theme)
-      '123',  // Islamic (already in Faith theme)
+      '165',  // Arabic News
+      '156',  // Arabic Sports
+      '555',  // Arabic Music
+      '87',   // beIN Movies
+      '123',  // Islamic
     ],
   },
+  // Deep regional — massive catalogs
   {
     id: 'south-asian',
     name: 'South Asia',
@@ -751,16 +811,16 @@ export const BROWSE_EXPERIENCES: BrowseExperience[] = [
     categoryIds: [
       '247',  // India Entertainment
       '338',  // India Entertainment (additional)
-      '18',   // Indian SD (49ch)
       '340',  // India English Movies (29ch)
       '339',  // India Hindi Movies (23ch)
       '337',  // India Documentary (23ch)
       '356',  // India Sports
       '341',  // India Music (11ch)
       '77',   // Indian News (47ch)
-      '730',  // Malayalam News (29ch)
+      '18',   // Indian SD (49ch)
       '728',  // Malayalam Entertainment (33ch)
       '729',  // Malayalam Movies (65ch)
+      '730',  // Malayalam News (29ch)
       '732',  // Tamil Entertainment (67ch)
       '733',  // Tamil Movies (37ch)
       '731',  // Tamil News (11ch)
@@ -793,7 +853,7 @@ export const BROWSE_EXPERIENCES: BrowseExperience[] = [
       '272',  // Pakistani Movies 24/7 (4ch)
       '7',    // Punjabi (83ch)
       '285',  // Punjabi Movies 24/7 (9ch)
-      '287',  // Punjabi Singers 24/7 (already in Music theme)
+      '287',  // Punjabi Singers 24/7
     ],
   },
   {
@@ -802,67 +862,13 @@ export const BROWSE_EXPERIENCES: BrowseExperience[] = [
     icon: 'map',
     categoryIds: [
       '14',   // Italy (45ch)
+      '16',   // Portugal (157ch)
+      '39',   // Poland (192ch)
       '35',   // Romania (79ch)
       '582',  // Finland (32ch)
-      '16',   // Portugal (157ch)
-      '39',   // Poland (192ch — already in Entertainment theme)
       '132',  // Israel (116ch)
       '141',  // New Zealand (5ch)
-    ],
-  },
-  {
-    id: 'asia-pacific',
-    name: 'Asia Pacific',
-    icon: 'compass',
-    categoryIds: [
       '90',   // Philippines (124ch)
-    ],
-  },
-  {
-    id: 'sports-events',
-    name: 'Live Events',
-    icon: 'trophy',
-    categoryIds: [
-      '190',  // PPV Live Match Time (72ch)
-      '807',  // IPL 2026 (9ch)
-      '808',  // PSL 2026 (2ch)
-    ],
-  },
-  {
-    id: 'movies-247',
-    name: 'Movies 24/7',
-    icon: 'film',
-    categoryIds: [
-      '275',  // English Movies 24/7
-      '57',   // Netflix Movies 24/7
-      '280',  // Amazon Movies 24/7
-      '274',  // Bollywood Movies/Actors 24/7 (65ch)
-      '282',  // Bollywood Movies 24/7
-      '283',  // Hindi Web Series 24/7 (14ch)
-      '349',  // 24x7 Live (34ch)
-      '413',  // UK Movies (42ch)
-    ],
-  },
-  {
-    id: 'uk-usa',
-    name: 'UK & USA',
-    icon: 'tv',
-    categoryIds: [
-      '2',    // USA (93ch)
-      '3',    // UK Entertainment (39ch)
-      '414',  // UK General (26ch)
-      '413',  // UK Movies (42ch)
-      '24',   // US 24/7
-      '411',  // HUB Premier (11ch)
-    ],
-  },
-  {
-    id: 'french',
-    name: 'French',
-    icon: 'languages',
-    categoryIds: [
-      '11',   // France (162ch)
-      '336',  // AFRICA CANAL+ (247ch — French African content)
     ],
   },
 ];
