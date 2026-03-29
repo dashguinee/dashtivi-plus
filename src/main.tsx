@@ -6,7 +6,7 @@ import './styles/globals.css';
 // Register service worker + update detection
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then((reg) => {
+    navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then((reg) => {
       console.log('[APP] SW registered, scope:', reg.scope);
       setInterval(() => {
         console.log('[APP] Checking for SW update...');
