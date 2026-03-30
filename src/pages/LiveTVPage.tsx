@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Play, Search, X, ChevronRight, LayoutGrid, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart } from 'lucide-react';
 import { t, useLanguage } from '@/i18n';
 import type { XtreamCredentials, LiveStream, GroupedChannel, FreeChannel } from '@/lib/xtream';
-import { getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
+import { getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getExperienceIds, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
 import {
   LIVETV_THEMES, SPORT_TYPES, ENTERTAINMENT_TYPES, KIDS_TYPES,
   CINEMA_TYPES, MUSIC_TYPES, DISCOVERY_TYPES, FAITH_TYPES, PREMIUM4K_TYPES,
@@ -30,6 +30,20 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { isDead } from '@/hooks/useChannelHealth';
 import type { Channel } from '@/types';
 
+
+// Map theme IDs → classified experience IDs (name-based, per-channel)
+// This supplements category-based loading with cross-category channels
+const THEME_TO_CLASSIFIED: Record<string, string> = {
+  'sports': 'sports',
+  'entertainment': 'entertainment',
+  'news': 'news',
+  'kids': 'kids',
+  'movies247': 'movies',
+  'faith': 'faith',
+  'music': 'music',
+  'documentary': 'documentary',
+  'premium4k': 'sports',  // 4K sports channels
+};
 
 // Map theme IDs to free channel experience tags
 const THEME_TO_EXPERIENCE: Record<string, string[]> = {
@@ -148,8 +162,16 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
           setProbeStale(true);
         }
 
-        // Load free channels in parallel with Xtream themes
-        const freeChannelsPromise = getFreeChannels();
+        // Load ALL streams once for classified per-channel mapping
+        const [freeChannelsPromise, allStreamsResult] = [
+          getFreeChannels(),
+          getAllLiveStreams(credentials).catch(() => [] as LiveStream[]),
+        ];
+
+        // Build stream lookup by ID for classified injection
+        const allStreams = await allStreamsResult;
+        const streamById = new Map<number, LiveStream>();
+        for (const s of allStreams) streamById.set(s.stream_id, s);
 
         const results = await Promise.allSettled(
           LIVETV_THEMES.map(async (theme) => {
@@ -158,7 +180,26 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             const streams = await Promise.allSettled(
               cats.map(id => getLiveStreams(credentials, id).catch(() => [] as LiveStream[]))
             );
-            const xtreamStreams = dedupeStreams(streams.flatMap(r => r.status === 'fulfilled' ? r.value : []));
+            let xtreamStreams = dedupeStreams(streams.flatMap(r => r.status === 'fulfilled' ? r.value : []));
+
+            // Supplement with classified per-channel mapping (name-based, cross-category)
+            const classifiedExp = THEME_TO_CLASSIFIED[theme.id];
+            if (classifiedExp) {
+              const expIds = getExperienceIds(classifiedExp);
+              if (expIds) {
+                const existingIds = new Set(xtreamStreams.map(s => s.stream_id));
+                const supplemental: LiveStream[] = [];
+                for (const sid of expIds) {
+                  if (!existingIds.has(sid)) {
+                    const stream = streamById.get(sid);
+                    if (stream) supplemental.push(stream);
+                  }
+                }
+                if (supplemental.length > 0) {
+                  xtreamStreams = dedupeStreams([...xtreamStreams, ...supplemental]);
+                }
+              }
+            }
 
             // Merge matching free channels
             const experiences = THEME_TO_EXPERIENCE[theme.id];

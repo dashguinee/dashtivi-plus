@@ -732,12 +732,13 @@ export function seedProbeCacheFromServer(data: ServerProbeData): void {
 let verifiedSet: Set<number> | null = null;
 let verifiedPromise: Promise<VerifiedData | null> | null = null;
 
-interface VerifiedData {
+export interface VerifiedData {
   ts: string;
   total: number;
   verified: number;
   verified_pct: number;
   verified_set: number[];
+  experiences?: Record<string, number[]>;
 }
 
 export async function fetchVerifiedData(): Promise<VerifiedData | null> {
@@ -756,9 +757,26 @@ export async function fetchVerifiedData(): Promise<VerifiedData | null> {
   return verifiedPromise;
 }
 
+let experienceMap: Record<string, Set<number>> | null = null;
+
 export function seedVerifiedSet(data: VerifiedData): void {
   verifiedSet = new Set(data.verified_set);
-  console.log('[VERIFIED] Set seeded with %d channels', verifiedSet.size);
+  // Seed experience classification if available
+  if (data.experiences) {
+    experienceMap = {};
+    for (const [exp, ids] of Object.entries(data.experiences)) {
+      experienceMap[exp] = new Set(ids);
+    }
+    console.log('[VERIFIED] Set seeded with %d channels, %d experiences', verifiedSet.size, Object.keys(experienceMap).length);
+  } else {
+    console.log('[VERIFIED] Set seeded with %d channels (no experiences)', verifiedSet.size);
+  }
+}
+
+/** Get stream IDs classified into an experience by name-based analysis */
+export function getExperienceIds(experienceId: string): Set<number> | null {
+  if (!experienceMap) return null;
+  return experienceMap[experienceId] || null;
 }
 
 
