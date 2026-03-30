@@ -162,16 +162,11 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
           setProbeStale(true);
         }
 
-        // Load ALL streams once for classified per-channel mapping
-        const [freeChannelsPromise, allStreamsResult] = [
-          getFreeChannels(),
-          getAllLiveStreams(credentials).catch(() => [] as LiveStream[]),
-        ];
+        // Load free channels in parallel with Xtream themes
+        const freeChannelsPromise = getFreeChannels();
 
-        // Build stream lookup by ID for classified injection
-        const allStreams = await allStreamsResult;
+        // Build stream lookup from all theme category loads (shared across themes)
         const streamById = new Map<number, LiveStream>();
-        for (const s of allStreams) streamById.set(s.stream_id, s);
 
         const results = await Promise.allSettled(
           LIVETV_THEMES.map(async (theme) => {
@@ -180,26 +175,10 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             const streams = await Promise.allSettled(
               cats.map(id => getLiveStreams(credentials, id).catch(() => [] as LiveStream[]))
             );
-            let xtreamStreams = dedupeStreams(streams.flatMap(r => r.status === 'fulfilled' ? r.value : []));
+            const xtreamStreams = dedupeStreams(streams.flatMap(r => r.status === 'fulfilled' ? r.value : []));
 
-            // Supplement with classified per-channel mapping (name-based, cross-category)
-            const classifiedExp = THEME_TO_CLASSIFIED[theme.id];
-            if (classifiedExp) {
-              const expIds = getExperienceIds(classifiedExp);
-              if (expIds) {
-                const existingIds = new Set(xtreamStreams.map(s => s.stream_id));
-                const supplemental: LiveStream[] = [];
-                for (const sid of expIds) {
-                  if (!existingIds.has(sid)) {
-                    const stream = streamById.get(sid);
-                    if (stream) supplemental.push(stream);
-                  }
-                }
-                if (supplemental.length > 0) {
-                  xtreamStreams = dedupeStreams([...xtreamStreams, ...supplemental]);
-                }
-              }
-            }
+            // Add to shared lookup
+            for (const s of xtreamStreams) streamById.set(s.stream_id, s);
 
             // Merge matching free channels
             const experiences = THEME_TO_EXPERIENCE[theme.id];
@@ -225,6 +204,26 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             Object.assign(urlMap, buildFreeUrlMap(r.value.freeChannels));
           }
         }
+
+        // Supplement themes with classified per-channel mapping
+        // Uses streamById built from all category loads above
+        for (const theme of LIVETV_THEMES) {
+          const classifiedExp = THEME_TO_CLASSIFIED[theme.id];
+          if (!classifiedExp || !map[theme.id]) continue;
+          const expIds = getExperienceIds(classifiedExp);
+          if (!expIds) continue;
+          const existingIds = new Set(map[theme.id].map(s => s.stream_id));
+          const supplemental: LiveStream[] = [];
+          for (const sid of expIds) {
+            if (!existingIds.has(sid) && streamById.has(sid)) {
+              supplemental.push(streamById.get(sid)!);
+            }
+          }
+          if (supplemental.length > 0) {
+            map[theme.id] = [...map[theme.id], ...supplemental];
+          }
+        }
+
         setThemeStreams(map);
         setFreeUrlMap(prev => ({ ...prev, ...urlMap }));
       } catch {
