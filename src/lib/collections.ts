@@ -1317,6 +1317,7 @@ export const BROWSE_EXPERIENCES: BrowseExperience[] = [
       '42',   // Sri Lanka (36ch)
       '64',   // Nepal (87ch)
       '28',   // Afghanistan (17 alive)
+      '727',  // Malayalam News (15 alive)
     ],
   },
   {
@@ -1331,6 +1332,7 @@ export const BROWSE_EXPERIENCES: BrowseExperience[] = [
       '7',    // Punjabi (83ch)
       '285',  // Punjabi Movies 24/7 (9ch)
       '287',  // Punjabi Singers 24/7
+      '360',  // Pakistani Singers 24/7 (13 alive)
     ],
   },
   {
@@ -1342,14 +1344,33 @@ export const BROWSE_EXPERIENCES: BrowseExperience[] = [
       '25',   // Turkey (263 alive)
       '20',   // EXYU (240 alive)
       '71',   // Russian (196 alive)
+      '44',   // Bulgaria (135 alive)
       '14',   // Italy (45ch)
       '16',   // Portugal (157ch)
       '39',   // Poland (192ch)
       '35',   // Romania (79ch)
+      '29',   // Albania (107 alive)
+      '21',   // Netherlands (68 alive)
+      '774',  // Czech (57 alive)
       '63',   // Sweden (48 alive)
+      '583',  // Norway (32 alive)
+      '60',   // Austria (30 alive)
+      '579',  // Denmark (27 alive)
       '582',  // Finland (32ch)
+      '10',   // Greek (11 alive)
       '132',  // Israel (116ch)
       '141',  // New Zealand (5ch)
+    ],
+  },
+  {
+    id: 'americas',
+    name: 'Americas',
+    icon: 'globe',
+    categoryIds: [
+      '31',   // Canada (230 alive)
+      '741',  // Canada Live Event (157 alive)
+      '425',  // Caribbean (196 alive)
+      '66',   // Brasil (75 alive)
     ],
   },
   {
@@ -1359,7 +1380,8 @@ export const BROWSE_EXPERIENCES: BrowseExperience[] = [
     categoryIds: [
       '90',   // Philippines (124ch)
       '101',  // Indonesia (91 alive)
-      '48',   // Malaysia (200ch — probe will filter dead)
+      '48',   // Malaysia (200ch)
+      '54',   // Australia (110 alive)
     ],
   },
   {
@@ -1393,29 +1415,15 @@ export const BROWSE_EXPERIENCES: BrowseExperience[] = [
       '808',  // PSL 2026 (2ch)
       '542',  // Optus Sports (11 alive)
       '543',  // Spark Sports (8 alive)
+      '773',  // NBA League Pass (5 alive)
     ],
   },
 ];
 
-// Dead categories — truly dead or empty, verified 2026-03-30 probe.
-// Categories removed from this list if probe found alive channels.
+// Dead categories — EMPTY after two-tier verification (2026-03-30).
+// Every category with even 1 verified channel has been removed from this list.
 export const DEAD_CATEGORY_IDS = new Set([
-  '579',  // Denmark (0 alive)
-  '29',   // Albania (0 alive — all 343 dead)
-  '54',   // Australia (0 alive — use Fox Sports 137 instead)
-  '60',   // Austria (0 alive)
-  '66',   // Brasil (0 alive)
-  '44',   // Bulgaria (0 alive)
-  '31',   // Canada (0 alive)
-  '741',  // Canada Live Event (0 alive)
-  '425',  // Caribbean (0 alive)
-  '774',  // Czech (0 alive)
-  '10',   // Greek (0 alive)
-  '773',  // NBA League Pass (0 alive — use 516 NFL for US sports)
-  '21',   // Netherlands (0 alive)
-  '583',  // Norway (0 alive)
-  '360',  // Pakistani Singers 24/7 (0 alive — use 287 Punjabi Singers)
-  '213',  // Premium (0 alive)
+  '213',  // Premium (2 channels, not useful)
 ]);
 
 // ── Premium Gem Channels ─────────────────────────────────────────
