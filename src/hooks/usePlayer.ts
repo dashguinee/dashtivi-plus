@@ -34,6 +34,7 @@ export function usePlayer() {
   const destroyRef = useRef<(() => void) | null>(null);
   const hlsRef = useRef<HlsInstance | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const cleanup = useCallback(() => {
     // Destroy HLS.js instance if active (free channels)
@@ -49,6 +50,11 @@ export function usePlayer() {
 
   const playChannel = useCallback(
     async (channel: Channel) => {
+      // Abort any previous pre-flight fetch
+      if (abortRef.current) abortRef.current.abort();
+      abortRef.current = new AbortController();
+      const signal = abortRef.current.signal;
+
       const video = videoRef.current;
       const isSwitch = !!video && !!video.src && !video.paused;
 
@@ -121,7 +127,7 @@ export function usePlayer() {
           // Xtream proxy channels — pre-flight to detect stream limit
           if (isLive) {
             try {
-              const probe = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(3000) });
+              const probe = await fetch(url, { method: 'GET', signal });
               if (probe.status === 409) {
                 const data = await probe.json();
                 if (data.error === 'stream_limit') {
@@ -268,7 +274,8 @@ export function usePlayer() {
             if (bufferCount >= BUFFER_LIMIT && TIERS.indexOf(currentTier) > 0) {
               stepDown();
             }
-            setState((prev) => ({ ...prev, isLoading: true }));
+            if (typeof origWaiting === 'function') origWaiting.call(video, new Event('waiting'));
+            else setState((prev) => ({ ...prev, isLoading: true }));
           };
 
           const origDestroy = destroyRef.current;

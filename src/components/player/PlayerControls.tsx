@@ -171,6 +171,7 @@ export const PlayerControls: React.FC<Props> = ({
             <button
               onClick={onTogglePlay}
               className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+              aria-label={state.isPlaying ? 'Pause' : 'Play'}
             >
               {state.isPlaying ? (
                 <Pause className="w-5 h-5" />
@@ -189,6 +190,7 @@ export const PlayerControls: React.FC<Props> = ({
               <button
                 onClick={onToggleMute}
                 className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+                aria-label={state.isMuted ? 'Unmute' : 'Mute'}
               >
                 {state.isMuted || state.volume === 0 ? (
                   <VolumeX className="w-5 h-5" />
@@ -276,7 +278,7 @@ export const PlayerControls: React.FC<Props> = ({
             <button
               onClick={onTogglePiP}
               className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
-              title="Picture in Picture"
+              aria-label="Picture in Picture"
             >
               <PictureInPicture2 className="w-5 h-5" />
             </button>
@@ -285,6 +287,7 @@ export const PlayerControls: React.FC<Props> = ({
             <button
               onClick={onToggleFullscreen}
               className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+              aria-label={state.isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
             >
               {state.isFullscreen ? (
                 <Minimize className="w-5 h-5" />

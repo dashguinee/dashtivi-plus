@@ -56,26 +56,32 @@ export const VideoPlayer: React.FC<Props> = ({
   const cinemaChannelRef = useRef<string | null>(null);
   const cinemaMinTimeRef = useRef(false); // has minimum 2.5s elapsed?
 
+  const cinemaMinTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const cinemaMaxTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
   // Trigger cinema intro when a VOD channel starts loading
   useEffect(() => {
     const isVod = state.channel?.category === 'movie' || state.channel?.category === 'series';
     const channelId = state.channel?.id ?? null;
 
     if (isVod && state.isLoading && channelId !== cinemaChannelRef.current) {
-      // New VOD channel loading — start cinema intro
       cinemaChannelRef.current = channelId;
       cinemaMinTimeRef.current = false;
       setShowCinemaIntro(true);
-      // MUTE video during cinema intro (prevent audio overlap with cinema sound)
       if (videoRef.current) videoRef.current.muted = true;
-      // Minimum display time: 2.5s (let the animation + sound complete)
-      setTimeout(() => { cinemaMinTimeRef.current = true; }, 2500);
-      // Maximum display time: 8s (fallback if video never starts)
-      setTimeout(() => { setShowCinemaIntro(false); if (videoRef.current) videoRef.current.muted = false; }, 8000);
+      cinemaMinTimerRef.current = setTimeout(() => { cinemaMinTimeRef.current = true; }, 2500);
+      cinemaMaxTimerRef.current = setTimeout(() => { setShowCinemaIntro(false); if (videoRef.current) videoRef.current.muted = false; }, 8000);
     } else if (!state.channel) {
       cinemaChannelRef.current = null;
       setShowCinemaIntro(false);
     }
+
+    return () => {
+      clearTimeout(cinemaMinTimerRef.current);
+      clearTimeout(cinemaMaxTimerRef.current);
+      // Ensure unmute on cleanup
+      if (videoRef.current) videoRef.current.muted = false;
+    };
   }, [state.channel, state.isLoading]);
 
   // Dismiss cinema intro when video starts playing AND min time elapsed
@@ -280,9 +286,7 @@ export const VideoPlayer: React.FC<Props> = ({
   return (
     <div
       ref={containerRef as React.RefObject<HTMLDivElement>}
-      className={`fixed inset-0 z-50 bg-black flex items-center justify-center ${
-        state.isFullscreen ? '' : ''
-      }`}
+      className="fixed inset-0 z-50 bg-black flex items-center justify-center"
       onMouseMove={showControls}
       onClick={() => {
         if (controlsVisible) showControls();

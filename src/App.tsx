@@ -205,12 +205,12 @@ function AppContent() {
           <ErrorBoundary>
             <Suspense fallback={<div className="pt-20 px-4 space-y-6 animate-pulse"><div className="h-[22vh] rounded-2xl bg-white/[0.02]" /><div className="flex gap-2">{[1,2,3,4].map(i=><div key={i} className="h-8 w-16 rounded-full bg-white/[0.03]" />)}</div><div className="space-y-4">{[1,2,3].map(i=><div key={i} className="h-32 rounded-xl bg-white/[0.02]" />)}</div></div>}>
               <Routes>
-                <Route path="/" element={<HomePage credentials={credentials} onPlay={handlePlayChannel} />} />
-                <Route path="/live" element={<LiveTVPage credentials={credentials} onPlay={handlePlayChannel} />} />
-                <Route path="/movies" element={<MoviesPage credentials={credentials} onPlay={handlePlayChannel} />} />
-                <Route path="/series" element={<SeriesPage credentials={credentials} onPlay={handlePlayChannel} />} />
-                <Route path="/french" element={<FrenchPage credentials={credentials} onPlay={handlePlayChannel} />} />
-                <Route path="/originals" element={<PlatformsPage credentials={credentials} onPlay={handlePlayChannel} />} />
+                <Route path="/" element={<ErrorBoundary><HomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
+                <Route path="/live" element={<ErrorBoundary><LiveTVPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
+                <Route path="/movies" element={<ErrorBoundary><MoviesPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
+                <Route path="/series" element={<ErrorBoundary><SeriesPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
+                <Route path="/french" element={<ErrorBoundary><FrenchPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
+                <Route path="/originals" element={<ErrorBoundary><PlatformsPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
@@ -248,6 +248,15 @@ function AppContent() {
   );
 }
 
+function AuthedApp({ credentials }: { credentials: { username: string; password: string } | null }) {
+  useEffect(() => {
+    if (credentials) {
+      preloadApiData((import.meta.env.VITE_PROXY_URL || 'https://stream.zionsynapse.online').trim(), credentials.username, credentials.password);
+    }
+  }, [credentials]);
+  return <AppContent />;
+}
+
 function AppRouter() {
   const [showSplash, setShowSplash] = useState(() => !getItem<boolean>('splash_seen_plus', false));
   const auth = useAuth();
@@ -269,12 +278,7 @@ function AppRouter() {
       {!showSplash && !auth.isAuthenticated && (
         <AccessCodeLogin onLogin={async (code) => { if (isAmbientEnabled()) startAmbient(); return auth.login(code); }} />
       )}
-      {auth.isAuthenticated && (() => {
-        if (auth.credentials) {
-          preloadApiData((import.meta.env.VITE_PROXY_URL || 'https://stream.zionsynapse.online').trim(), auth.credentials.username, auth.credentials.password);
-        }
-        return <AppContent />;
-      })()}
+      {auth.isAuthenticated && <AuthedApp credentials={auth.credentials} />}
     </>
   );
 }

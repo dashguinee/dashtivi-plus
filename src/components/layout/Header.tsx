@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Tv, LogOut, Volume2, VolumeX } from 'lucide-react';
-import { toggleAmbient } from '@/lib/ambient-audio';
+import { toggleAmbient, isAmbientEnabled } from '@/lib/ambient-audio';
 import { LangToggle } from '@/components/ui/LangToggle';
 import { useLanguage } from '@/i18n';
 
@@ -14,7 +14,7 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === '/';
-  const [ambientOn, setAmbientOn] = useState(true); // Shows ON — ambient auto-starts on first interaction
+  const [ambientOn, setAmbientOn] = useState(() => isAmbientEnabled());
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 safe-top">

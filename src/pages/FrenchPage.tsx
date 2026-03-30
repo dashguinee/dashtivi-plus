@@ -409,7 +409,7 @@ export const FrenchPage: React.FC<Props> = ({ credentials, onPlay }) => {
             <button
               key={genre.id}
               onClick={() => switchGenre(genre.id)}
-              className={`flex-shrink-0 text-[11px] px-3.5 py-1.5 rounded-full font-semibold transition-all duration-200 ${
+              className={`flex-shrink-0 text-[11px] px-3.5 py-1.5 rounded-full font-semibold transition-all duration-300 ${
                 activeGenre === genre.id
                   ? `bg-gradient-to-r ${active.gradient} text-white shadow-md ${active.glowColor}`
                   : 'bg-white/[0.04] text-text-secondary border border-white/[0.08] hover:bg-white/[0.08] hover:text-white'

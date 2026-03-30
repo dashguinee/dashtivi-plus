@@ -49,7 +49,7 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-600 ${
+      className={`fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-500 ${
         phase === 'exit' ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
       style={{ background: '#060609' }}
@@ -67,7 +67,7 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
 
       {/* Wordmark */}
       <div
-        className={`relative z-10 text-center transition-[opacity,transform] duration-600 ${
+        className={`relative z-10 text-center transition-[opacity,transform] duration-500 ${
           phase === 'dark' ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
         }`}
       >

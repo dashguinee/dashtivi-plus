@@ -133,7 +133,7 @@ export const PlatformsPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const episodes = seriesInfo && activeSeason ? seriesInfo.episodes[activeSeason] || [] : [];
 
   return (
-    <div className="pt-16 pb-4">
+    <div className="pt-16 pb-32">
       {/* Platform selector — premium pills with brand colors */}
       <div className="sticky top-14 z-20 py-3 px-4 bg-[#0A0A0A]/90 backdrop-blur-lg border-b border-white/5">
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">

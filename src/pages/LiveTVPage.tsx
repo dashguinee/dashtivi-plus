@@ -75,6 +75,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const [browseStreams, setBrowseStreams] = useState<LiveStream[]>([]);
   const [browseLoading, setBrowseLoading] = useState(false);
   const [browseError, setBrowseError] = useState(false);
+  const [browseRetryKey, setBrowseRetryKey] = useState(0);
 
   const isSearching = debouncedQuery.trim().length > 0;
 
@@ -227,7 +228,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
     }
     load();
     return () => { mounted = false; };
-  }, [showBrowse, activeExperience, credentials]);
+  }, [showBrowse, activeExperience, credentials, browseRetryKey]);
 
   // ── Play handler with playlist context ────────────────────────
   const handlePlayFromList = useCallback(
@@ -375,7 +376,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 <div className="flex flex-col items-center justify-center py-24 gap-3">
                   <p className="text-text-muted text-sm">{t(lang, 'unableToLoad')}</p>
                   <button
-                    onClick={() => setBrowseError(false)}
+                    onClick={() => { setBrowseError(false); setBrowseRetryKey(k => k + 1); }}
                     className="px-4 py-2 bg-primary rounded-xl text-sm font-medium hover:bg-primary-light transition-colors"
                   >
                     {t(lang, 'retry')}
@@ -498,7 +499,7 @@ function ThemeRow({
             <button
               key={sub.id}
               onClick={() => setActiveSubTab(sub.id)}
-              className={`flex-shrink-0 text-[10px] px-2.5 py-1 rounded-full transition-colors duration-300 ${
+              className={`flex-shrink-0 text-[10px] px-2.5 py-2 min-h-[44px] rounded-full transition-colors duration-300 flex items-center justify-center ${
                 activeSubTab === sub.id
                   ? `bg-gradient-to-r ${theme.gradient} text-white border border-white/20`
                   : 'bg-white/5 text-white/50 border border-transparent hover:text-white/80'
