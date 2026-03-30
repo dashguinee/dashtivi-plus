@@ -13,6 +13,8 @@ import {
   fetchVpsHealth,
   fetchServerProbeData,
   seedProbeCacheFromServer,
+  fetchVerifiedData,
+  seedVerifiedSet,
   isChannelProbeAlive,
   getTmdbMap,
   safeImageUrl,
@@ -379,13 +381,16 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       console.log('[HOME] Loading started');
       const t0 = Date.now();
       try {
-        // Fetch health + probe data in parallel
-        const [health, probeData] = await Promise.all([
+        // Fetch health + verified data (two-tier) + legacy probe in parallel
+        const [health, verifiedData, probeData] = await Promise.all([
           fetchVpsHealth(),
+          fetchVerifiedData(),
           fetchServerProbeData(),
         ]);
-        console.log('[HOME] Health + probe loaded in', Date.now() - t0, 'ms — live categories:', (health.liveCategories || []).length);
-        if (probeData) seedProbeCacheFromServer(probeData);
+        console.log('[HOME] Health loaded in', Date.now() - t0, 'ms — live categories:', (health.liveCategories || []).length);
+        // Verified takes priority (video+audio confirmed), legacy probe as fallback
+        if (verifiedData) { seedVerifiedSet(verifiedData); console.log('[HOME] Using verified set:', verifiedData.verified, 'channels'); }
+        else if (probeData) { seedProbeCacheFromServer(probeData); console.log('[HOME] Fallback to legacy probe:', probeData.alive_set?.length, 'channels'); }
         const liveCatIds: string[] = health.liveCategories || [];
 
         // Load collections progressively — each row appears as it resolves

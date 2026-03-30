@@ -29,11 +29,29 @@ export const RELOCATE_MAP: Record<number, string> = {
   34084: 'sports',   // MLB Network
   34085: 'sports',   // NFL Network
   34086: 'sports',   // NFL RedZone
-  34087: 'sports',   // UFC Fight Pass
+  34087: 'sports',   // UFC Fight pass
   34088: 'sports',   // Red Bull TV
   34089: 'sports',   // beIN Sports La Liga
+  // Additional USA sports confirmed by audit 2026-03-30
+  52: 'sports',      // USA: ESPN 1
+  53: 'sports',      // USA: ESPN 2 HD
+  54: 'sports',      // USA: Fox Sport 1 HD (FS1)
+  55: 'sports',      // USA: Fox Sport 2 HD (FS2)
+  711: 'sports',     // USA: WWE NETWORK
+  1010: 'sports',    // US: NBA TV
+  1011: 'sports',    // US: ESPN
+  1012: 'sports',    // US: NBA Network
+  1013: 'sports',    // US: NHL Network
+  1014: 'sports',    // US: MLB Network
+  1015: 'sports',    // US: NFL Network
+  1057: 'sports',    // US: UFC Fight pass
+  3415: 'sports',    // US: NFL Network (dup)
+  3420: 'sports',    // USA: FOX SPORTS 1
+  3421: 'sports',    // USA: FOX SPORTS 2
+  23550: 'sports',   // US: NFL RedZone HD
+  130044: 'sports',  // US: Fox Sports 1
 
-  // Non-sports in UHD Sports (cat 578)
+  // Non-sports in UHD Sports (cat 578) — real 4K category
   466660: 'movies247',     // KINO Cinema Ultra HD
   466661: 'europe',        // RTL DE UHD
   466662: 'europe',        // PRO7SAT.1 DE UHD
@@ -42,9 +60,22 @@ export const RELOCATE_MAP: Record<number, string> = {
   466666: 'documentary',   // Odisea ES UHD
   466667: 'europe',        // TRT TR UHD
   466668: 'entertainment', // Fashion TV UHD
+  // Additional UHD misplacements (non-sport UHD streams in sport cat 578)
+  688278: 'europe',        // UHD QUADRO [RU]
+  688279: 'europe',        // UHD ULTRA REX [RU]
+  688280: 'movies247',     // UHD KINO [RU]
+  688281: 'movies247',     // UHD CINEMA ULTRA HD [RU]
+  688282: 'europe',        // UHD RTL [DE]
+  688285: 'europe',        // UHD PRO7SAT.1 [DE]
+  688287: 'europe',        // UHD RAI 1 [IT]
+  688290: 'europe',        // UHD LA 1 [ES]
+  688291: 'documentary',   // UHD ODISEA [ES]
+  688292: 'europe',        // UHD TRT [TR]
+  688306: 'entertainment', // UHD FASHION TV [AL]
+  688308: 'sports',        // UHD BENFICA TV [PT] — correct sport but was in UHD generic
 
   // Al Rabiaa Iraq non-sports in Arabic Sports (cat 156)
-  605085: 'faith',         // Al Rabiaa Quran
+  605085: 'faith',         // Al Rabiaa Quran / Iraq
   605087: 'arabic',        // Al Rabiaa Series
   605088: 'arabic',        // Al Rabiaa Variety
   605089: 'music',         // Al Rabiaa Music
@@ -52,27 +83,405 @@ export const RELOCATE_MAP: Record<number, string> = {
   605091: 'documentary',   // Al Rabiaa Geo
 
   // Sky Sports News → sports (was in News cat 82)
-  23: 'sports',            // Sky Sports News FHD
+  23: 'sports',            // UK: Sky Sports News FHD
 
-  // Euronews → news (was in Sports SD cat 139)
-  148676: 'news',          // Euronews
+  // Euronews → news (was in Sports UK Mix cat 139)
+  148676: 'news',          // Euronews (UK SD)
+
+  // DD Sports buried in INDIAN SD (should be sports)
+  4044: 'sports',          // IN: DD Sports (4K)
+
+  // Kids channels misplaced in Africa Canal+ (cat 336) → kids
+  145031: 'kids',          // FR (C+AF) CANAL+ KIDS
+  145079: 'kids',          // FR (C+AF) DISNEY CHANNEL
+  145080: 'kids',          // FR (C+AF) DISNEY JUNIOR
+  145133: 'kids',          // FR (C+AF) LUDIKIDS
+  145156: 'kids',          // FR (C+AF) NICKELODEON
+
+  // Kids buried in USA Entertainment (cat 2) → kids
+  3402: 'kids',            // US: DISNEY JR EAST
+  3403: 'kids',            // US: DISNEY XD EAST
+  // 148214 (Bloomberg in UK Kids) already set above
+
+  // Iran Kids in IRAN general (cat 751) → kids
+  638685: 'kids',          // IR: ITOON HD
+  638686: 'kids',          // IR: Gem Kids HD
+  638687: 'kids',          // IR: Gem Junior HD
 };
 
 // ── Hidden Channels ─────────────────────────────────────────────────
 /** Channels to never show — separators, ghosts, placeholders, true junk.
- *  Deep audit 2026-03-30. */
+ *  Deep audit 2026-03-30 — full inventory of 11,264 channels across 146 categories. */
 export const HIDDEN_STREAM_IDS = new Set([
-  // German feed separators (not real channels)
-  659186, 659215, 659254, 659425, 659464,
+  // ── Section separators (not real channels — display names are "=======") ──
+  // Germany separators
+  659186, 659215, 659243, 659254, 659425, 659464,
+  // Netherlands separator
+  659492,
+  // Poland separator
+  660114,
+  // Denmark separator
+  660639,
+  // Sweden separator
+  660692,
+  // Albania section headers (8 of them)
+  660743, 660821, 660839, 660853, 660868, 660907, 661027, 661075,
+  // Austria separator
+  661086,
+  // NBA League Pass separator
+  661131,
+  // Czech separator
+  661152,
+  // Bulgaria separator
+  661238,
 
-  // MLS dead placeholders (year 2098 expiry, no content)
+  // ── Empty event slots (Sportsnet+ / DAZN CA trailing placeholders) ──
+  // Sportsnet+ 19-50 (no event assigned)
+  615708, 615709, 615710, 615711, 615712, 615713, 615714, 615715,
+  615716, 615717, 615718, 615719, 615720, 615721, 615722, 615723,
+  615724, 615725, 615726, 615727, 615728, 615729, 615730, 615731,
+  615732, 615733, 615734, 615735, 615736, 615737, 615738, 615739,
+  // DAZN CA empty slots
+  615923, 615936, 615937, 615938, 615939, 615940, 615941, 615942,
+  615943, 615944, 615945,
+
+  // ── MLS dead placeholders (year 2098 expiry, no content) ──
   613068, 613069, 613070, 613071, 613072, 613073, 613074,
   613075, 613076, 613077, 613078, 613079, 613080,
 
-  // NFL "No Scheduled Event" ghost slots
+  // ── NFL "No Scheduled Event" ghost slots ──
   428135, 428136, 428151, 428152, 428153, 428154,
 
-  // Internal/exposed test streams
+  // ── Duplicate quality copies — keep best, hide rest ──
+  // Sky Sports Cricket (keep FHD 186606)
+  186605, 148679,
+  // Sky Sports Golf (keep FHD 186614)
+  186613, 148682,
+  // Sky Sports F1 (keep FHD 186616)
+  186615, 148680,
+  // Sky Sports Mix (keep FHD 186622)
+  186621, 148684,
+  // Sky Sports News — keep 23 (FHD), hide duplicates
+  23343, 148685,
+  // Sky Sports Box Office — keep FHD 186626
+  201548, 186625,
+  // Sky Sports Main Event (keep FHD 186597)
+  186596,
+  // Sky Sports Action (keep FHD 186618)
+  186617,
+  // Sky Sports Football (keep FHD 23334)
+  186612, 186607, 19,
+  // Sky Sports Premier League (keep FHD 23342)
+  186604, 9891, 186603,
+  // Sky Sports Plus (keep FHD 186620)
+  148678,
+  // Sport TV 1 PT (keep FHD 389128)
+  389127, 389126,
+  // Sport TV 2 PT (keep FHD 389131)
+  389130, 389129,
+  // Sport TV 3 PT (keep FHD 389134)
+  389133, 389132,
+  // Sport TV 4 PT (keep FHD 389137)
+  389136, 389135,
+  // Sport TV 5 PT (keep FHD 389140)
+  389139, 389138,
+  // Eleven Sports 1 PT (keep FHD 389150)
+  389148, 389149,
+  // Eleven Sports 3 PT (keep FHD 389155)
+  389153, 389154,
+  // Eleven Sports 4 PT (keep FHD 389158)
+  389156, 389157,
+  // Eleven Sports 5 PT (keep FHD 389161)
+  389159, 389160,
+  // Eleven Sports 6 PT (keep FHD 389164)
+  389162, 389163,
+  // Eurosport 1 PT (keep FHD 389166)
+  324,
+  // Eurosport 2 PT (keep FHD 389167)
+  325,
+  // Bein Sports Max 1 (keep 4K 652395)
+  652399, 652403, 652407,
+  // Bein Sports Max 2 (keep 4K 652396)
+  652400, 652404, 652408,
+  // Bein Sports Max 3 (keep 4K 652397)
+  652401, 652405, 652409,
+  // Bein Sports Max 4 (keep 4K 652398)
+  652402, 652406, 652410,
+  // BeIN Alkass 1-10 (keep 4K versions)
+  652421, 652431, // Alkass 1
+  652422, 652432, // Alkass 2
+  652423, 652433, // Alkass 3
+  652424, 652434, // Alkass 4
+  652425, 652435, // Alkass 5
+  652426, 652436, // Alkass 6
+  652427, 652437, // Alkass 7
+  652428, 652438, // Alkass 8
+  652429, 652439, // Alkass 9
+  652430, 652440, // Alkass 10
+  // Bein Xtra 4/5/6 (keep 4K)
+  652365, 652390, // Xtra 5
+  652366, 652391, // Xtra 6
+  652367, 652389, // Xtra 4
+  // Bein AFC (keep 4K)
+  652368, 652392, // AFC 3
+  652369, 652393, // AFC 4
+  652370, 652394, // AFC 5
+  // Thamanya Sport (keep 4K)
+  605100, 605103, // Thamanya 1
+  605101, 605104, // Thamanya 2
+  605102, 605105, // Thamanya 3
+  // Shasha TV (keep 4K)
+  605109, 605111, // Shasha 1
+  605108, 605110, // Shasha 2
+  // Shahid Sport (keep 4K/best)
+  605113, 605114, // Shahid Sport 1
+  605116, 605117, // Shahid Sport 2
+  // AD Sport Asia (keep 4K)
+  605128, 605130, // AD Sport Asia 1
+  605129, 605131, // AD Sport Asia 2
+  // MBC channels (keep 4K)
+  308905, 308948, // MBC 1
+  308906, 308949, // MBC 2
+  308908, 308907, 308950, // MBC 3
+  308909, 308951, // MBC 4
+  308911, 308910, 308952, // MBC 5
+  308918, 308916, 308955, // MBC Drama
+  308920, 308919, 308956, // MBC Iraq
+  308912, 308953, // MBC Action
+  308913, 308954, // MBC Bollywood
+  308914, 308957, // MBC Max
+  308924, 308921, // MBC Masr 1
+  308923, 308922, // MBC Masr 2
+  308926, 308925, // MBC Wanasah
+  // Al Hadath (keep 4K 319271)
+  319269, 319268, 319270,
+  // Al Jazeera (keep 4K 319261)
+  319260, 319262,
+  // beIN Sport English (keep 4K)
+  652381, // English 1 SD
+  652382, // English 2 SD
+  652385, // Global SD
+  // TR Euro D (keep one)
+  423596, 423597,
+  // TR Eurosport 2 (keep one)
+  423601, 423602,
+  // CRIC SKY SPORTS CRIC (keep 12)
+  23566, 114479, 124269,
+  // CRIC T Sports (keep 18452)
+  130714, 113069,
+  // TM SUN TV (keep 158)
+  5921, 5922, 5923,
+  // TM ANGEL TV (keep 5881)
+  189, 5882, 5883,
+  // TM SUN LIFE (keep 5919)
+  5918,
+  // IN STAR PLUS (keep FHD 167)
+  9366, 221, 3744,
+  // IN SONY (keep FHD 9365)
+  144, 9885,
+  // IN ZEE TV (keep FHD 220)
+  9371, 161,
+  // IN STAR BHARAT (keep FHD 9367)
+  199,
+  // IN SONY MAX (keep FHD 9373)
+  151,
+  // IN STAR GOLD (keep FHD 9375)
+  194,
+  // IN STAR GOLD SELECT (keep FHD 9376)
+  210,
+  // IN STAR MOVIES (keep FHD 9384)
+  979,
+  // IN STAR MOVIES SELECT (keep FHD 23270)
+  218,
+  // IN SONY PIX (keep FHD 9381)
+  147,
+  // IN MNX (keep 4K 23428)
+  191,
+  // IN & PRIVE (keep FHD 9379)
+  201,
+  // IN COLORS INFINITY (keep FHD 9390)
+  187,
+  // IN ANIMAL PLANET (keep FHD 9391)
+  182,
+  // IN MTV Plus (keep 4K 94499)
+  23791, 4029,
+  // Kand UDAYA TV (keep FHD 9449)
+  9450, 164,
+  // UK SKY SPORTS NEWS dupe — 23343 already listed above in Sky Sports News block
+  // UK Sony TV (keep FHD 24580)
+  148175, 148467,
+  // UK 92 News (keep 39419)
+  148578,
+  // CA CNN (keep HD 1486)
+  616223, 616222,
+  // CA CTV Ottawa (keep HD 615978)
+  616229, 616340,
+  // AU ABC ME (keep HD 415505)
+  415349, 415506,
+  // AU SBS World Movies (keep HD 415363)
+  415566, 415567,
+  // 24/7 Doc McStuffins (keep 224745)
+  224746, 224747,
+  // PH One News (keep HD 150980)
+  151012, 151013,
+  // Sy Lana TV (keep 4K 309063)
+  309062, 309064,
+  // SuperSports PSL (keep FHD 770)
+  517, 271039,
+  // SuperSports Laliga (keep FHD 768)
+  515,
+  // SuperSports Premier League (keep FHD 771)
+  518,
+  // SuperSports Football (keep FHD 776)
+  523,
+  // SuperSports Golf (keep FHD 778)
+  525,
+  // SuperSports Cricket (keep FHD 157939)
+  769,
+  // SuperSports Grandstand (keep FHD 772)
+  519,
+  // SuperSports Variety 2 (keep FHD 773)
+  520,
+  // SuperSports Action (keep FHD 774)
+  521,
+  // SuperSports Variety 1 (keep FHD 775)
+  522,
+  // SuperSport Motorsport (keep FHD 779)
+  560,
+  // DSTV Super Motorsport (keep 124000)
+  157947,
+  // DSTV ESPN (keep FHD 157959)
+  23369,
+  // TNT Sport 2 (keep FHD 186628)
+  285,
+  // TNT Sport 3 (keep FHD 186629)
+  283,
+  // TNT Sport 4 (keep FHD 255259)
+  186630,
+  // Eurosport 2 (keep FHD 23348)
+  186638,
+  // CRIC PTV SPORTS (keep ᴴᴰ 89 — ⁴ᵏ 61674 stream unverified quality, hide)
+  // 61674, — removed, PTV Sports 4K may be valid; keeping both for now
+  // CRIC A SPORTS (keep ᴴᴰ 43444)
+  43447,
+  // CRIC STAR SPORTS 1 ENG (keep ᴴᴰ 148)
+  124281,
+  // CRIC STAR SPORTS 1 HINDI (keep ᴴᴰ 211)
+  124287,
+  // CRIC WILLOW SPORTS (keep 215)
+  23943,
+  // CRIC SUPERSPORTS (keep 158442)
+  2496,
+  // T Sports FHD (keep 703302)
+  52500,
+  // Sky Sports F1 UK (keep 4K 122181)
+  144581,
+  // Eurosport 1 PT — 324 already hidden above (Sport TV 1 PT block)
+  // Eurosport 1 FR (keep 23345 area, hide 186637 FHD dupe if confirmed)
+  // GOLF+ dupe (keep 3072)
+  659125,
+  // Golf dupe (keep 3072 |FR| GOLF+ — 659125 FR Golf+ is same channel)
+  // 3294 already listed as 847 GOLF FHD dupe above — remove duplicate
+
+  // Canadian TSN1 (keep 1565)
+  616080,
+  // UK SKY CINEMA dupes (keep FHD versions)
+  273, 274, 275, 276, 278, 279, // HD versions of Sky Cinema channels
+  // DSTV dupes (keep FHD versions)
+  19837, // Star Life HD (keep FHD 157992)
+  23361, // Discovery Family (keep FHD 157994)
+  24118, // Investigation Discovery (keep FHD 157995)
+  120855, // TNT Africa (keep FHD 157998)
+  137530, // KIX (keep FHD 157999)
+  23873,  // Studio Universal (keep FHD 158001)
+  // UK Nick Jr dupe (keep FHD 148256)
+  561,
+  // US Cartoon Network (keep 951)
+  3365,
+  // UK BBC NEWS — 1059 (UK: BBC NEWS HD) and 148365 (UK HD: BBC News) are both HD.
+  // Both are kept — they appear in different experience arrays. Not hiding either.
+  // UK GB News (keep FHD 148243)
+  34663,
+  // UK TLC (keep FHD 148171)
+  352,
+  // UK UTV (keep FHD 148253)
+  148306,
+  // UK Film4 (keep FHD 148201)
+  148532,
+  // UK B4U Movies (keep 6208)
+  148653,
+  // UK Utsav Gold (keep FHD 28729)
+  148174,
+  // UK CNBC (keep FHD 148227)
+  148287,
+  // Tata Play Bollywood Premiere (keep HD 467485)
+  467684,
+  // IN COLORS (keep FHD 195)
+  9370,
+  // MY ZEE KERALAM (keep FHD 10094)
+  23310, 4226,
+  // MAL MANORAMA NEWS (keep 226)
+  169776, 249,
+  // MAL KAUMUDY TV (keep HD 169)
+  169822,
+  // MAL ASIANET MOVIES (keep 4K 177842)
+  9031,
+  // MAL REPORTER NEWS (keep HD 166615)
+  56032,
+  // MAL NEWS 24 (keep HD 166612)
+  248,
+  // MAL MEDIA ONE (keep HD 169796)
+  9035,
+  // MAL MATHRUBHUMI NEWS (keep HD 9032 — both similar quality, keep older)
+  169786,
+  // MAL ASIANET NEWS (keep HD 166605)
+  165,
+  // MAL KAIRALI NEWS (keep HD 169797)
+  85929,
+  // MAL NEWS 18 KERALA (keep HD 9036)
+  169837,
+  // MAL JAI HIND TV (keep HD 172)
+  169798,
+  // MAL JANAM TV (keep HD 169807)
+  9029,
+  // MY ASIANET (keep FHD 23307)
+  166,
+  // MY Shalom (keep HD 169838)
+  9040,
+  // Marathi ZEE (keep FHD 85694)
+  4066,
+  // BD ZEE BANGLA (keep FHD 23305)
+  435,
+  // BD Gaan Bangla (keep 3807)
+  3812,
+  // Tamil ZEE THIRAI (keep 4K 181966)
+  144636,
+  // Telugu ETV (keep FHD 23312)
+  9017,
+  // MALAYALAM JAYAN MOVIES (keep 135584)
+  135585,
+  // AR ON Time Sports (keep 4598)
+  4620,
+  // Al Rabiaa Iraq dupe (keep 605085)
+  309116,
+  // UK Virgin One (keep FHD 148274)
+  148277,
+  // Sky Documentaries (keep FHD 148265)
+  148443,
+  // DSTV Big Brother Ninja (keep FHD 167458)
+  167459,
+  // UK Noor TV (keep 148503)
+  24886,
+  // StarzPlay Sports 1 (keep HD 605119)
+  605120,
+  // StarzPlay Sports 2 (keep HD 605122)
+  605123,
+  // beIN Sport NBA (keep 4K 652332)
+  652371,
+  // US NHL Network — 1013 is relocated to sports via RELOCATE_MAP, not hidden
+  // 428102 is the clean FHD version, 1013 is SD but still valid for fallback
+
+  // ── Internal/exposed test streams ──
   636113, 636114, 196347,
 ]);
 

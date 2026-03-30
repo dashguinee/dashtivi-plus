@@ -621,7 +621,11 @@ export function getProbeStatus(streamId: number): string | null {
 }
 
 export function isChannelProbeAlive(streamId: number): boolean {
-  // Check server probe set first (full coverage, no size limit)
+  // Check verified set first (two-tier: ffprobe + ffmpeg decode)
+  if (verifiedSet !== null && verifiedSet.size > 0) {
+    return verifiedSet.has(streamId);
+  }
+  // Fall back to legacy server probe set
   if (serverAliveSet !== null && serverAliveSet.size > 0) {
     return serverAliveSet.has(streamId);
   }
@@ -721,6 +725,40 @@ let serverAliveSet: Set<number> | null = null;
 
 export function seedProbeCacheFromServer(data: ServerProbeData): void {
   serverAliveSet = new Set(data.alive_set);
+}
+
+// Two-tier verified set (ffprobe + ffmpeg decode — video AND audio confirmed)
+// Takes priority over serverAliveSet when available
+let verifiedSet: Set<number> | null = null;
+let verifiedPromise: Promise<VerifiedData | null> | null = null;
+
+interface VerifiedData {
+  ts: string;
+  total: number;
+  verified: number;
+  verified_pct: number;
+  verified_set: number[];
+}
+
+export async function fetchVerifiedData(): Promise<VerifiedData | null> {
+  if (verifiedPromise) return verifiedPromise;
+  verifiedPromise = (async () => {
+    try {
+      const res = await fetch(`${PROXY}/verified.json`, { signal: AbortSignal.timeout(5000) });
+      if (!res.ok) return null;
+      const data = await res.json() as VerifiedData;
+      if (!data.verified_set?.length) return null;
+      console.log('[VERIFIED] Loaded %d channels (%.1f%% of %d)', data.verified, data.verified_pct, data.total);
+      return data;
+    } catch { return null; }
+    finally { verifiedPromise = null; }
+  })();
+  return verifiedPromise;
+}
+
+export function seedVerifiedSet(data: VerifiedData): void {
+  verifiedSet = new Set(data.verified_set);
+  console.log('[VERIFIED] Set seeded with %d channels', verifiedSet.size);
 }
 
 

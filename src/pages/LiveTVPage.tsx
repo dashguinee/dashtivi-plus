@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Play, Search, X, ChevronRight, LayoutGrid, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart } from 'lucide-react';
 import { t, useLanguage } from '@/i18n';
 import type { XtreamCredentials, LiveStream, GroupedChannel, FreeChannel } from '@/lib/xtream';
-import { getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
+import { getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
 import {
   LIVETV_THEMES, SPORT_TYPES, ENTERTAINMENT_TYPES, KIDS_TYPES,
   CINEMA_TYPES, MUSIC_TYPES, DISCOVERY_TYPES, FAITH_TYPES, PREMIUM4K_TYPES,
@@ -127,18 +127,21 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
     let mounted = true;
     async function loadThemes() {
       try {
-        const [healthData, probeData] = await Promise.all([
+        const [healthData, verifiedData, probeData] = await Promise.all([
           fetchVpsHealth(),
+          fetchVerifiedData(),
           fetchServerProbeData(),
         ]);
-        if (probeData) {
+        if (verifiedData) {
+          seedVerifiedSet(verifiedData);
+          const STALE_MS = 48 * 60 * 60 * 1000;
+          const vTs = verifiedData.ts ? new Date(verifiedData.ts).getTime() : 0;
+          if (!vTs || Date.now() - vTs > STALE_MS) setProbeStale(true);
+        } else if (probeData) {
           seedProbeCacheFromServer(probeData);
-          // Check if probe data is stale (>48h old or no timestamp)
           const STALE_MS = 48 * 60 * 60 * 1000;
           const probeTs = probeData.ts ? new Date(probeData.ts).getTime() : 0;
-          if (!probeTs || Date.now() - probeTs > STALE_MS) {
-            setProbeStale(true);
-          }
+          if (!probeTs || Date.now() - probeTs > STALE_MS) setProbeStale(true);
         } else {
           // No probe data at all — treat as stale
           setProbeStale(true);

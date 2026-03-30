@@ -3,7 +3,7 @@ import { Play, Globe, Headphones, ChevronRight } from 'lucide-react';
 import { t, useLanguage } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
 import type { XtreamCredentials, LiveStream, FreeChannel } from '@/lib/xtream';
-import { getLiveStreams, buildLiveUrl, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, getFreeChannelsByCulture, freeToLiveStream, buildFreeUrlMap, isFreeChannel, type VpsHealthData } from '@/lib/xtream';
+import { getLiveStreams, buildLiveUrl, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getFreeChannelsByCulture, freeToLiveStream, buildFreeUrlMap, isFreeChannel, type VpsHealthData } from '@/lib/xtream';
 import { REGION_GENRES } from '@/lib/collections';
 import type { RegionGenre } from '@/lib/collections';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
@@ -189,11 +189,13 @@ export const FrenchPage: React.FC<Props> = ({ credentials, onPlay }) => {
     let mounted = true;
     async function load() {
       try {
-        const [healthData, probeData] = await Promise.all([
+        const [healthData, verifiedData, probeData] = await Promise.all([
           fetchVpsHealth(),
+          fetchVerifiedData(),
           fetchServerProbeData(),
         ]);
-        if (probeData) seedProbeCacheFromServer(probeData);
+        if (verifiedData) seedVerifiedSet(verifiedData);
+        else if (probeData) seedProbeCacheFromServer(probeData);
         const first = REGIONS[0];
         const xtreamStreams = await loadRegionStreams(first, healthData, credentials);
 
