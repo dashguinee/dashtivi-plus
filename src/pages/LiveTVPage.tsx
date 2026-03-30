@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Play, Search, X, ChevronRight, LayoutGrid, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart } from 'lucide-react';
 import { t, useLanguage } from '@/i18n';
 import type { XtreamCredentials, LiveStream, GroupedChannel, FreeChannel } from '@/lib/xtream';
-import { getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getExperienceIds, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
+import { getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getExperienceIds, getExperienceCategoryIds, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
 import {
   LIVETV_THEMES, SPORT_TYPES, ENTERTAINMENT_TYPES, KIDS_TYPES,
   CINEMA_TYPES, MUSIC_TYPES, DISCOVERY_TYPES, FAITH_TYPES, PREMIUM4K_TYPES,
@@ -205,8 +205,49 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
           }
         }
 
-        // Supplement themes with classified per-channel mapping
-        // Uses streamById built from all category loads above
+        // --- Phase 2: Fetch extra categories for classified channel reach ---
+        // Find categories NOT already loaded by any theme that contain classified channels.
+        // Capped at 20 extra fetches to keep load time reasonable.
+        const allLoadedCats = new Set<string>();
+        for (const theme of LIVETV_THEMES) {
+          for (const cid of theme.categoryIds) allLoadedCats.add(cid);
+        }
+
+        // Collect extra categories needed across all experiences, ranked by demand
+        const extraCatDemand = new Map<string, number>(); // catId -> number of themes that need it
+        for (const theme of LIVETV_THEMES) {
+          const classifiedExp = THEME_TO_CLASSIFIED[theme.id];
+          if (!classifiedExp) continue;
+          const expCatIds = getExperienceCategoryIds(classifiedExp);
+          if (!expCatIds) continue;
+          for (const cid of expCatIds) {
+            if (!allLoadedCats.has(cid) && !isCategoryDead(healthData, cid)) {
+              extraCatDemand.set(cid, (extraCatDemand.get(cid) || 0) + 1);
+            }
+          }
+        }
+
+        // Fetch top 20 most-demanded extra categories
+        const MAX_EXTRA = 20;
+        const extraCatsToFetch = [...extraCatDemand.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, MAX_EXTRA)
+          .map(([cid]) => cid);
+
+        if (extraCatsToFetch.length > 0 && mounted) {
+          const extraResults = await Promise.allSettled(
+            extraCatsToFetch.map(id => getLiveStreams(credentials, id).catch(() => [] as LiveStream[]))
+          );
+          for (const r of extraResults) {
+            if (r.status === 'fulfilled') {
+              for (const s of r.value) streamById.set(s.stream_id, s);
+            }
+          }
+          console.log('[LIVETV] Fetched %d extra categories for classified reach (%d streams in lookup)', extraCatsToFetch.length, streamById.size);
+        }
+
+        // --- Phase 3: Supplement themes with classified per-channel mapping ---
+        // Uses streamById built from all category loads + extra fetches above
         for (const theme of LIVETV_THEMES) {
           const classifiedExp = THEME_TO_CLASSIFIED[theme.id];
           if (!classifiedExp || !map[theme.id]) continue;

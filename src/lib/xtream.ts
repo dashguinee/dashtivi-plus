@@ -739,6 +739,7 @@ export interface VerifiedData {
   verified_pct: number;
   verified_set: number[];
   experiences?: Record<string, number[]>;
+  experience_categories?: Record<string, string[]>;
 }
 
 export async function fetchVerifiedData(): Promise<VerifiedData | null> {
@@ -758,6 +759,7 @@ export async function fetchVerifiedData(): Promise<VerifiedData | null> {
 }
 
 let experienceMap: Record<string, Set<number>> | null = null;
+let experienceCatMap: Record<string, string[]> | null = null;
 
 export function seedVerifiedSet(data: VerifiedData): void {
   verifiedSet = new Set(data.verified_set);
@@ -771,12 +773,23 @@ export function seedVerifiedSet(data: VerifiedData): void {
   } else {
     console.log('[VERIFIED] Set seeded with %d channels (no experiences)', verifiedSet.size);
   }
+  // Seed experience_categories (which Starshare categories contain classified channels per experience)
+  if (data.experience_categories) {
+    experienceCatMap = data.experience_categories;
+    console.log('[VERIFIED] Experience categories seeded for %d experiences', Object.keys(experienceCatMap).length);
+  }
 }
 
 /** Get stream IDs classified into an experience by name-based analysis */
 export function getExperienceIds(experienceId: string): Set<number> | null {
   if (!experienceMap) return null;
   return experienceMap[experienceId] || null;
+}
+
+/** Get extra Starshare category IDs that contain classified channels for an experience */
+export function getExperienceCategoryIds(experienceId: string): string[] | null {
+  if (!experienceCatMap) return null;
+  return experienceCatMap[experienceId] || null;
 }
 
 
