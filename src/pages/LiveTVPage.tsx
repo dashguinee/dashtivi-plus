@@ -147,7 +147,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
         if (curatorResult) {
           // CURATOR PATH: Database-backed, clean, no category loading needed
-          console.log('[LIVE] Using curator data: %d experiences', Object.keys(curatorResult.experiences).length);
+          // verbose: '[LIVE] Using curator data'
 
           const freeChannelsPromise = getFreeChannels();
           const map: Record<string, LiveStream[]> = {};
@@ -163,7 +163,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             let streams: LiveStream[] = [];
             if (curatorChannels && curatorChannels.length > 0) {
               streams = curatorToLiveStreams(curatorChannels);
-              console.log('[LIVE] Theme %s ← curator "%s": %d channels', theme.id, classifiedExp, streams.length);
+              // verbose: '[LIVE] Theme curator channels'
             } else {
               console.warn('[LIVE] Theme %s: curator returned %s for "%s"', theme.id, curatorChannels === null ? 'null' : '0 channels', classifiedExp);
             }
@@ -183,7 +183,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
           // Summary log
           const total = Object.values(map).reduce((s, arr) => s + arr.length, 0);
-          console.log('[LIVE] Curator loaded %d total streams across %d themes', total, Object.keys(map).length);
+          // verbose: '[LIVE] Curator total streams'
 
           if (!mounted) return;
           setThemeStreams(map);

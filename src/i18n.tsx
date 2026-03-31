@@ -347,6 +347,34 @@ const translations = {
     premierLeagueLive: 'Premier League en direct',
     trendingOnTivi: 'Tendances sur TiVi',
 
+    // ── Platforms Page ────────────────────────────────────────
+    seriesAvailable: 'séries disponibles',
+    noSeriesFound: 'Aucune série trouvée',
+
+    // ── Stream Limit Overlay ──────────────────────────────────
+    screenInUse: 'Écran en cours d\'utilisation',
+    anotherDeviceStreaming: 'Un autre appareil diffuse en ce moment',
+    accountSupports1Screen: 'Votre compte prend en charge 1 écran. Mettez à niveau pour regarder sur plusieurs appareils en même temps.',
+    screensAtOnce: 'écrans simultanés',
+    screensShareFamily: 'écrans — partagez avec la famille',
+    contactUsWhatsApp: 'Contactez-nous sur WhatsApp pour changer de forfait',
+
+    // ── Video Player ──────────────────────────────────────────
+    reconnecting: 'Reconnexion',
+    channelUnavailable: 'Chaîne indisponible',
+    unstableConnection: 'Connexion instable',
+    switchToStreamFlow: 'Passer à StreamFlow pour une lecture fluide',
+    flowShort: 'Flow',
+
+    // ── Player Controls ───────────────────────────────────────
+    liveLabel: 'EN DIRECT',
+    streamFlow: 'StreamFlow',
+    hdLabel: 'HD',
+
+    // ── App Updates ───────────────────────────────────────────
+    updateAvailable: 'Mise à jour disponible',
+    updatingDashTivi: 'Mise à jour de DashTivi+',
+
     // ── Footer / Branding ─────────────────────────────────────
     dashLifestyle: 'DASH Lifestyle',
     dashPremium: 'Premium',
@@ -697,6 +725,34 @@ const translations = {
     fromCommunity: 'From the community',
     premierLeagueLive: 'Premier League Live',
     trendingOnTivi: 'Trending on TiVi',
+
+    // ── Platforms Page ────────────────────────────────────────
+    seriesAvailable: 'series available',
+    noSeriesFound: 'No series found',
+
+    // ── Stream Limit Overlay ──────────────────────────────────
+    screenInUse: 'Screen in use',
+    anotherDeviceStreaming: 'Another device is streaming right now',
+    accountSupports1Screen: 'Your account supports 1 screen. Upgrade to watch on multiple devices at the same time.',
+    screensAtOnce: 'screens at once',
+    screensShareFamily: 'screens — share with family',
+    contactUsWhatsApp: 'Contact us on WhatsApp to upgrade your plan',
+
+    // ── Video Player ──────────────────────────────────────────
+    reconnecting: 'Reconnecting',
+    channelUnavailable: 'Channel unavailable',
+    unstableConnection: 'Unstable connection',
+    switchToStreamFlow: 'Switch to StreamFlow for smooth playback',
+    flowShort: 'Flow',
+
+    // ── Player Controls ───────────────────────────────────────
+    liveLabel: 'LIVE',
+    streamFlow: 'StreamFlow',
+    hdLabel: 'HD',
+
+    // ── App Updates ───────────────────────────────────────────
+    updateAvailable: 'Update available',
+    updatingDashTivi: 'Updating DashTivi+',
 
     // ── Footer / Branding ─────────────────────────────────────
     dashLifestyle: 'DASH Lifestyle',

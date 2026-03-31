@@ -439,15 +439,15 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           fetchVerifiedData(),
           fetchServerProbeData(),
         ]);
-        console.log('[HOME] Data loaded in', Date.now() - t0, 'ms');
+        // verbose: '[HOME] Data loaded'
         if (curatorResult) {
-          console.log('[HOME] Using curator: %d channels, %d experiences', curatorResult.total, Object.keys(curatorResult.experiences).length);
+          // verbose: '[HOME] Using curator'
         } else if (verifiedData) {
           seedVerifiedSet(verifiedData);
-          console.log('[HOME] Fallback to verified set:', verifiedData.verified, 'channels');
+          // verbose: '[HOME] Fallback to verified set'
         } else if (probeData) {
           seedProbeCacheFromServer(probeData);
-          console.log('[HOME] Fallback to legacy probe:', probeData.alive_set?.length, 'channels');
+          // verbose: '[HOME] Fallback to legacy probe'
         }
         // Store VEE homepage rows for tagline overlay + new special rows
         if (veeResult) {
@@ -459,9 +459,8 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
         // Load collections progressively — each row appears as it resolves
         let anyLoaded = false;
-        console.log('[HOME] Loading', HOMEPAGE_COLLECTIONS.length, 'collections...');
+        // verbose: '[HOME] Loading collections'
         const rowPromises = HOMEPAGE_COLLECTIONS.map(async (collection) => {
-          const ct0 = Date.now();
           const rowData: RowData = { collection };
           try {
             if (collection.type === 'live') {
@@ -475,7 +474,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
             console.warn('[HOME] Row failed:', collection.id, err);
           }
           const count = (rowData.liveStreams?.length || 0) + (rowData.vodStreams?.length || 0) + (rowData.seriesItems?.length || 0);
-          console.log('[HOME] Row ready:', collection.id, '—', count, 'items in', Date.now() - ct0, 'ms');
+          // verbose: '[HOME] Row ready'
           // Append this row immediately when it resolves
           if (!mounted) return;
           const hasContent = count > 0;
@@ -497,7 +496,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
         await Promise.allSettled(rowPromises);
         if (!mounted) return;
-        console.log('[HOME] All collections done in', Date.now() - t0, 'ms — loaded:', anyLoaded);
+        // verbose: '[HOME] All collections done'
         if (!anyLoaded) setError(true);
       } catch (err) {
         console.error('[HOME] Fatal load error:', err);

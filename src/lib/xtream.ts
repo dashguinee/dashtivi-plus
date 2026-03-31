@@ -49,6 +49,7 @@ export interface VodStream {
   container_extension: string;
   category_id: string;
   rating?: string;
+  added?: string;
 }
 
 export interface SeriesItem {
@@ -56,6 +57,7 @@ export interface SeriesItem {
   name: string;
   cover: string;
   category_id: string;
+  last_modified?: string;
   rating?: string;
 }
 
@@ -750,7 +752,7 @@ export async function fetchVerifiedData(): Promise<VerifiedData | null> {
       if (!res.ok) return null;
       const data = await res.json() as VerifiedData;
       if (!data.verified_set?.length) return null;
-      console.log('[VERIFIED] Loaded %d channels (%.1f%% of %d)', data.verified, data.verified_pct, data.total);
+      // verbose: '[VERIFIED] Loaded channels'
       return data;
     } catch { return null; }
     finally { verifiedPromise = null; }
@@ -769,14 +771,14 @@ export function seedVerifiedSet(data: VerifiedData): void {
     for (const [exp, ids] of Object.entries(data.experiences)) {
       experienceMap[exp] = new Set(ids);
     }
-    console.log('[VERIFIED] Set seeded with %d channels, %d experiences', verifiedSet.size, Object.keys(experienceMap).length);
+    // verbose: '[VERIFIED] Set seeded'
   } else {
-    console.log('[VERIFIED] Set seeded with %d channels (no experiences)', verifiedSet.size);
+    // verbose: '[VERIFIED] Set seeded (no experiences)'
   }
   // Seed experience_categories (which Starshare categories contain classified channels per experience)
   if (data.experience_categories) {
     experienceCatMap = data.experience_categories;
-    console.log('[VERIFIED] Experience categories seeded for %d experiences', Object.keys(experienceCatMap).length);
+    // verbose: '[VERIFIED] Experience categories seeded'
   }
 }
 
@@ -824,7 +826,7 @@ export async function fetchCuratorData(): Promise<CuratorData | null> {
       console.log('[CURATOR] Disabled by feature flag');
       return null;
     }
-    console.log('[CURATOR] Flag enabled, fetching curator data...');
+    // verbose: '[CURATOR] Flag enabled, fetching...'
   } catch (e) {
     console.warn('[CURATOR] Flag check failed:', e);
     return null;
@@ -874,8 +876,7 @@ export async function fetchCuratorData(): Promise<CuratorData | null> {
       }
       verifiedSet = new Set(allIds);
 
-      console.log('[CURATOR] Loaded %d channels across %d experiences in %dms (null:%d empty:%d)',
-        totalChannels, expCount, Date.now() - t0, nullExps.length, emptyExps.length);
+      // verbose: '[CURATOR] Loaded channels'
       return data;
     } catch (e) {
       console.error('[CURATOR] Fetch error:', e);
@@ -960,11 +961,7 @@ export async function fetchVeeData(): Promise<VeeData | null> {
     const data = await res.json() as VeeData;
     if (!data.homepage?.length) return null;
     veeData = data;
-    console.log('[VEE] Loaded %d homepage rows, %s slot, hot:%d explore:%d moods:%d',
-      data.homepage.length, data.time_slot,
-      data.vee_hot?.channels?.length || 0,
-      data.vee_explore?.channels?.length || 0,
-      Object.keys(data.moods || {}).length);
+    console.log('[VEE] Loaded — rows:%d slot:%s', data.homepage.length, data.time_slot);
     return data;
   } catch (e) {
     console.warn('[VEE] Fetch failed:', e);
