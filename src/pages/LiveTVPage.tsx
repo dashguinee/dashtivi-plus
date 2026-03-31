@@ -155,11 +155,17 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
           for (const theme of LIVETV_THEMES) {
             const classifiedExp = THEME_TO_CLASSIFIED[theme.id];
+            if (!classifiedExp) {
+              console.warn('[LIVE] Theme "%s" has no THEME_TO_CLASSIFIED mapping', theme.id);
+            }
             const curatorChannels = classifiedExp ? getCuratorExperience(classifiedExp) : null;
 
             let streams: LiveStream[] = [];
             if (curatorChannels && curatorChannels.length > 0) {
               streams = curatorToLiveStreams(curatorChannels);
+              console.log('[LIVE] Theme %s ← curator "%s": %d channels', theme.id, classifiedExp, streams.length);
+            } else {
+              console.warn('[LIVE] Theme %s: curator returned %s for "%s"', theme.id, curatorChannels === null ? 'null' : '0 channels', classifiedExp);
             }
 
             // Merge free channels
@@ -174,6 +180,10 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
             map[theme.id] = streams;
           }
+
+          // Summary log
+          const total = Object.values(map).reduce((s, arr) => s + arr.length, 0);
+          console.log('[LIVE] Curator loaded %d total streams across %d themes', total, Object.keys(map).length);
 
           if (!mounted) return;
           setThemeStreams(map);

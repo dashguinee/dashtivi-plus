@@ -824,34 +824,87 @@ export async function fetchCuratorData(): Promise<CuratorData | null> {
       console.log('[CURATOR] Disabled by feature flag');
       return null;
     }
-  } catch { return null; }
+    console.log('[CURATOR] Flag enabled, fetching curator data...');
+  } catch (e) {
+    console.warn('[CURATOR] Flag check failed:', e);
+    return null;
+  }
 
   if (curatorPromise) return curatorPromise;
   curatorPromise = (async () => {
+    const t0 = Date.now();
     try {
       const res = await fetch(`${PROXY}/curator.json`, { signal: AbortSignal.timeout(8000) });
-      if (!res.ok) return null;
+      if (!res.ok) {
+        console.error('[CURATOR] Fetch failed: HTTP %d', res.status);
+        return null;
+      }
       const data = await res.json() as CuratorData;
-      if (!data.experiences || Object.keys(data.experiences).length === 0) return null;
+      if (!data.experiences || Object.keys(data.experiences).length === 0) {
+        console.error('[CURATOR] Empty data — no experiences returned');
+        return null;
+      }
       curatorData = data;
-      // Also seed verified set from curator channels (all curator channels are verified)
+
+      // Validate experiences
+      const expCount = Object.keys(data.experiences).length;
+      let totalChannels = 0;
+      let nullExps: string[] = [];
+      let emptyExps: string[] = [];
+      for (const [expId, channels] of Object.entries(data.experiences)) {
+        if (channels === null) { nullExps.push(expId); continue; }
+        if (!Array.isArray(channels)) { console.warn('[CURATOR] Experience %s is not an array:', expId, typeof channels); continue; }
+        if (channels.length === 0) { emptyExps.push(expId); continue; }
+        totalChannels += channels.length;
+        // Validate first channel has required fields
+        const first = channels[0];
+        if (!first.id || !first.name) {
+          console.warn('[CURATOR] Experience %s has channels with missing id/name:', expId, first);
+        }
+      }
+      if (nullExps.length) console.warn('[CURATOR] NULL experiences:', nullExps.join(', '));
+      if (emptyExps.length) console.warn('[CURATOR] Empty experiences:', emptyExps.join(', '));
+
+      // Seed verified set
       const allIds: number[] = [];
       for (const channels of Object.values(data.experiences)) {
-        if (channels) for (const ch of channels) allIds.push(ch.id);
+        if (channels && Array.isArray(channels)) {
+          for (const ch of channels) allIds.push(ch.id);
+        }
       }
       verifiedSet = new Set(allIds);
-      console.log('[CURATOR] Loaded %d channels across %d experiences', data.total, Object.keys(data.experiences).length);
+
+      console.log('[CURATOR] Loaded %d channels across %d experiences in %dms (null:%d empty:%d)',
+        totalChannels, expCount, Date.now() - t0, nullExps.length, emptyExps.length);
       return data;
-    } catch { return null; }
+    } catch (e) {
+      console.error('[CURATOR] Fetch error:', e);
+      return null;
+    }
     finally { curatorPromise = null; }
   })();
   return curatorPromise;
 }
 
-/** Get curator channels for an experience — returns full metadata, no secondary fetch needed */
+/** Get curator channels for an experience — logs miss */
 export function getCuratorExperience(experienceId: string): CuratorChannel[] | null {
-  if (!curatorData) return null;
-  return curatorData.experiences[experienceId] || null;
+  if (!curatorData) {
+    console.warn('[CURATOR] getCuratorExperience(%s) — no curator data loaded', experienceId);
+    return null;
+  }
+  const channels = curatorData.experiences[experienceId];
+  if (!channels) {
+    console.warn('[CURATOR] Experience "%s" not found. Available: %s', experienceId, Object.keys(curatorData.experiences).join(', '));
+    return null;
+  }
+  if (!Array.isArray(channels)) {
+    console.warn('[CURATOR] Experience "%s" is not an array:', experienceId, typeof channels);
+    return null;
+  }
+  if (channels.length === 0) {
+    console.warn('[CURATOR] Experience "%s" has 0 channels', experienceId);
+  }
+  return channels;
 }
 
 /** Convert curator channels to LiveStream format for existing UI compatibility */
