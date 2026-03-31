@@ -132,6 +132,12 @@ async function main() {
       const secs = ((Date.now() - start) / 1000).toFixed(0);
       process.stdout.write(`\r   ${pct}% — ${done}/${batches.length} batches (${secs}s)`);
     }
+    // Incremental save every 100 batches (~5 min) — crash-safe
+    if (done % 100 === 0) {
+      const partialAlive = Object.entries(results).filter(([, s]) => s === 'live' || s === 'weak').map(([id]) => Number(id));
+      const partial = { ts: new Date().toISOString(), total: toProbe.length, probed: done * BATCH_SIZE, alive: partialAlive.length, alive_set: partialAlive, partial: true };
+      fs.writeFileSync(RESULTS_FILE + '.progress', JSON.stringify(partial));
+    }
     await sleep(BATCH_DELAY);
   }
 

@@ -60,6 +60,115 @@ export const SORT_MODES: { id: SortMode; name: string }[] = [
   { id: 'name', name: 'A-Z' },
 ];
 
+// ── VEE Intelligence Collections ──────────────────────────────────
+//
+// Smart, curated rows powered by TMDB data. These render ABOVE the
+// regular tab grid on the Movies page as horizontal scrollers.
+
+import type { VodStream } from '@/lib/xtream';
+import type { TmdbEntry } from '@/lib/tmdb-map.generated';
+
+export interface VeeMovieCollection {
+  id: string;
+  name: string;
+  tagline: string;
+  /** Return true to include this movie in the collection */
+  filter: (movie: VodStream, tmdb: TmdbEntry | null) => boolean;
+  /** Sort comparator — receives full tmdb map for lookups */
+  sort: (a: VodStream, b: VodStream, tmdbMap: Record<string, TmdbEntry>) => number;
+  limit: number;
+  /** Optional: only show on certain parent tabs (empty = all) */
+  parentTabs?: string[];
+  /** Optional: filter by category IDs instead of TMDB genres */
+  categoryIds?: string[];
+}
+
+function tmdbKey(m: VodStream): string { return `m:${m.stream_id}`; }
+function tmdbRating(m: VodStream, map: Record<string, TmdbEntry>): number { return map[tmdbKey(m)]?.r || 0; }
+function byRatingDesc(a: VodStream, b: VodStream, map: Record<string, TmdbEntry>): number {
+  return tmdbRating(b, map) - tmdbRating(a, map);
+}
+
+export const VEE_MOVIE_COLLECTIONS: VeeMovieCollection[] = [
+  {
+    id: 'top-rated',
+    name: 'Critically Acclaimed',
+    tagline: 'The ones that stayed with people',
+    filter: (_m, t) => t !== null && t.r >= 7.5,
+    sort: byRatingDesc,
+    limit: 20,
+  },
+  {
+    id: 'fresh-drops',
+    name: 'Fresh Drops',
+    tagline: 'Just added — catch them first',
+    filter: (m, _t) => {
+      if (m.added) {
+        const addedTs = parseInt(m.added, 10);
+        if (addedTs > 0) {
+          const weekAgo = Date.now() / 1000 - 7 * 86400;
+          return addedTs >= weekAgo;
+        }
+      }
+      // Fallback: check for 2025/2026 in name
+      const yr = m.name.match(/\((\d{4})\)/);
+      return yr ? parseInt(yr[1], 10) >= 2025 : false;
+    },
+    sort: (a, b) => parseInt(b.added || '0', 10) - parseInt(a.added || '0', 10),
+    limit: 20,
+  },
+  {
+    id: 'friday-night',
+    name: 'Friday Night',
+    tagline: 'Action, thriller, something with pace',
+    filter: (_m, t) => t !== null && (t.g.includes(28) || t.g.includes(53) || t.g.includes(80)),
+    sort: byRatingDesc,
+    limit: 20,
+  },
+  {
+    id: 'feel-good',
+    name: 'Feel Good',
+    tagline: 'Comedy, family, something light',
+    filter: (_m, t) => t !== null && (t.g.includes(35) || t.g.includes(10751) || t.g.includes(10749)),
+    sort: byRatingDesc,
+    limit: 20,
+  },
+  {
+    id: 'deep-watch',
+    name: 'Deep Watch',
+    tagline: 'Drama, mystery, the ones that make you think',
+    filter: (_m, t) => t !== null && (t.g.includes(18) || t.g.includes(9648) || t.g.includes(36)),
+    sort: byRatingDesc,
+    limit: 20,
+  },
+  {
+    id: 'sci-fi-fantasy',
+    name: 'Other Worlds',
+    tagline: 'Sci-fi, fantasy, beyond reality',
+    filter: (_m, t) => t !== null && (t.g.includes(878) || t.g.includes(14)),
+    sort: byRatingDesc,
+    limit: 20,
+  },
+  {
+    id: 'african-cinema',
+    name: 'African Cinema',
+    tagline: 'Stories from the continent',
+    filter: (m, _t) => false, // category-based: resolved at render time
+    sort: byRatingDesc,
+    limit: 20,
+    categoryIds: ['580'], // Afrikaans / African content
+  },
+  {
+    id: '4k-showcase',
+    name: '4K Showcase',
+    tagline: 'Crystal clear, no compromise',
+    filter: (m, _t) => false, // category-based: resolved at render time
+    sort: byRatingDesc,
+    limit: 20,
+    categoryIds: ['122', '120'], // Hollywood 4K + Bollywood 4K
+  },
+];
+
 // ── Parent Tabs ────────────────────────────────────────────────────
 
 export const MOVIE_TABS: MovieParentTab[] = [

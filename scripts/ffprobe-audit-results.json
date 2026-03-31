@@ -1,0 +1,103 @@
+{
+  "ts": "2026-03-29T20:01:36.343Z",
+  "tested": 20,
+  "healthy": 18,
+  "no_audio": [],
+  "no_video": [],
+  "corrupt": [
+    9,
+    17
+  ],
+  "codec_map": {
+    "8": {
+      "video": "h264",
+      "audio": "aac",
+      "resolution": "1920x1080"
+    },
+    "11": {
+      "video": "h264",
+      "audio": "eac3",
+      "resolution": "1920x1080"
+    },
+    "12": {
+      "video": "h264",
+      "audio": "aac",
+      "resolution": "1920x1080"
+    },
+    "13": {
+      "video": "h264",
+      "audio": "aac",
+      "resolution": "1920x1080"
+    },
+    "14": {
+      "video": "h264",
+      "audio": "aac",
+      "resolution": "1920x1080"
+    },
+    "15": {
+      "video": "h264",
+      "audio": "aac",
+      "resolution": "854x480"
+    },
+    "19": {
+      "video": "h264",
+      "audio": "eac3",
+      "resolution": "1920x1080"
+    },
+    "23": {
+      "video": "h264",
+      "audio": "aac",
+      "resolution": "1280x720"
+    },
+    "24": {
+      "video": "h264",
+      "audio": "aac",
+      "resolution": "1920x1080"
+    },
+    "25": {
+      "video": "h264",
+      "audio": "eac3",
+      "resolution": "1920x1080"
+    },
+    "26": {
+      "video": "h264",
+      "audio": "aac",
+      "resolution": "720x576"
+    },
+    "29": {
+      "video": "h264",
+      "audio": "aac",
+      "resolution": "1920x1080"
+    },
+    "30": {
+      "video": "h264",
+      "audio": "aac",
+      "resolution": "1280x720"
+    },
+    "31": {
+      "video": "h264",
+      "audio": "aac",
+      "resolution": "1920x1080"
+    },
+    "32": {
+      "video": "h264",
+      "audio": "aac",
+      "resolution": "1920x1080"
+    },
+    "33": {
+      "video": "h264",
+      "audio": "aac",
+      "resolution": "720x576"
+    },
+    "34": {
+      "video": "h264",
+      "audio": "aac",
+      "resolution": "1920x1080"
+    },
+    "35": {
+      "video": "h264",
+      "audio": "aac",
+      "resolution": "720x480"
+    }
+  }
+}

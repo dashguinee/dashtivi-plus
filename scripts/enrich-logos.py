@@ -742,6 +742,36 @@ def match_channels(xtream_channels: list, indices: dict) -> tuple:
                 stats["tv_logo_cdn"] += 1
                 continue
 
+        # Strategy 6: Jaruba (TMDB-sourced logos)
+        if jaruba_idx:
+            jaruba_logo = jaruba_idx.get(norm) or jaruba_idx.get(lower)
+            if jaruba_logo:
+                matches[stream_id] = {
+                    "logo": jaruba_logo,
+                    "method": "jaruba",
+                    "xtream_name": raw_name,
+                    "matched_name": norm,
+                }
+                stats["jaruba"] += 1
+                continue
+
+        # Strategy 7: Parent brand fallback (e.g. "Nick Hindi" -> Nickelodeon logo)
+        if parent_brand_idx:
+            brand_matched = False
+            for keyword, logo_url in parent_brand_idx.items():
+                if keyword in norm:
+                    matches[stream_id] = {
+                        "logo": logo_url,
+                        "method": "parent_brand",
+                        "xtream_name": raw_name,
+                        "matched_name": keyword,
+                    }
+                    stats["parent_brand"] += 1
+                    brand_matched = True
+                    break
+            if brand_matched:
+                continue
+
         stats["unmatched"] += 1
 
     return matches, stats
@@ -850,6 +880,8 @@ def print_report(total_channels: int, matches: dict, stats: dict, xtream_channel
     print(f"    Token match (80%+):     {stats.get('token', 0)}")
     print(f"    Abbreviation:           {stats.get('abbreviation', 0)}")
     print(f"    tv-logo CDN:            {stats.get('tv_logo_cdn', 0)}")
+    print(f"    Jaruba (TMDB):          {stats.get('jaruba', 0)}")
+    print(f"    Parent brand:           {stats.get('parent_brand', 0)}")
     print()
 
     new_matches = total_mapped - stats.get("existing_https", 0)
@@ -892,9 +924,12 @@ def main():
     # Step 2: Fetch iptv-org channels + logos (joined)
     iptv_org_data = fetch_iptv_org_data()
 
+    # Step 2b: Fetch jaruba/channel-logos (TMDB-sourced)
+    jaruba_data = fetch_jaruba_data()
+
     # Step 3: Build indices
     print("\n  Building match indices...")
-    indices = build_indices(iptv_org_data)
+    indices = build_indices(iptv_org_data, jaruba_data)
     print(f"  -> {len(indices['exact'])} exact, {len(indices['normalized'])} normalized, "
           f"{len(indices['tokens'])} token entries, {len(indices['abbreviations'])} abbreviations")
     print()

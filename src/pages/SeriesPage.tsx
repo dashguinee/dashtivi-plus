@@ -4,9 +4,10 @@ import type { XtreamCredentials, SeriesItem, SeriesInfo, Episode } from '@/lib/x
 import { getSeries, getSeriesInfo, buildSeriesUrl, getTmdbMap } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { PosterCard } from '@/components/ui/PosterCard';
+import { VeeCollectionRow } from '@/components/ui/VeeCollectionRow';
 import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { SERIES_TABS, GENRE_FILTERS, SORT_MODES, type SortMode } from '@/lib/series-collections';
+import { SERIES_TABS, GENRE_FILTERS, SORT_MODES, VEE_SERIES_COLLECTIONS, type SortMode, type VeeSeriesCollection } from '@/lib/series-collections';
 import { t, useLanguage } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
 import type { Channel } from '@/types';
@@ -49,17 +50,42 @@ const TAB_NAME_MAP: Record<string, TranslationKey> = {
 function getTrendingScore(series: SeriesItem, tmdbMap: Record<string, TmdbEntry>): number {
   const tmdb = tmdbMap[`s:${series.series_id}`];
   if (!tmdb) return 0;
+
+  // Rating: 40% weight
   const ratingScore = Math.min((tmdb.r || 0) / 10, 1);
-  let freshnessScore = 0.3;
-  const yearMatch = series.name.match(/\((\d{4})\)/);
-  if (yearMatch) {
-    const year = parseInt(yearMatch[1], 10);
-    if (year >= 2026) freshnessScore = 1.0;
-    else if (year === 2025) freshnessScore = 0.85;
-    else if (year === 2024) freshnessScore = 0.7;
-    else if (year === 2023) freshnessScore = 0.5;
+
+  // Freshness: 30% weight
+  let freshnessScore = 0.2;
+  if (series.last_modified) {
+    const ts = parseInt(series.last_modified, 10);
+    if (ts > 0) {
+      const daysAgo = (Date.now() / 1000 - ts) / 86400;
+      if (daysAgo < 7) freshnessScore = 1.0;
+      else if (daysAgo < 30) freshnessScore = 0.85;
+      else if (daysAgo < 90) freshnessScore = 0.65;
+      else if (daysAgo < 365) freshnessScore = 0.4;
+    }
+  } else {
+    const yearMatch = series.name.match(/\((\d{4})\)/);
+    if (yearMatch) {
+      const year = parseInt(yearMatch[1], 10);
+      if (year >= 2026) freshnessScore = 1.0;
+      else if (year === 2025) freshnessScore = 0.85;
+      else if (year === 2024) freshnessScore = 0.7;
+      else if (year === 2023) freshnessScore = 0.5;
+    }
   }
-  return ratingScore * 0.55 + freshnessScore * 0.35 + (tmdb.y ? 0.1 : 0);
+
+  // Popularity: 20% — trailer + poster + genre breadth
+  const hasTrailer = tmdb.y ? 0.4 : 0;
+  const hasPoster = tmdb.p ? 0.3 : 0;
+  const genreBreadth = Math.min((tmdb.g?.length || 0) / 4, 1) * 0.3;
+  const popularityScore = hasTrailer + hasPoster + genreBreadth;
+
+  // Diversity: 10%
+  const diversityScore = Math.min((tmdb.g?.length || 0) / 3, 1);
+
+  return ratingScore * 0.4 + freshnessScore * 0.3 + popularityScore * 0.2 + diversityScore * 0.1;
 }
 
 function parseYear(name: string): number {
@@ -315,6 +341,33 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     }).filter(Boolean) as { id: string; name: string; items: SeriesItem[] }[];
   }, [seriesList, tmdbMap, activeParent, hasTmdb]);
 
+  // ── VEE intelligence rows ────────────────────────────────────
+
+  const veeCollectionRows = useMemo(() => {
+    if (!hasTmdb || seriesList.length === 0) return [];
+    return VEE_SERIES_COLLECTIONS
+      .filter(col => !col.parentTabs || col.parentTabs.length === 0 || col.parentTabs.includes(activeParent))
+      .map(col => {
+        let pool: SeriesItem[];
+        if (col.categoryIds && col.categoryIds.length > 0) {
+          const catSet = new Set(col.categoryIds);
+          pool = seriesList.filter(s => catSet.has(s.category_id));
+        } else {
+          pool = seriesList.filter(s => col.filter(s, tmdbMap[`s:${s.series_id}`] || null));
+        }
+        const sorted = [...pool].sort((a, b) => col.sort(a, b, tmdbMap));
+        const items = sorted.slice(0, col.limit).map(s => ({
+          id: s.series_id,
+          name: s.name,
+          poster: s.cover,
+          rating: s.rating,
+          tmdbKey: `s:${s.series_id}`,
+        }));
+        return items.length >= 3 ? { collection: col, items } : null;
+      })
+      .filter(Boolean) as { collection: VeeSeriesCollection; items: { id: number; name: string; poster: string; rating?: string; tmdbKey: string }[] }[];
+  }, [seriesList, tmdbMap, hasTmdb, activeParent]);
+
   // ── Series detail handlers ────────────────────────────────────
 
   // 15-second timeout for episodes loading
@@ -518,6 +571,26 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 ))}
               </div>
             </section>
+          ))}
+          <div className="mx-8 h-[0.5px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.06), transparent)' }} />
+        </div>
+      )}
+
+      {/* ── VEE Intelligence rows ── */}
+      {!isSearching && !loading && activeGenre === 0 && veeCollectionRows.length > 0 && (
+        <div className="space-y-5 py-3 mb-2">
+          {veeCollectionRows.map(({ collection, items }) => (
+            <VeeCollectionRow
+              key={collection.id}
+              name={collection.name}
+              tagline={collection.tagline}
+              items={items}
+              tmdbMap={tmdbMap}
+              onItemClick={(id) => {
+                const series = seriesList.find(s => s.series_id === id);
+                if (series) setDetailSeries(series);
+              }}
+            />
           ))}
           <div className="mx-8 h-[0.5px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.06), transparent)' }} />
         </div>

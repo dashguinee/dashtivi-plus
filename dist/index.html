@@ -15,17 +15,28 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="dns-prefetch" href="https://stream.zionsynapse.online" />
     <link rel="preconnect" href="https://stream.zionsynapse.online" crossorigin />
+    <link rel="preconnect" href="https://image.tmdb.org" crossorigin />
     <link rel="dns-prefetch" href="https://image.tmdb.org" />
+    <link rel="preconnect" href="https://mclbbkmpovnvcfmwsoqt.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://datahub11.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <title>DashTivi+ — Premium Streaming</title>
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://stream.zionsynapse.online https://mclbbkmpovnvcfmwsoqt.supabase.co https://datahub11.com https://image.tmdb.org https://cdn.jsdelivr.net *.r2.cloudflarestorage.com; img-src * data:; media-src *; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://piped.video https://inv.nadeko.net;" />
-    <script type="module" crossorigin src="/assets/index-vAtd5oD_.js"></script>
+    <script type="module" crossorigin src="/assets/index-CFPLskmA.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/router-DSWUqEza.js">
     <link rel="modulepreload" crossorigin href="/assets/tmdb-data-dE2hyHVo.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-C_QVVgbz.css">
+    <link rel="modulepreload" crossorigin href="/assets/hls-BGvSEJpu.js">
+    <link rel="modulepreload" crossorigin href="/assets/mpegts-DtGDlU8h.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-Oy-GRVGr.css">
   </head>
-  <body>
+  <body style="background:#060609;margin:0">
+    <!-- Pre-splash: visible instantly before React loads, eliminated white flash -->
+    <div id="pre-splash" style="position:fixed;inset:0;z-index:99999;background:#060609;display:flex;align-items:center;justify-content:center">
+      <div style="text-align:center;opacity:0;animation:pre-fade 0.6s ease 0.1s forwards">
+        <span style="font-size:36px;font-weight:900;color:white;font-family:'Space Grotesk',system-ui;letter-spacing:-0.02em">DASH</span><span style="font-size:26px;font-weight:300;color:rgba(255,255,255,0.4);font-family:'Outfit',system-ui;margin-left:2px">tivi</span><span style="font-size:18px;font-weight:700;color:#C77DFF;margin-left:4px">+</span>
+      </div>
+    </div>
+    <style>@keyframes pre-fade{to{opacity:1}}</style>
     <div id="root"></div>
   </body>
 </html>

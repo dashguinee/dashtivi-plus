@@ -1,0 +1,8746 @@
+{
+  "summary": {
+    "total": 4253,
+    "gems": 967,
+    "solid": 3286,
+    "noise": 0,
+    "total_dupes": 348,
+    "quality": {
+      "Unknown": 2276,
+      "HD": 1267,
+      "SD": 201,
+      "4K": 223,
+      "FHD": 286
+    }
+  },
+  "categories": {
+    "PUNJABI": {
+      "total": 72,
+      "gems": 0,
+      "solid": 72,
+      "noise": 0,
+      "dupes": 4,
+      "has_icons": 64,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 12
+    },
+    "INDIA ENTERTAINMENT": {
+      "total": 26,
+      "gems": 12,
+      "solid": 14,
+      "noise": 0,
+      "dupes": 14,
+      "has_icons": 26,
+      "quality_4k": 8,
+      "quality_fhd": 10,
+      "quality_hd": 8
+    },
+    "INDIA HINDI MOVIES": {
+      "total": 23,
+      "gems": 10,
+      "solid": 13,
+      "noise": 0,
+      "dupes": 9,
+      "has_icons": 22,
+      "quality_4k": 8,
+      "quality_fhd": 6,
+      "quality_hd": 7
+    },
+    "INDIA ENGLISH MOVIES": {
+      "total": 29,
+      "gems": 11,
+      "solid": 18,
+      "noise": 0,
+      "dupes": 13,
+      "has_icons": 24,
+      "quality_4k": 11,
+      "quality_fhd": 8,
+      "quality_hd": 9
+    },
+    "INDIA DOCUMENTARY": {
+      "total": 23,
+      "gems": 17,
+      "solid": 6,
+      "noise": 0,
+      "dupes": 6,
+      "has_icons": 22,
+      "quality_4k": 7,
+      "quality_fhd": 5,
+      "quality_hd": 8
+    },
+    "KIDS": {
+      "total": 46,
+      "gems": 29,
+      "solid": 17,
+      "noise": 0,
+      "dupes": 3,
+      "has_icons": 5,
+      "quality_4k": 4,
+      "quality_fhd": 1,
+      "quality_hd": 9
+    },
+    "BANGLA": {
+      "total": 80,
+      "gems": 6,
+      "solid": 74,
+      "noise": 0,
+      "dupes": 6,
+      "has_icons": 27,
+      "quality_4k": 5,
+      "quality_fhd": 7,
+      "quality_hd": 19
+    },
+    "TELUGU": {
+      "total": 48,
+      "gems": 1,
+      "solid": 47,
+      "noise": 0,
+      "dupes": 7,
+      "has_icons": 42,
+      "quality_4k": 9,
+      "quality_fhd": 6,
+      "quality_hd": 13
+    },
+    "MARATHI": {
+      "total": 30,
+      "gems": 4,
+      "solid": 26,
+      "noise": 0,
+      "dupes": 3,
+      "has_icons": 7,
+      "quality_4k": 5,
+      "quality_fhd": 5,
+      "quality_hd": 7
+    },
+    "KANNADA": {
+      "total": 36,
+      "gems": 5,
+      "solid": 31,
+      "noise": 0,
+      "dupes": 6,
+      "has_icons": 11,
+      "quality_4k": 5,
+      "quality_fhd": 8,
+      "quality_hd": 9
+    },
+    " SPORTS | INDIA": {
+      "total": 14,
+      "gems": 11,
+      "solid": 3,
+      "noise": 0,
+      "dupes": 2,
+      "has_icons": 14,
+      "quality_4k": 9,
+      "quality_fhd": 5,
+      "quality_hd": 0
+    },
+    "CRICKET": {
+      "total": 57,
+      "gems": 37,
+      "solid": 20,
+      "noise": 0,
+      "dupes": 15,
+      "has_icons": 57,
+      "quality_4k": 1,
+      "quality_fhd": 0,
+      "quality_hd": 1
+    },
+    "SPORTS | RUGBY": {
+      "total": 20,
+      "gems": 19,
+      "solid": 1,
+      "noise": 0,
+      "dupes": 1,
+      "has_icons": 20,
+      "quality_4k": 0,
+      "quality_fhd": 11,
+      "quality_hd": 3
+    },
+    "FOOTBALL": {
+      "total": 28,
+      "gems": 19,
+      "solid": 9,
+      "noise": 0,
+      "dupes": 6,
+      "has_icons": 28,
+      "quality_4k": 1,
+      "quality_fhd": 10,
+      "quality_hd": 10
+    },
+    "TAMIL | ENTERTAINMENT": {
+      "total": 64,
+      "gems": 11,
+      "solid": 53,
+      "noise": 0,
+      "dupes": 17,
+      "has_icons": 51,
+      "quality_4k": 6,
+      "quality_fhd": 6,
+      "quality_hd": 24
+    },
+    "TAMIL | MOVIES": {
+      "total": 22,
+      "gems": 0,
+      "solid": 22,
+      "noise": 0,
+      "dupes": 2,
+      "has_icons": 18,
+      "quality_4k": 3,
+      "quality_fhd": 3,
+      "quality_hd": 5
+    },
+    "TAMIL | NEWS": {
+      "total": 10,
+      "gems": 0,
+      "solid": 10,
+      "noise": 0,
+      "dupes": 1,
+      "has_icons": 5,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 2
+    },
+    "TAMIL": {
+      "total": 6,
+      "gems": 1,
+      "solid": 5,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 3,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 1
+    },
+    "USA": {
+      "total": 93,
+      "gems": 42,
+      "solid": 51,
+      "noise": 0,
+      "dupes": 5,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 5,
+      "quality_hd": 21
+    },
+    "UK| GENERAL": {
+      "total": 26,
+      "gems": 16,
+      "solid": 10,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 8,
+      "quality_4k": 0,
+      "quality_fhd": 10,
+      "quality_hd": 5
+    },
+    "SPORTS | DSTV SUPER": {
+      "total": 5,
+      "gems": 4,
+      "solid": 1,
+      "noise": 0,
+      "dupes": 2,
+      "has_icons": 5,
+      "quality_4k": 0,
+      "quality_fhd": 3,
+      "quality_hd": 2
+    },
+    "UK| ASIAN": {
+      "total": 38,
+      "gems": 9,
+      "solid": 29,
+      "noise": 0,
+      "dupes": 5,
+      "has_icons": 8,
+      "quality_4k": 0,
+      "quality_fhd": 5,
+      "quality_hd": 2
+    },
+    "ENGLISH NEWS": {
+      "total": 22,
+      "gems": 14,
+      "solid": 8,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 10,
+      "quality_4k": 1,
+      "quality_fhd": 1,
+      "quality_hd": 4
+    },
+    "SPORTS | GOLF": {
+      "total": 7,
+      "gems": 7,
+      "solid": 0,
+      "noise": 0,
+      "dupes": 2,
+      "has_icons": 7,
+      "quality_4k": 0,
+      "quality_fhd": 3,
+      "quality_hd": 2
+    },
+    "PAKISTAN NEWS": {
+      "total": 47,
+      "gems": 0,
+      "solid": 47,
+      "noise": 0,
+      "dupes": 4,
+      "has_icons": 29,
+      "quality_4k": 2,
+      "quality_fhd": 0,
+      "quality_hd": 16
+    },
+    "PAKISTAN": {
+      "total": 40,
+      "gems": 1,
+      "solid": 39,
+      "noise": 0,
+      "dupes": 2,
+      "has_icons": 23,
+      "quality_4k": 1,
+      "quality_fhd": 1,
+      "quality_hd": 9
+    },
+    "ISLAMIC": {
+      "total": 62,
+      "gems": 0,
+      "solid": 62,
+      "noise": 0,
+      "dupes": 3,
+      "has_icons": 11,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 6
+    },
+    "INDIA MUSIC": {
+      "total": 11,
+      "gems": 4,
+      "solid": 7,
+      "noise": 0,
+      "dupes": 2,
+      "has_icons": 10,
+      "quality_4k": 1,
+      "quality_fhd": 2,
+      "quality_hd": 2
+    },
+    "MALAYALAM | ENTRTNMNT": {
+      "total": 33,
+      "gems": 5,
+      "solid": 28,
+      "noise": 0,
+      "dupes": 8,
+      "has_icons": 33,
+      "quality_4k": 4,
+      "quality_fhd": 5,
+      "quality_hd": 7
+    },
+    "MALAYALAM | NEWS": {
+      "total": 28,
+      "gems": 2,
+      "solid": 26,
+      "noise": 0,
+      "dupes": 10,
+      "has_icons": 28,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 3
+    },
+    "MALAYALAM | SONGS": {
+      "total": 3,
+      "gems": 0,
+      "solid": 3,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 3,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "INDIAN NEWS": {
+      "total": 47,
+      "gems": 5,
+      "solid": 42,
+      "noise": 0,
+      "dupes": 2,
+      "has_icons": 27,
+      "quality_4k": 3,
+      "quality_fhd": 0,
+      "quality_hd": 3
+    },
+    "INDIAN SD": {
+      "total": 46,
+      "gems": 6,
+      "solid": 40,
+      "noise": 0,
+      "dupes": 2,
+      "has_icons": 5,
+      "quality_4k": 1,
+      "quality_fhd": 0,
+      "quality_hd": 3
+    },
+    "UK| ENTERTAINMENT": {
+      "total": 39,
+      "gems": 8,
+      "solid": 31,
+      "noise": 0,
+      "dupes": 1,
+      "has_icons": 7,
+      "quality_4k": 0,
+      "quality_fhd": 10,
+      "quality_hd": 6
+    },
+    "SPORTS | SPORTS": {
+      "total": 13,
+      "gems": 10,
+      "solid": 3,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 13,
+      "quality_4k": 0,
+      "quality_fhd": 1,
+      "quality_hd": 11
+    },
+    "SPORTS | TENNIS": {
+      "total": 6,
+      "gems": 2,
+      "solid": 4,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 4,
+      "quality_4k": 1,
+      "quality_fhd": 1,
+      "quality_hd": 2
+    },
+    "AFGHANISTAN": {
+      "total": 7,
+      "gems": 0,
+      "solid": 7,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 2
+    },
+    "GUJARATI": {
+      "total": 19,
+      "gems": 3,
+      "solid": 16,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 1,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 8
+    },
+    "Oriya": {
+      "total": 13,
+      "gems": 0,
+      "solid": 13,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "SPORTS | FOX AUSTRALIA": {
+      "total": 5,
+      "gems": 5,
+      "solid": 0,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 2,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "UK| MUSIC": {
+      "total": 4,
+      "gems": 1,
+      "solid": 3,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 1,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 1
+    },
+    "NEPAL": {
+      "total": 71,
+      "gems": 1,
+      "solid": 70,
+      "noise": 0,
+      "dupes": 1,
+      "has_icons": 3,
+      "quality_4k": 4,
+      "quality_fhd": 2,
+      "quality_hd": 31
+    },
+    "UK| MOVIES": {
+      "total": 39,
+      "gems": 34,
+      "solid": 5,
+      "noise": 0,
+      "dupes": 7,
+      "has_icons": 13,
+      "quality_4k": 0,
+      "quality_fhd": 17,
+      "quality_hd": 16
+    },
+    "UK| DOCUMENTARY": {
+      "total": 19,
+      "gems": 18,
+      "solid": 1,
+      "noise": 0,
+      "dupes": 1,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 4,
+      "quality_hd": 4
+    },
+    "DSTV | KIDS": {
+      "total": 1,
+      "gems": 1,
+      "solid": 0,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 1,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "Assam": {
+      "total": 8,
+      "gems": 0,
+      "solid": 8,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "SRI LANKA": {
+      "total": 33,
+      "gems": 0,
+      "solid": 33,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 30,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "UK| NEWS": {
+      "total": 15,
+      "gems": 11,
+      "solid": 4,
+      "noise": 0,
+      "dupes": 2,
+      "has_icons": 1,
+      "quality_4k": 0,
+      "quality_fhd": 7,
+      "quality_hd": 4
+    },
+    "NEW ZEALAND": {
+      "total": 1,
+      "gems": 1,
+      "solid": 0,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 1,
+      "quality_hd": 0
+    },
+    "USA ASIAN": {
+      "total": 4,
+      "gems": 0,
+      "solid": 4,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 1,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 1
+    },
+    "UK| KIDS": {
+      "total": 12,
+      "gems": 11,
+      "solid": 1,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 7,
+      "quality_hd": 1
+    },
+    "RACING | F1 MOTOGP": {
+      "total": 4,
+      "gems": 2,
+      "solid": 2,
+      "noise": 0,
+      "dupes": 1,
+      "has_icons": 2,
+      "quality_4k": 1,
+      "quality_fhd": 1,
+      "quality_hd": 2
+    },
+    "SPORTS | SKY UK (4K)": {
+      "total": 10,
+      "gems": 10,
+      "solid": 0,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 10,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "SPORTS | UK MIX": {
+      "total": 10,
+      "gems": 9,
+      "solid": 1,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 9,
+      "quality_4k": 1,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "SPORTS | DSTV SUPER (FHD)": {
+      "total": 8,
+      "gems": 4,
+      "solid": 4,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 4,
+      "quality_4k": 0,
+      "quality_fhd": 4,
+      "quality_hd": 0
+    },
+    "DSTV | ENTERTAINMENT (FHD)": {
+      "total": 1,
+      "gems": 0,
+      "solid": 1,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 1,
+      "quality_4k": 0,
+      "quality_fhd": 1,
+      "quality_hd": 0
+    },
+    "DSTV | KIDS (FHD)": {
+      "total": 1,
+      "gems": 1,
+      "solid": 0,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 1,
+      "quality_4k": 0,
+      "quality_fhd": 1,
+      "quality_hd": 0
+    },
+    "SPORTS | UK SPORTS": {
+      "total": 29,
+      "gems": 26,
+      "solid": 3,
+      "noise": 0,
+      "dupes": 7,
+      "has_icons": 29,
+      "quality_4k": 0,
+      "quality_fhd": 17,
+      "quality_hd": 12
+    },
+    "SPORTS | ARABIC": {
+      "total": 84,
+      "gems": 13,
+      "solid": 71,
+      "noise": 0,
+      "dupes": 19,
+      "has_icons": 0,
+      "quality_4k": 7,
+      "quality_fhd": 0,
+      "quality_hd": 46
+    },
+    "BEIN MOVIES": {
+      "total": 29,
+      "gems": 8,
+      "solid": 21,
+      "noise": 0,
+      "dupes": 4,
+      "has_icons": 0,
+      "quality_4k": 14,
+      "quality_fhd": 0,
+      "quality_hd": 14
+    },
+    "MBC ARABIC": {
+      "total": 46,
+      "gems": 46,
+      "solid": 0,
+      "noise": 0,
+      "dupes": 28,
+      "has_icons": 0,
+      "quality_4k": 17,
+      "quality_fhd": 3,
+      "quality_hd": 16
+    },
+    "ARABIC": {
+      "total": 12,
+      "gems": 12,
+      "solid": 0,
+      "noise": 0,
+      "dupes": 2,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 2,
+      "quality_hd": 10
+    },
+    "ARABIC NEWS": {
+      "total": 44,
+      "gems": 12,
+      "solid": 32,
+      "noise": 0,
+      "dupes": 8,
+      "has_icons": 0,
+      "quality_4k": 3,
+      "quality_fhd": 1,
+      "quality_hd": 12
+    },
+    "SAUDI ARABIA": {
+      "total": 32,
+      "gems": 0,
+      "solid": 32,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 7
+    },
+    "QATAR": {
+      "total": 8,
+      "gems": 3,
+      "solid": 5,
+      "noise": 0,
+      "dupes": 1,
+      "has_icons": 0,
+      "quality_4k": 1,
+      "quality_fhd": 0,
+      "quality_hd": 4
+    },
+    "INDIAN ACTIVE": {
+      "total": 20,
+      "gems": 0,
+      "solid": 20,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 2,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "ISRAEL": {
+      "total": 66,
+      "gems": 9,
+      "solid": 57,
+      "noise": 0,
+      "dupes": 4,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 5,
+      "quality_hd": 28
+    },
+    "CHRISTIAN": {
+      "total": 8,
+      "gems": 0,
+      "solid": 8,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "BHOJPURI": {
+      "total": 2,
+      "gems": 0,
+      "solid": 2,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "REAL 4K (2160P)": {
+      "total": 31,
+      "gems": 12,
+      "solid": 19,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 6,
+      "quality_4k": 31,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "HUB PREMIER": {
+      "total": 6,
+      "gems": 0,
+      "solid": 6,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 6,
+      "quality_hd": 0
+    },
+    "FINLAND": {
+      "total": 4,
+      "gems": 1,
+      "solid": 3,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 4,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "MALAYSIA": {
+      "total": 13,
+      "gems": 5,
+      "solid": 8,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 1
+    },
+    "UAE": {
+      "total": 12,
+      "gems": 3,
+      "solid": 9,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 3
+    },
+    "ARABIC MUSIC": {
+      "total": 11,
+      "gems": 2,
+      "solid": 9,
+      "noise": 0,
+      "dupes": 1,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 2
+    },
+    "MOROCCO": {
+      "total": 14,
+      "gems": 0,
+      "solid": 14,
+      "noise": 0,
+      "dupes": 1,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 4
+    },
+    "ALGERIA": {
+      "total": 20,
+      "gems": 0,
+      "solid": 20,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 2
+    },
+    "SYRIA": {
+      "total": 15,
+      "gems": 0,
+      "solid": 15,
+      "noise": 0,
+      "dupes": 2,
+      "has_icons": 0,
+      "quality_4k": 2,
+      "quality_fhd": 0,
+      "quality_hd": 1
+    },
+    "LEBANON": {
+      "total": 19,
+      "gems": 2,
+      "solid": 17,
+      "noise": 0,
+      "dupes": 4,
+      "has_icons": 0,
+      "quality_4k": 4,
+      "quality_fhd": 0,
+      "quality_hd": 8
+    },
+    "PHILIPPINES": {
+      "total": 1,
+      "gems": 0,
+      "solid": 1,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "SHAHED BOX": {
+      "total": 17,
+      "gems": 17,
+      "solid": 0,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 10
+    },
+    "IRAQ": {
+      "total": 43,
+      "gems": 0,
+      "solid": 43,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 11
+    },
+    "KUWAIT": {
+      "total": 7,
+      "gems": 0,
+      "solid": 7,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 5
+    },
+    "EGYPT": {
+      "total": 58,
+      "gems": 0,
+      "solid": 58,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 10
+    },
+    "EXYU": {
+      "total": 168,
+      "gems": 18,
+      "solid": 150,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 1,
+      "quality_fhd": 0,
+      "quality_hd": 2
+    },
+    "ROMANIA": {
+      "total": 69,
+      "gems": 16,
+      "solid": 53,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "CANADA (LIVE EVENT ONLY)": {
+      "total": 13,
+      "gems": 10,
+      "solid": 3,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "CANADA": {
+      "total": 218,
+      "gems": 16,
+      "solid": 202,
+      "noise": 0,
+      "dupes": 9,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 1,
+      "quality_hd": 13
+    },
+    "PPV (LIVE ONLY MATCH TIME)": {
+      "total": 48,
+      "gems": 0,
+      "solid": 48,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "IRAN": {
+      "total": 102,
+      "gems": 0,
+      "solid": 102,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 1,
+      "quality_hd": 36
+    },
+    "SPORTS | BEIN": {
+      "total": 124,
+      "gems": 39,
+      "solid": 85,
+      "noise": 0,
+      "dupes": 42,
+      "has_icons": 0,
+      "quality_4k": 36,
+      "quality_fhd": 19,
+      "quality_hd": 34
+    },
+    "FRANCE": {
+      "total": 162,
+      "gems": 50,
+      "solid": 112,
+      "noise": 0,
+      "dupes": 1,
+      "has_icons": 0,
+      "quality_4k": 1,
+      "quality_fhd": 0,
+      "quality_hd": 158
+    },
+    "GERMANY": {
+      "total": 255,
+      "gems": 93,
+      "solid": 162,
+      "noise": 0,
+      "dupes": 1,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 1,
+      "quality_hd": 209
+    },
+    "NETHERLANDS": {
+      "total": 82,
+      "gems": 17,
+      "solid": 65,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "Poland": {
+      "total": 192,
+      "gems": 38,
+      "solid": 154,
+      "noise": 0,
+      "dupes": 33,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 47,
+      "quality_hd": 97
+    },
+    " DENMARK": {
+      "total": 42,
+      "gems": 9,
+      "solid": 33,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 32
+    },
+    "SWEDEN": {
+      "total": 45,
+      "gems": 11,
+      "solid": 34,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "ALBANIA": {
+      "total": 121,
+      "gems": 6,
+      "solid": 115,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 3
+    },
+    "AUSTRIA": {
+      "total": 22,
+      "gems": 2,
+      "solid": 20,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 21
+    },
+    "CZECH": {
+      "total": 3,
+      "gems": 0,
+      "solid": 3,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "BULGARIA": {
+      "total": 162,
+      "gems": 24,
+      "solid": 138,
+      "noise": 0,
+      "dupes": 3,
+      "has_icons": 0,
+      "quality_4k": 3,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "NFL (LIVE ONLY MATCH TIME)": {
+      "total": 4,
+      "gems": 4,
+      "solid": 0,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 4,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "EPL (LIVE ONLY MATCH TIME)": {
+      "total": 21,
+      "gems": 0,
+      "solid": 21,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "MLB (LIVE ONLY MATCH TIME)": {
+      "total": 32,
+      "gems": 0,
+      "solid": 32,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "TELUGU MOVIES 24/7": {
+      "total": 11,
+      "gems": 0,
+      "solid": 11,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 1,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 10
+    },
+    "MALAYALAM | MOVIES": {
+      "total": 12,
+      "gems": 2,
+      "solid": 10,
+      "noise": 0,
+      "dupes": 2,
+      "has_icons": 12,
+      "quality_4k": 1,
+      "quality_fhd": 0,
+      "quality_hd": 8
+    },
+    "KANNADA MOVIES 24/7": {
+      "total": 13,
+      "gems": 0,
+      "solid": 13,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 13
+    },
+    "BANGLA MOVIES 24/7": {
+      "total": 5,
+      "gems": 0,
+      "solid": 5,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 5
+    },
+    "US : 24X7": {
+      "total": 82,
+      "gems": 0,
+      "solid": 82,
+      "noise": 0,
+      "dupes": 1,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 0
+    },
+    "Bollywood Singers 24/7": {
+      "total": 1,
+      "gems": 0,
+      "solid": 1,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 1
+    },
+    "ENGLISH Movies 24/7": {
+      "total": 51,
+      "gems": 1,
+      "solid": 50,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 41
+    },
+    "NETFLIX MOVIES 24/7": {
+      "total": 13,
+      "gems": 0,
+      "solid": 13,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 13
+    },
+    "AMAZON MOVIES 24/7": {
+      "total": 12,
+      "gems": 0,
+      "solid": 12,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 12
+    },
+    "PUNJABI MOVIES 24/7": {
+      "total": 5,
+      "gems": 0,
+      "solid": 5,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 5
+    },
+    "PUNJABI SINGERS 24/7": {
+      "total": 27,
+      "gems": 0,
+      "solid": 27,
+      "noise": 0,
+      "dupes": 0,
+      "has_icons": 0,
+      "quality_4k": 0,
+      "quality_fhd": 0,
+      "quality_hd": 27
+    }
+  },
+  "gems_by_cat": {
+    "INDIA ENTERTAINMENT": [
+      {
+        "name": "IN: SONY SAB (4K).",
+        "id": 98853,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: COLORS (4K).",
+        "id": 98851,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: STAR PLUS (4K).",
+        "id": 98849,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: STAR PLUS HD",
+        "id": 221,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "IN: STAR PLUS FHD",
+        "id": 167,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: STAR PLUS (FHD)",
+        "id": 9366,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: COLORS FHD",
+        "id": 195,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: Colors (FHD)",
+        "id": 9370,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: SONY SAB HD",
+        "id": 145,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "IN: ZEE TV HD",
+        "id": 161,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "IN: ZEE TV FHD",
+        "id": 220,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: ZEE TV (FHD)",
+        "id": 9371,
+        "quality": "FHD",
+        "icon": true
+      }
+    ],
+    "INDIA HINDI MOVIES": [
+      {
+        "name": "IN: SONY MAX (4K).",
+        "id": 98857,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: ZEE CINEMA (4K).",
+        "id": 98860,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: Colors Cineplex (4K).",
+        "id": 98908,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: SONY MAX HD",
+        "id": 151,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "IN: SONY MAX (FHD)",
+        "id": 9373,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: ZEE CINEMA HD",
+        "id": 230,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "IN: Colors Cineplex (FHD)",
+        "id": 9378,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: COLORS CINEPLEX SUPERHITS",
+        "id": 172368,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "IN: Colors Cineplex Bollywood",
+        "id": 37074,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "IN: MBC BOLLYWOOD (FHD)",
+        "id": 20512,
+        "quality": "FHD",
+        "icon": true
+      }
+    ],
+    "INDIA ENGLISH MOVIES": [
+      {
+        "name": "IN: STAR MOVIE (4K).",
+        "id": 98842,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: STAR MOVIE SELECT (4K).",
+        "id": 98843,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: Colors INFINITY (4K).",
+        "id": 98879,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: TLC (4K).",
+        "id": 98878,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: STAR MOVIES HD",
+        "id": 979,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "IN: STAR MOVIES SELECT HD",
+        "id": 218,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "IN: COLORS INFINITY HD",
+        "id": 187,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "IN: STAR MOVIES (FHD)",
+        "id": 9384,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: TLC (FHD)",
+        "id": 9388,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: Colors INFINITY (FHD)",
+        "id": 9390,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: STAR MOVIES SELECT (FHD)",
+        "id": 23270,
+        "quality": "FHD",
+        "icon": false
+      }
+    ],
+    "INDIA DOCUMENTARY": [
+      {
+        "name": "IN: DISCOVERY (4K).",
+        "id": 98872,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: ANIMAL PLANET (4K).",
+        "id": 98873,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: National GEO (4K).",
+        "id": 98874,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: NAT Geo Wild (4K).",
+        "id": 98875,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: HISTORY TV (4K).",
+        "id": 98877,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: HISTORY HD",
+        "id": 180,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "IN: HISTORY 18 (HINDI)",
+        "id": 5252,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "IN: DISCOVERY WORLD HD",
+        "id": 156,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "IN: NATIONAL GEOGRAPHIC INDIA",
+        "id": 7342,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "IN: NATIONAL GEOGRAPHIC",
+        "id": 7343,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "IN: ANIMAL PLANET HD",
+        "id": 182,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "IN: ANIMAL PLANET (FHD)",
+        "id": 9391,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: HISTORY TV (FHD)",
+        "id": 9392,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: DISCOVERY (FHD)",
+        "id": 9393,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: National GEO (FHD)",
+        "id": 9394,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: NAT Geo Wild (FHD)",
+        "id": 9395,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: INVESTIGATION DISCOVERY (4K)",
+        "id": 23790,
+        "quality": "4K",
+        "icon": true
+      }
+    ],
+    "KIDS": [
+      {
+        "name": "IN: NICK (4K).",
+        "id": 98880,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "TAMIL: NICK",
+        "id": 66163,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "TAMIL: DISCOVERY KIDS",
+        "id": 66164,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "UK: Cbeebies",
+        "id": 26,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "USA: Nickelodeon",
+        "id": 37,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "USA: NICK JR",
+        "id": 38,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "USA: Boomerang",
+        "id": 45,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "USA: DISNEY JR HD",
+        "id": 49,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Malayalam: Nicklodean Sonic",
+        "id": 127762,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "IN:  Nick_Hindi",
+        "id": 205,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "IN: Nick_Junior",
+        "id": 206,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "IN: Discovery_Kids_1",
+        "id": 208,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "UK:Nickelodeon",
+        "id": 269,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "UK : NICK JR ",
+        "id": 561,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: Cartoon Network",
+        "id": 951,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "UK : CARTOON NETWORK HD",
+        "id": 1066,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UK : BOOMERANG",
+        "id": 1067,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "IN : CARTOON NETWORK HD",
+        "id": 8,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "IN: Nick+ FHD",
+        "id": 7438,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Kids: Nick Pakistan",
+        "id": 18457,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "IN: Disney Channel (4K)",
+        "id": 19741,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: Disney Junior",
+        "id": 35713,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "IN: DISNEY INTERNATIONAL (4K)",
+        "id": 20925,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: DISNEY JUNIOR (MULTI AUDIO)",
+        "id": 207676,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Kids:  Cartoon Network Arabia HD",
+        "id": 319402,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Kids: Rotana Kids HD",
+        "id": 319405,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Kids | Ar: NickToons HD",
+        "id": 319408,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Kids: OSN Nickelodeon HD",
+        "id": 319409,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Kids | En: NickToons HD",
+        "id": 319416,
+        "quality": "HD",
+        "icon": false
+      }
+    ],
+    "BANGLA": [
+      {
+        "name": "BD: COLORS BANGLA (4K).",
+        "id": 98882,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: Colors_Bengali_HD",
+        "id": 183,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "BD_Discovery_Channel_Bengali",
+        "id": 406,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BD_DESHITV HD",
+        "id": 414,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "BD: iTV",
+        "id": 999,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BD: COLORS BANGLA (FHD)",
+        "id": 23306,
+        "quality": "FHD",
+        "icon": false
+      }
+    ],
+    "TELUGU": [
+      {
+        "name": "Telugu: Zee Cinemalu HD",
+        "id": 9016,
+        "quality": "HD",
+        "icon": true
+      }
+    ],
+    "MARATHI": [
+      {
+        "name": "MARATHI: COLORS MARATHI (4K).",
+        "id": 98905,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "Marathi:Colors:Marathi",
+        "id": 5872,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "MARATHI: COLORS-MARATHI (FHD)",
+        "id": 23798,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Marathi: NDTV MARATHI",
+        "id": 374570,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "KANNADA": [
+      {
+        "name": "Kannada: COLORS_KANNADA (4K).",
+        "id": 98907,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "Kand:  Colors Kannada HD",
+        "id": 162,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Kand:  Colors Super",
+        "id": 163,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Kannada: COLORS_KANNADA (FHD)",
+        "id": 23323,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "KANNADA: Asianet Suvarna News",
+        "id": 56037,
+        "quality": "Unknown",
+        "icon": true
+      }
+    ],
+    " SPORTS | INDIA": [
+      {
+        "name": "IN: STAR SPORTS 1 (4K).",
+        "id": 98864,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: STAR SPORTS 2 (4K).",
+        "id": 98865,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: STAR SPORTS 1 HINDI (4K).",
+        "id": 98866,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: STAR SPORTS SELECT 1 (4K).",
+        "id": 98867,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: SONY TEN 5 (4K).",
+        "id": 98870,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: Star Sports Select 1 (FHD)",
+        "id": 9400,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: Star Sports Select 2 (FHD)",
+        "id": 9401,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: Sony Ten 1 (FHD)",
+        "id": 9402,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: Sony Ten 3 (FHD)",
+        "id": 9404,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: SONY TEN 5 (FHD)",
+        "id": 17565,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: EUROSPORTS (4K)",
+        "id": 23308,
+        "quality": "4K",
+        "icon": true
+      }
+    ],
+    "CRICKET": [
+      {
+        "name": "CRIC || SUPERSPORTS ᴴᴰ",
+        "id": 158442,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || SUPERSPORTS ᴴᴰ",
+        "id": 2496,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || SKY SPORTS CRIC ᴴᴰ",
+        "id": 12,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || SKY SPORTS CRIC ⁴ᵏ",
+        "id": 23566,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || SKY SPORTS CRIC ⁴ᵏ",
+        "id": 114479,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || SKY SPORTS CRIC ⁴ᵏ",
+        "id": 124269,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || WILLOW SPORTS ᴴᴰ",
+        "id": 215,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || WILLOW SPORTS ᴴᴰ",
+        "id": 23943,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || WILLOW 2 ᴴᴰ",
+        "id": 5040,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || TNT SPORTS 3 ᶠᴴᴰ",
+        "id": 148090,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS 1 ENG ᴴᴰ",
+        "id": 148,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS 1 ENG ᶠᴴᴰ",
+        "id": 9397,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS 1 ENG ⁴ᵏ",
+        "id": 124281,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS 2 ENGLISH ᴴᴰ",
+        "id": 239,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS 2 ENGLISH ᶠᴴᴰ",
+        "id": 9398,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS 2 ENGLISH ⁴ᵏ",
+        "id": 124284,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS 1 HINDI ᴴᴰ",
+        "id": 211,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS 1 HINDI ᶠᴴᴰ",
+        "id": 9399,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS 1 HINDI ⁴ᵏ",
+        "id": 124287,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS SELECT 1 ᴴᴰ",
+        "id": 238,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS SELECT 2 ᴴᴰ",
+        "id": 148801,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS 1 TAMIL ⁴ᵏ",
+        "id": 9722,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS 1 TELUGU ⁴ᵏ",
+        "id": 177843,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS 3 ᴴᴰ",
+        "id": 1080,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRI: SONY ESPN HD",
+        "id": 155,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "CRIC || SKY SPORT 1 ᶠᴴᴰ",
+        "id": 150854,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || SKY SPORT 3 ᶠᴴᴰ",
+        "id": 24018,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || EUROSPORTS ᴴᴰ",
+        "id": 216,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || TNT SPORTS 1 ᶠᴴᴰ",
+        "id": 186627,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS 2 HINDI ᶠᴴᴰ",
+        "id": 213049,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS 2 TAMIL ⁴ᵏ",
+        "id": 379753,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS 2 TELUGU ⁴ᵏ",
+        "id": 379755,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS 1 KANNADA ᴴᴰ",
+        "id": 380977,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STARZPLAY CRICLIFE 1 ᶠᴴᴰ",
+        "id": 122979,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STARZPLAY CRICLIFE 2 ᶠᴴᴰ",
+        "id": 122980,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STARZPLAY CRICLIFE 3 ᶠᴴᴰ",
+        "id": 158897,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "CRIC || STAR SPORTS KHEL",
+        "id": 612020,
+        "quality": "Unknown",
+        "icon": true
+      }
+    ],
+    "SPORTS | RUGBY": [
+      {
+        "name": "TNT SPORT 1",
+        "id": 23564,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "TNT SPORT 2.",
+        "id": 23565,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "ITV",
+        "id": 15,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "SuperSport Rugby (FHD)",
+        "id": 777,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "Fox Sports 502",
+        "id": 4749,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "Sky Sport 1 FHD",
+        "id": 23997,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "Sky Sport 2 FHD",
+        "id": 23998,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "Sky Sport 3 FHD",
+        "id": 23999,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "Sky Sport 4 FHD",
+        "id": 24000,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "SKY Sport SELECT",
+        "id": 34152,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "SuperSport Grandstand (FHD).",
+        "id": 158441,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS MAIN EVENT HD",
+        "id": 186596,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS ACTION HD",
+        "id": 186617,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS ACTION FHD",
+        "id": 186618,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "TNT SPORT 4 FHD",
+        "id": 255259,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "Sky Sport 5 FHD.",
+        "id": 343019,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "Sky Sport 6 FHD.",
+        "id": 343020,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "Sky Sport 9 FHD.",
+        "id": 343023,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS 1",
+        "id": 514389,
+        "quality": "Unknown",
+        "icon": true
+      }
+    ],
+    "FOOTBALL": [
+      {
+        "name": "SONY Ten 2 HD",
+        "id": 192,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "MUTV HD",
+        "id": 29,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "LIVERPOOL FC HD",
+        "id": 30,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "SUPERSPORTS LALIGA HD",
+        "id": 515,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "SUPERSPORTS PSL HD",
+        "id": 517,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "SUPERSPORTS PREMIER LEAGUE HD",
+        "id": 518,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "SUPERSPORTS FOOTBALL HD",
+        "id": 523,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "SUPERSPORTS PSL (FHD)",
+        "id": 770,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS FOOTBALL",
+        "id": 19,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "TNT Sport 3",
+        "id": 283,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "TNT SPORT 2",
+        "id": 285,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "Sky Sports Premier League HD",
+        "id": 9891,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "Sky Sports Football (FHD)",
+        "id": 23334,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "Sky Sports Premier League (FHD)",
+        "id": 23342,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "Eurosport 2 (FHD)",
+        "id": 23348,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "SUPERSPORTS FOOTBALL (FHD)",
+        "id": 776,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "SUPERSPORTS LALIGA (FHD)",
+        "id": 768,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "SUPERSPORTS PREMIER LEAGUE (FHD)",
+        "id": 771,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "BEIN SPORTS English 1 (4k)",
+        "id": 138713,
+        "quality": "4K",
+        "icon": true
+      }
+    ],
+    "TAMIL | ENTERTAINMENT": [
+      {
+        "name": "Tamil: VIJAY TV (4K).",
+        "id": 98898,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "Tamil: VIJAY TV (FHD) ",
+        "id": 9969,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "TM: VIJAY TV HD",
+        "id": 1634,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "Tamil: Colors Tamil (4K).",
+        "id": 98911,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "Tamil: Colors Tamil (FHD)",
+        "id": 9970,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "TM: COLORS TAMIL HD",
+        "id": 5886,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "TM: SUN TV HD",
+        "id": 158,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "TM: SUN TV HD",
+        "id": 5921,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "TM: SUN TV HD",
+        "id": 5922,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "TM: SUN TV HD ",
+        "id": 5923,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "TAMIL: SUN TV USA",
+        "id": 76343,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "TAMIL": [
+      {
+        "name": "TM: JothiTV",
+        "id": 296241,
+        "quality": "Unknown",
+        "icon": true
+      }
+    ],
+    "USA": [
+      {
+        "name": "USA: COMEDY CENTRAL",
+        "id": 9,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: National Geographic",
+        "id": 17,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "USA:  HISTORY  HD",
+        "id": 34,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "USA: MTV  HD",
+        "id": 35,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "USA: TLC HD",
+        "id": 36,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "USA: Discovery channel",
+        "id": 44,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "USA: HBO  COMEDY",
+        "id": 50,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "USA: ESPN 2 HD",
+        "id": 53,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "US: NAT GEO WILD",
+        "id": 1008,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: NFL Network",
+        "id": 1015,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: HBO 2 Comedy",
+        "id": 1025,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: HBO Family FHD",
+        "id": 1026,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "US: HBO Signature FHD",
+        "id": 1027,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "US: HBO Zone FHD",
+        "id": 1028,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "US: Starz Black FHD",
+        "id": 1029,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "US: HBO FAMILY",
+        "id": 3355,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: HBO ZONE",
+        "id": 3356,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: HBO COMEDY",
+        "id": 3357,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: HBO SIGNATURE",
+        "id": 3358,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: ANIMAL PLANET",
+        "id": 3359,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: NATIONAL GEOGRAPHIC",
+        "id": 3361,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: CARTOON NETWORK",
+        "id": 3365,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: DISCOVERY CHANNEL EAST",
+        "id": 3399,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: DISCOVERY FAMILY",
+        "id": 3400,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: DISCOVERY LIFE",
+        "id": 3401,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: DISNEY JR EAST",
+        "id": 3402,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: DISNEY XD EAST",
+        "id": 3403,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: MTV U",
+        "id": 3406,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: MTV2",
+        "id": 3407,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: SHOWTIME EAST",
+        "id": 3409,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: SHOWTIME FAMILY ZONE",
+        "id": 3411,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: SHOWTIME WOMEN",
+        "id": 3412,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: NFL Network",
+        "id": 3415,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: STARZENCORE",
+        "id": 3416,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: STARZENCORE ACTION",
+        "id": 3417,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: STARZENCORE CLASSIC",
+        "id": 3418,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: STARZENCORE FAMILY",
+        "id": 3419,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "USA: FOX SPORTS 2",
+        "id": 3421,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "USA: FOX SPORTS CAROLINAS",
+        "id": 3422,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "USA: FOX SPORTS SOUTHWEST",
+        "id": 3428,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "US: ESPN News HD",
+        "id": 7371,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "USA: ESPN U",
+        "id": 88177,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "UK| GENERAL": [
+      {
+        "name": "UK: BBC 1",
+        "id": 13,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK: BBC 2",
+        "id": 14,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK: ITV 3 HD",
+        "id": 31,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UK: ITV 4 HD",
+        "id": 32,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "UK: BBC ONE (SCOTLAND)",
+        "id": 255,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "UK: BBC TWO (SCOTLAND)",
+        "id": 256,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK : TLC HD",
+        "id": 352,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UK: ITV +1",
+        "id": 5018,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "UK: ITV2 +1",
+        "id": 5019,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "UK: ITV3 +1",
+        "id": 5020,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK: ITV4 +1",
+        "id": 5021,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK FHD : ITV2",
+        "id": 148197,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK FHD : BBC One",
+        "id": 148219,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK FHD : BBC One Northern Ireland",
+        "id": 148247,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK FHD : ITV Yorkshire East",
+        "id": 148248,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK SD : BBC One South West",
+        "id": 148667,
+        "quality": "SD",
+        "icon": false
+      }
+    ],
+    "SPORTS | DSTV SUPER": [
+      {
+        "name": "DSTV: SuperSport Cricket HD",
+        "id": 516,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "DSTV : SuperSport Action HD",
+        "id": 521,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "DSTV : SuperSport Cricket (FHD)",
+        "id": 769,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "DSTV : SuperSport Action (FHD)",
+        "id": 774,
+        "quality": "FHD",
+        "icon": true
+      }
+    ],
+    "UK| ASIAN": [
+      {
+        "name": "UK: ZEE TV HD",
+        "id": 46,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "UK: Sony SAB ",
+        "id": 251,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK: Zee cinema",
+        "id": 2439,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK : Colors CinePlex",
+        "id": 2440,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "UK: Colors FHD",
+        "id": 24581,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK: Sony Max FHD",
+        "id": 24582,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK: NDTV 24x7",
+        "id": 148508,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "UK: ColorsRishtey",
+        "id": 148586,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "UK: Sony Max 2",
+        "id": 148611,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "ENGLISH NEWS": [
+      {
+        "name": "USA: CNN HD",
+        "id": 710,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "USA: Fox News",
+        "id": 51,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "US : CNBC HD",
+        "id": 1095,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "UK : BBC NEWS HD",
+        "id": 1059,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "[MY] AL JAZEERA HD",
+        "id": 5666,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UK : SKY NEWS",
+        "id": 1060,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "US: MSNBC",
+        "id": 871,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "UK: SKY SPORTS NEWS FHD",
+        "id": 23,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "UK: FRANCE 24 ENGLISH",
+        "id": 9482,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "IN: CNN_NEWS_18 (NEWS)",
+        "id": 9976,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "UK: CNN International",
+        "id": 31944,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "IN: CNBC TV18 Prime (4K)",
+        "id": 371444,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "IN: CNBC-TV18",
+        "id": 371445,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "IN: CNN News 18",
+        "id": 371446,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "SPORTS | GOLF": [
+      {
+        "name": "USA: NBC GOLF HD",
+        "id": 56,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "GOLF FHD",
+        "id": 847,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "|FR| GOLF+",
+        "id": 3072,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "GOLF FHD",
+        "id": 3294,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "MY: GOLF CHANNEL HD",
+        "id": 5712,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "UK: SKY SPORTS GOLF",
+        "id": 11,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK: Sky Sports Golf (FHD)",
+        "id": 23338,
+        "quality": "FHD",
+        "icon": true
+      }
+    ],
+    "PAKISTAN": [
+      {
+        "name": "PK: HBO PAKISTAN",
+        "id": 95,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "INDIA MUSIC": [
+      {
+        "name": "IN: MTV HD PLUS",
+        "id": 4029,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "IN: MTV HD Plus (FHD)",
+        "id": 23791,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "IN: MTV Plus (4K)",
+        "id": 94499,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "MTV FHD (HINDI)",
+        "id": 130045,
+        "quality": "FHD",
+        "icon": true
+      }
+    ],
+    "MALAYALAM | ENTRTNMNT": [
+      {
+        "name": "MY: ASIANET (4K).",
+        "id": 98891,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "MY: Asianet HD",
+        "id": 166,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "MY: ASIANET (FHD)",
+        "id": 23307,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "MY: Asianet Plus",
+        "id": 9027,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "MY: AsianetMiddleEast",
+        "id": 85926,
+        "quality": "Unknown",
+        "icon": true
+      }
+    ],
+    "MALAYALAM | NEWS": [
+      {
+        "name": "MAL | ASIANET NEWS ᴴᴰ",
+        "id": 166605,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "MAL | ASIANET NEWS",
+        "id": 165,
+        "quality": "Unknown",
+        "icon": true
+      }
+    ],
+    "INDIAN NEWS": [
+      {
+        "name": "IN: NDTV 24x7",
+        "id": 247,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "IN: NDTV INDIA",
+        "id": 7430,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "IN: NDTV Profit (news)",
+        "id": 7437,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "IN: CNBC Awaaz (News) HD",
+        "id": 9116,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "IN: CNBC Tv 18 (News)",
+        "id": 9117,
+        "quality": "Unknown",
+        "icon": true
+      }
+    ],
+    "INDIAN SD": [
+      {
+        "name": "IN : Colors Rishtey TV",
+        "id": 241,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "IN: SONY MAX 2",
+        "id": 973,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "IN: STAR PLUS",
+        "id": 3744,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "IN: Discovery Science",
+        "id": 4745,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "IN:  Discovery_Channel_Hindi",
+        "id": 5250,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "IN:  Discovery Turbo",
+        "id": 23917,
+        "quality": "Unknown",
+        "icon": true
+      }
+    ],
+    "UK| ENTERTAINMENT": [
+      {
+        "name": "UK: CHANNEL 4 HD",
+        "id": 258,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "UK: CHANNEL 5 HD",
+        "id": 259,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "UK: COMEDY CENTRAL HD",
+        "id": 260,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UK FHD : TLC",
+        "id": 148171,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UKFHD : Sky Arts",
+        "id": 148187,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UKHD : Sky Nature",
+        "id": 148313,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UK HD : MUTV",
+        "id": 148320,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UK SD : Channel 4 Scotland +1",
+        "id": 148716,
+        "quality": "SD",
+        "icon": false
+      }
+    ],
+    "SPORTS | SPORTS": [
+      {
+        "name": "PT: SPORT TV1 HD",
+        "id": 314,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "PT: SPORT TV 2 HD",
+        "id": 315,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "PT: Sport TV 5 HD",
+        "id": 318,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "PT: EUROSPORT 2 HD",
+        "id": 325,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "NL : ESPN SPORTS 1 HD",
+        "id": 503,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "NL : ESPN SPORTS 3 HD",
+        "id": 505,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "NL : EUROSPORT 1 HD",
+        "id": 509,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "DE: DAZN Sport 2 HD",
+        "id": 564,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "FR: RMC SPORTS 3",
+        "id": 615,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "USA : BeIN SPORTS HD",
+        "id": 18451,
+        "quality": "HD",
+        "icon": true
+      }
+    ],
+    "SPORTS | TENNIS": [
+      {
+        "name": "TNT SPORT 1",
+        "id": 286,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK FHD : SKY SPORTS TENNIS FHD",
+        "id": 428098,
+        "quality": "FHD",
+        "icon": true
+      }
+    ],
+    "GUJARATI": [
+      {
+        "name": "Guj:  Colors_Gujarati",
+        "id": 3163,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "GUJ:CNBC Bajar GUJRATI HD",
+        "id": 5838,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Guj:Colors Gujarati",
+        "id": 5850,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "SPORTS | FOX AUSTRALIA": [
+      {
+        "name": "AU: Fox Sports 501",
+        "id": 4748,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "AU: Fox Sports 503",
+        "id": 4750,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "AU: Fox Sports 505",
+        "id": 4752,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "AU: Fox Sports 507",
+        "id": 4754,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "AU: Fox Sports News",
+        "id": 5442,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "UK| MUSIC": [
+      {
+        "name": "UK: MTV HD",
+        "id": 5809,
+        "quality": "HD",
+        "icon": true
+      }
+    ],
+    "NEPAL": [
+      {
+        "name": "NEPAL:  ABC News HD",
+        "id": 637986,
+        "quality": "HD",
+        "icon": false
+      }
+    ],
+    "UK| MOVIES": [
+      {
+        "name": "UK: Sky Movies Drama HD",
+        "id": 24,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "UK: Sky movies Premiere HD",
+        "id": 25,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UK: Sky Cinema Action HD",
+        "id": 273,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "UK: Sky Cinema Family HD",
+        "id": 274,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "UK: Sky Cinema Greats HD",
+        "id": 275,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UK: Sky Cinema Drama HD",
+        "id": 276,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "UK: Sky Cinema Sky-fi HD",
+        "id": 277,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "UK: Sky Cinema Thriller HD",
+        "id": 278,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UK: Sky Cinema Premiere HD",
+        "id": 279,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UK : SKY ARTS HD",
+        "id": 1061,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UK: SKY ARTS FHD",
+        "id": 34157,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK: SKY ATLANTIC FHD",
+        "id": 34158,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "UK: SKY CINEMA PREMIERE FHD",
+        "id": 34161,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "UK: SKY CINEMA HITS FHD",
+        "id": 34162,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "UK: SKY CINEMA THRILLER (FHD)",
+        "id": 34163,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "UK: SKY CINEMA DRAMA (FHD)",
+        "id": 34164,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK: SKY CINEMA FAMILY (FHD)",
+        "id": 34165,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "UK: SKY CINEMA GREATS (FHD)",
+        "id": 34166,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK: SKY CINEMA SCIFI / HORROR (FHD)",
+        "id": 34167,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "UK: SKY CINEMA SELECT (FHD)",
+        "id": 34168,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "UK: SKY CINEMA COMEDY (FHD)",
+        "id": 34169,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK: SKY CINEMA ACTION (FHD)",
+        "id": 34170,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "UKFHD : Sky Comedy",
+        "id": 148170,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UKFHD : Sky Witness",
+        "id": 148177,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UKFHD : Sky Showcase",
+        "id": 148181,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Sky Crime FHD",
+        "id": 148267,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UKHD : Sky Atlantic",
+        "id": 148322,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UKHD : Sky Comedy",
+        "id": 148324,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UK HD : Sky Witness",
+        "id": 148330,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UKHD : Sky Cinema Sci-Fi Horror",
+        "id": 148332,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UKHD : Sky Cinema Premiere",
+        "id": 148333,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UKSD : Sky Witness",
+        "id": 148472,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "UKSD : Sky Cinema Premiere",
+        "id": 148476,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "UKSD Sky Cinema Drama",
+        "id": 148482,
+        "quality": "SD",
+        "icon": false
+      }
+    ],
+    "UK| DOCUMENTARY": [
+      {
+        "name": "UK: Discovery (FHD)",
+        "id": 97095,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UKFHD : Sky History",
+        "id": 148198,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UKFHD : Sky History 2",
+        "id": 148199,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Sky Documentaries FHD",
+        "id": 148265,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UKHD : Nat Geo Wild",
+        "id": 148315,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UKHD : Nat Geo",
+        "id": 148342,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UKHD : Sky History",
+        "id": 148348,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UKHD : Discovery",
+        "id": 148352,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Documentaries SD",
+        "id": 148443,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "UK SD : Discovery Turbo",
+        "id": 148447,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "UK SD : Discovery Science",
+        "id": 148448,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "UKSD Discovery History",
+        "id": 148449,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "UKSD : Nat Geo",
+        "id": 148510,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "UK SD : Animal Planet",
+        "id": 148570,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "UK SD : Discovery Turbo +1",
+        "id": 148710,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "UK SD : Animal Planet +1",
+        "id": 148713,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "UK SD : Discovery Science +1",
+        "id": 148728,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "UK SD : Investigation Discovery +1",
+        "id": 148729,
+        "quality": "SD",
+        "icon": false
+      }
+    ],
+    "DSTV | KIDS": [
+      {
+        "name": "DSTV: Boomerang",
+        "id": 23370,
+        "quality": "Unknown",
+        "icon": true
+      }
+    ],
+    "UK| NEWS": [
+      {
+        "name": "UK: Sky Sports News (FHD)",
+        "id": 23343,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "UK FHD : Sky Sports News",
+        "id": 148178,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK FHD : NBC News Now",
+        "id": 148224,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK FHD : CNBC",
+        "id": 148227,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UKFHD : Al Jazeera",
+        "id": 148251,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK FHD : CNN",
+        "id": 148282,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK HD : CNBC",
+        "id": 148287,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UKHD : Al Jazeera",
+        "id": 148302,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UKHD : Sky News",
+        "id": 148335,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UK HD : BBC News",
+        "id": 148365,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sports News SD Hevc",
+        "id": 148685,
+        "quality": "SD",
+        "icon": false
+      }
+    ],
+    "NEW ZEALAND": [
+      {
+        "name": "NZ: Sky Sport 7 FHD",
+        "id": 24003,
+        "quality": "FHD",
+        "icon": false
+      }
+    ],
+    "UK| KIDS": [
+      {
+        "name": "UK: SKY CINEMA ANIMATION (FHD)",
+        "id": 34171,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK FHD : Nickelodeon",
+        "id": 148190,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Cartoon Network FHD",
+        "id": 148211,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK FHD : CBeebies",
+        "id": 148212,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK FHD : Sky Kids",
+        "id": 148222,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UK FHD : Nick Jr",
+        "id": 148256,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "UKHD : BOOMERANG",
+        "id": 148312,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "UKSD Nicktoons",
+        "id": 148504,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "UKSD Nick Jr. Too",
+        "id": 148506,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "UK SD :  Boomerang +1",
+        "id": 148563,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "UK SD : Nickelodeon +1",
+        "id": 148735,
+        "quality": "SD",
+        "icon": false
+      }
+    ],
+    "RACING | F1 MOTOGP": [
+      {
+        "name": "UK: Sky Sports F1 (4K)",
+        "id": 122181,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "UK: SKY SPORTS F1 HD",
+        "id": 144581,
+        "quality": "HD",
+        "icon": true
+      }
+    ],
+    "SPORTS | SKY UK (4K)": [
+      {
+        "name": "UK || SKY SPORTS NEWS",
+        "id": 122408,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK || SKY SPORTS MAIN EVENT",
+        "id": 122409,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK || SKY SPORTS PREMIER LEAGUE",
+        "id": 122410,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK || SKY SPORTS FOOTBALL",
+        "id": 122411,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK || SKY SPORTS CRICKET",
+        "id": 122412,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK || SKY SPORTS ACTION",
+        "id": 122413,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK || SKY SPORTS PLUS",
+        "id": 122414,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK || SKY SPORTS RACING",
+        "id": 122415,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK || SKY SPORTS MIX",
+        "id": 122416,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "UK || SKY SPORTS GOLF",
+        "id": 122417,
+        "quality": "Unknown",
+        "icon": true
+      }
+    ],
+    "SPORTS | UK MIX": [
+      {
+        "name": "UK SD : TNT Sport 3",
+        "id": 148559,
+        "quality": "SD",
+        "icon": true
+      },
+      {
+        "name": "UK SD : TNT Sport 2",
+        "id": 148560,
+        "quality": "SD",
+        "icon": true
+      },
+      {
+        "name": "UK SD : TNT Sport 1",
+        "id": 148561,
+        "quality": "SD",
+        "icon": true
+      },
+      {
+        "name": "UK SD : Euronews",
+        "id": 148676,
+        "quality": "SD",
+        "icon": true
+      },
+      {
+        "name": "Sky Sports Plus SD Hevc",
+        "id": 148678,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sports Cricket SD Hevc",
+        "id": 148679,
+        "quality": "SD",
+        "icon": true
+      },
+      {
+        "name": "Sky Sports F1 SD Hevc",
+        "id": 148680,
+        "quality": "SD",
+        "icon": true
+      },
+      {
+        "name": "Sky Sports Golf SD Hevc",
+        "id": 148682,
+        "quality": "SD",
+        "icon": true
+      },
+      {
+        "name": "Sky Sports mix SD Hevc",
+        "id": 148684,
+        "quality": "SD",
+        "icon": true
+      }
+    ],
+    "SPORTS | DSTV SUPER (FHD)": [
+      {
+        "name": "DSTV : SUPERSPORT CRICKET (FHD)",
+        "id": 157939,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "DSTV : SUPERSPORTS PREMIER LEAGUE (FHD).",
+        "id": 157940,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "DSTV : SUPERSPORTS FOOTBALL (FHD).",
+        "id": 157942,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "DSTV : SuperSport Action (FHD).",
+        "id": 157948,
+        "quality": "FHD",
+        "icon": true
+      }
+    ],
+    "DSTV | KIDS (FHD)": [
+      {
+        "name": "DSTV: Boomerang (FHD)",
+        "id": 158031,
+        "quality": "FHD",
+        "icon": true
+      }
+    ],
+    "SPORTS | UK SPORTS": [
+      {
+        "name": "SKY SPORTS MAIN EVENT FHD",
+        "id": 186597,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS PREMIER LEAGUE HD ",
+        "id": 186603,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS PREMIER LEAGUE FHD",
+        "id": 186604,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS CRICKET HD",
+        "id": 186605,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS CRICKET FHD",
+        "id": 186606,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS FOOTBALL HD",
+        "id": 186607,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS FOOTBALL FHD",
+        "id": 186612,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS GOLF HD",
+        "id": 186613,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS GOLF FHD",
+        "id": 186614,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS F1 HD",
+        "id": 186615,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS F1 FHD",
+        "id": 186616,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS Plus FHD",
+        "id": 186620,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS MIX HD",
+        "id": 186621,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS MIX FHD",
+        "id": 186622,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS NEWS HD",
+        "id": 186623,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "SKY SPORTS NEWS FHD",
+        "id": 186624,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "TNT SPORT 2 FHD",
+        "id": 186628,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "TNT SPORT 3 FHD",
+        "id": 186629,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "TNT SPORT 4 FHD",
+        "id": 186630,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "TNT SPORT 5 HD",
+        "id": 186631,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "TNT SPORT 6 HD",
+        "id": 186632,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "TNT SPORT 9 HD",
+        "id": 186635,
+        "quality": "HD",
+        "icon": true
+      },
+      {
+        "name": "EUROSPORT 1 FHD",
+        "id": 186637,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "EUROSPORT 2 FHD",
+        "id": 186638,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "UK: SKY SPORTS RACING FHD",
+        "id": 186643,
+        "quality": "FHD",
+        "icon": true
+      },
+      {
+        "name": "TNT SPORT 1 HD.",
+        "id": 199487,
+        "quality": "HD",
+        "icon": true
+      }
+    ],
+    "SPORTS | ARABIC": [
+      {
+        "name": "Sport | Ar: Abu Dhabi Sports 1 HD",
+        "id": 309006,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sport | Ar: Abu Dhabi Sports 2 HD",
+        "id": 309007,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Shahid Sport 1 4k",
+        "id": 605112,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "Shahid Sport 1 HD",
+        "id": 605113,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Shahid Sport 1 SD",
+        "id": 605114,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "Shahid Sport 2 4K",
+        "id": 605115,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "Shahid Sport 2 HD",
+        "id": 605116,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Shahid Sport 2 SD",
+        "id": 605117,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "StarzPlay Sports 1 HD",
+        "id": 605119,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "StarzPlay Sports 1 SD",
+        "id": 605120,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "StarzPlay Sports 2 HD",
+        "id": 605122,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "StarzPlay Sports 2 SD",
+        "id": 605123,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "StarzPlay Sports 3 HD",
+        "id": 605125,
+        "quality": "HD",
+        "icon": false
+      }
+    ],
+    "BEIN MOVIES": [
+      {
+        "name": "beIN MOVIES 4K 1",
+        "id": 274145,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "beIN MOVIES 4K 2",
+        "id": 274146,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "beIN MOVIES 4K 3",
+        "id": 274147,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "beIN MOVIES 4K 4",
+        "id": 274148,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "Bein Movies HD1",
+        "id": 274199,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Bein Movies HD2",
+        "id": 274200,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Bein Movies HD3",
+        "id": 274201,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Bein Movies HD4",
+        "id": 274202,
+        "quality": "HD",
+        "icon": false
+      }
+    ],
+    "MBC ARABIC": [
+      {
+        "name": "MBC 1 HD",
+        "id": 308905,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MBC 2 HD",
+        "id": 308906,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MBC 3 HD",
+        "id": 308907,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MBC 3 FHD",
+        "id": 308908,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "MBC 4 HD",
+        "id": 308909,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MBC 5 HD",
+        "id": 308910,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MBC Action HD",
+        "id": 308912,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MBC Max HD",
+        "id": 308914,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MBC Variety HD",
+        "id": 308915,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MBC Drama HD",
+        "id": 308916,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MBC Drama+ HD",
+        "id": 308917,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MBC Iraq HD",
+        "id": 308919,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MBC Masr 1 HD",
+        "id": 308921,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MBC Masr 2 HD",
+        "id": 308922,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MBC Masr 2 FHD",
+        "id": 308923,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "MBC Wanasah HD",
+        "id": 308925,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MBC Panorama HD",
+        "id": 308927,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MBC FM HD",
+        "id": 308928,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MBC Persia FHD",
+        "id": 308930,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "MBC 1 4K",
+        "id": 308931,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC 2 4K",
+        "id": 308932,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC 3 4K",
+        "id": 308933,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC 4 4K",
+        "id": 308934,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC 5 4K",
+        "id": 308935,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC Action 4K",
+        "id": 308936,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC Bollywood 4K",
+        "id": 308937,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC Drama + 4K",
+        "id": 308938,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC Drama 4K",
+        "id": 308939,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC Iraq 4K",
+        "id": 308940,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC Masr 1 4K",
+        "id": 308941,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC Masr 2 4K",
+        "id": 308942,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC Max 4K",
+        "id": 308943,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC Panorama 4K",
+        "id": 308944,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC Persian 4K",
+        "id": 308945,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC Variety 4K",
+        "id": 308946,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC Wanasah 4K",
+        "id": 308947,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "MBC 1 SD",
+        "id": 308948,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "MBC 2 SD",
+        "id": 308949,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "MBC 3 SD",
+        "id": 308950,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "MBC 4 SD",
+        "id": 308951,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "MBC 5 SD",
+        "id": 308952,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "MBC Action SD",
+        "id": 308953,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "MBC Bollywood SD",
+        "id": 308954,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "MBC Drama SD",
+        "id": 308955,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "MBC Iraq SD",
+        "id": 308956,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "MBC Max SD",
+        "id": 308957,
+        "quality": "SD",
+        "icon": false
+      }
+    ],
+    "ARABIC": [
+      {
+        "name": "Rotana + HD",
+        "id": 309045,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Rotana Aflam + HD",
+        "id": 309047,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Rotana Clip HD",
+        "id": 309048,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Rotana Music HD",
+        "id": 309049,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Rotana Classic HD",
+        "id": 309050,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Rotana Drama HD",
+        "id": 309051,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Rotana Khalijiah HD",
+        "id": 309052,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Rotana Comedy HD",
+        "id": 309053,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Rotana Cinema Egy HD",
+        "id": 309054,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Rotana Cinema KSA HD",
+        "id": 309055,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Rotana Comedy FHD",
+        "id": 309056,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Rotana Classic FHD",
+        "id": 309057,
+        "quality": "FHD",
+        "icon": false
+      }
+    ],
+    "ARABIC NEWS": [
+      {
+        "name": "News | Ar: Al Jazeera HD",
+        "id": 319260,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "News | Ar: Al Jazeera 4K ✦",
+        "id": 319261,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "News | Ar: Al Jazeera Mubasher ✦",
+        "id": 319263,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "News | Ar: Al Jazeera Mubasher 2 ✦",
+        "id": 319264,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "News | En: Al Jazeera English ✦",
+        "id": 319265,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "News | Ar: Sky News Arabic HD ✦",
+        "id": 319272,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "News | Ar: Sky News Arabic SD ✦",
+        "id": 319273,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "News | En: CNN International ✦",
+        "id": 319284,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "News | Ar: France 24 Arabic HD ✦",
+        "id": 319285,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "News | Ar: France 24 Arabic SD ✦",
+        "id": 319286,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "News | En: France 24 English ✦",
+        "id": 319287,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "News | Ar: CNBC Arabiya ✦",
+        "id": 319294,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "QATAR": [
+      {
+        "name": "Qa| Al Jazeera Documentary HD ✦",
+        "id": 319635,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Qa| Al Jazeera 4K ✦",
+        "id": 319638,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "Qa| Al Jazeera HD ✦",
+        "id": 319639,
+        "quality": "HD",
+        "icon": false
+      }
+    ],
+    "ISRAEL": [
+      {
+        "name": "Is: Yes Discovery Channel HD",
+        "id": 348101,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Is: Yes Animal Planet HD",
+        "id": 348102,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Is: Yes History HD",
+        "id": 348103,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Is: Yes TeenNick HD",
+        "id": 348124,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "IS: Yes Sky News",
+        "id": 348131,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Is: Yes TLC",
+        "id": 348135,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Is: Yes MTV 00s",
+        "id": 348136,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "IS: Yes Hot Comedy Central",
+        "id": 348190,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "IS: Yes Hot HBO",
+        "id": 348192,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "REAL 4K (2160P)": [
+      {
+        "name": "UK: SKY SORTS F1 (4K)",
+        "id": 384213,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "UK : SKY SPORTS MAIN EVENTS (4K)",
+        "id": 384215,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "UK: SKY SPORTS 2 (4K)",
+        "id": 384216,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "UK: SKY SPORTS 1 (4K)",
+        "id": 384222,
+        "quality": "4K",
+        "icon": true
+      },
+      {
+        "name": "UHD ▎SKY SPORTS MAIN EVENT [UK]",
+        "id": 581305,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "UHD ▎SKY SPORTS F1 [UK]",
+        "id": 581306,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "UHD ▎SKY SPORTS 1 [UK]",
+        "id": 581307,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "UHD ▎SKY SPORTS 2 [UK]",
+        "id": 688273,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "UHD ▎SKY SPORT [DE]",
+        "id": 688283,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "UHD ▎SKY SPORT BUNDESLIGA [DE]",
+        "id": 688284,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "UHD ▎SPORT TV 1 [PT]",
+        "id": 688307,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "UHD ▎M+ LALIGA TV [ES]",
+        "id": 688310,
+        "quality": "4K",
+        "icon": false
+      }
+    ],
+    "FINLAND": [
+      {
+        "name": "FI: TLC",
+        "id": 556527,
+        "quality": "Unknown",
+        "icon": true
+      }
+    ],
+    "MALAYSIA": [
+      {
+        "name": "MY Nat Geo Wild",
+        "id": 142961,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "MY Euronews",
+        "id": 142988,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "MY Sky News",
+        "id": 142991,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "MY Colors",
+        "id": 142996,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "MY Colors Tamil",
+        "id": 142997,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "UAE": [
+      {
+        "name": "Uae: Dubai TV",
+        "id": 319609,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Uae: Abu Dhabi Al Emarat SD",
+        "id": 319614,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "Uae: Noor Dubai TV",
+        "id": 319617,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "ARABIC MUSIC": [
+      {
+        "name": "Music: MBC FM HD",
+        "id": 319383,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Music: Rotana Music HD",
+        "id": 319388,
+        "quality": "HD",
+        "icon": false
+      }
+    ],
+    "LEBANON": [
+      {
+        "name": "Lb| MTV Lebanon HD ✦",
+        "id": 309089,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Lb| MTV Lebanon 4K ✦",
+        "id": 309090,
+        "quality": "4K",
+        "icon": false
+      }
+    ],
+    "SHAHED BOX": [
+      {
+        "name": "Shahid The Game HD",
+        "id": 308973,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Shahid Selfie HD",
+        "id": 308974,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Shahid Bab Al Hara",
+        "id": 308975,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Shahid Al Kabeer Awi",
+        "id": 308977,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Shahid Al Asouf",
+        "id": 308979,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Shahid Movies Action",
+        "id": 308980,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Shahid Movies Thriller",
+        "id": 308981,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Shahid Freej HD",
+        "id": 308985,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Shahid Naser Al Qassaby",
+        "id": 308986,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Shahid AlThaqafeya HD",
+        "id": 308988,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Shahid Gulli Bil Arabi",
+        "id": 308990,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Shahid Tash HD",
+        "id": 308996,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Shahid Al Arabiya Business HD",
+        "id": 308997,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Shahid Khaleeji HD",
+        "id": 308998,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Shahid Maraya HD",
+        "id": 309002,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Shahid Masrah Masr HD",
+        "id": 309004,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Shahid Ragel We Set Settat HD",
+        "id": 309005,
+        "quality": "HD",
+        "icon": false
+      }
+    ],
+    "EXYU": [
+      {
+        "name": "EX-YU: HBO",
+        "id": 210405,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: HBO 2",
+        "id": 210406,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: HBO 3",
+        "id": 210407,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: HBO MAX",
+        "id": 210469,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: VIASAT HISTORY",
+        "id": 210506,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: DISCOVERY",
+        "id": 210507,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: TLC",
+        "id": 210509,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: HISTORY",
+        "id": 210516,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: NICKELODEON | SI",
+        "id": 210537,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: CARTOON NETWORK | SI",
+        "id": 210540,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: NICKELODEON | HR",
+        "id": 210550,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: DISNEY JUNIOR | SI",
+        "id": 210551,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: NICKTOONS | SI",
+        "id": 210558,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: NICK JR. | SI",
+        "id": 210571,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: NICK TOONS | RS",
+        "id": 210575,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: EUROSPORT 1 | RS",
+        "id": 210618,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: EUROSPORT 1",
+        "id": 210652,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "EX-YU: EUROSPORT 2",
+        "id": 210653,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "ROMANIA": [
+      {
+        "name": "RO: BOOMERANG",
+        "id": 210936,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "RO: CARTOON NETWORK",
+        "id": 210937,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "RO: DISCOVERY CHANNEL",
+        "id": 210945,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "RO: DISCOVERY SCIENCE",
+        "id": 210946,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "RO: DISCOVERY WORLD",
+        "id": 210947,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "RO: DISNEY JUNIOR",
+        "id": 210949,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "RO: HBO 2",
+        "id": 210960,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "RO: HBO 3",
+        "id": 210961,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "RO: HBO ROMANIA",
+        "id": 210962,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "RO: HISTORY CHANNEL",
+        "id": 210963,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "RO: INVESTIGATION DISCOVERY",
+        "id": 210965,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "RO: NAT GEO WILD",
+        "id": 210972,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "RO: NICKELODEON",
+        "id": 210975,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "RO: NICKTOONS",
+        "id": 210976,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "RO: TLC",
+        "id": 210989,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "RO: VIASAT HISTORY",
+        "id": 211000,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "CANADA (LIVE EVENT ONLY)": [
+      {
+        "name": "CA-DAZN 38: UEFA Conference League| Strasbourg vs. Jagiellonia Białystok| Thu 23 Oct 12:45 PM",
+        "id": 615933,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "CA-DAZN 39: UEFA Conference League| Shakhtar Donetsk vs. Legia Warsaw| Thu 23 Oct 12:45 PM",
+        "id": 615934,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "DAZN CA 42 :",
+        "id": 615937,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "DAZN CA 43 :",
+        "id": 615938,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "DAZN CA 44 :",
+        "id": 615939,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "DAZN CA 46 :",
+        "id": 615941,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "DAZN CA 47 :",
+        "id": 615942,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "DAZN CA 48 :",
+        "id": 615943,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "DAZN CA 49 :",
+        "id": 615944,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "DAZN CA 50 :",
+        "id": 615945,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "CANADA": [
+      {
+        "name": "CA CNN Canada",
+        "id": 615960,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "CA MTV",
+        "id": 615994,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "CA Disney La Chain",
+        "id": 616040,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "CA GOLF",
+        "id": 616045,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "CA HBO 1",
+        "id": 616046,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "CA La Chaine Disney (FR)",
+        "id": 616052,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "CA TLC",
+        "id": 616067,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "CA Bein Sports HD",
+        "id": 616098,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "CA NFL Network",
+        "id": 616102,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "CA Fox Sports Racing",
+        "id": 616107,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "CA HPITV WEST",
+        "id": 616149,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "CA La Chaine Disney (FR))",
+        "id": 616195,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "CA Fox News HD",
+        "id": 616240,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "CA Disney Junior",
+        "id": 616272,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "CA Nickelodeon",
+        "id": 616276,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "CA National Geographic",
+        "id": 616292,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "SPORTS | BEIN": [
+      {
+        "name": "beIN SPORTS 4K 1",
+        "id": 652310,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "beIN SPORTS  4K 2",
+        "id": 652311,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "beIN SPORTS  4K 3",
+        "id": 652312,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "beIN SPORTS 4K 4",
+        "id": 652313,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "beIN SPORTS 4K 5",
+        "id": 652314,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "beIN SPORTS 4K 6",
+        "id": 652315,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "beIN SPORTS 4K 7",
+        "id": 652316,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "beIN SPORTS 4K 8",
+        "id": 652317,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "beIN SPORTS 4K 9",
+        "id": 652318,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports Global 4K",
+        "id": 652322,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports HD1 1080",
+        "id": 652333,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports HD2 1080",
+        "id": 652334,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports HD3 1080",
+        "id": 652335,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports HD4 1080",
+        "id": 652336,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports HD5 1080",
+        "id": 652337,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports HD6 1080",
+        "id": 652338,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports HD7 1080",
+        "id": 652339,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports HD8 1080",
+        "id": 652340,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports HD9 1080",
+        "id": 652341,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports English 1 1080",
+        "id": 652345,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports English 2 1080",
+        "id": 652346,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports French HD1 1080",
+        "id": 652347,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports French HD2 1080",
+        "id": 652348,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "BeIN Sports Global SD",
+        "id": 652385,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports Max 1 4K",
+        "id": 652395,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports Max 2 4K",
+        "id": 652396,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports Max 3 4K",
+        "id": 652397,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports Max 4 4K",
+        "id": 652398,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports Max 1 FHD",
+        "id": 652399,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports Max 2 FHD",
+        "id": 652400,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports Max 4 FHD",
+        "id": 652402,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports Max 1 HD",
+        "id": 652403,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports Max 2 HD",
+        "id": 652404,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports Max 3 HD",
+        "id": 652405,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports Max 4 HD",
+        "id": 652406,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports Max 1 SD",
+        "id": 652407,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports Max 2 SD",
+        "id": 652408,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports Max 3 SD",
+        "id": 652409,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "Bein Sports Max 4 SD",
+        "id": 652410,
+        "quality": "SD",
+        "icon": false
+      }
+    ],
+    "FRANCE": [
+      {
+        "name": "FRA | M6 4K (Local)",
+        "id": 658999,
+        "quality": "4K",
+        "icon": false
+      },
+      {
+        "name": "FRA | TF1 HD (Local)",
+        "id": 659000,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | France 2 HD (Local)",
+        "id": 659001,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | France 3 HD (Local)",
+        "id": 659002,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | France 5 HD (Local)",
+        "id": 659004,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | M6 HD (Local)",
+        "id": 659005,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FR | Canal+ Sport 360",
+        "id": 659021,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "FRA | TF1 Series Films HD (Local)",
+        "id": 659027,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | RMC Story HD (Local)",
+        "id": 659030,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | RMC Decouverte HD (Local)",
+        "id": 659031,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | Eurosport 1 HD (Local)",
+        "id": 659036,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | beIN SPORTS 1 HD (Local)",
+        "id": 659037,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | beIN SPORTS 2 HD (Local)",
+        "id": 659038,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | beIN SPORTS 3 HD (Local)",
+        "id": 659039,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | Disney Channel",
+        "id": 659040,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "FRA | National Geographic HD (Local)",
+        "id": 659050,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | TLC HD (Local)",
+        "id": 659052,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | Discovery Channel HD (Local)",
+        "id": 659053,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | Discovery Investigation HD (Local)",
+        "id": 659054,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | M6 Music HD (Local)",
+        "id": 659064,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | MTV HD (Local)",
+        "id": 659065,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | MTV Hits HD (Local)",
+        "id": 659067,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | Comedy Central HD (Local)",
+        "id": 659075,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | Nickelodeon HD (Local)",
+        "id": 659092,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | Nickelodeon +1 HD (Local)",
+        "id": 659093,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | Nickelodeon Junior HD (Local)",
+        "id": 659094,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | Nickelodeon Teen HD (Local)",
+        "id": 659095,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | Cartoon Network HD (Local)",
+        "id": 659098,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | Boomerang HD (Local)",
+        "id": 659100,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | BFM 2 HD (Local)",
+        "id": 659105,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | BFM Business HD (Local)",
+        "id": 659106,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | Euronews HD (Local)",
+        "id": 659108,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | France 24 HD (Local)",
+        "id": 659110,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | Journal du Golf HD (Local)",
+        "id": 659120,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FR | Golf+",
+        "id": 659125,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "FRA | BFM Alsace HD (Local)",
+        "id": 659169,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | BFM D!CI Haute Provence HD (Local)",
+        "id": 659170,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | BFM DICI Alpes Sud HD (Local)",
+        "id": 659171,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | BFM Grand Lille HD (Local)",
+        "id": 659172,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | BFM Grand Littoral HD (Local)",
+        "id": 659173,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | BFM Lyon HD (Local)",
+        "id": 659174,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | BFM Marseille Provence HD (Local)",
+        "id": 659175,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | BFM Nice C te d'Azur HD (Local)",
+        "id": 659176,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | BFM Normandie HD (Local)",
+        "id": 659177,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | BFM Toulon Var HD (Local)",
+        "id": 659178,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | beIN SPORTS MAX 6 HD (Local)",
+        "id": 659181,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | beIN SPORTS MAX 7 HD (Local)",
+        "id": 659182,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | beIN SPORTS MAX 8 HD (Local)",
+        "id": 659183,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | beIN SPORTS MAX 9 HD (Local)",
+        "id": 659184,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "FRA | beIN SPORTS MAX 10 HD (Local)",
+        "id": 659185,
+        "quality": "HD",
+        "icon": false
+      }
+    ],
+    "GERMANY": [
+      {
+        "name": "============ Sky Germany (HEVC) Local Streams ============",
+        "id": 659186,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Cinema Premieren -HD (Local) ''hevc h.265''",
+        "id": 659187,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Cinema Family -HD (Local) ''hevc h.265''",
+        "id": 659188,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Cinema Action -HD (Local) ''hevc h.265''",
+        "id": 659189,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Cinema Best Of -HD (Local) ''hevc h.265''",
+        "id": 659190,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Cinema Highlights -HD (Local) ''hevc h.265''",
+        "id": 659191,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Cinema Classics -HD (Local) ''hevc h.265''",
+        "id": 659192,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Krimi -HD (Local) ''hevc h.265''",
+        "id": 659193,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky One -HD (Local) ''hevc h.265''",
+        "id": 659194,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Crime -HD (Local) ''hevc h.265''",
+        "id": 659195,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Atlantic -HD (Local) ''hevc h.265''",
+        "id": 659196,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Showcase -HD (Local) ''hevc h.265''",
+        "id": 659197,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Nature -HD (Local) ''hevc h.265''",
+        "id": 659198,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Replay -HD (Local) ''hevc h.265''",
+        "id": 659199,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Documentaries -HD (Local) ''hevc h.265''",
+        "id": 659200,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Discovery -HD (Local) ''hevc h.265''",
+        "id": 659208,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "HISTORY Channel -HD (Local) ''hevc h.265''",
+        "id": 659209,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Cartoon Network -SD (Local) ''hevc h.265''",
+        "id": 659212,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "============ Sky Germany (H.264) Local Streams ============",
+        "id": 659215,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Cinema Premieren -HD (Local) ''H.264''",
+        "id": 659216,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Cinema Family -HD (Local) ''H.264''",
+        "id": 659217,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Cinema Action -HD (Local) ''H.264''",
+        "id": 659218,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Cinema Special -HD (Local) ''H.264''",
+        "id": 659219,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Cinema Classics -HD (Local) ''H.264''",
+        "id": 659220,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Krimi -HD (Local) ''H.264''",
+        "id": 659221,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky One -HD (Local) ''H.264''",
+        "id": 659222,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Atlantic -HD (Local) ''H.264''",
+        "id": 659223,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Crime -HD (Local) ''H.264''",
+        "id": 659224,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Showcase -HD (Local) ''H.264''",
+        "id": 659225,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Replay -HD (Local) ''H.264''",
+        "id": 659226,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Nature -HD (Local) ''H.264''",
+        "id": 659227,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Documentaries -HD (Local) ''H.264''",
+        "id": 659228,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "History -HD (Local) ''H.264''",
+        "id": 659237,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Cartoon Network -HD (Local) ''H.264''",
+        "id": 659240,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "RTL Haus & Garten -SD (Local)",
+        "id": 659278,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "Comedy Central -HD Local (Magneta)",
+        "id": 659288,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "National Geographic -HD (Local) Magenta",
+        "id": 659306,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "National Geographic Wild -HD (Local) Magenta",
+        "id": 659307,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "TLC -HD (Local) Magneta",
+        "id": 659309,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "MTV -HD (Local) Magneta",
+        "id": 659328,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Eurosport 1 -HD (Local) Magneta",
+        "id": 659346,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Disney Channel -HD (Local) Magneta",
+        "id": 659366,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "============ Sky Sport & Bundesliga HEVC Local Streams ============",
+        "id": 659425,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "DAZN 1 -HD (Local) ''hevc h.265''",
+        "id": 659426,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "DAZN 2 -HD (Local) ''hevc h.265''",
+        "id": 659427,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport News-HD (Local) ''hevc h.265''",
+        "id": 659428,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport Mix -HD (Local) ''hevc h.265''",
+        "id": 659429,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport Top Event -HD (Local) ''hevc h.265''",
+        "id": 659430,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport Premier League -HD (Local) ''hevc h.265''",
+        "id": 659431,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport Bundesliga -HD (Local) ''hevc h.265''",
+        "id": 659432,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport Austria 1 -HD (Local) ''hevc h.265''",
+        "id": 659433,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport F1 -HD (Local) ''hevc h.265''",
+        "id": 659434,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport Tennis -HD (Local) ''hevc h.265''",
+        "id": 659435,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport Golf -HD (Local) ''hevc h.265''",
+        "id": 659436,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Bundesliga Conferenze (Local) (only during events)''hevc h.265''",
+        "id": 659438,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Bundesliga 1 (Local) (only during events)''hevc h.265''",
+        "id": 659439,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Bundesliga 2 (Local) (only during events)''hevc h.265''",
+        "id": 659440,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Bundesliga 4 (Local) (only during events)''hevc h.265''",
+        "id": 659442,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Bundesliga 6 (Local) (only during events)''hevc h.265''",
+        "id": 659444,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Bundesliga 7 (Local) (only during events)''hevc h.265''",
+        "id": 659445,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Bundesliga 8 (Local) (only during events)''hevc h.265''",
+        "id": 659446,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Bundesliga 10 (Local) (only during events)''hevc h.265''",
+        "id": 659448,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport Austria 2 -HD (Local) (only during events)''hevc h.265''",
+        "id": 659449,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport Austria 3 -HD (Local) (only during events)''hevc h.265''",
+        "id": 659450,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport Austria 4 -HD (Local) (only during events)''hevc h.265''",
+        "id": 659451,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport Austria 5 -HD (Local) (only during events)''hevc h.265''",
+        "id": 659452,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport Austria 6 -HD (Local) (only during events)''hevc h.265''",
+        "id": 659453,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport Austria 7 -HD (Local) (only during events)''hevc h.265''",
+        "id": 659454,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport 2 (Local) (only during events)''hevc h.265''",
+        "id": 659455,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport 3 (Local) (only during events)''hevc h.265''",
+        "id": 659456,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport 4 (Local) (only during events)''hevc h.265''",
+        "id": 659457,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport 5 (Local) (only during events)''hevc h.265''",
+        "id": 659458,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport 6 (Local) (only during events)''hevc h.265''",
+        "id": 659459,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport 7 (Local) (only during events)''hevc h.265''",
+        "id": 659460,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport 8 (Local) (only during events)''hevc h.265''",
+        "id": 659461,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport 9 (Local) (only during events)''hevc h.265''",
+        "id": 659462,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "============ Sky Sport & Bundesliga H.264 Local Streams ============",
+        "id": 659464,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "SKY Sport NEWS -HD (Local) ''H.264''",
+        "id": 659465,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport Premier League -HD (Local) ''H.264''",
+        "id": 659466,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport Tennis -HD (Local) ''H.264''",
+        "id": 659469,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport F1 -HD (Local) ''H.264''",
+        "id": 659470,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport Golf -HD (Local) ''H.264''",
+        "id": 659471,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "Sky Bundesliga 1 (Local) ''H.264''",
+        "id": 659472,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Bundesliga 2 (Local) (only during events)''H.264''",
+        "id": 659473,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Bundesliga 3 (Local) (only during events)''H.264''",
+        "id": 659474,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Bundesliga 4 (Local) (only during events)''H.264''",
+        "id": 659475,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Bundesliga 5 (Local) (only during events)''H.264''",
+        "id": 659476,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Bundesliga 6  (Local) (only during events)''H.264''",
+        "id": 659477,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Bundesliga 7 (Local) (only during events)''H.264''",
+        "id": 659478,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport 5 (Local) (only during events)''H.264''",
+        "id": 659486,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport 6 (Local) (only during events)''H.264''",
+        "id": 659487,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport 8 (Local) (only during events)''H.264''",
+        "id": 659489,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "Sky Sport 9 (Local) (only during events)''H.264''",
+        "id": 659490,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "NETHERLANDS": [
+      {
+        "name": "NL: ESPN 1",
+        "id": 659539,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "NL: ESPN 2",
+        "id": 659540,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "NL: ESPN 3",
+        "id": 659541,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "NL: ESPN 4",
+        "id": 659542,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "NL: Eurosport 1",
+        "id": 659543,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "NL: Eurosport 2",
+        "id": 659544,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "NL: Discovery",
+        "id": 659545,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "NL: Discovery Science",
+        "id": 659546,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "NL: National geographic",
+        "id": 659547,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "NL: National Geographic WILD",
+        "id": 659548,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "NL: Animal Planet",
+        "id": 659549,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "NL: TLC",
+        "id": 659550,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "NL: Disney Channel",
+        "id": 659562,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "NL: Nicktoons",
+        "id": 659564,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "NL: Nick Jr.",
+        "id": 659566,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "NL: Cartoon Network",
+        "id": 659567,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "NL: MTV",
+        "id": 659578,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "Poland": [
+      {
+        "name": "PL | Canal+ | Canal+ 1 FHD",
+        "id": 660191,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "PL | Canal+ | Canal+ PREMIUM FHD",
+        "id": 660194,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "PL | Canal+ | Canal+ FILM FHD",
+        "id": 660195,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "PL | Canal+ | Canal+ Seriale FHD",
+        "id": 660196,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "PL | Canal+ | Canal+ SPORT 1 FHD",
+        "id": 660200,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "PL | Canal+ | Canal+ EXTRA 1 FHD",
+        "id": 660205,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "PL | Canal+ | Canal+ EXTRA 2 FHD",
+        "id": 660206,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "PL | Canal+ | Canal+ EXTRA 3 FHD",
+        "id": 660207,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "PL | Canal+ | Canal+ EXTRA 4 FHD",
+        "id": 660208,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "PL | Canal+ | Canal+ EXTRA 5 FHD",
+        "id": 660209,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "PL | Canal+ | Canal+ EXTRA 6 FHD",
+        "id": 660210,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "PL | Canal+ | ALE KINO+ SD",
+        "id": 660366,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "PL | Canal+ | wPolsce24 SD",
+        "id": 660392,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | Polsat Comedy Central Extra HD",
+        "id": 660442,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | Comedy Central Polska HD",
+        "id": 660443,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | HBO 3 HD",
+        "id": 660452,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | NICK JR SD",
+        "id": 660461,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | NickToons HD",
+        "id": 660462,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | Teen Nick HD",
+        "id": 660463,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | Cartoon Network HD",
+        "id": 660464,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | BBC CBEEBIES HD",
+        "id": 660466,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | Viasat History HD",
+        "id": 660477,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | Discovery Channel HD",
+        "id": 660480,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | Discovery Science HD",
+        "id": 660481,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | Discovery Life HD",
+        "id": 660483,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | History HD",
+        "id": 660486,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | History2 HD",
+        "id": 660487,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | Animal Planet HD",
+        "id": 660488,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | National Geographic Wild HD",
+        "id": 660491,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | Nat Geo People HD",
+        "id": 660493,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | TLC HD HD",
+        "id": 660498,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PolsatBoxGo | MTV POLSKA HD",
+        "id": 660503,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PlayerPL | Cartoon Network HD",
+        "id": 660551,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "PL | PlayerPL | Canal+ Dokument FHD",
+        "id": 660563,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "PL | PlayerPL | Canal+ Sport FHD",
+        "id": 660564,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "PL | PlayerPL | Canal+ Sport 2 FHD",
+        "id": 660565,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "PL | PlayerPL | Canal+ Sport 3 FHD",
+        "id": 660566,
+        "quality": "FHD",
+        "icon": false
+      },
+      {
+        "name": "PL | PlayerPL | Canal+ Sport 4 FHD",
+        "id": 660567,
+        "quality": "FHD",
+        "icon": false
+      }
+    ],
+    " DENMARK": [
+      {
+        "name": "DK: DISCOVERY -HD (Local)",
+        "id": 660662,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "DK: HISTORY -HD (Local)",
+        "id": 660664,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "DK: VIASAT HISTORY -HD (Local)",
+        "id": 660681,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "DK: MTV -HD (Local)",
+        "id": 660684,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "DK: NAT GEO -HD (Local)",
+        "id": 660687,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "DK: NICKELODEON -SD (Local)",
+        "id": 660688,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "DK: NICKJR. -SD (Local)",
+        "id": 660689,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "DK: NICKTOONS -SD (Local)",
+        "id": 660690,
+        "quality": "SD",
+        "icon": false
+      },
+      {
+        "name": "DK: TLC -HD (Local)",
+        "id": 660691,
+        "quality": "HD",
+        "icon": false
+      }
+    ],
+    "SWEDEN": [
+      {
+        "name": "SE: Discovery Channel",
+        "id": 660714,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "SE: National Geographic",
+        "id": 660715,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "SE: ID Investigation Discovery (S)",
+        "id": 660719,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "SE: HISTORY",
+        "id": 660720,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "SE: HISTORY 2",
+        "id": 660721,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "SE: Nickelodeon",
+        "id": 660724,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "SE: Nick Jr.",
+        "id": 660725,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "SE: Nicktoons",
+        "id": 660726,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "SE: Cartoon Network",
+        "id": 660727,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "SE: Eurosport 1",
+        "id": 660741,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "SE: Eurosport 2",
+        "id": 660742,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "ALBANIA": [
+      {
+        "name": "ALB: A2 CNN",
+        "id": 660850,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "ALB: MetiTV Max",
+        "id": 660994,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "ALB: MetiTV Horror",
+        "id": 660997,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "ALB: MetiTV Comedy",
+        "id": 660998,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "ALB: MTV Kosova",
+        "id": 661034,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "ALB: Diasport TV",
+        "id": 661043,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "AUSTRIA": [
+      {
+        "name": "AT | TLC Austria -HD (Local)",
+        "id": 661126,
+        "quality": "HD",
+        "icon": false
+      },
+      {
+        "name": "AT | MTV Austria -HD (Local)",
+        "id": 661127,
+        "quality": "HD",
+        "icon": false
+      }
+    ],
+    "BULGARIA": [
+      {
+        "name": "BG: Hbo",
+        "id": 661257,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: Hbo 2",
+        "id": 661258,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: Hbo 3",
+        "id": 661259,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: Showtime 1",
+        "id": 661273,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: Showtime 2",
+        "id": 661274,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: Nickelodeon",
+        "id": 661295,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: Nick Junior",
+        "id": 661296,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: Nicktoons",
+        "id": 661297,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: Cartoon Network",
+        "id": 661299,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: Disney Channel",
+        "id": 661301,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: Disney Junior",
+        "id": 661302,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: Euronews Tv",
+        "id": 661312,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: MTV",
+        "id": 661345,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: Mtv Hits",
+        "id": 661346,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: MTV Live",
+        "id": 661347,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: MTV Club",
+        "id": 661348,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: Discovery Channel",
+        "id": 661373,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: Discovery ID Xtra",
+        "id": 661374,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: National Geographic",
+        "id": 661376,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: Animal Planet",
+        "id": 661378,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: Viasat History",
+        "id": 661382,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: History Channel",
+        "id": 661383,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: History Channel 2",
+        "id": 661384,
+        "quality": "Unknown",
+        "icon": false
+      },
+      {
+        "name": "BG: TLC",
+        "id": 661388,
+        "quality": "Unknown",
+        "icon": false
+      }
+    ],
+    "NFL (LIVE ONLY MATCH TIME)": [
+      {
+        "name": "NFL || NFL NETWORK ᴴᴰ",
+        "id": 402090,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "NFL || ESPN ᴴᴰ",
+        "id": 402091,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "NFL || CNBC ᴴᴰ",
+        "id": 402093,
+        "quality": "Unknown",
+        "icon": true
+      },
+      {
+        "name": "NFL || SKY SPORTS ᴴᴰ",
+        "id": 402095,
+        "quality": "Unknown",
+        "icon": true
+      }
+    ],
+    "MALAYALAM | MOVIES": [
+      {
+        "name": "MAL | ASIANET MOVIES  SD",
+        "id": 9031,
+        "quality": "SD",
+        "icon": true
+      },
+      {
+        "name": "MAL | ASIANET MOVIES 4K",
+        "id": 177842,
+        "quality": "4K",
+        "icon": true
+      }
+    ],
+    "ENGLISH Movies 24/7": [
+      {
+        "name": "ENGLISH-DISNEY MOVIES HD",
+        "id": 135885,
+        "quality": "HD",
+        "icon": false
+      }
+    ]
+  },
+  "noise_by_cat": {},
+  "dupes_by_cat": {
+    "PUNJABI": [
+      [
+        "PB | PTC PUNJABI",
+        "PB: PTC PUNJABI"
+      ],
+      [
+        "PB : Namdhari TV",
+        "PB: NAMDHARI TV"
+      ],
+      [
+        "PB : DESI CHANNEL HD",
+        "PB: DESI CHANNEL"
+      ],
+      [
+        "PB : 5AAB TV",
+        "PB: 5AAB TV"
+      ]
+    ],
+    "INDIA ENTERTAINMENT": [
+      [
+        "IN: SONY HD",
+        "IN: SONY (4K)."
+      ],
+      [
+        "IN: SONY (FHD)",
+        "IN: SONY (4K)."
+      ],
+      [
+        "IN: STAR PLUS HD",
+        "IN: STAR PLUS (4K)."
+      ],
+      [
+        "IN: STAR PLUS FHD",
+        "IN: STAR PLUS (4K)."
+      ],
+      [
+        "IN: STAR PLUS (FHD)",
+        "IN: STAR PLUS (4K)."
+      ],
+      [
+        "IN: COLORS FHD",
+        "IN: COLORS (4K)."
+      ],
+      [
+        "IN: Colors (FHD)",
+        "IN: COLORS (4K)."
+      ],
+      [
+        "IN: STAR BHARAT HD",
+        "IN: STAR BHARAT (4K)."
+      ],
+      [
+        "IN: STAR BHARAT (FHD)",
+        "IN: STAR BHARAT (4K)."
+      ],
+      [
+        "IN: SONY SAB HD",
+        "IN: SONY SAB (4K)."
+      ],
+      [
+        "IN: & TV HD",
+        "IN: &TV (4K)."
+      ],
+      [
+        "IN: &TV (FHD)",
+        "IN: &TV (4K)."
+      ],
+      [
+        "IN: ZEE TV FHD",
+        "IN: ZEE TV HD"
+      ],
+      [
+        "IN: ZEE TV (FHD)",
+        "IN: ZEE TV HD"
+      ]
+    ],
+    "INDIA HINDI MOVIES": [
+      [
+        "IN: SONY MAX HD",
+        "IN: SONY MAX (4K)."
+      ],
+      [
+        "IN: SONY MAX (FHD)",
+        "IN: SONY MAX (4K)."
+      ],
+      [
+        "IN: STAR GOLD HD",
+        "IN: STAR GOLD (4K)."
+      ],
+      [
+        "IN: Star GOLD (FHD)",
+        "IN: STAR GOLD (4K)."
+      ],
+      [
+        "IN: STAR GOLD SELECT HD",
+        "IN: STAR GOLD SELECT (4K)."
+      ],
+      [
+        "IN: Star Gold SELECT (FHD)",
+        "IN: STAR GOLD SELECT (4K)."
+      ],
+      [
+        "IN: ZEE CINEMA HD",
+        "IN: ZEE CINEMA (4K)."
+      ],
+      [
+        "IN: Colors Cineplex (FHD)",
+        "IN: Colors Cineplex (4K)."
+      ],
+      [
+        "IN: & XPLOR (FHD)",
+        "IN: &XPLOR (4K)"
+      ]
+    ],
+    "INDIA ENGLISH MOVIES": [
+      [
+        "IN: SONY PIX HD",
+        "IN: SONY PIX (4K)."
+      ],
+      [
+        "IN: & PRIVE HD",
+        "IN: &PRIVE (4K)."
+      ],
+      [
+        "IN: & FLIX HD",
+        "IN: &FLIX (4K)."
+      ],
+      [
+        "IN: COLORS INFINITY HD",
+        "IN: Colors INFINITY (4K)."
+      ],
+      [
+        "IN: & PRIVE (FHD)",
+        "IN: &PRIVE (4K)."
+      ],
+      [
+        "IN: SONY PIX (FHD)",
+        "IN: SONY PIX (4K)."
+      ],
+      [
+        "IN: MN+ (FHD)",
+        "IN: MN+ (4K)."
+      ],
+      [
+        "IN: STAR MOVIES (FHD)",
+        "IN: STAR MOVIES HD"
+      ],
+      [
+        "IN: TLC (FHD)",
+        "IN: TLC (4K)."
+      ],
+      [
+        "IN: ZEE Cafe (FHD)",
+        "IN: ZEE CAFE (4K)."
+      ],
+      [
+        "IN: Colors INFINITY (FHD)",
+        "IN: Colors INFINITY (4K)."
+      ],
+      [
+        "IN: STAR MOVIES SELECT (FHD)",
+        "IN: STAR MOVIES SELECT HD"
+      ],
+      [
+        "IN: MNX (4K)",
+        "IN: MNX HD"
+      ]
+    ],
+    "INDIA DOCUMENTARY": [
+      [
+        "IN: ANIMAL PLANET HD",
+        "IN: ANIMAL PLANET (4K)."
+      ],
+      [
+        "IN: ANIMAL PLANET (FHD)",
+        "IN: ANIMAL PLANET (4K)."
+      ],
+      [
+        "IN: HISTORY TV (FHD)",
+        "IN: HISTORY TV (4K)."
+      ],
+      [
+        "IN: DISCOVERY (FHD)",
+        "IN: DISCOVERY (4K)."
+      ],
+      [
+        "IN: National GEO (FHD)",
+        "IN: National GEO (4K)."
+      ],
+      [
+        "IN: NAT Geo Wild (FHD)",
+        "IN: NAT Geo Wild (4K)."
+      ]
+    ],
+    "KIDS": [
+      [
+        "UK : CARTOON NETWORK HD",
+        "US: Cartoon Network"
+      ],
+      [
+        "IN : CARTOON NETWORK HD",
+        "US: Cartoon Network"
+      ],
+      [
+        "IN: Nick+ FHD",
+        "IN: NICK (4K)."
+      ]
+    ],
+    "BANGLA": [
+      [
+        "BD: ZEE BANGLA HD",
+        "BD: ZEE BANGLA (4K)."
+      ],
+      [
+        "BD: Star Jalsa (HD)",
+        "BD : Star Jalsa HD"
+      ],
+      [
+        "BD: Star Jalsha (FHD)",
+        "BD: STAR JALSHA (4K)."
+      ],
+      [
+        "BD: JALSHA MOVIES (FHD)",
+        "BD: JALSHA MOVIES (4K)."
+      ],
+      [
+        "BD: ZEE BANGLA (FHD)",
+        "BD: ZEE BANGLA (4K)."
+      ],
+      [
+        "BD: COLORS BANGLA (FHD)",
+        "BD: COLORS BANGLA (4K)."
+      ]
+    ],
+    "TELUGU": [
+      [
+        "Telugu: Etv HD",
+        "Telugu: ETV (4K)."
+      ],
+      [
+        "Telugu: ETV (FHD)",
+        "Telugu: ETV (4K)."
+      ],
+      [
+        "Telugu: STAR-MAA (FHD)",
+        "Telugu: STAR-MAA (4K)."
+      ],
+      [
+        "Telugu: STAR-MAA-MOVIE (FHD)",
+        "Telugu: STAR-MAA-MOVIE (4K)."
+      ],
+      [
+        "Telugu: GEMINI (FHD)",
+        "Telugu: GEMINI (4K)."
+      ],
+      [
+        "Telugu: ZEE-TELUGU (FHD)",
+        "Telugu: ZEE-TELUGU (4K)."
+      ],
+      [
+        "Telugu: ZEE-CINEMALU (FHD)",
+        "Telugu: ZEE-CINEMALU (4K)."
+      ]
+    ],
+    "MARATHI": [
+      [
+        "Marathi: STAR-PRAVAH (FHD)",
+        "Marathi: STAR-PRAVAH (4K)."
+      ],
+      [
+        "Marathi: ZEE Marathi (FHD)",
+        "Marathi: ZEE MARATHI HD"
+      ],
+      [
+        "Marathi: ZEE TALKIES (FHD)",
+        "Marathi: ZEE TALKIES (4K)."
+      ]
+    ],
+    "KANNADA": [
+      [
+        "Kand: UDAYA TV FHD",
+        "Kand: Udaya TV HD"
+      ],
+      [
+        "Kand: UDAYA TV FHD",
+        "Kand: Udaya TV HD"
+      ],
+      [
+        "Kannada: STAR-SUVARNA (FHD)",
+        "Kannada: STAR-SUVARNA (4k)."
+      ],
+      [
+        "Kannada: COLORS_KANNADA (FHD)",
+        "Kannada: COLORS_KANNADA (4K)."
+      ],
+      [
+        "Kannada: UDAYA (FHD)",
+        "Kannada: UDAYA (4K)."
+      ],
+      [
+        "Kannada: ZEE-KANNADA (FHD)",
+        "Kannada: ZEE-KANNADA (4K)."
+      ]
+    ],
+    " SPORTS | INDIA": [
+      [
+        "IN: Star Sports Select 1 (FHD)",
+        "IN: STAR SPORTS SELECT 1 (4K)."
+      ],
+      [
+        "IN: SONY TEN 5 (FHD)",
+        "IN: SONY TEN 5 (4K)."
+      ]
+    ],
+    "CRICKET": [
+      [
+        "CRIC || SUPERSPORTS ᴴᴰ",
+        "CRIC || SUPERSPORTS ᴴᴰ"
+      ],
+      [
+        "CRIC || SKY SPORTS CRIC ⁴ᵏ",
+        "CRIC || SKY SPORTS CRIC ᴴᴰ"
+      ],
+      [
+        "CRIC || SKY SPORTS CRIC ⁴ᵏ",
+        "CRIC || SKY SPORTS CRIC ᴴᴰ"
+      ],
+      [
+        "CRIC || SKY SPORTS CRIC ⁴ᵏ",
+        "CRIC || SKY SPORTS CRIC ᴴᴰ"
+      ],
+      [
+        "CRIC || WILLOW SPORTS ᴴᴰ",
+        "CRIC || WILLOW SPORTS ᴴᴰ"
+      ],
+      [
+        "CRIC || PTV SPORTS ⁴ᵏ",
+        "CRIC || PTV SPORTS ᴴᴰ"
+      ],
+      [
+        "CRIC || A SPORTS ⁴ᵏ",
+        "CRIC || A SPORTS ᴴᴰ"
+      ],
+      [
+        "CRIC || STAR SPORTS 1 ENG ᶠᴴᴰ",
+        "CRIC || STAR SPORTS 1 ENG ᴴᴰ"
+      ],
+      [
+        "CRIC || STAR SPORTS 1 ENG ⁴ᵏ",
+        "CRIC || STAR SPORTS 1 ENG ᴴᴰ"
+      ],
+      [
+        "CRIC || STAR SPORTS 2 ENGLISH ᶠᴴᴰ",
+        "CRIC || STAR SPORTS 2 ENGLISH ᴴᴰ"
+      ],
+      [
+        "CRIC || STAR SPORTS 2 ENGLISH ⁴ᵏ",
+        "CRIC || STAR SPORTS 2 ENGLISH ᴴᴰ"
+      ],
+      [
+        "CRIC || STAR SPORTS 1 HINDI ᶠᴴᴰ",
+        "CRIC || STAR SPORTS 1 HINDI ᴴᴰ"
+      ],
+      [
+        "CRIC || STAR SPORTS 1 HINDI ⁴ᵏ",
+        "CRIC || STAR SPORTS 1 HINDI ᴴᴰ"
+      ],
+      [
+        "CRIC || T SPORTS ᴴᴰ",
+        "CRIC || T SPORTS ᴴᴰ"
+      ],
+      [
+        "CRIC || T SPORTS ᴴᴰ",
+        "CRIC || T SPORTS ᴴᴰ"
+      ]
+    ],
+    "SPORTS | RUGBY": [
+      [
+        "SKY SPORTS ACTION FHD",
+        "SKY SPORTS ACTION HD"
+      ]
+    ],
+    "FOOTBALL": [
+      [
+        "SUPERSPORTS PSL (FHD)",
+        "SUPERSPORTS PSL HD"
+      ],
+      [
+        "Sky Sports Football (FHD)",
+        "SKY SPORTS FOOTBALL"
+      ],
+      [
+        "Sky Sports Premier League (FHD)",
+        "Sky Sports Premier League HD"
+      ],
+      [
+        "SUPERSPORTS FOOTBALL (FHD)",
+        "SUPERSPORTS FOOTBALL HD"
+      ],
+      [
+        "SUPERSPORTS LALIGA (FHD)",
+        "SUPERSPORTS LALIGA HD"
+      ],
+      [
+        "SUPERSPORTS PREMIER LEAGUE (FHD)",
+        "SUPERSPORTS PREMIER LEAGUE HD"
+      ]
+    ],
+    "TAMIL | ENTERTAINMENT": [
+      [
+        "Tamil: VIJAY TV (FHD) ",
+        "Tamil: VIJAY TV (4K)."
+      ],
+      [
+        "TM: STAR VIJAY HD",
+        "TM: STAR VIJAY HD"
+      ],
+      [
+        "Tamil: Zee Tamil (FHD)",
+        "Tamil: Zee Tamil (4K)."
+      ],
+      [
+        "Tamil: Colors Tamil (FHD)",
+        "Tamil: Colors Tamil (4K)."
+      ],
+      [
+        "Tamil: SUNTV (FHD)",
+        "Tamil: SUNTV (4K)."
+      ],
+      [
+        "TM: SUN TV HD",
+        "TM: SUN TV HD"
+      ],
+      [
+        "TM: SUN TV HD",
+        "TM: SUN TV HD"
+      ],
+      [
+        "TM: SUN TV HD ",
+        "TM: SUN TV HD"
+      ],
+      [
+        "Tamil: SUN-MUSIC (FHD)",
+        "Tamil: SUN-MUSIC (4K)."
+      ],
+      [
+        "TM: SUN LIFE HD",
+        "TM: SUN LIFE HD"
+      ],
+      [
+        "TM: SUN LIFE",
+        "TM: SUN LIFE HD"
+      ],
+      [
+        "TM: JAYA TV",
+        "TM: JAYA TV (4K)"
+      ],
+      [
+        "TM: VENDHAR TV HD",
+        "TM: VENDHAR TV"
+      ],
+      [
+        "TM: RAJ TV",
+        "TM: RAJ TV HD"
+      ],
+      [
+        "TM: ANGEL TV HD",
+        "TM: ANGEL TV HD"
+      ],
+      [
+        "TM: ANGEL TV HD",
+        "TM: ANGEL TV HD"
+      ],
+      [
+        "TM: ANGEL TV HD",
+        "TM: ANGEL TV HD"
+      ]
+    ],
+    "TAMIL | MOVIES": [
+      [
+        "Tamil: KTV (FHD)",
+        "Tamil: KTV (4K)."
+      ],
+      [
+        "TAMIL: Zee Thirai",
+        "TAMIL: ZEE THIRAI (4K)"
+      ]
+    ],
+    "TAMIL | NEWS": [
+      [
+        "TM: POLIMER NEWS",
+        "TM: POLIMER NEWS"
+      ]
+    ],
+    "USA": [
+      [
+        "US: HBO FAMILY",
+        "US: HBO Family FHD"
+      ],
+      [
+        "US: HBO ZONE",
+        "US: HBO Zone FHD"
+      ],
+      [
+        "US: HBO SIGNATURE",
+        "US: HBO Signature FHD"
+      ],
+      [
+        "US: NATIONAL GEOGRAPHIC",
+        "US: National Geographic"
+      ],
+      [
+        "US: NFL Network",
+        "US: NFL Network"
+      ]
+    ],
+    "SPORTS | DSTV SUPER": [
+      [
+        "DSTV : SuperSport Cricket (FHD)",
+        "DSTV: SuperSport Cricket HD"
+      ],
+      [
+        "DSTV : SuperSport Action (FHD)",
+        "DSTV : SuperSport Action HD"
+      ]
+    ],
+    "UK| ASIAN": [
+      [
+        "UK: Utsav Plus HD",
+        "UK:UTSAV  PLUS FHD"
+      ],
+      [
+        "UK: utsav Gold",
+        "UK: Utsav Gold FHD"
+      ],
+      [
+        "UK: Sony TV",
+        "UK: Sony TV FHD"
+      ],
+      [
+        "UK: Sony TV SD",
+        "UK: Sony TV FHD"
+      ],
+      [
+        "UK: B4U Movies",
+        "UK: B4U MOVIES"
+      ]
+    ],
+    "SPORTS | GOLF": [
+      [
+        "GOLF FHD",
+        "GOLF FHD"
+      ],
+      [
+        "UK: Sky Sports Golf (FHD)",
+        "UK: SKY SPORTS GOLF"
+      ]
+    ],
+    "PAKISTAN NEWS": [
+      [
+        "UK: HUM NEWS",
+        "PK : HUM NEWS-HD"
+      ],
+      [
+        "PK: 24 NEWS-HD",
+        "PK : 24 NEWS HD"
+      ],
+      [
+        "UK: 92 NEWS",
+        "PK : 92 NEWS-HD"
+      ],
+      [
+        "PK: BOL NEWS (4K)",
+        "PK : BOL NEWS-HD"
+      ]
+    ],
+    "PAKISTAN": [
+      [
+        "PK: HUM TV-HD",
+        "PK: HUM TV (FHD)"
+      ],
+      [
+        "PK: ARY DIGITAL-HD",
+        "PK: ARY DIGITAL (4K)"
+      ]
+    ],
+    "ISLAMIC": [
+      [
+        "Quran TV: أجمل صوت قرآن مؤثر",
+        "Quran TV:  ياسر الدوسري"
+      ],
+      [
+        "Quran TV: أذكار الصباح  د.محمد خير الشعال",
+        "Quran TV:  ياسر الدوسري"
+      ],
+      [
+        "Quran TV: عبدالرحمن مسعد",
+        "Quran TV:  ياسر الدوسري"
+      ]
+    ],
+    "INDIA MUSIC": [
+      [
+        "IN: MTV HD Plus (FHD)",
+        "IN: MTV HD PLUS"
+      ],
+      [
+        "IN: MTV Plus (4K)",
+        "IN: MTV HD PLUS"
+      ]
+    ],
+    "MALAYALAM | ENTRTNMNT": [
+      [
+        "MY: Asianet HD",
+        "MY: ASIANET (4K)."
+      ],
+      [
+        "MY: ASIANET (FHD)",
+        "MY: ASIANET (4K)."
+      ],
+      [
+        "MY: SURYA (FHD)",
+        "MY: SURYA (4K)."
+      ],
+      [
+        "MY: MAZHAVIL (FHD)",
+        "MY: MAZHAVIL (4K)."
+      ],
+      [
+        "MY: ZEE KERALAM",
+        "MY: ZEE KERALAM (4K)."
+      ],
+      [
+        "MY: ZEE KERALAM (FHD)",
+        "MY: ZEE KERALAM (4K)."
+      ],
+      [
+        "MY: ZEE KERALAM (FHD)",
+        "MY: ZEE KERALAM (4K)."
+      ],
+      [
+        "MY: Shalom",
+        "MY: Shalom HD"
+      ]
+    ],
+    "MALAYALAM | NEWS": [
+      [
+        "MAL | REPORTER NEWS",
+        "MAL | REPORTER NEWS ᴴᴰ"
+      ],
+      [
+        "MAL | NEWS 24",
+        "MAL | NEWS 24 ᴴᴰ"
+      ],
+      [
+        "MAL | MEDIA ONE",
+        "MAL | MEDIA ONE ᴴᴰ"
+      ],
+      [
+        "MAL | MATHRUBHUMI NEWS HD",
+        "MAL | MATHRUBHUMI NEWS ᴴᴰ"
+      ],
+      [
+        "MAL | ASIANET NEWS",
+        "MAL | ASIANET NEWS ᴴᴰ"
+      ],
+      [
+        "MAL | KAIRALI NEWS",
+        "MAL | KAIRALI NEWS ᴴᴰ"
+      ],
+      [
+        "MAL | MANORAMA NEWS ᴴᴰ",
+        "MAL | MANORAMA NEWS"
+      ],
+      [
+        "MAL | MANORAMA NEWS ᴴᴰ",
+        "MAL | MANORAMA NEWS"
+      ],
+      [
+        "MAL | NEWS 18 KERALA HD",
+        "MAL | NEWS 18 KERALA ᴴᴰ"
+      ],
+      [
+        "MAL | JAI HIND TV HD",
+        "MAL | JAI HIND TV ᴴᴰ"
+      ]
+    ],
+    "INDIAN NEWS": [
+      [
+        "IN:  India News",
+        "IN: India news"
+      ],
+      [
+        "IN: AAJTAK (4K)",
+        "IN:  Aaj_Tak"
+      ]
+    ],
+    "INDIAN SD": [
+      [
+        "IN:  DD India",
+        "IN: DD India"
+      ],
+      [
+        "IN: Food Food",
+        "IN: Food Food"
+      ]
+    ],
+    "UK| ENTERTAINMENT": [
+      [
+        "UK HD : UTV",
+        "UK FHD : UTV"
+      ]
+    ],
+    "NEPAL": [
+      [
+        "|NP| NTV NATIONAL FHD",
+        "|NP| NTV NATIONAL FHD"
+      ]
+    ],
+    "UK| MOVIES": [
+      [
+        "UK: SKY ARTS FHD",
+        "UK : SKY ARTS HD"
+      ],
+      [
+        "UK: SKY CINEMA PREMIERE FHD",
+        "UK: Sky Cinema Premiere HD"
+      ],
+      [
+        "UK: SKY CINEMA THRILLER (FHD)",
+        "UK: Sky Cinema Thriller HD"
+      ],
+      [
+        "UK: SKY CINEMA DRAMA (FHD)",
+        "UK: Sky Cinema Drama HD"
+      ],
+      [
+        "UK: SKY CINEMA FAMILY (FHD)",
+        "UK: Sky Cinema Family HD"
+      ],
+      [
+        "UK: SKY CINEMA GREATS (FHD)",
+        "UK: Sky Cinema Greats HD"
+      ],
+      [
+        "UK: SKY CINEMA ACTION (FHD)",
+        "UK: Sky Cinema Action HD"
+      ]
+    ],
+    "UK| DOCUMENTARY": [
+      [
+        "Sky Documentaries SD",
+        "Sky Documentaries FHD"
+      ]
+    ],
+    "UK| NEWS": [
+      [
+        "UK FHD : Sky Sports News",
+        "UK: Sky Sports News (FHD)"
+      ],
+      [
+        "UK HD : CNBC",
+        "UK FHD : CNBC"
+      ]
+    ],
+    "RACING | F1 MOTOGP": [
+      [
+        "UK: SKY SPORTS F1 HD",
+        "UK: Sky Sports F1 (4K)"
+      ]
+    ],
+    "SPORTS | UK SPORTS": [
+      [
+        "SKY SPORTS PREMIER LEAGUE FHD",
+        "SKY SPORTS PREMIER LEAGUE HD "
+      ],
+      [
+        "SKY SPORTS CRICKET FHD",
+        "SKY SPORTS CRICKET HD"
+      ],
+      [
+        "SKY SPORTS FOOTBALL FHD",
+        "SKY SPORTS FOOTBALL HD"
+      ],
+      [
+        "SKY SPORTS GOLF FHD",
+        "SKY SPORTS GOLF HD"
+      ],
+      [
+        "SKY SPORTS F1 FHD",
+        "SKY SPORTS F1 HD"
+      ],
+      [
+        "SKY SPORTS MIX FHD",
+        "SKY SPORTS MIX HD"
+      ],
+      [
+        "SKY SPORTS NEWS FHD",
+        "SKY SPORTS NEWS HD"
+      ]
+    ],
+    "SPORTS | ARABIC": [
+      [
+        "AR:  ON Time Sports HD+",
+        "AR:  ON Time Sports HD+"
+      ],
+      [
+        "IQ| Al Rabiaa Sport +1",
+        "IQ| Al Rabiaa Sport 1"
+      ],
+      [
+        "IQ| Al Rabiaa Sport +2",
+        "IQ| Al Rabiaa Sport 2"
+      ],
+      [
+        "Thamanya 1 Sport HD",
+        "Thamanya 1 Sport 4K"
+      ],
+      [
+        "Thamanya 2 Sport HD",
+        "Thamanya 2 Sport 4K"
+      ],
+      [
+        "Thamanya 3 Sport HD",
+        "Thamanya 3 Sport 4K"
+      ],
+      [
+        "Thamanya 1 Sport SD",
+        "Thamanya 1 Sport 4K"
+      ],
+      [
+        "Thamanya 2 Sport SD",
+        "Thamanya 2 Sport 4K"
+      ],
+      [
+        "Thamanya 3 Sport SD",
+        "Thamanya 3 Sport 4K"
+      ],
+      [
+        "Shahid Sport 1 HD",
+        "Shahid Sport 1 4k"
+      ],
+      [
+        "Shahid Sport 1 SD",
+        "Shahid Sport 1 4k"
+      ],
+      [
+        "Shahid Sport 2 HD",
+        "Shahid Sport 2 4K"
+      ],
+      [
+        "Shahid Sport 2 SD",
+        "Shahid Sport 2 4K"
+      ],
+      [
+        "StarzPlay Sports 1 SD",
+        "StarzPlay Sports 1 HD"
+      ],
+      [
+        "StarzPlay Sports 2 SD",
+        "StarzPlay Sports 2 HD"
+      ],
+      [
+        "AD Sport Asia 1 HD",
+        "AD Sport Asia 1 4K"
+      ],
+      [
+        "AD Sport Asia 2 HD",
+        "AD Sport Asia 2 4K"
+      ],
+      [
+        "AD Sport Asia 1 SD",
+        "AD Sport Asia 1 4K"
+      ],
+      [
+        "AD Sport Asia 2 SD",
+        "AD Sport Asia 2 4K"
+      ]
+    ],
+    "BEIN MOVIES": [
+      [
+        "Bein Fox Movies HD",
+        "Bein FOX MOVIES 4K"
+      ],
+      [
+        "Bein jeem HD",
+        "Bein JEEM 4K"
+      ],
+      [
+        "Bein BBC Earth HD",
+        "Bein BBC EARTH 4K"
+      ],
+      [
+        "Bein Fatafeat",
+        "Bein FATAFEAT 4K"
+      ]
+    ],
+    "MBC ARABIC": [
+      [
+        "MBC 3 FHD",
+        "MBC 3 HD"
+      ],
+      [
+        "MBC Drama+ HD",
+        "MBC Drama HD"
+      ],
+      [
+        "MBC Masr 2 FHD",
+        "MBC Masr 2 HD"
+      ],
+      [
+        "MBC 1 4K",
+        "MBC 1 HD"
+      ],
+      [
+        "MBC 2 4K",
+        "MBC 2 HD"
+      ],
+      [
+        "MBC 3 4K",
+        "MBC 3 HD"
+      ],
+      [
+        "MBC 4 4K",
+        "MBC 4 HD"
+      ],
+      [
+        "MBC 5 4K",
+        "MBC 5 HD"
+      ],
+      [
+        "MBC Action 4K",
+        "MBC Action HD"
+      ],
+      [
+        "MBC Drama + 4K",
+        "MBC Drama HD"
+      ],
+      [
+        "MBC Drama 4K",
+        "MBC Drama HD"
+      ],
+      [
+        "MBC Iraq 4K",
+        "MBC Iraq HD"
+      ],
+      [
+        "MBC Masr 1 4K",
+        "MBC Masr 1 HD"
+      ],
+      [
+        "MBC Masr 2 4K",
+        "MBC Masr 2 HD"
+      ],
+      [
+        "MBC Max 4K",
+        "MBC Max HD"
+      ],
+      [
+        "MBC Panorama 4K",
+        "MBC Panorama HD"
+      ],
+      [
+        "MBC Variety 4K",
+        "MBC Variety HD"
+      ],
+      [
+        "MBC Wanasah 4K",
+        "MBC Wanasah HD"
+      ],
+      [
+        "MBC 1 SD",
+        "MBC 1 HD"
+      ],
+      [
+        "MBC 2 SD",
+        "MBC 2 HD"
+      ],
+      [
+        "MBC 3 SD",
+        "MBC 3 HD"
+      ],
+      [
+        "MBC 4 SD",
+        "MBC 4 HD"
+      ],
+      [
+        "MBC 5 SD",
+        "MBC 5 HD"
+      ],
+      [
+        "MBC Action SD",
+        "MBC Action HD"
+      ],
+      [
+        "MBC Bollywood SD",
+        "MBC Bollywood 4K"
+      ],
+      [
+        "MBC Drama SD",
+        "MBC Drama HD"
+      ],
+      [
+        "MBC Iraq SD",
+        "MBC Iraq HD"
+      ],
+      [
+        "MBC Max SD",
+        "MBC Max HD"
+      ]
+    ],
+    "ARABIC": [
+      [
+        "Rotana Comedy FHD",
+        "Rotana Comedy HD"
+      ],
+      [
+        "Rotana Classic FHD",
+        "Rotana Classic HD"
+      ]
+    ],
+    "ARABIC NEWS": [
+      [
+        "News | Ar: Al Jazeera 4K ✦",
+        "News | Ar: Al Jazeera HD"
+      ],
+      [
+        "News | Ar: Al Arabiya 4K ✦",
+        "News | Ar: Al Arabiya HD ✦"
+      ],
+      [
+        "News | Ar: Al Hadath FHD ✦",
+        "News | Ar: Al Hadath HD ✦"
+      ],
+      [
+        "News | Ar: Al Hadath SD ✦",
+        "News | Ar: Al Hadath HD ✦"
+      ],
+      [
+        "News | Ar: Al Hadath 4K ✦",
+        "News | Ar: Al Hadath HD ✦"
+      ],
+      [
+        "News | Ar: Sky News Arabic SD ✦",
+        "News | Ar: Sky News Arabic HD ✦"
+      ],
+      [
+        "News | Ar: RT Arabic SD ✦",
+        "News | Ar: RT Arabic HD ✦"
+      ],
+      [
+        "News | Ar: France 24 Arabic SD ✦",
+        "News | Ar: France 24 Arabic HD ✦"
+      ]
+    ],
+    "QATAR": [
+      [
+        "Qa| Al Jazeera HD ✦",
+        "Qa| Al Jazeera 4K ✦"
+      ]
+    ],
+    "ISRAEL": [
+      [
+        "IS: Yes Sport 1 HD",
+        "Is: Yes Sport 1 FHD"
+      ],
+      [
+        "IS: Yes Sport 2 FHD",
+        "Is: Yes Sport 2 HD"
+      ],
+      [
+        "IS: Yes Sport 3 HD",
+        "Is: Yes Sport 3 FHD"
+      ],
+      [
+        "IS: Yes Sport 4 HD",
+        "Is: Yes Sport 4 FHD"
+      ]
+    ],
+    "ARABIC MUSIC": [
+      [
+        "Music: Arabica TV",
+        "Music: Arabica TV"
+      ]
+    ],
+    "MOROCCO": [
+      [
+        "Mor| Arryadia SD ✦",
+        "Mor| Arryadia HD ✦"
+      ]
+    ],
+    "SYRIA": [
+      [
+        "Sy| Lana TV 4K ✦",
+        "Sy| Lana TV HD ✦"
+      ],
+      [
+        "Sy| Lana TV SD ✦",
+        "Sy| Lana TV HD ✦"
+      ]
+    ],
+    "LEBANON": [
+      [
+        "Lb| MTV Lebanon 4K ✦",
+        "Lb| MTV Lebanon HD ✦"
+      ],
+      [
+        "Lb| LBC International 4K ✦",
+        "Lb| LBC International HD ✦"
+      ],
+      [
+        "Lb| NBN 4K ✦",
+        "Lb| NBN HD ✦"
+      ],
+      [
+        "Lb| Al Manar TV+ ✦",
+        "Lb| Al Manar TV ✦"
+      ]
+    ],
+    "CANADA": [
+      [
+        "CA The Weather Network",
+        "CA The Weather network FHD"
+      ],
+      [
+        "CA Historia (FR)",
+        "CA Historia (FR)"
+      ],
+      [
+        "CA ICI Montreal (FR)",
+        "CA ICI Montreal (FR)"
+      ],
+      [
+        "CA La Chaine Disney (FR))",
+        "CA La Chaine Disney (FR)"
+      ],
+      [
+        "CA NOOVO V-Tele (FR)",
+        "CA NOOVO V-Tele (FR)"
+      ],
+      [
+        "CA LCN (FR)",
+        "CA LCN (FR)"
+      ],
+      [
+        "CA HLN",
+        "CA HLN"
+      ],
+      [
+        "CA CTV Calgary",
+        "CA CTV Calgary"
+      ],
+      [
+        "CA CTV Ottawa",
+        "CA CTV Ottawa"
+      ]
+    ],
+    "SPORTS | BEIN": [
+      [
+        "Bein Xtra HD 5",
+        "Bein Xtra 4K 5"
+      ],
+      [
+        "Bein Xtra HD 6",
+        "Bein Xtra 4K 6"
+      ],
+      [
+        "Bein Xtra HD 4",
+        "Bein Xtra 4K 4"
+      ],
+      [
+        "Bein Sport AFC 3 HD",
+        "Bein Sport AFC 3 4K"
+      ],
+      [
+        "Bein Sport AFC 4 HD",
+        "Bein Sport AFC 4 4K"
+      ],
+      [
+        "Bein Sport AFC 5 HD",
+        "Bein Sport AFC 5 4K"
+      ],
+      [
+        "Bein Sport NBA HD",
+        "Bein Sport NBA 4K"
+      ],
+      [
+        "Bein Sport English 2 SD",
+        "beIN Sport English 2 4k"
+      ],
+      [
+        "BeIN Sports Global SD",
+        "Bein Sports Global 4K"
+      ],
+      [
+        "Bein Xtra SD 4",
+        "Bein Xtra 4K 4"
+      ],
+      [
+        "Bein Xtra SD 5",
+        "Bein Xtra 4K 5"
+      ],
+      [
+        "Bein Xtra SD 6",
+        "Bein Xtra 4K 6"
+      ],
+      [
+        "Bein Sport AFC 3 SD",
+        "Bein Sport AFC 3 4K"
+      ],
+      [
+        "Bein Sport AFC 4 SD",
+        "Bein Sport AFC 4 4K"
+      ],
+      [
+        "Bein Sport AFC 5 SD",
+        "Bein Sport AFC 5 4K"
+      ],
+      [
+        "Bein Sports Max 1 FHD",
+        "Bein Sports Max 1 4K"
+      ],
+      [
+        "Bein Sports Max 2 FHD",
+        "Bein Sports Max 2 4K"
+      ],
+      [
+        "Bein Sports Max 4 FHD",
+        "Bein Sports Max 4 4K"
+      ],
+      [
+        "Bein Sports Max 1 HD",
+        "Bein Sports Max 1 4K"
+      ],
+      [
+        "Bein Sports Max 2 HD",
+        "Bein Sports Max 2 4K"
+      ],
+      [
+        "Bein Sports Max 3 HD",
+        "Bein Sports Max 3 4K"
+      ],
+      [
+        "Bein Sports Max 4 HD",
+        "Bein Sports Max 4 4K"
+      ],
+      [
+        "Bein Sports Max 1 SD",
+        "Bein Sports Max 1 4K"
+      ],
+      [
+        "Bein Sports Max 2 SD",
+        "Bein Sports Max 2 4K"
+      ],
+      [
+        "Bein Sports Max 3 SD",
+        "Bein Sports Max 3 4K"
+      ],
+      [
+        "Bein Sports Max 4 SD",
+        "Bein Sports Max 4 4K"
+      ],
+      [
+        "BeIN Alkass 1 HD",
+        "BeIN Alkass 1 4K"
+      ],
+      [
+        "BeIN Alkass 2 HD",
+        "BeIN Alkass 2 4K"
+      ],
+      [
+        "BeIN Alkass 3 HD",
+        "BeIN Alkass 3 4K"
+      ],
+      [
+        "BeIN Alkass 4 HD",
+        "BeIN Alkass 4 4K"
+      ],
+      [
+        "BeIN Alkass 6 HD",
+        "BeIN Alkass 6 4K"
+      ],
+      [
+        "BeIN Alkass 8 HD",
+        "BeIN Alkass 8 4K"
+      ],
+      [
+        "BeIN Alkass 9 HD",
+        "BeIN Alkass 9 4K"
+      ],
+      [
+        "BeIN Alkass 10 HD",
+        "BeIN Alkass 10 4K"
+      ],
+      [
+        "BeIN Alkass 1 SD",
+        "BeIN Alkass 1 4K"
+      ],
+      [
+        "BeIN Alkass 4 SD",
+        "BeIN Alkass 4 4K"
+      ],
+      [
+        "BeIN Alkass 5 SD",
+        "BeIN Alkass 5 HD"
+      ],
+      [
+        "BeIN Alkass 6 SD",
+        "BeIN Alkass 6 4K"
+      ],
+      [
+        "BeIN Alkass 8 SD",
+        "BeIN Alkass 8 4K"
+      ],
+      [
+        "BeIN Alkass 9 SD",
+        "BeIN Alkass 9 4K"
+      ],
+      [
+        "BeIN Alkass 10 SD",
+        "BeIN Alkass 10 4K"
+      ],
+      [
+        "beIN Sport English 1 4k.",
+        "Bein Sport English 1 SD"
+      ]
+    ],
+    "FRANCE": [
+      [
+        "FRA | M6 HD (Local)",
+        "FRA | M6 4K (Local)"
+      ]
+    ],
+    "GERMANY": [
+      [
+        "DMAX -HD (Local) Magneta",
+        "DMAX -HD (Local) Magneta"
+      ]
+    ],
+    "Poland": [
+      [
+        "PL | TVP | TVP Info SD",
+        "PL | TVP | TVP Info FHD"
+      ],
+      [
+        "PL | TVP | TVP 2 SD",
+        "PL | TVP | TVP 2 FHD"
+      ],
+      [
+        "PL | TVP | TVP Polonia SD",
+        "PL | TVP | TVP Polonia FHD"
+      ],
+      [
+        "PL | TVP | TVP Dokument SD",
+        "PL | TVP | TVP Dokument FHD"
+      ],
+      [
+        "PL | TVP | TVP Kultura SD",
+        "PL | TVP | TVP Kultura FHD"
+      ],
+      [
+        "PL | TVP | TVP Kultura 2 SD",
+        "PL | TVP | TVP Kultura 2 FHD"
+      ],
+      [
+        "PL | TVP | TVP Historia 2 SD",
+        "PL | TVP | TVP Historia 2 FHD"
+      ],
+      [
+        "PL | TVP | TVP Kobieta SD",
+        "PL | TVP | TVP Kobieta FHD"
+      ],
+      [
+        "PL | TVP | TVP ABC SD",
+        "PL | TVP | TVP ABC FHD"
+      ],
+      [
+        "PL | TVP | TVP ABC 2 SD",
+        "PL | TVP | TVP ABC 2 FHD"
+      ],
+      [
+        "PL | TVP | TVP Rozrywka SD",
+        "PL | TVP | TVP Rozrywka FHD"
+      ],
+      [
+        "PL | TVP | TVP Nauka SD",
+        "PL | TVP | TVP Nauka FHD"
+      ],
+      [
+        "PL | TVP | TVP Alfa SD",
+        "PL | TVP | TVP Alfa FHD"
+      ],
+      [
+        "PL | TVP | TVP World SD",
+        "PL | TVP | TVP World FHD"
+      ],
+      [
+        "PL | TVP | TVP WIlno SD",
+        "PL | TVP | TVP Wilno FHD"
+      ],
+      [
+        "PL | TVP | Belsat SD",
+        "PL | TVP | Belsat FHD"
+      ],
+      [
+        "PL | TVP | TVP 3 Warszawa SD",
+        "PL | TVP | TVP 3 Warszawa FHD"
+      ],
+      [
+        "PL | TVP | TVP 3 Krakow SD",
+        "PL | TVP | TVP 3 Krakow FHD"
+      ],
+      [
+        "PL | TVP | TVP 3 Gdansk SD",
+        "PL | TVP | TVP 3 Gdansk FHD"
+      ],
+      [
+        "PL | TVP | TVP 3 Poznan SD",
+        "PL | TVP | TVP 3 Poznan FHD"
+      ],
+      [
+        "PL | TVP | TVP 3 Lublin SD",
+        "PL | TVP | TVP 3 Lublin FHD"
+      ],
+      [
+        "PL | TVP | TVP 3 Katowice SD",
+        "PL | TVP | TVP 3 Katowice FHD"
+      ],
+      [
+        "PL | TVP | TVP 3 Bydgoszcz SD",
+        "PL | TVP | TVP 3 Bydgoszcz FHD"
+      ],
+      [
+        "PL | TVP | TVP 3 Gorzow WLKP SD",
+        "PL | TVP | TVP 3 Gorzow WLKP FHD"
+      ],
+      [
+        "PL | TVP | TVP 3 Bialystok SD",
+        "PL | TVP | TVP 3 Bialystok FHD"
+      ],
+      [
+        "PL | TVP | TVP 3 Kielce SD",
+        "PL | TVP | TVP 3 Kielce FHD"
+      ],
+      [
+        "PL | TVP | TVP 3 Lodz SD",
+        "PL | TVP | TVP 3 Lodz FHD"
+      ],
+      [
+        "PL | TVP | TVP 3 Olsztyn SD",
+        "PL | TVP | TVP 3 Olsztyn FHD"
+      ],
+      [
+        "PL | TVP | TVP 3 Wroclaw SD",
+        "PL | TVP | TVP 3 Wroclaw FHD"
+      ],
+      [
+        "PL | TVP | TVP 3 Rzeszow SD",
+        "PL | TVP | TVP 3 Rzeszow FHD"
+      ],
+      [
+        "PL | TVP | TVP 3 Szczecin SD",
+        "PL | TVP | TVP 3 Szczecin FHD"
+      ],
+      [
+        "PL | TVP | TVP Parlament- Sejm",
+        "PL | TVP | TVP Parlament- Sejm"
+      ],
+      [
+        "PL | TVP | TVP Parlament- Senat",
+        "PL | TVP | TVP Parlament- Senat"
+      ]
+    ],
+    "BULGARIA": [
+      [
+        "BG: Planeta 4K",
+        "BG: Planeta"
+      ],
+      [
+        "BG: Diema Sport 2 4K",
+        "BG: Diema Sport 2"
+      ],
+      [
+        "BG: Diema Sport 3 4K",
+        "BG: Diema Sport 3"
+      ]
+    ],
+    "MALAYALAM | MOVIES": [
+      [
+        "MAL | KAUMUDY TV HD",
+        "MAL | KAUMUDY TV ᴴᴰ"
+      ],
+      [
+        "MAL | ASIANET MOVIES 4K",
+        "MAL | ASIANET MOVIES  SD"
+      ]
+    ],
+    "US : 24X7": [
+      [
+        "24/7 The Muppet Show",
+        "24/7 The Muppet Show"
+      ]
+    ]
+  }
+}

@@ -6,9 +6,10 @@ import type { XtreamCredentials, VodStream } from '@/lib/xtream';
 import { getVodStreams, buildVodUrl, getTmdbMap } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { PosterCard } from '@/components/ui/PosterCard';
+import { VeeCollectionRow } from '@/components/ui/VeeCollectionRow';
 import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { MOVIE_TABS, GENRE_FILTERS, SORT_MODES, type SortMode } from '@/lib/movie-collections';
+import { MOVIE_TABS, GENRE_FILTERS, SORT_MODES, VEE_MOVIE_COLLECTIONS, type SortMode, type VeeMovieCollection } from '@/lib/movie-collections';
 import { t, useLanguage } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
 import type { Channel } from '@/types';
@@ -53,17 +54,42 @@ const TAB_NAME_MAP: Record<string, TranslationKey> = {
 function getTrendingScore(movie: VodStream, tmdbMap: Record<string, TmdbEntry>): number {
   const tmdb = tmdbMap[`m:${movie.stream_id}`];
   if (!tmdb) return 0;
+
+  // Rating: 40% weight (normalized 0-1)
   const ratingScore = Math.min((tmdb.r || 0) / 10, 1);
-  let freshnessScore = 0.3;
-  const yearMatch = movie.name.match(/\((\d{4})\)/);
-  if (yearMatch) {
-    const year = parseInt(yearMatch[1], 10);
-    if (year >= 2026) freshnessScore = 1.0;
-    else if (year === 2025) freshnessScore = 0.85;
-    else if (year === 2024) freshnessScore = 0.7;
-    else if (year === 2023) freshnessScore = 0.5;
+
+  // Freshness: 30% weight — year from title or added timestamp
+  let freshnessScore = 0.2;
+  if (movie.added) {
+    const addedTs = parseInt(movie.added, 10);
+    if (addedTs > 0) {
+      const daysAgo = (Date.now() / 1000 - addedTs) / 86400;
+      if (daysAgo < 7) freshnessScore = 1.0;
+      else if (daysAgo < 30) freshnessScore = 0.85;
+      else if (daysAgo < 90) freshnessScore = 0.65;
+      else if (daysAgo < 365) freshnessScore = 0.4;
+    }
+  } else {
+    const yearMatch = movie.name.match(/\((\d{4})\)/);
+    if (yearMatch) {
+      const year = parseInt(yearMatch[1], 10);
+      if (year >= 2026) freshnessScore = 1.0;
+      else if (year === 2025) freshnessScore = 0.85;
+      else if (year === 2024) freshnessScore = 0.7;
+      else if (year === 2023) freshnessScore = 0.5;
+    }
   }
-  return ratingScore * 0.55 + freshnessScore * 0.35 + (tmdb.y ? 0.1 : 0);
+
+  // Popularity indicator: 20% — has trailer + has poster + genre breadth
+  const hasTrailer = tmdb.y ? 0.4 : 0;
+  const hasPoster = tmdb.p ? 0.3 : 0;
+  const genreBreadth = Math.min((tmdb.g?.length || 0) / 4, 1) * 0.3;
+  const popularityScore = hasTrailer + hasPoster + genreBreadth;
+
+  // Genre diversity bonus: 10% — reward movies that span multiple genres
+  const diversityScore = Math.min((tmdb.g?.length || 0) / 3, 1);
+
+  return ratingScore * 0.4 + freshnessScore * 0.3 + popularityScore * 0.2 + diversityScore * 0.1;
 }
 
 function parseYear(name: string): number {
@@ -306,6 +332,34 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       .filter((row): row is { pack: MomentPack; items: VodStream[] } => row !== null);
   }, [movies, tmdbMap, activeParent, hasTmdb]);
 
+  // ── VEE intelligence rows ────────────────────────────────────
+
+  const veeCollectionRows = useMemo(() => {
+    if (!hasTmdb || movies.length === 0) return [];
+    return VEE_MOVIE_COLLECTIONS
+      .filter(col => !col.parentTabs || col.parentTabs.length === 0 || col.parentTabs.includes(activeParent))
+      .map(col => {
+        let pool: VodStream[];
+        if (col.categoryIds && col.categoryIds.length > 0) {
+          // Category-based collection: filter by category_id
+          const catSet = new Set(col.categoryIds);
+          pool = movies.filter(m => catSet.has(m.category_id));
+        } else {
+          pool = movies.filter(m => col.filter(m, tmdbMap[`m:${m.stream_id}`] || null));
+        }
+        const sorted = [...pool].sort((a, b) => col.sort(a, b, tmdbMap));
+        const items = sorted.slice(0, col.limit).map(m => ({
+          id: m.stream_id,
+          name: m.name,
+          poster: m.stream_icon,
+          rating: m.rating,
+          tmdbKey: `m:${m.stream_id}`,
+        }));
+        return items.length >= 3 ? { collection: col, items } : null;
+      })
+      .filter(Boolean) as { collection: VeeMovieCollection; items: { id: number; name: string; poster: string; rating?: string; tmdbKey: string }[] }[];
+  }, [movies, tmdbMap, hasTmdb, activeParent]);
+
   // ── Handlers ─────────────────────────────────────────────────
 
   const handleParentChange = useCallback((id: string) => {
@@ -457,6 +511,26 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 ))}
               </div>
             </section>
+          ))}
+          <div className="mx-8 h-[0.5px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.06), transparent)' }} />
+        </div>
+      )}
+
+      {/* ── VEE Intelligence rows ── */}
+      {!isSearching && !loading && activeGenre === 0 && veeCollectionRows.length > 0 && (
+        <div className="space-y-5 py-3 mb-2">
+          {veeCollectionRows.map(({ collection, items }) => (
+            <VeeCollectionRow
+              key={collection.id}
+              name={collection.name}
+              tagline={collection.tagline}
+              items={items}
+              tmdbMap={tmdbMap}
+              onItemClick={(id) => {
+                const movie = movies.find(m => m.stream_id === id);
+                if (movie) setDetailMovie(movie);
+              }}
+            />
           ))}
           <div className="mx-8 h-[0.5px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.06), transparent)' }} />
         </div>

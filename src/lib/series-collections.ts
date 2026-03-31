@@ -61,6 +61,94 @@ export const SORT_MODES: { id: SortMode; name: string }[] = [
   { id: 'name', name: 'A-Z' },
 ];
 
+// ── VEE Intelligence Collections (Series) ─────────────────────────
+//
+// Smart, curated rows powered by TMDB data. Rendered ABOVE the
+// regular tab grid on the Series page as horizontal scrollers.
+
+import type { SeriesItem } from '@/lib/xtream';
+import type { TmdbEntry } from '@/lib/tmdb-map.generated';
+
+export interface VeeSeriesCollection {
+  id: string;
+  name: string;
+  tagline: string;
+  filter: (series: SeriesItem, tmdb: TmdbEntry | null) => boolean;
+  sort: (a: SeriesItem, b: SeriesItem, tmdbMap: Record<string, TmdbEntry>) => number;
+  limit: number;
+  parentTabs?: string[];
+  categoryIds?: string[];
+}
+
+function tmdbKey(s: SeriesItem): string { return `s:${s.series_id}`; }
+function tmdbRating(s: SeriesItem, map: Record<string, TmdbEntry>): number { return map[tmdbKey(s)]?.r || 0; }
+function byRatingDesc(a: SeriesItem, b: SeriesItem, map: Record<string, TmdbEntry>): number {
+  return tmdbRating(b, map) - tmdbRating(a, map);
+}
+
+export const VEE_SERIES_COLLECTIONS: VeeSeriesCollection[] = [
+  {
+    id: 'binge-worthy',
+    name: 'Binge-Worthy',
+    tagline: 'Start one, finish all',
+    filter: (_s, t) => t !== null && t.r >= 8.0,
+    sort: byRatingDesc,
+    limit: 20,
+  },
+  {
+    id: 'new-seasons',
+    name: 'New Seasons',
+    tagline: 'Your favorites are back',
+    filter: (s, _t) => {
+      if (s.last_modified) {
+        const ts = parseInt(s.last_modified, 10);
+        if (ts > 0) {
+          const twoWeeksAgo = Date.now() / 1000 - 14 * 86400;
+          return ts >= twoWeeksAgo;
+        }
+      }
+      const yr = s.name.match(/\((\d{4})\)/);
+      return yr ? parseInt(yr[1], 10) >= 2025 : false;
+    },
+    sort: (a, b) => parseInt(b.last_modified || '0', 10) - parseInt(a.last_modified || '0', 10),
+    limit: 20,
+  },
+  {
+    id: 'k-drama',
+    name: 'K-Drama',
+    tagline: 'Korean storytelling at its finest',
+    filter: (s, _t) => false, // category-based
+    sort: byRatingDesc,
+    limit: 20,
+    categoryIds: ['267', '658', '713', '715'],
+  },
+  {
+    id: 'turkish-drama',
+    name: 'Turkish Drama',
+    tagline: 'Epic love, epic drama',
+    filter: (s, _t) => false, // category-based
+    sort: byRatingDesc,
+    limit: 20,
+    categoryIds: ['99'],
+  },
+  {
+    id: 'documentary-series',
+    name: 'Real Stories',
+    tagline: 'Truth is stranger',
+    filter: (_s, t) => t !== null && t.g.includes(99),
+    sort: byRatingDesc,
+    limit: 20,
+  },
+  {
+    id: 'crime-thriller',
+    name: 'Crime & Thriller',
+    tagline: 'Who did it?',
+    filter: (_s, t) => t !== null && (t.g.includes(80) || t.g.includes(53)),
+    sort: byRatingDesc,
+    limit: 20,
+  },
+];
+
 // ── Parent Tabs ─────────────────────────────────────────────────────
 
 export const SERIES_TABS: SeriesParentTab[] = [
