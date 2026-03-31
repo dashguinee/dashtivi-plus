@@ -23,7 +23,10 @@ import {
   getTmdbMap,
   safeImageUrl,
   sortGemsFirst,
+  fetchVeeData,
+  getVeeData,
 } from '@/lib/xtream';
+import type { VeePlaylist } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import {
   HOMEPAGE_COLLECTIONS,
@@ -150,12 +153,33 @@ const COLLECTION_TO_EXPERIENCE: Record<string, string> = {
   'kids-family': 'kids',
 };
 
+// Map collection IDs → VEE experience IDs (same as COLLECTION_TO_EXPERIENCE but explicit)
+const COLLECTION_TO_VEE: Record<string, string> = {
+  'live-sports': 'sports',
+  'world-cinema': 'entertainment',
+  'news-world': 'news',
+  'kids-family': 'kids',
+};
+
 async function loadLiveCollection(
   credentials: XtreamCredentials,
   collection: Collection,
   healthCatIds: string[],
-  cache?: Record<string, LiveStream[]>
+  cache?: Record<string, LiveStream[]>,
+  veeHomepage?: VeePlaylist[] | null
 ): Promise<LiveStream[]> {
+  // VEE PATH (highest priority): AI-curated, time-aware playlist
+  if (veeHomepage && veeHomepage.length > 0) {
+    const veeId = COLLECTION_TO_VEE[collection.id];
+    if (veeId) {
+      const veeRow = veeHomepage.find(h => h.id === veeId);
+      if (veeRow && veeRow.channels.length > 0) {
+        console.log('[VEE] Using VEE row for %s (%s) — %d channels', collection.id, veeId, veeRow.channels.length);
+        return curatorToLiveStreams(veeRow.channels).slice(0, collection.limit);
+      }
+    }
+  }
+
   // CURATOR PATH: if curator data available, use it directly
   if (hasCuratorData()) {
     const expId = COLLECTION_TO_EXPERIENCE[collection.id];
@@ -368,6 +392,9 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const { profile } = useUserProfile();
   const [rows, setRows] = useState<RowData[]>([]);
   const [smartRows, setSmartRows] = useState<RowData[]>([]);
+  const [veeHomepageData, setVeeHomepageData] = useState<VeePlaylist[] | null>(null);
+  const [veeHotRow, setVeeHotRow] = useState<VeePlaylist | null>(null);
+  const [veeExploreRow, setVeeExploreRow] = useState<VeePlaylist | null>(null);
   const [veePool, setVeePool] = useState<VodStream[]>([]);
   const [veeTmdbMap, setVeeTmdbMap] = useState<Record<string, TmdbEntry>>({});
   const [loading, setLoading] = useState(true);
@@ -404,9 +431,10 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       console.log('[HOME] Loading started');
       const t0 = Date.now();
       try {
-        // Fetch curator (Supabase-backed) + health + legacy fallbacks in parallel
-        const [curatorResult, health, verifiedData, probeData] = await Promise.all([
+        // Fetch curator (Supabase-backed) + VEE + health + legacy fallbacks in parallel
+        const [curatorResult, veeResult, health, verifiedData, probeData] = await Promise.all([
           fetchCuratorData(),
+          fetchVeeData(),
           fetchVpsHealth(),
           fetchVerifiedData(),
           fetchServerProbeData(),
@@ -421,6 +449,12 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           seedProbeCacheFromServer(probeData);
           console.log('[HOME] Fallback to legacy probe:', probeData.alive_set?.length, 'channels');
         }
+        // Store VEE homepage rows for tagline overlay + new special rows
+        if (veeResult) {
+          setVeeHomepageData(veeResult.homepage || null);
+          setVeeHotRow(veeResult.vee_hot || null);
+          setVeeExploreRow(veeResult.vee_explore || null);
+        }
         const liveCatIds: string[] = health.liveCategories || [];
 
         // Load collections progressively — each row appears as it resolves
@@ -431,7 +465,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           const rowData: RowData = { collection };
           try {
             if (collection.type === 'live') {
-              rowData.liveStreams = await loadLiveCollection(credentials, collection, liveCatIds, categoryCache.current);
+              rowData.liveStreams = await loadLiveCollection(credentials, collection, liveCatIds, categoryCache.current, veeResult?.homepage);
             } else if (collection.type === 'vod') {
               rowData.vodStreams = await loadVodCollection(credentials, collection);
             } else if (collection.type === 'series') {
@@ -1153,9 +1187,30 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                 onPlayMovie={playMovie}
                 onOpenDetail={(movie, tmdb) => setDetailMovie({ movie, tmdbMap: tmdb })}
                 onNavigate={navigate}
+                veeTagline={veeHomepageData?.find(h => h.id === COLLECTION_TO_VEE[row.collection.id])?.tagline}
               />
             </React.Fragment>
           ))}
+
+          {/* ── VEE Hot — AI trending channels ─────────────────── */}
+          {veeHotRow && veeHotRow.channels.length > 0 && (
+            <VeeLiveRow
+              playlist={veeHotRow}
+              label="VEE Hot"
+              credentials={credentials}
+              onPlayLive={playLive}
+            />
+          )}
+
+          {/* ── VEE Explore — diversity pick ─────────────────────── */}
+          {veeExploreRow && veeExploreRow.channels.length > 0 && (
+            <VeeLiveRow
+              playlist={veeExploreRow}
+              label="VEE Explore"
+              credentials={credentials}
+              onPlayLive={playLive}
+            />
+          )}
         </div>
       )}
 
@@ -1208,6 +1263,7 @@ function SectionHeader({
   emoji,
   title,
   subtitle,
+  veeTagline,
   icon,
   seeAllTo,
   onNavigate,
@@ -1215,6 +1271,7 @@ function SectionHeader({
   emoji: string;
   title: string;
   subtitle?: string;
+  veeTagline?: string;
   icon?: React.ReactNode;
   seeAllTo?: string;
   onNavigate?: (path: string) => void;
@@ -1227,8 +1284,10 @@ function SectionHeader({
     : title.startsWith('__becauseYouWatched__') ? `${t(lang, 'becauseYouWatched')} ${title.replace('__becauseYouWatched__ ', '')}`
     : title;
 
-  // Translate collection description if a mapping exists
-  const translatedSubtitle = COLLECTION_DESC_MAP[title]
+  // VEE tagline takes priority over hardcoded description, then fall back to translated desc
+  const translatedSubtitle = veeTagline
+    ? veeTagline
+    : COLLECTION_DESC_MAP[title]
     ? t(lang, COLLECTION_DESC_MAP[title])
     : subtitle || undefined;
 
@@ -1271,6 +1330,72 @@ function SectionHeader({
   );
 }
 
+// ── VEE Live Row — special AI-curated live channel rows ──────────
+
+function VeeLiveRow({
+  playlist,
+  label,
+  credentials,
+  onPlayLive,
+}: {
+  playlist: VeePlaylist;
+  label: string;
+  credentials: XtreamCredentials;
+  onPlayLive: (stream: LiveStream, allStreams?: LiveStream[]) => void;
+}) {
+  const { lang } = useLanguage();
+  const streams = curatorToLiveStreams(playlist.channels);
+  const aliveStreams = streams.filter(s => isChannelProbeAlive(s.stream_id));
+  if (aliveStreams.length === 0) return null;
+
+  const isHot = label === 'VEE Hot';
+
+  return (
+    <section className="mb-1 reveal">
+      <div className="px-4 mb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-baseline gap-2">
+            <div
+              className="w-1.5 h-1.5 rounded-full flex-shrink-0 mb-0.5"
+              style={{
+                background: isHot ? '#F97316' : '#3B82F6',
+                boxShadow: isHot ? '0 0 6px rgba(249,115,22,0.5)' : '0 0 6px rgba(59,130,246,0.4)',
+              }}
+            />
+            <h2 className="text-[20px] font-black tracking-tight text-white" style={{ textShadow: '0 0 40px rgba(157,78,221,0.08)' }}>
+              {label}
+            </h2>
+          </div>
+        </div>
+        {playlist.tagline && (
+          <p className="text-[11px] text-white/25 mt-0.5 pl-3.5">{playlist.tagline}</p>
+        )}
+      </div>
+      <div data-focus-lens className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3">
+        {aliveStreams.map((stream, i) => (
+          <button
+            key={stream.stream_id}
+            onClick={() => onPlayLive(stream, aliveStreams)}
+            className="flex-shrink-0 group"
+            style={{ width: i === 0 ? 160 : 140, ...(i < 12 ? { animation: `vee-card-in 0.7s cubic-bezier(0.4, 0, 0.2, 1) ${i * 90}ms both` } : {}) }}
+          >
+            <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 transition-shadow duration-300 group-hover:shadow-lg group-hover:shadow-primary/8"
+              style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <ChannelIcon src={stream.stream_icon} name={stream.name} size="lg" className="!w-full !h-full !rounded-xl" />
+              <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-black/50 rounded text-[8px] font-semibold"
+                style={{ color: isHot ? '#FB923C' : '#60A5FA' }}>
+                <span className="w-1 h-1 rounded-full live-badge-pulse" style={{ background: isHot ? '#F97316' : '#3B82F6' }} />
+                {t(lang, 'live').toUpperCase()}
+              </div>
+            </div>
+            <p className="text-[10px] text-white/40 truncate group-hover:text-white/70 transition-colors">{stream.name}</p>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 // ── Collection Row Renderer ───────────────────────────────────────
 
 function CollectionRow({
@@ -1279,12 +1404,14 @@ function CollectionRow({
   onPlayMovie,
   onOpenDetail,
   onNavigate,
+  veeTagline,
 }: {
   row: RowData;
   onPlayLive: (stream: LiveStream, allStreams?: LiveStream[]) => void;
   onPlayMovie: (movie: VodStream) => void;
   onOpenDetail?: (movie: VodStream, tmdbMap?: Record<string, TmdbEntry>) => void;
   onNavigate: (path: string) => void;
+  veeTagline?: string;
 }) {
   const { lang } = useLanguage();
   const { collection } = row;
@@ -1299,6 +1426,7 @@ function CollectionRow({
           emoji={collection.emoji}
           title={collection.name}
           subtitle={'description' in collection ? collection.description : undefined}
+          veeTagline={veeTagline}
           seeAllTo={collection.navigateTo}
           onNavigate={onNavigate}
         />

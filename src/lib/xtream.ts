@@ -931,6 +931,49 @@ export function hasCuratorData(): boolean {
   return curatorData !== null;
 }
 
+// --- VEE Data (AI-curated playlists, 3x daily) ---
+// VPS /vee.json — built by vee-engine.py, 30-min cache
+// Returns 7 homepage rows + VEE Hot + VEE Explore + 6 moods
+
+export interface VeePlaylist {
+  id: string;
+  name: string;
+  tagline: string;
+  channels: CuratorChannel[];
+}
+
+export interface VeeData {
+  ts: string;
+  time_slot: string;
+  homepage: VeePlaylist[];
+  vee_hot: VeePlaylist;
+  vee_explore: VeePlaylist;
+  moods: Record<string, VeePlaylist>;
+}
+
+let veeData: VeeData | null = null;
+
+export async function fetchVeeData(): Promise<VeeData | null> {
+  try {
+    const res = await fetch(`${PROXY}/vee.json`, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return null;
+    const data = await res.json() as VeeData;
+    if (!data.homepage?.length) return null;
+    veeData = data;
+    console.log('[VEE] Loaded %d homepage rows, %s slot, hot:%d explore:%d moods:%d',
+      data.homepage.length, data.time_slot,
+      data.vee_hot?.channels?.length || 0,
+      data.vee_explore?.channels?.length || 0,
+      Object.keys(data.moods || {}).length);
+    return data;
+  } catch (e) {
+    console.warn('[VEE] Fetch failed:', e);
+    return null;
+  }
+}
+
+export function getVeeData(): VeeData | null { return veeData; }
+
 // --- VPS Health Data (server-side hourly scan) ---
 // The VPS checks every category hourly and writes /channels.json
 // App fetches this on load → filters dead categories from UI
