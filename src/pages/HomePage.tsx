@@ -15,6 +15,10 @@ import {
   seedProbeCacheFromServer,
   fetchVerifiedData,
   seedVerifiedSet,
+  fetchCuratorData,
+  getCuratorExperience,
+  curatorToLiveStreams,
+  hasCuratorData,
   isChannelProbeAlive,
   getTmdbMap,
   safeImageUrl,
@@ -138,13 +142,33 @@ const COLLECTION_DESC_MAP: Record<string, TranslationKey> = {
 
 // ── Data loaders for each collection type ─────────────────────────
 
+// Map homepage collection IDs to curator experience IDs
+const COLLECTION_TO_EXPERIENCE: Record<string, string> = {
+  'live-sports': 'sports',
+  'world-cinema': 'entertainment',
+  'news-world': 'news',
+  'kids-family': 'kids',
+};
+
 async function loadLiveCollection(
   credentials: XtreamCredentials,
   collection: Collection,
   healthCatIds: string[],
   cache?: Record<string, LiveStream[]>
 ): Promise<LiveStream[]> {
-  // Load ALL categories (removed .slice(0,4) — was hiding Football/EPL)
+  // CURATOR PATH: if curator data available, use it directly
+  if (hasCuratorData()) {
+    const expId = COLLECTION_TO_EXPERIENCE[collection.id];
+    if (expId) {
+      const curatorChannels = getCuratorExperience(expId);
+      if (curatorChannels && curatorChannels.length > 0) {
+        const streams = curatorToLiveStreams(curatorChannels);
+        return dailyShuffle(streams, collection.id).slice(0, collection.limit);
+      }
+    }
+  }
+
+  // FALLBACK: category-based loading
   const activeCats = collection.categoryIds.filter(
     (id) => healthCatIds.length === 0 || healthCatIds.includes(id)
   );
@@ -163,7 +187,6 @@ async function loadLiveCollection(
   for (const r of results) {
     if (r.status === 'fulfilled') all.push(...r.value);
   }
-  // Filter probe-dead BEFORE slicing — so limit is always fully filled
   const alive = all.filter(s => isChannelProbeAlive(s.stream_id));
   const shuffled = dailyShuffle(alive.length > 0 ? alive : all, collection.id);
   return sortGemsFirst(shuffled).slice(0, collection.limit);
@@ -381,16 +404,23 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       console.log('[HOME] Loading started');
       const t0 = Date.now();
       try {
-        // Fetch health + verified data (two-tier) + legacy probe in parallel
-        const [health, verifiedData, probeData] = await Promise.all([
+        // Fetch curator (Supabase-backed) + health + legacy fallbacks in parallel
+        const [curatorResult, health, verifiedData, probeData] = await Promise.all([
+          fetchCuratorData(),
           fetchVpsHealth(),
           fetchVerifiedData(),
           fetchServerProbeData(),
         ]);
-        console.log('[HOME] Health loaded in', Date.now() - t0, 'ms — live categories:', (health.liveCategories || []).length);
-        // Verified takes priority (video+audio confirmed), legacy probe as fallback
-        if (verifiedData) { seedVerifiedSet(verifiedData); console.log('[HOME] Using verified set:', verifiedData.verified, 'channels'); }
-        else if (probeData) { seedProbeCacheFromServer(probeData); console.log('[HOME] Fallback to legacy probe:', probeData.alive_set?.length, 'channels'); }
+        console.log('[HOME] Data loaded in', Date.now() - t0, 'ms');
+        if (curatorResult) {
+          console.log('[HOME] Using curator: %d channels, %d experiences', curatorResult.total, Object.keys(curatorResult.experiences).length);
+        } else if (verifiedData) {
+          seedVerifiedSet(verifiedData);
+          console.log('[HOME] Fallback to verified set:', verifiedData.verified, 'channels');
+        } else if (probeData) {
+          seedProbeCacheFromServer(probeData);
+          console.log('[HOME] Fallback to legacy probe:', probeData.alive_set?.length, 'channels');
+        }
         const liveCatIds: string[] = health.liveCategories || [];
 
         // Load collections progressively — each row appears as it resolves

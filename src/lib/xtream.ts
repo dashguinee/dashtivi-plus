@@ -793,6 +793,91 @@ export function getExperienceCategoryIds(experienceId: string): string[] | null 
 }
 
 
+// --- Curator Data (Supabase-backed, replaces category loading) ---
+// VPS reads from Supabase every 5 min, serves /curator.json
+// Contains full channel metadata per experience — no secondary fetches needed
+
+export interface CuratorChannel {
+  id: number;
+  name: string;
+  icon: string;
+  quality: string;
+  gem: boolean;
+  cat: string;
+}
+
+export interface CuratorData {
+  ts: string;
+  total: number;
+  experiences: Record<string, CuratorChannel[]>;
+}
+
+let curatorData: CuratorData | null = null;
+let curatorPromise: Promise<CuratorData | null> | null = null;
+
+export async function fetchCuratorData(): Promise<CuratorData | null> {
+  // Feature flag — check version.json curator field
+  try {
+    const vRes = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store', signal: AbortSignal.timeout(2000) });
+    const vData = await vRes.json();
+    if (!vData.curator) {
+      console.log('[CURATOR] Disabled by feature flag');
+      return null;
+    }
+  } catch { return null; }
+
+  if (curatorPromise) return curatorPromise;
+  curatorPromise = (async () => {
+    try {
+      const res = await fetch(`${PROXY}/curator.json`, { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) return null;
+      const data = await res.json() as CuratorData;
+      if (!data.experiences || Object.keys(data.experiences).length === 0) return null;
+      curatorData = data;
+      // Also seed verified set from curator channels (all curator channels are verified)
+      const allIds: number[] = [];
+      for (const channels of Object.values(data.experiences)) {
+        if (channels) for (const ch of channels) allIds.push(ch.id);
+      }
+      verifiedSet = new Set(allIds);
+      console.log('[CURATOR] Loaded %d channels across %d experiences', data.total, Object.keys(data.experiences).length);
+      return data;
+    } catch { return null; }
+    finally { curatorPromise = null; }
+  })();
+  return curatorPromise;
+}
+
+/** Get curator channels for an experience — returns full metadata, no secondary fetch needed */
+export function getCuratorExperience(experienceId: string): CuratorChannel[] | null {
+  if (!curatorData) return null;
+  return curatorData.experiences[experienceId] || null;
+}
+
+/** Convert curator channels to LiveStream format for existing UI compatibility */
+export function curatorToLiveStreams(channels: CuratorChannel[]): LiveStream[] {
+  return channels.map(ch => ({
+    stream_id: ch.id,
+    name: ch.name,
+    stream_icon: ch.icon,
+    stream_type: 'live' as const,
+    category_id: ch.cat || '',
+    epg_channel_id: '',
+    is_adult: '0',
+    custom_sid: '',
+    tv_archive: 0,
+    direct_source: '',
+    tv_archive_duration: 0,
+    num: 0,
+    added: '',
+  }));
+}
+
+/** Check if curator data is available */
+export function hasCuratorData(): boolean {
+  return curatorData !== null;
+}
+
 // --- VPS Health Data (server-side hourly scan) ---
 // The VPS checks every category hourly and writes /channels.json
 // App fetches this on load → filters dead categories from UI

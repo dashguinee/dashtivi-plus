@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Play, Search, X, ChevronRight, LayoutGrid, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart } from 'lucide-react';
 import { t, useLanguage } from '@/i18n';
 import type { XtreamCredentials, LiveStream, GroupedChannel, FreeChannel } from '@/lib/xtream';
-import { getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getExperienceIds, getExperienceCategoryIds, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
+import { getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getExperienceIds, getExperienceCategoryIds, fetchCuratorData, getCuratorExperience, curatorToLiveStreams, hasCuratorData, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
 import {
   LIVETV_THEMES, SPORT_TYPES, ENTERTAINMENT_TYPES, KIDS_TYPES,
   CINEMA_TYPES, MUSIC_TYPES, DISCOVERY_TYPES, FAITH_TYPES, PREMIUM4K_TYPES,
@@ -142,6 +142,49 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
     let mounted = true;
     async function loadThemes() {
       try {
+        // Try curator data first (Supabase-backed, full metadata, no category fetching)
+        const curatorResult = await fetchCuratorData();
+
+        if (curatorResult) {
+          // CURATOR PATH: Database-backed, clean, no category loading needed
+          console.log('[LIVE] Using curator data: %d experiences', Object.keys(curatorResult.experiences).length);
+
+          const freeChannelsPromise = getFreeChannels();
+          const map: Record<string, LiveStream[]> = {};
+          const urlMap: Record<number, string> = {};
+
+          for (const theme of LIVETV_THEMES) {
+            const classifiedExp = THEME_TO_CLASSIFIED[theme.id];
+            const curatorChannels = classifiedExp ? getCuratorExperience(classifiedExp) : null;
+
+            let streams: LiveStream[] = [];
+            if (curatorChannels && curatorChannels.length > 0) {
+              streams = curatorToLiveStreams(curatorChannels);
+            }
+
+            // Merge free channels
+            const experiences = THEME_TO_EXPERIENCE[theme.id];
+            if (experiences) {
+              const allFree = await freeChannelsPromise;
+              const freeStreams = allFree.filter(ch => experiences.includes(ch.experience));
+              const freeAsLive = freeStreams.map(freeToLiveStream);
+              streams = [...streams, ...freeAsLive];
+              Object.assign(urlMap, buildFreeUrlMap(freeStreams));
+            }
+
+            map[theme.id] = streams;
+          }
+
+          if (!mounted) return;
+          setThemeStreams(map);
+          setFreeUrlMap(prev => ({ ...prev, ...urlMap }));
+          setThemesLoading(false);
+          return;
+        }
+
+        // FALLBACK: Legacy category-based loading (if curator unavailable)
+        console.log('[LIVE] Curator unavailable, falling back to category loading');
+
         const [healthData, verifiedData, probeData] = await Promise.all([
           fetchVpsHealth(),
           fetchVerifiedData(),
@@ -158,7 +201,6 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
           const probeTs = probeData.ts ? new Date(probeData.ts).getTime() : 0;
           if (!probeTs || Date.now() - probeTs > STALE_MS) setProbeStale(true);
         } else {
-          // No probe data at all — treat as stale
           setProbeStale(true);
         }
 
@@ -280,14 +322,24 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // ── Load browse streams for active experience ──────────────────
   useEffect(() => {
     if (!showBrowse || !activeExperience) return;
-    const exp = BROWSE_EXPERIENCES.find(e => e.id === activeExperience);
-    if (!exp) return;
     let mounted = true;
     async function load() {
       setBrowseLoading(true);
       setBrowseError(false);
       try {
-        const promises = exp!.categoryIds
+        // CURATOR PATH — use database-curated channels when available
+        if (hasCuratorData()) {
+          const curatorChannels = getCuratorExperience(activeExperience);
+          if (curatorChannels) {
+            if (mounted) setBrowseStreams(curatorToLiveStreams(curatorChannels));
+            if (mounted) setBrowseLoading(false);
+            return;
+          }
+        }
+        // FALLBACK — category-based loading from Xtream API
+        const exp = BROWSE_EXPERIENCES.find(e => e.id === activeExperience);
+        if (!exp) { if (mounted) setBrowseLoading(false); return; }
+        const promises = exp.categoryIds
           .filter(id => !DEAD_CATEGORY_IDS.has(id))
           .map(id => getLiveStreams(credentials, id).catch(() => [] as LiveStream[]));
         const results = await Promise.all(promises);
