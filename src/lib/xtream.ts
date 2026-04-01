@@ -1271,15 +1271,40 @@ async function sbRpc<T>(fn: string, body: Record<string, unknown> = {}): Promise
 }
 
 /** Fetch VOD by category from Supabase (replaces Xtream get_vod_streams) */
-export async function getVodByCategory(catId: string): Promise<VodDbItem[]> {
-  const data = await sbRpc<VodDbItem[]>('get_vod_by_category', { cat_id: catId });
-  return data || [];
+export async function getVodByCategory(catId: string, limit = 100): Promise<VodDbItem[]> {
+  if (!SB_ANON) return [];
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/tivi_vod?category_id=eq.${catId}&is_active=eq.true&is_hidden=eq.false&select=vod_id,name,poster,quality,rating,year,genre,tmdb_id,is_gem,container_extension,added_ts&order=is_gem.desc,rating.desc.nullslast,added_ts.desc.nullslast&limit=${limit}`,
+      { headers: { 'apikey': SB_ANON, 'Authorization': `Bearer ${SB_ANON}` }, signal: AbortSignal.timeout(8000) }
+    );
+    if (!res.ok) return [];
+    const rows = await res.json();
+    return rows.map((r: Record<string, unknown>) => ({
+      id: r.vod_id, name: r.name, poster: r.poster || '', quality: r.quality || 'SD',
+      rating: Number(r.rating) || 0, year: r.year as number | null, genre: (r.genre as string) || '',
+      tmdb_id: r.tmdb_id as number | null, gem: !!r.is_gem, ext: (r.container_extension as string) || 'mp4',
+      duration: null, added: Number(r.added_ts) || 0,
+    })) as VodDbItem[];
+  } catch { return []; }
 }
 
 /** Fetch series by category from Supabase */
-export async function getSeriesByCategory(catId: string): Promise<SeriesDbItem[]> {
-  const data = await sbRpc<SeriesDbItem[]>('get_series_by_category', { cat_id: catId });
-  return data || [];
+export async function getSeriesByCategory(catId: string, limit = 100): Promise<SeriesDbItem[]> {
+  if (!SB_ANON) return [];
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/tivi_series?category_id=eq.${catId}&is_active=eq.true&is_hidden=eq.false&select=series_id,name,cover,genre,rating,tmdb_id,is_gem,season_count,episode_count&order=is_gem.desc,rating.desc.nullslast,last_modified_ts.desc.nullslast&limit=${limit}`,
+      { headers: { 'apikey': SB_ANON, 'Authorization': `Bearer ${SB_ANON}` }, signal: AbortSignal.timeout(8000) }
+    );
+    if (!res.ok) return [];
+    const rows = await res.json();
+    return rows.map((r: Record<string, unknown>) => ({
+      id: r.series_id, name: r.name, cover: r.cover || '', genre: (r.genre as string) || '',
+      rating: Number(r.rating) || 0, tmdb_id: r.tmdb_id as number | null, gem: !!r.is_gem,
+      seasons: r.season_count as number | null, episodes: r.episode_count as number | null,
+    })) as SeriesDbItem[];
+  } catch { return []; }
 }
 
 /** Search VOD from Supabase */
