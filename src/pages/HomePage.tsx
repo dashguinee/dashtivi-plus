@@ -516,9 +516,8 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   // ── Smart Rows (lazy, after main content loads) ─────────────────
 
   useEffect(() => {
-    // Only run after main rows loaded + profile exists
-    // Start immediately — don't wait for main rows or profile
-    if (!credentials) return;
+    // Defer smart rows until main content is loaded (saves 4.5MB on first paint)
+    if (!credentials || loading) return;
     const userProfile = profile; // may be null on first visit
     let mounted = true;
 
@@ -624,7 +623,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
     loadSmartRows();
     return () => { mounted = false; };
-  }, [credentials]);
+  }, [credentials, loading]);
 
   // ── Hex Sections — independent loading ──────────────────────
   useEffect(() => {
