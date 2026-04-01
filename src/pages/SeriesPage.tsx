@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { Play, X, Download, Search, SlidersHorizontal } from 'lucide-react';
 import type { XtreamCredentials, SeriesItem, SeriesInfo, Episode } from '@/lib/xtream';
-import { getSeries, getSeriesInfo, buildSeriesUrl, getTmdbMap } from '@/lib/xtream';
+import { getSeries, getSeriesInfo, buildSeriesUrl, getTmdbMap, getSeriesByCategory, seriesDbToItem, searchSeries } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { PosterCard } from '@/components/ui/PosterCard';
 import { VeeCollectionRow } from '@/components/ui/VeeCollectionRow';
@@ -187,22 +187,37 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       setLoading(true);
       setSeriesError(false);
       try {
-        if (catIds.length === 1) {
-          const result = await getSeries(credentials, catIds[0]);
-          if (mounted) setSeriesList(result);
-        } else {
-          const results = await Promise.allSettled(catIds.map(id => getSeries(credentials, id)));
-          if (!mounted) return;
-          const seen = new Set<number>();
-          const merged: SeriesItem[] = [];
-          for (const r of results) {
-            if (r.status === 'fulfilled') {
-              for (const s of r.value) {
-                if (!seen.has(s.series_id)) { seen.add(s.series_id); merged.push(s); }
-              }
+        // Supabase-first: try DB, fall back to Xtream
+        const sbResults = await Promise.allSettled(catIds.map(id => getSeriesByCategory(id)));
+        const sbMerged: SeriesItem[] = [];
+        const seen = new Set<number>();
+        for (const r of sbResults) {
+          if (r.status === 'fulfilled' && r.value.length > 0) {
+            for (const s of r.value) {
+              if (!seen.has(s.id)) { seen.add(s.id); sbMerged.push(seriesDbToItem(s)); }
             }
           }
-          setSeriesList(merged);
+        }
+        if (sbMerged.length > 0) {
+          if (mounted) setSeriesList(sbMerged);
+        } else {
+          // Fallback to Xtream
+          if (catIds.length === 1) {
+            const result = await getSeries(credentials, catIds[0]);
+            if (mounted) setSeriesList(result);
+          } else {
+            const results = await Promise.allSettled(catIds.map(id => getSeries(credentials, id)));
+            if (!mounted) return;
+            const merged: SeriesItem[] = [];
+            for (const r of results) {
+              if (r.status === 'fulfilled') {
+                for (const s of r.value) {
+                  if (!seen.has(s.series_id)) { seen.add(s.series_id); merged.push(s); }
+                }
+              }
+            }
+            setSeriesList(merged);
+          }
         }
       } catch {
         if (mounted) { setSeriesList([]); setSeriesError(true); }
@@ -226,11 +241,17 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       setSearchTruncated(false);
       try {
         if (q.length < 3) {
-          // Short query — filter current list only
           const filtered = seriesList.filter(s => s.name.toLowerCase().includes(q));
           if (mounted) { setSearchResults(filtered.slice(0, LIMIT)); setSearchTruncated(filtered.length > LIMIT); }
         } else {
-          // Longer query — search across parent's searchCategoryIds
+          // Supabase search first — instant across 15K series
+          const sbResults = await searchSeries(q, LIMIT);
+          if (sbResults.length > 0) {
+            if (mounted) { setSearchResults(sbResults.map(seriesDbToItem).slice(0, LIMIT)); setSearchTruncated(sbResults.length >= LIMIT); }
+            if (mounted) setSearchLoading(false);
+            return;
+          }
+          // Fallback to Xtream
           const results = await Promise.allSettled(
             currentParent.searchCategoryIds.map(id => getSeries(credentials, id).catch(() => [] as SeriesItem[]))
           );

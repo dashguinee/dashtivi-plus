@@ -3,7 +3,7 @@ import { Download, Search, X, SlidersHorizontal, Moon, TrendingUp, Coffee, Rabbi
 import { getActiveMomentPacks, getMomentPackResults } from '@/lib/moment-packs';
 import type { MomentPack } from '@/lib/moment-packs';
 import type { XtreamCredentials, VodStream } from '@/lib/xtream';
-import { getVodStreams, buildVodUrl, getTmdbMap } from '@/lib/xtream';
+import { getVodStreams, buildVodUrl, getTmdbMap, getVodByCategory, vodDbToStream, searchVod } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { PosterCard } from '@/components/ui/PosterCard';
 import { VeeCollectionRow } from '@/components/ui/VeeCollectionRow';
@@ -186,22 +186,37 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       setLoading(true);
       setMoviesError(false);
       try {
-        if (catIds.length === 1) {
-          const result = await getVodStreams(credentials, catIds[0]);
-          if (mounted) setMovies(result);
-        } else {
-          const results = await Promise.allSettled(catIds.map(id => getVodStreams(credentials, id)));
-          if (!mounted) return;
-          const seen = new Set<number>();
-          const merged: VodStream[] = [];
-          for (const r of results) {
-            if (r.status === 'fulfilled') {
-              for (const m of r.value) {
-                if (!seen.has(m.stream_id)) { seen.add(m.stream_id); merged.push(m); }
-              }
+        // Supabase-first: try DB, fall back to Xtream API
+        const sbResults = await Promise.allSettled(catIds.map(id => getVodByCategory(id)));
+        const sbMerged: VodStream[] = [];
+        const seen = new Set<number>();
+        for (const r of sbResults) {
+          if (r.status === 'fulfilled' && r.value.length > 0) {
+            for (const m of r.value) {
+              if (!seen.has(m.id)) { seen.add(m.id); sbMerged.push(vodDbToStream(m)); }
             }
           }
-          setMovies(merged);
+        }
+        if (sbMerged.length > 0) {
+          if (mounted) setMovies(sbMerged);
+        } else {
+          // Fallback to Xtream API
+          if (catIds.length === 1) {
+            const result = await getVodStreams(credentials, catIds[0]);
+            if (mounted) setMovies(result);
+          } else {
+            const results = await Promise.allSettled(catIds.map(id => getVodStreams(credentials, id)));
+            if (!mounted) return;
+            const merged: VodStream[] = [];
+            for (const r of results) {
+              if (r.status === 'fulfilled') {
+                for (const m of r.value) {
+                  if (!seen.has(m.stream_id)) { seen.add(m.stream_id); merged.push(m); }
+                }
+              }
+            }
+            setMovies(merged);
+          }
         }
       } catch {
         if (mounted) { setMovies([]); setMoviesError(true); }
@@ -228,6 +243,14 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           const filtered = movies.filter(m => m.name.toLowerCase().includes(q));
           if (mounted) { setSearchResults(filtered.slice(0, LIMIT)); setSearchTruncated(filtered.length > LIMIT); }
         } else {
+          // Supabase search first — instant across 60K movies
+          const sbResults = await searchVod(q, LIMIT);
+          if (sbResults.length > 0) {
+            if (mounted) { setSearchResults(sbResults.map(vodDbToStream).slice(0, LIMIT)); setSearchTruncated(sbResults.length >= LIMIT); }
+            if (mounted) setSearchLoading(false);
+            return;
+          }
+          // Fallback to Xtream category search
           const results = await Promise.allSettled(
             currentParent.searchCategoryIds.map(id => getVodStreams(credentials, id).catch(() => [] as VodStream[]))
           );
