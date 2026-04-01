@@ -121,17 +121,17 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
 
   return (
     <div
-      className={`${sizes[size]} rounded-xl flex items-center justify-center font-bold flex-shrink-0 ${className}`}
+      className={`${sizes[size]} rounded-xl flex items-center justify-center font-black flex-shrink-0 ${className}`}
       style={{
-        background: 'linear-gradient(135deg, rgba(157,78,221,0.12) 0%, rgba(10,10,18,0.95) 50%, rgba(157,78,221,0.06) 100%)',
-        border: '1px solid rgba(157,78,221,0.1)',
-        color: 'rgba(157,78,221,0.7)',
-        fontSize: size === 'lg' ? '14px' : size === 'md' ? '11px' : '9px',
-        letterSpacing: '0.05em',
-        textShadow: '0 0 8px rgba(157,78,221,0.3)',
+        background: 'linear-gradient(135deg, rgba(157,78,221,0.15) 0%, rgba(10,10,18,0.95) 50%, rgba(157,78,221,0.08) 100%)',
+        border: '1px solid rgba(157,78,221,0.12)',
+        color: 'rgba(199,125,255,0.6)',
+        fontSize: size === 'lg' ? '11px' : size === 'md' ? '9px' : '7px',
+        letterSpacing: '0.12em',
+        textShadow: '0 0 10px rgba(157,78,221,0.3)',
       }}
     >
-      {letter}
+      DASH
     </div>
   );
 });
