@@ -15,26 +15,13 @@ export function startPreload() {
 
   const loads: Promise<unknown>[] = [];
 
-  // Phase 1: VPS health + probe (immediate)
-  loads.push(
-    fetch('https://stream.zionsynapse.online/health', { signal: AbortSignal.timeout(5000) }).catch(() => {}),
-    fetch('/probe-results.json', { signal: AbortSignal.timeout(5000) }).catch(() => {}),
-  );
-
-  // Phase 2: TMDB data + free channels
-  loads.push(
-    fetch('/tmdb-data.json', { signal: AbortSignal.timeout(8000) }).catch(() => {}),
-    fetch('/free-channels-curated.json', { signal: AbortSignal.timeout(5000) }).catch(() => {}),
-  );
-
-  // Phase 3: Page chunks
+  // Only preload what the homepage needs for first paint
+  // Everything else loads lazily when the user navigates
   loads.push(
     import('@/pages/HomePage').catch(() => {}),
-    import('@/pages/LiveTVPage').catch(() => {}),
-    import('@/lib/logo-map.generated').catch(() => {}),
   );
 
-  // Signal ready when critical assets are loaded (or timeout)
+  // Signal ready quickly — don't block splash on data fetches
   Promise.allSettled(loads).then(() => resolveReady());
 
   // Failsafe — resolve after 6s no matter what
@@ -44,18 +31,8 @@ export function startPreload() {
 /**
  * Preload after auth — warm up the API cache with credentials
  */
-export function preloadApiData(proxyUrl: string, username: string, password: string) {
-  const enc = (s: string) => encodeURIComponent(s);
-  const base = `${proxyUrl}/api?u=${enc(username)}&p=${enc(password)}`;
-
-  // Category lists (small, fast)
-  fetch(`${base}&action=get_live_categories`, { signal: AbortSignal.timeout(8000) }).catch(() => {});
-  fetch(`${base}&action=get_vod_categories`, { signal: AbortSignal.timeout(8000) }).catch(() => {});
-  fetch(`${base}&action=get_series_categories`, { signal: AbortSignal.timeout(8000) }).catch(() => {});
-
-  // Homepage hot categories
-  const hotCats = ['749', '597', '234', '85', '353', '5'];
-  for (const cat of hotCats) {
-    fetch(`${base}&action=get_live_streams&category_id=${cat}`, { signal: AbortSignal.timeout(10000) }).catch(() => {});
-  }
+export function preloadApiData(proxyUrl: string, _username: string, _password: string) {
+  // Warm the curator + VEE cache (these are what the homepage actually uses)
+  fetch(`${proxyUrl}/curator.json`, { signal: AbortSignal.timeout(8000) }).catch(() => {});
+  fetch(`${proxyUrl}/vee.json`, { signal: AbortSignal.timeout(5000) }).catch(() => {});
 }
