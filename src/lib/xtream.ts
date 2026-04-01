@@ -1203,3 +1203,117 @@ export function clearXtreamCache(): void {
     }
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// Supabase VOD Layer — database-backed movie/series catalog
+// Falls back to Xtream API if Supabase unavailable
+// ═══════════════════════════════════════════════════════════════════
+
+const SB_URL = (import.meta.env.VITE_SUPABASE_URL || 'https://mclbbkmpovnvcfmwsoqt.supabase.co').trim();
+const SB_ANON = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+
+export interface VodDbItem {
+  id: number;
+  name: string;
+  poster: string;
+  quality: string;
+  rating: number;
+  year: number | null;
+  genre: string;
+  tmdb_id: number | null;
+  gem: boolean;
+  ext: string;
+  duration: number | null;
+  added: number;
+}
+
+export interface SeriesDbItem {
+  id: number;
+  name: string;
+  cover: string;
+  genre: string;
+  rating: number;
+  tmdb_id: number | null;
+  gem: boolean;
+  seasons: number | null;
+  episodes: number | null;
+}
+
+export interface VodCollection {
+  id: string;
+  name: string;
+  description: string;
+  source_type: string;
+  items: VodDbItem[];
+}
+
+let vodCuratorCache: { collections: VodCollection[]; total: number } | null = null;
+let seriesCuratorCache: { collections: { id: string; name: string; items: SeriesDbItem[] }[]; total: number } | null = null;
+
+async function sbRpc<T>(fn: string, body: Record<string, unknown> = {}): Promise<T | null> {
+  if (!SB_ANON) return null;
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SB_ANON,
+        'Authorization': `Bearer ${SB_ANON}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return null;
+    return await res.json() as T;
+  } catch {
+    return null;
+  }
+}
+
+/** Fetch VOD by category from Supabase (replaces Xtream get_vod_streams) */
+export async function getVodByCategory(catId: string): Promise<VodDbItem[]> {
+  const data = await sbRpc<VodDbItem[]>('get_vod_by_category', { cat_id: catId });
+  return data || [];
+}
+
+/** Fetch series by category from Supabase */
+export async function getSeriesByCategory(catId: string): Promise<SeriesDbItem[]> {
+  const data = await sbRpc<SeriesDbItem[]>('get_series_by_category', { cat_id: catId });
+  return data || [];
+}
+
+/** Search VOD from Supabase */
+export async function searchVod(query: string, maxResults = 30): Promise<VodDbItem[]> {
+  const data = await sbRpc<VodDbItem[]>('search_vod', { query, max_results: maxResults });
+  return data || [];
+}
+
+/** Search series from Supabase */
+export async function searchSeries(query: string, maxResults = 30): Promise<SeriesDbItem[]> {
+  const data = await sbRpc<SeriesDbItem[]>('search_series', { query, max_results: maxResults });
+  return data || [];
+}
+
+/** Convert VodDbItem to VodStream (compatibility with existing UI) */
+export function vodDbToStream(item: VodDbItem): VodStream {
+  return {
+    stream_id: item.id,
+    name: item.name,
+    stream_icon: item.poster,
+    container_extension: item.ext || 'mp4',
+    category_id: '',
+    rating: String(item.rating || ''),
+    added: String(item.added || ''),
+  };
+}
+
+/** Convert SeriesDbItem to SeriesItem (compatibility with existing UI) */
+export function seriesDbToItem(item: SeriesDbItem): SeriesItem {
+  return {
+    series_id: item.id,
+    name: item.name,
+    cover: item.cover,
+    category_id: '',
+    rating: String(item.rating || ''),
+  };
+}
