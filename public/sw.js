@@ -97,6 +97,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // --- CHANNEL ICONS: cache-first (logos don't change) ---
+  if (url.includes('/icons/') || (url.includes('supabase.co') && url.includes('channel-icons'))) {
+    event.respondWith(cacheFirstThenNetwork(request));
+    return;
+  }
+
   try {
     // --- HTML / NAVIGATION: network-first with cache fallback ---
     if (request.mode === 'navigate') {
