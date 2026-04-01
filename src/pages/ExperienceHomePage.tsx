@@ -251,6 +251,31 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
       { id: 'kids', name: 'Kids', gradient: 'from-pink-500/30 to-purple-500/20', icon: <Baby className="w-4 h-4" /> },
     ],
   },
+  africa: {
+    id: 'africa',
+    curatorId: 'africa',
+    veeHomepageId: 'homepage_africa',
+    name: 'The Motherland',
+    tagline: 'DSTV, Canal+, SuperSport — everything Africa watches.',
+    heroGradient: 'from-orange-900/40 via-[#060609] to-yellow-900/20',
+    accentColor: '#F97316',
+    accentGlow: 'rgba(249,115,22,0.3)',
+    icon: <Globe className="w-5 h-5" />,
+    subtypes: [],
+    timeGreetings: {
+      morning: 'Good morning Africa',
+      afternoon: 'African afternoon — the continent is live',
+      evening: 'Motherland prime time',
+      late_night: 'African nights — the continent never sleeps',
+    },
+    crossExperiences: [
+      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'entertainment', name: 'Entertainment', gradient: 'from-blue-500/30 to-purple-500/20', icon: <Sparkles className="w-4 h-4" /> },
+      { id: 'kids', name: 'Kids', gradient: 'from-pink-500/30 to-purple-500/20', icon: <Baby className="w-4 h-4" /> },
+      { id: 'music', name: 'Music', gradient: 'from-violet-500/30 to-pink-500/20', icon: <Music className="w-4 h-4" /> },
+      { id: 'news', name: 'News', gradient: 'from-red-500/30 to-orange-500/20', icon: <Radio className="w-4 h-4" /> },
+    ],
+  },
 };
 
 // ── Helper: Get time slot ────────────────────────────────────────────

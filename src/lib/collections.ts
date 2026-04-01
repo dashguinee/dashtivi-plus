@@ -188,7 +188,7 @@ export const COLLECTION_CARDS: CollectionCard[] = [
   { id: 'sports', name: 'Sports', emoji: '', gradient: 'from-primary/30 to-primary-dark/30', navigateTo: '/live/sports' },
   { id: 'movies', name: 'Movies', emoji: '', gradient: 'from-primary/25 to-primary-dark/25', navigateTo: '/movies' },
   { id: 'news', name: 'News', emoji: '', gradient: 'from-primary/20 to-white/5', navigateTo: '/live/news' },
-  { id: 'africa', name: 'Africa', emoji: '', gradient: 'from-accent/20 to-accent-gold/10', navigateTo: '/french' },
+  { id: 'africa', name: 'Motherland', emoji: '', gradient: 'from-accent/20 to-accent-gold/10', navigateTo: '/live/africa' },
   { id: 'series', name: 'Series', emoji: '', gradient: 'from-primary/30 to-primary-dark/20', navigateTo: '/series' },
   { id: 'kids', name: 'Kids', emoji: '', gradient: 'from-primary-light/20 to-primary/15', navigateTo: '/live/kids' },
   { id: 'music', name: 'Music', emoji: '', gradient: 'from-primary/25 to-primary-light/15', navigateTo: '/live/music' },
