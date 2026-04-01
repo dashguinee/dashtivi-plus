@@ -130,7 +130,11 @@ export function useAuth() {
       return;
     }
 
-    lookupCode(stored.code).then((result) => {
+    // Race lookup against a 6s timeout — never hang on loading screen
+    const timeout = new Promise<LookupResult>((resolve) =>
+      setTimeout(() => resolve({ ok: false, reason: 'network' }), 6000)
+    );
+    Promise.race([lookupCode(stored.code), timeout]).then((result) => {
       if (result.ok) {
         setState({
           isAuthenticated: true,
@@ -152,6 +156,10 @@ export function useAuth() {
         removeItem(AUTH_KEY);
         setState({ ...UNAUTHENTICATED, isLoading: false });
       }
+    }).catch(() => {
+      // Safety net — never hang on loading screen
+      removeItem(AUTH_KEY);
+      setState({ ...UNAUTHENTICATED, isLoading: false });
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

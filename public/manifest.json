@@ -4,7 +4,7 @@
   "description": "Premium Streaming. Live TV, Movies, Series.",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "background_color": "#0A0A0A",
   "theme_color": "#9D4EDD",
   "categories": ["entertainment", "video"],

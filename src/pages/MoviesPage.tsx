@@ -374,6 +374,16 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   return (
     <div className="pt-16 pb-32">
+      {/* ── Page Identity Header — Cinema ── */}
+      <div className="relative overflow-hidden" style={{ height: '120px' }}>
+        <div className="absolute inset-0 bg-gradient-to-b from-amber-900/30 via-[#060609] to-[#060609]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-800/10 to-transparent" />
+        <div className="relative h-full flex flex-col justify-end px-5 pb-5">
+          <h1 className="text-[28px] font-black text-white tracking-tight leading-none">Cinema</h1>
+          <p className="text-[11px] text-white/25 tracking-widest uppercase mt-1.5">The big screen, in your hands</p>
+        </div>
+      </div>
+
       {/* ── Sticky header ── */}
       <div className="sticky top-14 z-20 bg-[#0A0A0A]/95 backdrop-blur-lg border-b border-white/5">
         {/* Search */}
@@ -474,8 +484,8 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
       {/* ── Trending row ── */}
       {!isSearching && !loading && activeGenre === 0 && trendingMovies.length >= 5 && (
-        <div className="px-4 pt-4 pb-2">
-          <h2 className="text-sm font-semibold text-white/80 mb-2 flex items-center gap-2">
+        <div className="px-4 pt-6 pb-3">
+          <h2 className="text-sm font-semibold text-white/80 mb-3 flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
             {t(lang, 'trendingNow')}
           </h2>
@@ -492,7 +502,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
       {/* ── Moment pack rows ── */}
       {!isSearching && activeGenre === 0 && momentRows.length > 0 && (
-        <div className="space-y-5 py-3 mb-4">
+        <div className="space-y-7 py-5 mb-6">
           {momentRows.map(({ pack, items }) => (
             <section key={pack.id}>
               <div className="px-4 mb-2">
@@ -512,13 +522,13 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               </div>
             </section>
           ))}
-          <div className="mx-8 h-[0.5px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.06), transparent)' }} />
+          <div className="mx-6 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.08), transparent)' }} />
         </div>
       )}
 
       {/* ── VEE Intelligence rows ── */}
       {!isSearching && !loading && activeGenre === 0 && veeCollectionRows.length > 0 && (
-        <div className="space-y-5 py-3 mb-2">
+        <div className="space-y-7 py-5 mb-4">
           {veeCollectionRows.map(({ collection, items }) => (
             <VeeCollectionRow
               key={collection.id}
@@ -532,13 +542,13 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               }}
             />
           ))}
-          <div className="mx-8 h-[0.5px]" style={{ background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.06), transparent)' }} />
+          <div className="mx-6 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.08), transparent)' }} />
         </div>
       )}
 
       {/* ── Active filter indicator ── */}
       {activeGenre !== 0 && !loading && (
-        <div className="px-4 pt-3 pb-1 flex items-center gap-2">
+        <div className="px-5 pt-4 pb-2 flex items-center gap-2">
           <span className="text-xs text-white/30">
             {filteredAndSorted.length} {(() => { const gn = GENRE_FILTERS.find(g => g.id === activeGenre)?.name; return gn && GENRE_NAME_MAP[gn] ? t(lang, GENRE_NAME_MAP[gn]) : gn; })()} {t(lang, 'moviesLabel')}
           </span>
@@ -568,7 +578,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 p-4">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5">
             {(isSearching ? filteredAndSorted : filteredAndSorted.slice(0, displayLimit)).map(movie => (
               <div key={movie.stream_id} className="relative group/card">
                 <PosterCard title={movie.name} poster={movie.stream_icon} rating={movie.rating}
@@ -585,7 +595,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
             ))}
           </div>
           {!isSearching && filteredAndSorted.length > displayLimit && (
-            <div className="flex flex-col items-center gap-2 pb-6 mt-4 mb-2">
+            <div className="flex flex-col items-center gap-3 pb-8 mt-6 mb-4">
               <p className="text-xs text-white/30 text-center">
                 {t(lang, 'showing')} {Math.min(displayLimit, filteredAndSorted.length).toLocaleString()} {t(lang, 'of')} {filteredAndSorted.length.toLocaleString()}
               </p>

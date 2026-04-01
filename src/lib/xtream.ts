@@ -14,7 +14,7 @@ export function safeImageUrl(url?: string | null): string | null {
   // Replace dead starshare domain
   u = u.replace('starshare.live:8080', 'datahub11.com:8080');
   // Block known junk hosts
-  if (u.includes('webhop.live') || u.includes('imdb.com') || u.includes('wikia.nocookie.net') || u.includes('paste.pics') || u.includes('tensports.com.pk')) {
+  if (u.includes('webhop.live') || u.includes('imdb.com') || u.includes('wikia.nocookie.net') || u.includes('paste.pics') || u.includes('tensports.com.pk') || u.includes('stariptv.fun') || u.includes('starapk1.com') || u.includes('stackpathcdn.com') || u.includes('QuranTVSA')) {
     return null;
   }
   // Already HTTPS — safe
@@ -943,13 +943,28 @@ export interface VeePlaylist {
   channels: CuratorChannel[];
 }
 
+export interface VeeShadow {
+  mood: string;
+  channels: CuratorChannel[];
+}
+
+export interface VeeMatchDay {
+  is_match_day: boolean;
+  matches: { name: string; league: string; kickoff: string; channels: CuratorChannel[] }[];
+  promoted_channels: CuratorChannel[];
+}
+
 export interface VeeData {
   ts: string;
+  engine: string;
   time_slot: string;
   homepage: VeePlaylist[];
+  social_proof: VeePlaylist;
   vee_hot: VeePlaylist;
   vee_explore: VeePlaylist;
+  shadows: Record<string, VeeShadow>;
   moods: Record<string, VeePlaylist>;
+  match_day: VeeMatchDay | null;
 }
 
 let veeData: VeeData | null = null;

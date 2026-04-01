@@ -13,7 +13,7 @@
     -webkit-tap-highlight-color: transparent;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    overscroll-behavior-y: contain;
+    /* overscroll-behavior-y: contain — removed to enable pull-to-refresh */
   }
 
   body {

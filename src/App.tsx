@@ -20,6 +20,7 @@ import { playDashCinemaSound } from '@/lib/cinema-sound';
 import { muteAmbient, unmuteAmbient, startAmbient, isAmbientEnabled, getAmbientPulse, initAudioReactive } from '@/lib/ambient-audio';
 import { LanguageProvider } from '@/i18n';
 import type { Channel } from '@/types';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 
 // Start preloading immediately on script load — before React even mounts
 startPreload();
@@ -45,6 +46,7 @@ const SeriesPage = lazyRetry(() => import('@/pages/SeriesPage').then((m) => ({ d
 const FrenchPage = lazyRetry(() => import('@/pages/FrenchPage').then((m) => ({ default: m.FrenchPage })));
 const WelcomePage = lazyRetry(() => import('@/pages/WelcomePage').then((m) => ({ default: m.WelcomePage })));
 const PlatformsPage = lazyRetry(() => import('@/pages/PlatformsPage').then((m) => ({ default: m.PlatformsPage })));
+const ExperienceHomePage = lazyRetry(() => import('@/pages/ExperienceHomePage').then((m) => ({ default: m.ExperienceHomePage })));
 
 // Build-time version stamp — compared against remote version.json
 const APP_VERSION = __APP_VERSION__;
@@ -125,6 +127,12 @@ function UpdateButton() {
   );
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  React.useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
 function AppContent() {
   const { credentials, logout } = useAuth();
   const player = usePlayer();
@@ -168,6 +176,11 @@ function AppContent() {
     setShowFullPlayer(true);
   }, []);
 
+  // Unlock screen orientation — overrides manifest (works without reinstall)
+  React.useEffect(() => {
+    try { screen.orientation?.unlock?.(); } catch {}
+  }, []);
+
   // Ambient blobs — organic morphing glow + audio-reactive scale
   // PERF FIX: throttled rAF loop — only runs when scrolled past threshold (blobs visible).
   // When hidden (opacity 0), loop yields to save GPU frames.
@@ -201,10 +214,36 @@ function AppContent() {
     return () => { running = false; };
   }, []);
 
+  const ptr = usePullToRefresh();
+
   if (!credentials) return null;
 
   return (
     <div className="min-h-screen bg-bg relative" onClick={handleAmbientStart}>
+      {/* Pull-to-refresh indicator */}
+      {ptr.pulling && (
+        <div
+          className="fixed left-1/2 -translate-x-1/2 z-[9998] flex items-center justify-center transition-opacity duration-200"
+          style={{ top: Math.max(0, ptr.pullY - 20), opacity: ptr.pullY > 20 ? Math.min(1, ptr.pullY / 60) : 0 }}
+        >
+          <div
+            className="w-8 h-8 rounded-full border-2 border-white/20 flex items-center justify-center backdrop-blur-sm"
+            style={{
+              background: ptr.refreshing ? 'rgba(199,125,255,0.2)' : 'rgba(0,0,0,0.6)',
+              borderColor: ptr.pullY > 40 ? 'rgba(199,125,255,0.5)' : 'rgba(255,255,255,0.15)',
+              transform: `rotate(${ptr.pullY * 3}deg)`,
+            }}
+          >
+            {ptr.refreshing ? (
+              <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-white/60">
+                <path d="M12 5v14M5 12l7 7 7-7" />
+              </svg>
+            )}
+          </div>
+        </div>
+      )}
       <CosmicBackground />
       {/* PERF FIX: removed blob-3 (orange) — 2 blobs sufficient, less GPU load */}
       <div ref={blobsRef} className="ambient-blobs">
@@ -212,6 +251,7 @@ function AppContent() {
         <div className="ambient-blob ambient-blob-2" />
       </div>
       <div className="relative z-10">
+        <ScrollToTop />
         <Header onLogout={logout} />
         <Navbar />
         <main className="pb-20 lg:pb-0 lg:pl-[72px]">
@@ -219,6 +259,7 @@ function AppContent() {
             <Suspense fallback={<div className="pt-20 px-4 space-y-6 animate-pulse"><div className="h-[22vh] rounded-2xl bg-white/[0.02]" /><div className="flex gap-2">{[1,2,3,4].map(i=><div key={i} className="h-8 w-16 rounded-full bg-white/[0.03]" />)}</div><div className="space-y-4">{[1,2,3].map(i=><div key={i} className="h-32 rounded-xl bg-white/[0.02]" />)}</div></div>}>
               <Routes>
                 <Route path="/" element={<ErrorBoundary><HomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
+                <Route path="/live/:experienceId" element={<ErrorBoundary><ExperienceHomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                 <Route path="/live" element={<ErrorBoundary><LiveTVPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                 <Route path="/movies" element={<ErrorBoundary><MoviesPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                 <Route path="/series" element={<ErrorBoundary><SeriesPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
@@ -281,14 +322,41 @@ function AppRouter() {
     if (isAmbientEnabled()) startAmbient();
   }, []);
 
+  // Always remove pre-splash overlay (it's only needed before React mounts)
+  useEffect(() => {
+    document.getElementById('pre-splash')?.remove();
+  }, []);
+
   if (location.pathname === '/welcome') {
     return (<Suspense fallback={<FullPageLoader />}><WelcomePage /></Suspense>);
   }
 
+  // Failsafe: if stuck loading for 4s, force show login
+  const [forceReady, setForceReady] = useState(false);
+  useEffect(() => {
+    if (!auth.isLoading) return;
+    const t = setTimeout(() => setForceReady(true), 4000);
+    return () => clearTimeout(t);
+  }, [auth.isLoading]);
+
+  const effectiveLoading = auth.isLoading && !forceReady;
+
   return (
     <>
       {showSplash && <SplashScreen onComplete={handleSplashComplete} authReady={!auth.isLoading} />}
-      {!showSplash && !auth.isAuthenticated && (
+      {!showSplash && effectiveLoading && (
+        <div style={{ position: 'fixed', inset: 0, background: '#060609', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ fontSize: 36, fontWeight: 900, color: 'white', fontFamily: "'Space Grotesk',system-ui", letterSpacing: '-0.02em' }}>DASH</span>
+            <span style={{ fontSize: 26, fontWeight: 300, color: 'rgba(255,255,255,0.4)', fontFamily: "'Outfit',system-ui", marginLeft: 2 }}>tivi</span>
+            <span style={{ fontSize: 18, fontWeight: 700, color: '#C77DFF', marginLeft: 4 }}>+</span>
+            <div style={{ marginTop: 16, width: 40, height: 3, background: 'rgba(199,125,255,0.4)', borderRadius: 2, margin: '20px auto 0', animation: 'loading-bar 1s ease infinite' }} />
+            <p style={{ marginTop: 12, fontSize: 11, color: 'rgba(255,255,255,0.15)' }}>Connecting...</p>
+          </div>
+          <style>{`@keyframes loading-bar { 0%,100% { opacity:0.3; transform:scaleX(0.5) } 50% { opacity:1; transform:scaleX(1.5) } }`}</style>
+        </div>
+      )}
+      {!showSplash && !effectiveLoading && !auth.isAuthenticated && (
         <AccessCodeLogin onLogin={async (code) => { if (isAmbientEnabled()) startAmbient(); return auth.login(code); }} />
       )}
       {auth.isAuthenticated && <AuthedApp credentials={auth.credentials} />}

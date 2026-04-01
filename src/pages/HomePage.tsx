@@ -155,10 +155,10 @@ const COLLECTION_TO_EXPERIENCE: Record<string, string> = {
 
 // Map collection IDs → VEE experience IDs (same as COLLECTION_TO_EXPERIENCE but explicit)
 const COLLECTION_TO_VEE: Record<string, string> = {
-  'live-sports': 'sports',
-  'world-cinema': 'entertainment',
-  'news-world': 'news',
-  'kids-family': 'kids',
+  'live-sports': 'homepage_sports',
+  'world-cinema': 'homepage_entertainment',
+  'news-world': 'homepage_news',
+  'kids-family': 'homepage_kids',
 };
 
 async function loadLiveCollection(
@@ -395,6 +395,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const [veeHomepageData, setVeeHomepageData] = useState<VeePlaylist[] | null>(null);
   const [veeHotRow, setVeeHotRow] = useState<VeePlaylist | null>(null);
   const [veeExploreRow, setVeeExploreRow] = useState<VeePlaylist | null>(null);
+  const [veeSocialProof, setVeeSocialProof] = useState<VeePlaylist | null>(null);
   const [veePool, setVeePool] = useState<VodStream[]>([]);
   const [veeTmdbMap, setVeeTmdbMap] = useState<Record<string, TmdbEntry>>({});
   const [loading, setLoading] = useState(true);
@@ -454,6 +455,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           setVeeHomepageData(veeResult.homepage || null);
           setVeeHotRow(veeResult.vee_hot || null);
           setVeeExploreRow(veeResult.vee_explore || null);
+          setVeeSocialProof(veeResult.social_proof || null);
         }
         const liveCatIds: string[] = health.liveCategories || [];
 
@@ -1191,6 +1193,17 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
             </React.Fragment>
           ))}
 
+          {/* ── Popular Right Now — social proof row ─────────────── */}
+          {veeSocialProof && veeSocialProof.channels.length > 0 && (
+            <VeeLiveRow
+              playlist={veeSocialProof}
+              label="Popular Right Now"
+              credentials={credentials}
+              onPlayLive={playLive}
+              accent="social"
+            />
+          )}
+
           {/* ── VEE Hot — AI trending channels ─────────────────── */}
           {veeHotRow && veeHotRow.channels.length > 0 && (
             <VeeLiveRow
@@ -1336,18 +1349,23 @@ function VeeLiveRow({
   label,
   credentials,
   onPlayLive,
+  accent,
 }: {
   playlist: VeePlaylist;
   label: string;
   credentials: XtreamCredentials;
   onPlayLive: (stream: LiveStream, allStreams?: LiveStream[]) => void;
+  accent?: 'hot' | 'explore' | 'social';
 }) {
   const { lang } = useLanguage();
   const streams = curatorToLiveStreams(playlist.channels);
   const aliveStreams = streams.filter(s => isChannelProbeAlive(s.stream_id));
   if (aliveStreams.length === 0) return null;
 
-  const isHot = label === 'VEE Hot';
+  const mode = accent ?? (label === 'VEE Hot' ? 'hot' : label === 'Popular Right Now' ? 'social' : 'explore');
+  const dotColor = mode === 'hot' ? '#F97316' : mode === 'social' ? '#10B981' : '#3B82F6';
+  const dotGlow = mode === 'hot' ? 'rgba(249,115,22,0.5)' : mode === 'social' ? 'rgba(16,185,129,0.4)' : 'rgba(59,130,246,0.4)';
+  const badgeColor = mode === 'hot' ? '#FB923C' : mode === 'social' ? '#34D399' : '#60A5FA';
 
   return (
     <section className="mb-1 reveal">
@@ -1356,10 +1374,7 @@ function VeeLiveRow({
           <div className="flex items-baseline gap-2">
             <div
               className="w-1.5 h-1.5 rounded-full flex-shrink-0 mb-0.5"
-              style={{
-                background: isHot ? '#F97316' : '#3B82F6',
-                boxShadow: isHot ? '0 0 6px rgba(249,115,22,0.5)' : '0 0 6px rgba(59,130,246,0.4)',
-              }}
+              style={{ background: dotColor, boxShadow: `0 0 6px ${dotGlow}` }}
             />
             <h2 className="text-[20px] font-black tracking-tight text-white" style={{ textShadow: '0 0 40px rgba(157,78,221,0.08)' }}>
               {label}
@@ -1382,8 +1397,8 @@ function VeeLiveRow({
               style={{ background: 'rgba(255,255,255,0.02)' }}>
               <ChannelIcon src={stream.stream_icon} name={stream.name} size="lg" className="!w-full !h-full !rounded-xl" />
               <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-black/50 rounded text-[8px] font-semibold"
-                style={{ color: isHot ? '#FB923C' : '#60A5FA' }}>
-                <span className="w-1 h-1 rounded-full live-badge-pulse" style={{ background: isHot ? '#F97316' : '#3B82F6' }} />
+                style={{ color: badgeColor }}>
+                <span className="w-1 h-1 rounded-full live-badge-pulse" style={{ background: dotColor }} />
                 {t(lang, 'live').toUpperCase()}
               </div>
             </div>

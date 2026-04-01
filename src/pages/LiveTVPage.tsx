@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Play, Search, X, ChevronRight, LayoutGrid, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart } from 'lucide-react';
+import { Play, Search, X, ChevronRight, LayoutGrid, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { t, useLanguage } from '@/i18n';
 import type { XtreamCredentials, LiveStream, GroupedChannel, FreeChannel } from '@/lib/xtream';
 import { getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getExperienceIds, getExperienceCategoryIds, fetchCuratorData, getCuratorExperience, curatorToLiveStreams, hasCuratorData, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
 import {
   LIVETV_THEMES, SPORT_TYPES, ENTERTAINMENT_TYPES, KIDS_TYPES,
   CINEMA_TYPES, MUSIC_TYPES, DISCOVERY_TYPES, FAITH_TYPES, PREMIUM4K_TYPES,
-  BROWSE_EXPERIENCES, DEAD_CATEGORY_IDS,
+  NEWS_TYPES, BROWSE_EXPERIENCES, DEAD_CATEGORY_IDS,
 } from '@/lib/collections';
 import type { LiveTheme, SportType, BrowseExperience } from '@/lib/collections';
 import { getSmartThemeOrder, recordThemeWatch } from '@/lib/intelligence';
@@ -21,7 +22,7 @@ const THEME_SUBTYPES: Record<string, SportType[]> = {
   'documentary': DISCOVERY_TYPES,
   'faith': FAITH_TYPES,
   'premium4k': PREMIUM4K_TYPES,
-  'news': [], // News doesn't need sub-tabs
+  'news': NEWS_TYPES,
 };
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { setAmbientSpeed, setAmbientExperience } from '@/lib/ambient-audio';
@@ -462,18 +463,35 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             </div>
           ) : (
             <div className="pt-4">
-              {smartThemeOrder.map((theme) => (
-                <ThemeRow
-                  key={theme.id}
-                  theme={theme}
-                  streams={themeStreams[theme.id] || []}
-                  credentials={credentials}
-                  onPlay={handlePlayFromList}
-                  onThemeSelect={(themeId) => {
-                    setAmbientExperience(themeId);
-                    setAmbientSpeed(0.85);
-                  }}
-                />
+              {smartThemeOrder.map((theme, idx) => (
+                <React.Fragment key={theme.id}>
+                  <ThemeRow
+                    theme={theme}
+                    streams={themeStreams[theme.id] || []}
+                    credentials={credentials}
+                    onPlay={handlePlayFromList}
+                    onThemeSelect={(themeId) => {
+                      setAmbientExperience(themeId);
+                      setAmbientSpeed(0.85);
+                    }}
+                  />
+                  {/* Experience Showcases — visual breaks between rows */}
+                  {idx === 0 && SHOWCASE_CONFIG['sports'] && (
+                    <ExperienceShowcase experienceId="sports" streams={themeStreams['sports'] || []} onPlay={handlePlayFromList} />
+                  )}
+                  {idx === 1 && SHOWCASE_CONFIG['entertainment'] && (
+                    <ExperienceShowcase experienceId="entertainment" streams={themeStreams['entertainment'] || []} onPlay={handlePlayFromList} />
+                  )}
+                  {idx === 2 && SHOWCASE_CONFIG['kids'] && (
+                    <ExperienceShowcase experienceId="kids" streams={themeStreams['kids'] || []} onPlay={handlePlayFromList} />
+                  )}
+                  {idx === 3 && SHOWCASE_CONFIG['movies'] && (
+                    <ExperienceShowcase experienceId="movies" streams={themeStreams['movies247'] || []} onPlay={handlePlayFromList} />
+                  )}
+                  {idx === 5 && SHOWCASE_CONFIG['documentary'] && (
+                    <ExperienceShowcase experienceId="documentary" streams={themeStreams['documentary'] || []} onPlay={handlePlayFromList} />
+                  )}
+                </React.Fragment>
               ))}
             </div>
           )}
@@ -546,6 +564,172 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
 // ── Helpers ───────────────────────────────────────────────────────
 
+// ── Experience Showcase — visual break between theme rows ─────────
+
+const SHOWCASE_CONFIG: Record<string, {
+  name: string;
+  tagline: string;
+  route: string;
+  gradient: string;
+  accentColor: string;
+  accentGlow: string;
+  icon: React.ReactNode;
+}> = {
+  sports: {
+    name: 'Sports',
+    tagline: 'Every match. Every league.',
+    route: '/live/sports',
+    gradient: 'from-emerald-900/50 via-emerald-900/20 to-transparent',
+    accentColor: '#10B981',
+    accentGlow: 'rgba(16,185,129,0.25)',
+    icon: <Trophy className="w-5 h-5" />,
+  },
+  kids: {
+    name: 'Kids & Family',
+    tagline: 'Safe, fun, always on.',
+    route: '/live/kids',
+    gradient: 'from-pink-900/50 via-pink-900/20 to-transparent',
+    accentColor: '#EC4899',
+    accentGlow: 'rgba(236,72,153,0.25)',
+    icon: <Baby className="w-5 h-5" />,
+  },
+  entertainment: {
+    name: 'Entertainment',
+    tagline: 'BBC, HBO, Canal+ — prime time.',
+    route: '/live/entertainment',
+    gradient: 'from-indigo-900/50 via-indigo-900/20 to-transparent',
+    accentColor: '#818CF8',
+    accentGlow: 'rgba(129,140,248,0.25)',
+    icon: <Sparkles className="w-5 h-5" />,
+  },
+  news: {
+    name: 'News',
+    tagline: 'CNN, BBC, Al Jazeera — stay sharp.',
+    route: '/live/news',
+    gradient: 'from-red-900/50 via-red-900/20 to-transparent',
+    accentColor: '#EF4444',
+    accentGlow: 'rgba(239,68,68,0.25)',
+    icon: <Radio className="w-5 h-5" />,
+  },
+  music: {
+    name: 'Music & Vibes',
+    tagline: 'Trace, MTV, gospel — every mood.',
+    route: '/live/music',
+    gradient: 'from-violet-900/50 via-violet-900/20 to-transparent',
+    accentColor: '#A855F7',
+    accentGlow: 'rgba(168,85,247,0.25)',
+    icon: <Music className="w-5 h-5" />,
+  },
+  documentary: {
+    name: 'Docs & Discovery',
+    tagline: 'Discovery, NatGeo, BBC Earth.',
+    route: '/live/documentary',
+    gradient: 'from-teal-900/50 via-teal-900/20 to-transparent',
+    accentColor: '#14B8A6',
+    accentGlow: 'rgba(20,184,166,0.25)',
+    icon: <Globe className="w-5 h-5" />,
+  },
+  movies: {
+    name: 'Cinema',
+    tagline: 'HBO, Sky Cinema — 24/7 showtime.',
+    route: '/live/movies',
+    gradient: 'from-amber-900/50 via-amber-900/20 to-transparent',
+    accentColor: '#F59E0B',
+    accentGlow: 'rgba(245,158,11,0.25)',
+    icon: <Film className="w-5 h-5" />,
+  },
+};
+
+function ExperienceShowcase({
+  experienceId,
+  streams,
+  onPlay,
+}: {
+  experienceId: string;
+  streams: LiveStream[];
+  onPlay: (stream: LiveStream, allStreams: LiveStream[]) => void;
+}) {
+  const navigate = useNavigate();
+  const config = SHOWCASE_CONFIG[experienceId];
+  if (!config) return null;
+
+  const alive = streams.filter(s => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id));
+  const top = sortGemsFirst(alive).slice(0, 6);
+  if (top.length === 0) return null;
+
+  return (
+    <div className="mx-4 mb-8 rounded-2xl overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.02)' }}>
+      {/* Gradient backdrop */}
+      <div className={`absolute inset-0 bg-gradient-to-r ${config.gradient} pointer-events-none`} />
+
+      <div className="relative p-4">
+        {/* Header row */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2.5">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-white"
+              style={{ background: config.accentColor, boxShadow: `0 0 16px ${config.accentGlow}` }}
+            >
+              {config.icon}
+            </div>
+            <div>
+              <h3 className="text-base font-black text-white tracking-tight">{config.name}</h3>
+              <p className="text-[10px] text-white/30">{config.tagline}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate(config.route)}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-300 hover:scale-105 active:scale-95"
+            style={{
+              background: config.accentColor,
+              color: '#fff',
+              boxShadow: `0 0 12px ${config.accentGlow}`,
+            }}
+          >
+            Explore
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+
+        {/* Preview channel strip — wider, cinematic aspect */}
+        <div className="flex gap-2">
+          {top.map((stream, i) => (
+            <button
+              key={stream.stream_id}
+              onClick={() => onPlay(stream, alive)}
+              className="flex-1 min-w-0 group"
+              style={i < 6 ? { animation: `vee-card-in 0.5s ease ${i * 60}ms both` } : undefined}
+            >
+              <div
+                className="relative aspect-[16/10] rounded-xl overflow-hidden transition-all duration-300 group-hover:ring-1"
+                style={{
+                  background: 'rgba(255,255,255,0.04)',
+                  boxShadow: i === 0 ? `0 0 12px ${config.accentGlow}` : undefined,
+                  ['--tw-ring-color' as string]: config.accentColor,
+                }}
+              >
+                <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" className="!w-full !h-full !rounded-xl" />
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-xl">
+                  <Play className="w-3.5 h-3.5 text-white" />
+                </div>
+              </div>
+              <p className="text-[8px] text-white/25 text-center mt-1 truncate group-hover:text-white/50 transition-colors">
+                {stream.name}
+              </p>
+            </button>
+          ))}
+        </div>
+
+        {/* Channel count footer */}
+        <div className="flex items-center justify-center mt-3 gap-1.5">
+          <div className="w-1 h-1 rounded-full" style={{ background: config.accentColor, opacity: 0.5 }} />
+          <span className="text-[9px] text-white/20">{alive.length} channels</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function dedupeStreams(streams: LiveStream[]): LiveStream[] {
   const seen = new Set<number>();
   return streams.filter((s) => {
@@ -603,49 +787,67 @@ function ThemeRow({
   const sorted = sortGemsFirst(deduped);
   const displayed = expanded ? sorted : sorted.slice(0, 25);
 
+  // Experience page route (if one exists)
+  const expRoute = SHOWCASE_CONFIG[theme.id]?.route;
+  const navigate = useNavigate();
+
   return (
-    <div className="mb-8">
+    <div className="mb-10">
       {/* Theme header */}
-      <div className="flex items-center gap-2 px-4 mb-3">
-        <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${theme.gradient} flex items-center justify-center`}>
+      <div className="flex items-center gap-2.5 px-4 mb-3">
+        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${theme.gradient} flex items-center justify-center`}>
           {({
-            sports: <Trophy className="w-3.5 h-3.5 text-white/80" />,
-            entertainment: <Sparkles className="w-3.5 h-3.5 text-white/80" />,
-            news: <Radio className="w-3.5 h-3.5 text-white/80" />,
-            kids: <Baby className="w-3.5 h-3.5 text-white/80" />,
-            movies247: <Film className="w-3.5 h-3.5 text-white/80" />,
-            music: <Music className="w-3.5 h-3.5 text-white/80" />,
-            documentary: <Globe className="w-3.5 h-3.5 text-white/80" />,
-            premium4k: <Sparkles className="w-3.5 h-3.5 text-white/80" />,
-            faith: <Heart className="w-3.5 h-3.5 text-white/80" />,
-          } as Record<string, React.ReactNode>)[theme.id] || <Sparkles className="w-3.5 h-3.5 text-white/80" />}
+            sports: <Trophy className="w-4 h-4 text-white/80" />,
+            entertainment: <Sparkles className="w-4 h-4 text-white/80" />,
+            news: <Radio className="w-4 h-4 text-white/80" />,
+            kids: <Baby className="w-4 h-4 text-white/80" />,
+            movies247: <Film className="w-4 h-4 text-white/80" />,
+            music: <Music className="w-4 h-4 text-white/80" />,
+            documentary: <Globe className="w-4 h-4 text-white/80" />,
+            premium4k: <Sparkles className="w-4 h-4 text-white/80" />,
+            faith: <Heart className="w-4 h-4 text-white/80" />,
+          } as Record<string, React.ReactNode>)[theme.id] || <Sparkles className="w-4 h-4 text-white/80" />}
         </div>
-        <h2 className="text-[15px] font-bold text-white">{theme.name}</h2>
-        <span className="text-[11px] text-text-muted">{sorted.length}</span>
-        <button
-          onClick={() => {
-            const next = !expanded;
-            setExpanded(next);
-            if (next) onThemeSelect?.(theme.id);
-          }}
-          className="ml-auto flex items-center gap-0.5 text-xs text-primary-light hover:text-white transition-colors"
-        >
-          {expanded ? t(lang, 'seeLess') : t(lang, 'seeAll')}
-          <ChevronRight className={`w-3 h-3 transition-transform duration-300 ${expanded ? 'rotate-90' : ''}`} />
-        </button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h2 className="text-[16px] font-bold text-white">{theme.name}</h2>
+            <span className="text-[10px] text-white/20 bg-white/5 px-1.5 py-0.5 rounded">{sorted.length}</span>
+          </div>
+        </div>
+        {expRoute ? (
+          <button
+            onClick={() => navigate(expRoute)}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-semibold bg-white/8 text-white/70 hover:bg-white/15 hover:text-white transition-all active:scale-95"
+          >
+            Explore
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              const next = !expanded;
+              setExpanded(next);
+              if (next) onThemeSelect?.(theme.id);
+            }}
+            className="flex items-center gap-0.5 text-xs text-primary-light hover:text-white transition-colors"
+          >
+            {expanded ? t(lang, 'seeLess') : t(lang, 'seeAll')}
+            <ChevronRight className={`w-3 h-3 transition-transform duration-300 ${expanded ? 'rotate-90' : ''}`} />
+          </button>
+        )}
       </div>
 
       {/* Child experience sub-tabs */}
       {subtypes.length > 0 && (
-        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide px-4 mb-3">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 mb-3">
           {subtypes.map((sub) => (
             <button
               key={sub.id}
               onClick={() => setActiveSubTab(sub.id)}
-              className={`flex-shrink-0 text-[10px] px-2.5 py-2 min-h-[44px] rounded-full transition-colors duration-300 flex items-center justify-center ${
+              className={`flex-shrink-0 text-[11px] px-3 py-2 min-h-[36px] rounded-full transition-all duration-300 flex items-center justify-center ${
                 activeSubTab === sub.id
                   ? `bg-gradient-to-r ${theme.gradient} text-white border border-white/20`
-                  : 'bg-white/5 text-white/50 border border-transparent hover:text-white/80'
+                  : 'bg-white/5 text-white/40 border border-transparent hover:text-white/70'
               }`}
             >
               {sub.name}
@@ -654,25 +856,24 @@ function ThemeRow({
         </div>
       )}
 
-      {/* Horizontal scroll of channels */}
+      {/* Horizontal scroll of channels — larger cards */}
       <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2">
         {displayed.map((stream) => (
           <button
             key={stream.stream_id}
             onClick={() => onPlay(stream, sorted)}
-            className="flex-shrink-0 w-[88px] group"
+            className="flex-shrink-0 w-[100px] group"
           >
-            <div className="relative w-[88px] h-[60px] rounded-xl bg-white/[0.04] border border-white/8 flex items-center justify-center overflow-hidden
+            <div className="relative w-[100px] h-[68px] rounded-xl bg-white/[0.04] border border-white/8 flex items-center justify-center overflow-hidden
                             group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/10 group-hover:scale-[1.03]
-                            active:scale-95 transition-colors duration-300">
+                            active:scale-95 transition-all duration-300">
               <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" />
-              {/* Play hover overlay */}
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-xl">
                 <Play className="w-4 h-4 text-white" />
               </div>
             </div>
-            <p className="text-[10px] text-text-secondary text-center mt-1.5 truncate px-0.5
-                          group-hover:text-white transition-colors">
+            <p className="text-[10px] text-white/40 text-center mt-1.5 truncate px-0.5
+                          group-hover:text-white/70 transition-colors">
               {stream.name}
             </p>
           </button>

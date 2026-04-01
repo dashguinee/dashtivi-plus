@@ -631,7 +631,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
       '492',  // EPL (21ch — match day team channels)
     ],
     limit: 15,
-    navigateTo: '/live',
+    navigateTo: '/live/sports',
   },
   // 2. HOOK — fresh cinema, universal draw
   {
@@ -697,7 +697,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
       '165',  // Arabic News (44ch — Al Jazeera 4K, France 24)
     ],
     limit: 12,
-    navigateTo: '/live',
+    navigateTo: '/live/news',
   },
   // 7. WARMTH — ends on family, softens the scroll
   {
@@ -711,21 +711,21 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
       '32',   // Kids (46ch — Disney 4K, Nick, CN, CBeebies)
     ],
     limit: 15,
-    navigateTo: '/live',
+    navigateTo: '/live/kids',
   },
 ];
 
 // ── Quick-tap Collection Cards (vibes navigation) ─────────────────
 
 export const COLLECTION_CARDS: CollectionCard[] = [
-  { id: 'sports', name: 'Sports', emoji: '', gradient: 'from-primary/30 to-primary-dark/30', navigateTo: '/live' },
+  { id: 'sports', name: 'Sports', emoji: '', gradient: 'from-primary/30 to-primary-dark/30', navigateTo: '/live/sports' },
   { id: 'movies', name: 'Movies', emoji: '', gradient: 'from-primary/25 to-primary-dark/25', navigateTo: '/movies' },
-  { id: 'news', name: 'News', emoji: '', gradient: 'from-primary/20 to-white/5', navigateTo: '/live' },
+  { id: 'news', name: 'News', emoji: '', gradient: 'from-primary/20 to-white/5', navigateTo: '/live/news' },
   { id: 'africa', name: 'Africa', emoji: '', gradient: 'from-accent/20 to-accent-gold/10', navigateTo: '/french' },
   { id: 'series', name: 'Series', emoji: '', gradient: 'from-primary/30 to-primary-dark/20', navigateTo: '/series' },
-  { id: 'kids', name: 'Kids', emoji: '', gradient: 'from-primary-light/20 to-primary/15', navigateTo: '/live' },
-  { id: 'music', name: 'Music', emoji: '', gradient: 'from-primary/25 to-primary-light/15', navigateTo: '/live' },
-  { id: 'faith', name: 'Faith', emoji: '', gradient: 'from-accent-gold/15 to-primary/10', navigateTo: '/live' },
+  { id: 'kids', name: 'Kids', emoji: '', gradient: 'from-primary-light/20 to-primary/15', navigateTo: '/live/kids' },
+  { id: 'music', name: 'Music', emoji: '', gradient: 'from-primary/25 to-primary-light/15', navigateTo: '/live/music' },
+  { id: 'faith', name: 'Faith', emoji: '', gradient: 'from-accent-gold/15 to-primary/10', navigateTo: '/live/faith' },
 ];
 
 // ── Time-aware Featured Hero ──────────────────────────────────────
@@ -1014,8 +1014,8 @@ export const ENTERTAINMENT_TYPES: SportType[] = [
   { id: 'uk', name: 'UK Lounge', categoryIds: ['414', '3'] },       // BBC, ITV, Ch4, Sky
   { id: 'usa', name: 'USA Tonight', categoryIds: ['2'] },           // HBO, Starz, Showtime
   { id: 'french', name: 'Canal+ & France', categoryIds: ['11', '39'] },  // Canal+ via France + Poland feeds, TF1, M6, Arte
-  { id: 'african', name: 'African Drama', categoryIds: [] },        // Free channels (experience: entertainment, culture: africa)
-  { id: 'reality', name: 'Reality Rush', categoryIds: [] },         // Free channels (experience: general)
+  { id: 'african', name: 'African Drama', categoryIds: ['343', '336'] }, // DSTV Entertainment + Africa Canal+
+  { id: 'nollywood', name: 'Nollywood & Africa', categoryIds: ['344', '429', '343'] }, // DSTV Movies + Entertainment
   { id: 'asian', name: 'Asian Vibes', categoryIds: ['247', '338', '19'] },
 ];
 
@@ -1028,22 +1028,27 @@ export const KIDS_TYPES: SportType[] = [
 ];
 
 export const CINEMA_TYPES: SportType[] = [
-  { id: 'all', name: 'All', categoryIds: ['87', '340', '339', '275', '57', '282', '280'] },  // beIN Movies (gems) first, then India (4K), then 24/7
-  { id: 'bein', name: 'beIN Cinema', categoryIds: ['87'] },          // 29ch, 8 gems — 4K + HD, Cinema + Series + Drama
-  { id: 'action', name: 'Action Vault', categoryIds: ['275'] },     // Filtered: action/thriller channels
-  { id: 'comedy', name: 'Comedy Corner', categoryIds: ['275'] },    // Filtered: comedy channels
-  { id: 'horror', name: 'Horror Room', categoryIds: ['275'] },      // Filtered: horror channels
-  { id: 'bollywood', name: 'Bollywood Palace', categoryIds: ['282', '339'] },
+  { id: 'all', name: 'All', categoryIds: ['87', '413', '429', '344', '340', '339', '275', '57', '282', '280'] },
+  { id: 'nollywood', name: 'Nollywood', categoryIds: ['344', '429'] },        // DSTV Movies — #1 for SL
+  { id: 'bein', name: 'beIN Cinema', categoryIds: ['87'] },                   // 5x 4K, premium
+  { id: 'sky', name: 'Sky Cinema', categoryIds: ['413'] },                    // 7x FHD gems
+  { id: 'bollywood', name: 'Bollywood Palace', categoryIds: ['282', '339', '340'] },
+  { id: 'action', name: 'Action Vault', categoryIds: ['275'] },
+  { id: 'comedy', name: 'Comedy Corner', categoryIds: ['275'] },
+  { id: 'horror', name: 'Horror Room', categoryIds: ['275'] },
   { id: 'netflix', name: 'Netflix Loop', categoryIds: ['57'] },
+  { id: '4k', name: '4K Cinema', categoryIds: ['87', '340', '339'] },         // All 4K movie channels
 ];
 
 export const MUSIC_TYPES: SportType[] = [
-  { id: 'all', name: 'All', categoryIds: ['416', '341', '555', '270', '287'] },
+  { id: 'all', name: 'All Vibes', categoryIds: ['416', '341', '555', '270', '287'] },
   { id: 'afro', name: 'Afro Beats', categoryIds: [] },              // Free channels (experience: music, culture: africa)
+  { id: 'gospel', name: 'Gospel & Praise', categoryIds: ['561'] },  // Faith music crossover — essential for SL
   { id: 'mtv', name: 'MTV World', categoryIds: ['416'] },
   { id: 'bollywood', name: 'Bollywood Beats', categoryIds: ['341', '270'] },
-  { id: 'throwback', name: 'Throwback', categoryIds: ['416'] },     // Filtered: NOW 70s, 80s, 90s
+  { id: 'throwback', name: 'Throwback', categoryIds: ['416'] },     // NOW 70s, 80s, 90s
   { id: 'arabic', name: 'Arabic Vibes', categoryIds: ['555'] },
+  { id: 'latin', name: 'Latin Beats', categoryIds: ['287'] },
 ];
 
 export const DISCOVERY_TYPES: SportType[] = [
@@ -1058,6 +1063,15 @@ export const FAITH_TYPES: SportType[] = [
   { id: 'all', name: 'All', categoryIds: ['123', '561'] },
   { id: 'islamic', name: 'Islamic', categoryIds: ['123'] },
   { id: 'christian', name: 'Christian', categoryIds: ['561'] },
+];
+
+export const NEWS_TYPES: SportType[] = [
+  { id: 'all', name: 'All News', categoryIds: ['82', '417', '165', '730', '77', '98'] },
+  { id: 'world', name: 'World News', categoryIds: ['82', '417'] },        // CNN, BBC, Sky News, Fox News
+  { id: 'african', name: 'African News', categoryIds: ['82'] },           // Channels TV, AIT, SLBC — filter by name
+  { id: 'business', name: 'Business', categoryIds: ['82', '417'] },       // CNBC, Bloomberg — filter by name
+  { id: 'arabic', name: 'Arabic News', categoryIds: ['165'] },            // Al Jazeera 4K, France 24 Arabic
+  { id: 'indian', name: 'South Asian', categoryIds: ['77', '730', '98'] },// NDTV, CNN News 18, Pakistan
 ];
 
 // ── WorldEX Region Genre Filters ─────────────────────────────────

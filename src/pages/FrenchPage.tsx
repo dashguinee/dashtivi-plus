@@ -330,21 +330,26 @@ export const FrenchPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   return (
     <div className="pt-16 pb-32 min-h-screen">
-      {/* ── WorldEX Header ──────────────────────────────────── */}
-      <div className="px-5 pt-5 pb-5">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500/25 via-primary/20 to-indigo-500/25 flex items-center justify-center shadow-lg shadow-primary/15 ring-1 ring-white/[0.06]">
-            <Globe className="w-6 h-6 text-white/90" />
-          </div>
-          <div>
-            <h1 className="text-[26px] font-extrabold text-white tracking-tight leading-none">WorldEX</h1>
-            <p className="text-xs text-text-secondary tracking-wider mt-0.5 uppercase">{t(lang, 'aTasteOfTheWorld')}</p>
+      {/* ── Page Identity Header — The Global Village ── */}
+      <div className="relative overflow-hidden" style={{ height: '120px' }}>
+        <div className="absolute inset-0 bg-gradient-to-b from-yellow-900/20 via-amber-900/15 to-[#060609]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-700/8 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/10 to-transparent" />
+        <div className="relative h-full flex items-end px-5 pb-5">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500/25 via-primary/20 to-indigo-500/25 flex items-center justify-center shadow-lg shadow-primary/15 ring-1 ring-white/[0.06]">
+              <Globe className="w-6 h-6 text-white/90" />
+            </div>
+            <div>
+              <h1 className="text-[28px] font-black text-white tracking-tight leading-none">WorldEX</h1>
+              <p className="text-[11px] text-white/25 tracking-widest uppercase mt-1.5">{t(lang, 'aTasteOfTheWorld')}</p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* ── AmbiLive Teaser ─────────────────────────────────── */}
-      <div className="px-4 mb-6">
+      <div className="px-4 mb-8 mt-2">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-indigo-500/8 to-primary-dark/10 border border-primary/15 p-4 hover:border-primary/25 transition-colors group cursor-pointer">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/25 transition-colors">
@@ -360,7 +365,7 @@ export const FrenchPage: React.FC<Props> = ({ credentials, onPlay }) => {
       </div>
 
       {/* ── Region Portals (horizontal scroll) ──────────────── */}
-      <div ref={portalScrollRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-6">
+      <div ref={portalScrollRef} className="flex gap-3.5 overflow-x-auto scrollbar-hide px-5 pb-8">
         {REGIONS.map((region) => {
           const isActive = region.id === activeRegion;
           return (
@@ -402,9 +407,12 @@ export const FrenchPage: React.FC<Props> = ({ credentials, onPlay }) => {
         })}
       </div>
 
+      {/* ── Section divider ── */}
+      <div className="mx-8 h-px bg-gradient-to-r from-transparent via-white/[0.04] to-transparent mb-5" />
+
       {/* ── Genre Pills ─────────────────────────────────────── */}
       {genres.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-4">
+        <div className="flex gap-2.5 overflow-x-auto scrollbar-hide px-5 pb-5">
           {genres.map((genre: RegionGenre) => (
             <button
               key={genre.id}
@@ -422,9 +430,9 @@ export const FrenchPage: React.FC<Props> = ({ credentials, onPlay }) => {
       )}
 
       {/* ── Active Region Content ───────────────────────────── */}
-      <div className="px-4 pt-6">
+      <div className="px-5 pt-8">
         {/* Region title bar */}
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2.5">
             <span className="text-xl">{active.flag}</span>
             <div>
@@ -507,12 +515,12 @@ function ChannelGrid({
   }, [alive.length, onAliveCount]);
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
       {alive.map((stream) => (
         <button
           key={stream.stream_id}
           onClick={() => onPlay(stream)}
-          className="group relative bg-white/[0.03] border border-white/[0.06] rounded-xl p-3.5 flex flex-col items-center gap-2.5 card-press hover:scale-[1.03] active:scale-[0.96] hover:bg-white/[0.07] hover:border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-[background-color,border-color,box-shadow] duration-300"
+          className="group relative bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 flex flex-col items-center gap-3 card-press hover:scale-[1.03] active:scale-[0.96] hover:bg-white/[0.07] hover:border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-[background-color,border-color,box-shadow] duration-300"
         >
           <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" />
           <p className="text-[11px] text-text-secondary text-center truncate w-full group-hover:text-white transition-colors leading-tight">
