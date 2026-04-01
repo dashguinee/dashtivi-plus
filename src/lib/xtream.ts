@@ -226,17 +226,10 @@ export async function getLiveCategories(c: XtreamCredentials): Promise<LiveCateg
 }
 
 /** Lazy-load logo map to keep main bundle small */
-let logoMapCache: Record<string, string> | null = null;
-let logoMapPromise: Promise<Record<string, string>> | null = null;
-
+// Logo map removed — 100% icon coverage in database now.
+// enrichIcons only patches icons for the Xtream fallback path, which rarely fires.
 function getLogoMap(): Promise<Record<string, string>> {
-  if (logoMapCache) return Promise.resolve(logoMapCache);
-  if (!logoMapPromise) {
-    logoMapPromise = import('./logo-map.generated')
-      .then(m => { logoMapCache = m.CHANNEL_LOGO_MAP; return logoMapCache; })
-      .catch(() => { logoMapCache = {}; return logoMapCache; });
-  }
-  return logoMapPromise;
+  return Promise.resolve({});
 }
 
 /** TMDB metadata — loaded as JSON via fetch (doesn't block main thread) */
@@ -266,10 +259,8 @@ async function enrichIcons(streams: LiveStream[]): Promise<LiveStream[]> {
   const map = await getLogoMap();
   const result: LiveStream[] = [];
   for (const s of streams) {
-    // Skip hidden channels (separators, ghosts, junk)
-    if (HIDDEN_STREAM_IDS.has(s.stream_id)) continue;
-    // Skip relocated channels (they'll appear in their correct experience instead)
-    if (RELOCATE_MAP[s.stream_id]) continue;
+    // Hidden/relocated filtering now handled by database (is_hidden, curator experiences)
+    // This fallback path only runs when curator is unavailable
     if (!s.stream_icon || s.stream_icon.trim() === '') {
       const mapped = map[String(s.stream_id)];
       if (mapped) s.stream_icon = mapped;
@@ -279,11 +270,9 @@ async function enrichIcons(streams: LiveStream[]): Promise<LiveStream[]> {
   return result;
 }
 
-/** Get channels that were relocated TO a specific experience */
-export function getRelocatedChannels(experience: string): number[] {
-  return Object.entries(RELOCATE_MAP)
-    .filter(([, exp]) => exp === experience)
-    .map(([id]) => Number(id));
+/** @deprecated Relocations now handled by curator experiences in database */
+export function getRelocatedChannels(_experience: string): number[] {
+  return [];
 }
 
 export async function getLiveStreams(c: XtreamCredentials, catId: string): Promise<LiveStream[]> {
@@ -848,6 +837,7 @@ export async function fetchCuratorData(): Promise<CuratorData | null> {
         return null;
       }
       curatorData = data;
+      seedGemSet(data);
 
       // Validate experiences
       const expCount = Object.keys(data.experiences).length;
@@ -1120,15 +1110,29 @@ function iconScore(icon: string): number {
 }
 
 // --- Gem-first sort (premium channels surface first) ---
-import { GEM_STREAM_IDS, HIDDEN_STREAM_IDS, RELOCATE_MAP } from './collections';
+// Gems are now tracked in the database (is_gem column). The curator RPC
+// already sorts gems first, so this function is mainly for fallback paths.
+// We build a gem set from curator data at runtime instead of hardcoding.
+
+const runtimeGemSet = new Set<number>();
+
+/** Register gem IDs from curator data (called when curator loads) */
+export function seedGemSet(curatorData: CuratorData | null) {
+  if (!curatorData?.experiences) return;
+  for (const channels of Object.values(curatorData.experiences)) {
+    if (!Array.isArray(channels)) continue;
+    for (const ch of channels) {
+      if (ch.gem) runtimeGemSet.add(ch.id);
+    }
+  }
+}
 
 /** Sort channels with gems first, then by icon quality */
 export function sortGemsFirst<T extends { stream_id: number; stream_icon: string }>(streams: T[]): T[] {
   return [...streams].sort((a, b) => {
-    const aGem = GEM_STREAM_IDS.has(a.stream_id) ? 100 : 0;
-    const bGem = GEM_STREAM_IDS.has(b.stream_id) ? 100 : 0;
+    const aGem = runtimeGemSet.has(a.stream_id) ? 100 : 0;
+    const bGem = runtimeGemSet.has(b.stream_id) ? 100 : 0;
     if (aGem !== bGem) return bGem - aGem;
-    // Fallback to icon quality
     return iconScore(b.stream_icon) - iconScore(a.stream_icon);
   });
 }
