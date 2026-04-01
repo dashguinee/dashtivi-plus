@@ -25,6 +25,8 @@ import {
   sortGemsFirst,
   fetchVeeData,
   getVeeData,
+  getVodByCategory,
+  vodDbToStream,
 } from '@/lib/xtream';
 import type { VeePlaylist } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
@@ -220,6 +222,22 @@ async function loadVodCollection(
   credentials: XtreamCredentials,
   collection: Collection
 ): Promise<VodStream[]> {
+  // Supabase-first: try DB, fall back to Xtream
+  const sbResults = await Promise.allSettled(
+    collection.categoryIds.map((catId) => getVodByCategory(catId))
+  );
+  const sbMerged: VodStream[] = [];
+  const sbSeen = new Set<number>();
+  for (const r of sbResults) {
+    if (r.status === 'fulfilled' && r.value.length > 0) {
+      for (const m of r.value) {
+        if (!sbSeen.has(m.id)) { sbSeen.add(m.id); sbMerged.push(vodDbToStream(m)); }
+      }
+    }
+  }
+  if (sbMerged.length > 0) return sbMerged.slice(0, collection.limit);
+
+  // Xtream fallback
   const results = await Promise.allSettled(
     collection.categoryIds.map((catId) => getVodStreams(credentials, catId))
   );
