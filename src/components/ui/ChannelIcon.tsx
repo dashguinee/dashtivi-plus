@@ -106,8 +106,7 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
       <img
         src={safeSrc}
         alt={name}
-        className={`${sizes[size]} rounded-xl object-contain bg-white/5 p-1 transition-opacity duration-400 ${loaded ? 'opacity-100' : 'opacity-0'} ${className}`}
-        onLoad={onLoad}
+        className={`${sizes[size]} rounded-xl object-contain bg-white/5 p-1 ${className}`}
         onError={() => {
           // If tv-logo CDN failed, try next in chain
           if (safeSrc?.includes('tv-logos')) setLogoFailed(true);
