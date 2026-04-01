@@ -817,20 +817,21 @@ export interface CuratorData {
 let curatorData: CuratorData | null = null;
 let curatorPromise: Promise<CuratorData | null> | null = null;
 
+// Cache the feature flag check — don't hit version.json on every call
+let curatorFlagChecked = false;
+let curatorFlagEnabled = true;
+
 export async function fetchCuratorData(): Promise<CuratorData | null> {
-  // Feature flag — check version.json curator field
-  try {
-    const vRes = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store', signal: AbortSignal.timeout(2000) });
-    const vData = await vRes.json();
-    if (!vData.curator) {
-      console.log('[CURATOR] Disabled by feature flag');
-      return null;
-    }
-    // verbose: '[CURATOR] Flag enabled, fetching...'
-  } catch (e) {
-    console.warn('[CURATOR] Flag check failed:', e);
-    return null;
+  // Feature flag — check once per session, not every call
+  if (!curatorFlagChecked) {
+    curatorFlagChecked = true;
+    try {
+      const vRes = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store', signal: AbortSignal.timeout(2000) });
+      const vData = await vRes.json();
+      curatorFlagEnabled = !!vData.curator;
+    } catch { curatorFlagEnabled = true; }
   }
+  if (!curatorFlagEnabled) return null;
 
   if (curatorPromise) return curatorPromise;
   curatorPromise = (async () => {

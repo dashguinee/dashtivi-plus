@@ -307,7 +307,7 @@ export function usePlayer() {
         if (!durationLocked && !isLive) {
           const streamId = channel.id.replace(/^(vod|series)-/, '');
           const prefix = channel.id.startsWith('series-') ? 's' : 'm';
-          fetch('/tmdb-data.json').then(r => r.json()).then((data: Record<string, { t?: number }>) => {
+          fetch('/tmdb-data.json', { signal: AbortSignal.timeout(10000) }).then(r => r.json()).then((data: Record<string, { t?: number }>) => {
             const entry = data[`${prefix}:${streamId}`];
             if (entry?.t && entry.t > 1 && !durationLocked) {
               durationLocked = true;

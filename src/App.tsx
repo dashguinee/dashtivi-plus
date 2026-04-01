@@ -64,7 +64,7 @@ function UpdateButton() {
     let active = true;
     async function checkVersion() {
       try {
-        const res = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store' });
+        const res = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store', signal: AbortSignal.timeout(5000) });
         if (!res.ok) return;
         const data = await res.json();
         if (data.version && data.version !== APP_VERSION) {
