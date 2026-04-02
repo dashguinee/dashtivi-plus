@@ -258,7 +258,7 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
     curatorId: 'africa',
     veeHomepageId: 'homepage_africa',
     name: 'The Motherland',
-    tagline: 'DSTV, Canal+, SuperSport — everything Africa watches.',
+    tagline: 'beIN, SuperSport, Trace — the continent is live.',
     heroGradient: 'from-orange-900/40 via-[#060609] to-amber-900/20',
     accentColor: '#F97316',
     accentGlow: 'rgba(249,115,22,0.35)',
@@ -267,7 +267,7 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
     timeGreetings: {
       morning: 'Good morning Africa — the continent wakes up',
       afternoon: 'Afternoon in the Motherland',
-      evening: 'Motherland prime time — DSTV + Canal+ live',
+      evening: 'Motherland prime time — Africa is live',
       late_night: 'African nights — the continent never sleeps',
     },
     crossExperiences: [
