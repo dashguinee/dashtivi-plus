@@ -3,9 +3,9 @@ import { X, RotateCcw } from 'lucide-react';
 
 // Embed sources — fallback chain: YouTube nocookie → Piped → Invidious
 const EMBED_SOURCES = [
-  (key: string) => `https://www.youtube-nocookie.com/embed/${key}?autoplay=1&rel=0&modestbranding=1&playsinline=1`,
-  (key: string) => `https://piped.video/embed/${key}`,
-  (key: string) => `https://inv.nadeko.net/embed/${key}`,
+  (key: string) => `https://www.youtube-nocookie.com/embed/${key}?autoplay=1&rel=0&modestbranding=1&playsinline=1&start=1&iv_load_policy=3`,
+  (key: string) => `https://piped.video/embed/${key}?autoplay=1`,
+  (key: string) => `https://inv.nadeko.net/embed/${key}?autoplay=1`,
 ];
 
 interface TrailerModalProps {
