@@ -88,9 +88,7 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
   const [failed, setFailed] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const onLoad = useCallback(() => setLoaded(true), []);
   const letter = name.charAt(0).toUpperCase();
-  const color = getColor(name);
 
   // Priority: 1. safeImageUrl (handles dead domains, HTTP proxy)  2. tv-logo CDN  3. Letter avatar
   let safeSrc: string | null = null;
@@ -101,24 +99,8 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
     }
   }
 
-  if (safeSrc) {
-    return (
-      <img
-        src={safeSrc}
-        alt={name}
-        className={`${sizes[size]} rounded-xl object-contain bg-white/5 p-1 ${className}`}
-        onError={() => {
-          // If tv-logo CDN failed, try next in chain
-          if (safeSrc?.includes('tv-logos')) setLogoFailed(true);
-          else setFailed(true);
-        }}
-        loading="lazy"
-        decoding="async"
-      />
-    );
-  }
-
-  return (
+  // Letter fallback (used as placeholder during load AND as final fallback)
+  const letterEl = (
     <div
       className={`${sizes[size]} rounded-xl flex items-center justify-center font-bold flex-shrink-0 ${className}`}
       style={{
@@ -127,10 +109,30 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
         color: 'rgba(157,78,221,0.7)',
         fontSize: size === 'lg' ? '14px' : size === 'md' ? '11px' : '9px',
         letterSpacing: '0.05em',
-        textShadow: '0 0 8px rgba(157,78,221,0.3)',
       }}
     >
       {letter}
+    </div>
+  );
+
+  if (!safeSrc) return letterEl;
+
+  return (
+    <div className={`${sizes[size]} relative rounded-xl overflow-hidden flex-shrink-0 ${className}`}>
+      {/* Letter behind image — visible while loading, smooth fallback on error */}
+      {!loaded && letterEl}
+      <img
+        src={safeSrc}
+        alt={name}
+        className={`absolute inset-0 w-full h-full rounded-xl object-contain bg-white/5 p-1 transition-opacity duration-200 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          if (safeSrc?.includes('tv-logos')) setLogoFailed(true);
+          else setFailed(true);
+        }}
+        loading="lazy"
+        decoding="async"
+      />
     </div>
   );
 });
