@@ -346,45 +346,31 @@ export const VideoPlayer: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Reconnecting — branded, no generic spinner */}
-      {state.error && state.error.includes('Retry') && !state.isPlaying && (
+      {/* Unified reconnection flow — seamless between inner retries and outer retries */}
+      {state.error && !state.isPlaying && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#060609]/90 z-40">
-          <div className="text-center">
-            <p className="text-[12px] text-white/25 font-light tracking-wide">Reconnecting</p>
-            <div className="mt-3 mx-auto w-8 h-[2px] rounded-full overflow-hidden bg-white/5">
-              <div className="h-full w-full bg-primary/40 rounded-full" style={{ animation: 'loading-bar 1.2s ease-in-out infinite' }} />
+          {state.error.includes('Retry') || autoRetryRef.current < 3 ? (
+            <div className="text-center">
+              <p className="text-[12px] text-white/25 font-light tracking-wide">Reconnecting</p>
+              <div className="mt-3 mx-auto w-8 h-[2px] rounded-full overflow-hidden bg-white/5">
+                <div className="h-full w-full bg-primary/40 rounded-full" style={{ animation: 'loading-bar 1.2s ease-in-out infinite' }} />
+              </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Stream interrupted — auto-retry then manual reconnect */}
-      {state.error && !state.error.includes('Retry') && !state.isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/90">
-          <div className="flex flex-col items-center gap-4 text-center max-w-sm px-6">
-            <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-              <AlertTriangle className="w-6 h-6 text-white/30" />
+          ) : (
+            <div className="flex flex-col items-center gap-4 text-center max-w-sm px-6">
+              <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-white/30" />
+              </div>
+              <p className="text-sm text-white/40">Channel unavailable</p>
+              <button
+                onClick={() => { autoRetryRef.current = 0; state.channel && onRetry(state.channel); }}
+                className="flex items-center gap-2 px-6 py-3 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Reconnect
+              </button>
             </div>
-            {autoRetryRef.current < 3 ? (
-              <>
-                <p className="text-sm text-white/40">Reconnecting... ({autoRetryRef.current + 1}/3)</p>
-                <div className="w-8 h-[2px] rounded-full overflow-hidden bg-white/5">
-                  <div className="h-full w-full bg-primary/40 rounded-full" style={{ animation: 'loading-bar 1.2s ease-in-out infinite' }} />
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-sm text-white/40">Channel unavailable</p>
-                <button
-                  onClick={() => { autoRetryRef.current = 0; state.channel && onRetry(state.channel); }}
-                  className="flex items-center gap-2 px-6 py-3 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Reconnect
-                </button>
-              </>
-            )}
-          </div>
+          )}
         </div>
       )}
 
