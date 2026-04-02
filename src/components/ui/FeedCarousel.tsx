@@ -157,7 +157,7 @@ function FeedCard({ item }: { item: FeedItem }) {
         <div className="relative w-full h-[120px] overflow-hidden">
           <img
             src={item.image_url!}
-            alt=""
+            alt={item.title || 'Content'}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
             loading="lazy"
           />

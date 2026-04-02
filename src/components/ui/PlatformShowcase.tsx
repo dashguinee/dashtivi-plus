@@ -194,9 +194,9 @@ function PosterPreview({ item, color, tmdbMap }: { item: { id: number; name: str
   return (
     <div className="flex-1 aspect-[2/3] rounded-xl overflow-hidden" style={{ background: `${color}06`, border: `1px solid ${color}10` }}>
       {safeSrc && !failed ? (
-        <img src={safeSrc} alt="" className="w-full h-full object-cover" loading="lazy" onError={() => setFailed(true)} />
+        <img src={safeSrc} alt={item.name || 'Poster'} className="w-full h-full object-cover" loading="lazy" onError={() => setFailed(true)} />
       ) : tmdbSrc && !tmdbFailed ? (
-        <img src={tmdbSrc} alt="" className="w-full h-full object-cover" loading="lazy" onError={() => setTmdbFailed(true)} />
+        <img src={tmdbSrc} alt={item.name || 'Poster'} className="w-full h-full object-cover" loading="lazy" onError={() => setTmdbFailed(true)} />
       ) : (
         <div className="w-full h-full flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${color}12, ${color}06)` }}>
           <span className="text-[8px] text-white/15 font-medium text-center px-1 line-clamp-2">{item.name?.replace(/\s*\(\d{4}\)\s*$/, '')}</span>

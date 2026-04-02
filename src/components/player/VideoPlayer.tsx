@@ -45,6 +45,23 @@ export const VideoPlayer: React.FC<Props> = ({
   const [controlsVisible, setControlsVisible] = useState(true);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const [showEcoPrompt, setShowEcoPrompt] = useState(false);
+
+  // Auto-retry with backoff: 3s → 6s → 10s, then give up to manual
+  const autoRetryRef = useRef(0);
+  const autoRetryTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => {
+    if (state.error && !state.error.includes('Retry') && !state.isPlaying && state.channel) {
+      if (autoRetryRef.current < 3) {
+        const delay = [3000, 6000, 10000][autoRetryRef.current] || 10000;
+        autoRetryTimerRef.current = setTimeout(() => {
+          autoRetryRef.current += 1;
+          onRetry(state.channel!);
+        }, delay);
+      }
+    }
+    if (state.isPlaying) autoRetryRef.current = 0;
+    return () => { if (autoRetryTimerRef.current) clearTimeout(autoRetryTimerRef.current); };
+  }, [state.error, state.isPlaying, state.channel, onRetry]);
   const [hasSubs, setHasSubs] = useState(false);
   const [subsOn, setSubsOn] = useState(false);
   const [subsUnavailable, setSubsUnavailable] = useState(false);
@@ -341,21 +358,32 @@ export const VideoPlayer: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Stream interrupted — manual reconnect needed */}
+      {/* Stream interrupted — auto-retry then manual reconnect */}
       {state.error && !state.error.includes('Retry') && !state.isPlaying && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/90">
           <div className="flex flex-col items-center gap-4 text-center max-w-sm px-6">
             <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
               <AlertTriangle className="w-6 h-6 text-white/30" />
             </div>
-            <p className="text-sm text-white/40">Channel unavailable</p>
-            <button
-              onClick={() => state.channel && onRetry(state.channel)}
-              className="flex items-center gap-2 px-6 py-3 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Reconnect
-            </button>
+            {autoRetryRef.current < 3 ? (
+              <>
+                <p className="text-sm text-white/40">Reconnecting... ({autoRetryRef.current + 1}/3)</p>
+                <div className="w-8 h-[2px] rounded-full overflow-hidden bg-white/5">
+                  <div className="h-full w-full bg-primary/40 rounded-full" style={{ animation: 'loading-bar 1.2s ease-in-out infinite' }} />
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-white/40">Channel unavailable</p>
+                <button
+                  onClick={() => { autoRetryRef.current = 0; state.channel && onRetry(state.channel); }}
+                  className="flex items-center gap-2 px-6 py-3 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Reconnect
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

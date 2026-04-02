@@ -146,7 +146,7 @@ function FeedCard({ item }: { item: CuratedFeedItem }) {
       >
         {/* Background */}
         {hasPoster ? (
-          <img src={item.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+          <img src={item.imageUrl} alt={item.title || 'Channel'} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
         ) : (
           <div className="absolute inset-0" style={{ background: getGradient(item.id) }}>
             {/* Subtle brand icon for non-poster cards */}

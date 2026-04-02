@@ -80,7 +80,7 @@ export const PlayerControls: React.FC<Props> = ({
           {onBack && (
             <button
               onClick={onBack}
-              className="w-9 h-9 rounded-full bg-black/40 flex items-center justify-center hover:bg-black/60 transition-colors"
+              className="w-11 h-11 rounded-full bg-black/40 flex items-center justify-center hover:bg-black/60 transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -104,7 +104,7 @@ export const PlayerControls: React.FC<Props> = ({
 
         <button
           onClick={onClose}
-          className="w-9 h-9 rounded-full bg-black/40 flex items-center justify-center hover:bg-black/60 transition-colors"
+          className="w-11 h-11 rounded-full bg-black/40 flex items-center justify-center hover:bg-black/60 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -170,7 +170,7 @@ export const PlayerControls: React.FC<Props> = ({
             {/* Play/Pause */}
             <button
               onClick={onTogglePlay}
-              className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+              className="w-11 h-11 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
               aria-label={state.isPlaying ? 'Pause' : 'Play'}
             >
               {state.isPlaying ? (
@@ -189,7 +189,7 @@ export const PlayerControls: React.FC<Props> = ({
             >
               <button
                 onClick={onToggleMute}
-                className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+                className="w-11 h-11 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
                 aria-label={state.isMuted ? 'Unmute' : 'Mute'}
               >
                 {state.isMuted || state.volume === 0 ? (
@@ -256,7 +256,7 @@ export const PlayerControls: React.FC<Props> = ({
                     window.open(state.channel.url, '_blank', 'noopener,noreferrer');
                   }
                 }}
-                className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+                className="w-11 h-11 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
                 title="Download"
               >
                 <Download className="w-5 h-5" />
@@ -267,7 +267,7 @@ export const PlayerControls: React.FC<Props> = ({
             {hasSubs && onToggleSubs && (
               <button
                 onClick={(e) => { e.stopPropagation(); onToggleSubs(); }}
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${subsOn ? 'bg-primary/30 text-primary-light' : 'hover:bg-white/10 text-white/60'}`}
+                className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${subsOn ? 'bg-primary/30 text-primary-light' : 'hover:bg-white/10 text-white/60'}`}
                 title="Subtitles"
               >
                 <span className="text-[10px] font-black tracking-tight border border-current rounded px-1 py-0.5">CC</span>
@@ -277,7 +277,7 @@ export const PlayerControls: React.FC<Props> = ({
             {/* PiP */}
             <button
               onClick={onTogglePiP}
-              className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+              className="w-11 h-11 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
               aria-label="Picture in Picture"
             >
               <PictureInPicture2 className="w-5 h-5" />
@@ -286,7 +286,7 @@ export const PlayerControls: React.FC<Props> = ({
             {/* Fullscreen */}
             <button
               onClick={onToggleFullscreen}
-              className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+              className="w-11 h-11 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
               aria-label={state.isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
             >
               {state.isFullscreen ? (
