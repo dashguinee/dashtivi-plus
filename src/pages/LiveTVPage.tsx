@@ -141,8 +141,10 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
         // Merge: curator + free (no duplicates)
         const freeIds = new Set(freeAsLive.map(s => s.stream_id));
         const merged = [...curatorResults.filter(s => !freeIds.has(s.stream_id)), ...freeAsLive];
+        console.info('[SEARCH] "%s" → %d results (curator:%d free:%d)', q, merged.length, curatorResults.length, freeAsLive.length);
         if (mounted) setSearchResults(sortGemsFirst(merged));
-      } catch {
+      } catch (err) {
+        console.error('[SEARCH] Failed:', err);
         if (mounted) setSearchResults([]);
       } finally {
         if (mounted) setSearchLoading(false);
@@ -203,9 +205,10 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             map[theme.id] = streams;
           }
 
-          // Summary log
+          // Summary — always log so Dash can see in devtools
           const total = Object.values(map).reduce((s, arr) => s + arr.length, 0);
-          // verbose: '[LIVE] Curator total streams'
+          const empty = Object.entries(map).filter(([, v]) => v.length === 0).map(([k]) => k);
+          console.info('[LIVE] Loaded %d streams across %d themes%s', total, Object.keys(map).length, empty.length ? ' | EMPTY: ' + empty.join(', ') : '');
 
           if (!mounted) return;
           setThemeStreams(map);

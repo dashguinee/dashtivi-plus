@@ -783,7 +783,7 @@ export async function fetchCuratorData(): Promise<CuratorData | null> {
       }
       verifiedSet = new Set(allIds);
 
-      // verbose: '[CURATOR] Loaded channels'
+      console.info('[CURATOR] %d experiences, %d channels, %dms', expCount, totalChannels, Date.now() - t0);
       return data;
     } catch (e) {
       console.error('[CURATOR] Fetch error:', e);

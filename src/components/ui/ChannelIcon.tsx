@@ -127,6 +127,7 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
         className={`absolute inset-0 w-full h-full rounded-xl object-contain bg-white/5 p-1 transition-opacity duration-200 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         onLoad={() => setLoaded(true)}
         onError={() => {
+          if (import.meta.env.DEV) console.warn('[ICON] Failed:', name, safeSrc?.slice(0, 60));
           if (safeSrc?.includes('tv-logos')) setLogoFailed(true);
           else setFailed(true);
         }}
