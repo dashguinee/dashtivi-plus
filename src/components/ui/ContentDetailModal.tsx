@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { Play, Star, Clock, Heart, X } from 'lucide-react';
 import { t, useLanguage } from '@/i18n';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
@@ -109,7 +109,25 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   // Trailer: prefer Xtream VOD info trailer (more reliable embedding), fallback to TMDB
   const trailerKey = vodTrailer || tmdbData?.y || null;
   const hasTrailer = !!trailerKey;
+  const [trailerFailed, setTrailerFailed] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const backdropUrl = getBackdropUrl(poster, undefined);
+
+  // Detect YouTube "unavailable" via postMessage API
+  useEffect(() => {
+    if (!hasTrailer) return;
+    const handleMessage = (e: MessageEvent) => {
+      try {
+        const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+        // YouTube sends error code 150 for country-blocked, 101 for embed-disabled
+        if (data?.event === 'onError' || data?.info === 150 || data?.info === 101) {
+          setTrailerFailed(true);
+        }
+      } catch { /* ignore non-JSON messages */ }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [hasTrailer]);
 
   // Rating: prefer TMDB, fallback to Xtream
   const displayRating = tmdbData?.r ? tmdbData.r.toFixed(1) : rating;
@@ -148,17 +166,9 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
         </button>
 
         {/* ── Media area (trailer or poster) ───────────────────── */}
-        <div className="relative w-full pb-[62%] rounded-xl overflow-hidden bg-black shadow-2xl">
-          {hasTrailer ? (
-            <iframe
-              className="absolute inset-0 w-full h-[115%] -top-[8%]"
-              src={`https://www.youtube-nocookie.com/embed/${trailerKey}?rel=0&modestbranding=1`}
-              title={`${cleanTitle} - Trailer`}
-              allow="autoplay; encrypted-media; fullscreen"
-              allowFullScreen
-              frameBorder="0"
-            />
-          ) : backdropUrl ? (
+        <div className="relative w-full pb-[56%] rounded-xl overflow-hidden bg-black shadow-2xl">
+          {/* Poster always behind as fallback (country-blocked trailers, slow loads) */}
+          {backdropUrl ? (
             <img
               src={backdropUrl}
               alt={cleanTitle}
@@ -168,6 +178,18 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
             <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary-dark/30 flex items-center justify-center">
               <Play className="w-16 h-16 text-white/20" />
             </div>
+          )}
+          {/* YouTube trailer — zoomed to mask controls, starts at 1s to skip red button */}
+          {hasTrailer && !trailerFailed && (
+            <iframe
+              ref={iframeRef}
+              className="absolute pointer-events-none"
+              style={{ top: '-2%', left: '-2%', width: '104%', height: '125%' }}
+              src={`https://www.youtube-nocookie.com/embed/${trailerKey}?rel=0&modestbranding=1&controls=0&showinfo=0&iv_load_policy=3&disablekb=1&start=1&autoplay=1&mute=1&enablejsapi=1&playsinline=1`}
+              title={`${cleanTitle} - Trailer`}
+              allow="autoplay; encrypted-media"
+              frameBorder="0"
+            />
           )}
           {/* Gradient overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-transparent to-transparent pointer-events-none" />

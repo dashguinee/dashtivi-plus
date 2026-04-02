@@ -329,7 +329,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       .map(m => ({ movie: m, score: getTrendingScore(m, tmdbMap) }))
       .filter(s => s.score > 0.5)
       .sort((a, b) => b.score - a.score)
-      .slice(0, 15)
+      .slice(0, 25)
       .map(s => s.movie);
   }, [movies, tmdbMap, activeParent, hasTmdb]);
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Play, ChevronLeft, ChevronRight, Search, X, Trophy, Baby, Sparkles, Radio, Film, Music, Globe, Heart, Home } from 'lucide-react';
+import { Play, ChevronLeft, ChevronRight, Search, X, Trophy, Baby, Sparkles, Radio, Film, Music, Globe, Heart, Home, MapPin, Sun, Star, Moon, Flag } from 'lucide-react';
 import { t, useLanguage } from '@/i18n';
 import type { XtreamCredentials, LiveStream, CuratorChannel } from '@/lib/xtream';
 import {
@@ -24,6 +24,8 @@ import type { VeePlaylist } from '@/lib/xtream';
 import {
   SPORT_TYPES, KIDS_TYPES, ENTERTAINMENT_TYPES, CINEMA_TYPES,
   MUSIC_TYPES, DISCOVERY_TYPES, FAITH_TYPES, NEWS_TYPES,
+  MOTHERLAND_TYPES, EUROPE_TYPES, SOUTH_ASIAN_TYPES,
+  AMERICAS_TYPES, ARABIC_TYPES, FRENCH_TYPES,
 } from '@/lib/collections';
 import type { SportType } from '@/lib/collections';
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
@@ -255,17 +257,17 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
     id: 'africa',
     curatorId: 'africa',
     veeHomepageId: 'homepage_africa',
-    name: 'Popular Here',
-    tagline: 'What everyone around you is watching.',
-    heroGradient: 'from-orange-900/40 via-[#060609] to-yellow-900/20',
+    name: 'The Motherland',
+    tagline: 'DSTV, Canal+, SuperSport — everything Africa watches.',
+    heroGradient: 'from-orange-900/40 via-[#060609] to-amber-900/20',
     accentColor: '#F97316',
-    accentGlow: 'rgba(249,115,22,0.3)',
+    accentGlow: 'rgba(249,115,22,0.35)',
     icon: <Globe className="w-5 h-5" />,
-    subtypes: [],
+    subtypes: MOTHERLAND_TYPES,
     timeGreetings: {
-      morning: 'Good morning Africa',
-      afternoon: 'African afternoon — the continent is live',
-      evening: 'Motherland prime time',
+      morning: 'Good morning Africa — the continent wakes up',
+      afternoon: 'Afternoon in the Motherland',
+      evening: 'Motherland prime time — DSTV + Canal+ live',
       late_night: 'African nights — the continent never sleeps',
     },
     crossExperiences: [
@@ -273,7 +275,132 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
       { id: 'entertainment', name: 'Entertainment', gradient: 'from-blue-500/30 to-purple-500/20', icon: <Sparkles className="w-4 h-4" /> },
       { id: 'kids', name: 'Kids', gradient: 'from-pink-500/30 to-purple-500/20', icon: <Baby className="w-4 h-4" /> },
       { id: 'music', name: 'Music', gradient: 'from-violet-500/30 to-pink-500/20', icon: <Music className="w-4 h-4" /> },
+      { id: 'french', name: 'French', gradient: 'from-blue-500/30 to-red-500/20', icon: <Flag className="w-4 h-4" /> },
+    ],
+  },
+  europe: {
+    id: 'europe',
+    curatorId: 'europe',
+    veeHomepageId: 'homepage_europe',
+    name: 'Europe',
+    tagline: 'Sky, Canal+, BBC, RAI — the continent\'s best.',
+    heroGradient: 'from-blue-900/40 via-[#060609] to-indigo-900/20',
+    accentColor: '#3B82F6',
+    accentGlow: 'rgba(59,130,246,0.3)',
+    icon: <MapPin className="w-5 h-5" />,
+    subtypes: EUROPE_TYPES,
+    timeGreetings: {
+      morning: 'Good morning Europe',
+      afternoon: 'European afternoon',
+      evening: 'Prime time across Europe',
+      late_night: 'Late night European cinema',
+    },
+    crossExperiences: [
+      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'movies', name: 'Cinema', gradient: 'from-amber-500/30 to-red-500/20', icon: <Film className="w-4 h-4" /> },
+      { id: 'africa', name: 'Africa', gradient: 'from-orange-500/30 to-yellow-500/20', icon: <Globe className="w-4 h-4" /> },
+      { id: 'french', name: 'French', gradient: 'from-blue-500/30 to-red-500/20', icon: <Flag className="w-4 h-4" /> },
+      { id: 'documentary', name: 'Docs', gradient: 'from-teal-500/30 to-green-500/20', icon: <Globe className="w-4 h-4" /> },
+    ],
+  },
+  south_asian: {
+    id: 'south_asian',
+    curatorId: 'south_asian',
+    veeHomepageId: 'homepage_south_asian',
+    name: 'South Asia',
+    tagline: 'Star, Zee, Colors, Sony — Bollywood to cricket.',
+    heroGradient: 'from-rose-900/40 via-[#060609] to-orange-900/20',
+    accentColor: '#FB923C',
+    accentGlow: 'rgba(251,146,60,0.3)',
+    icon: <Sun className="w-5 h-5" />,
+    subtypes: SOUTH_ASIAN_TYPES,
+    timeGreetings: {
+      morning: 'Good morning — chai time TV',
+      afternoon: 'Afternoon drama hour',
+      evening: 'Prime time serials',
+      late_night: 'Late night Bollywood',
+    },
+    crossExperiences: [
+      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'movies', name: 'Cinema', gradient: 'from-amber-500/30 to-red-500/20', icon: <Film className="w-4 h-4" /> },
+      { id: 'music', name: 'Music', gradient: 'from-violet-500/30 to-pink-500/20', icon: <Music className="w-4 h-4" /> },
       { id: 'news', name: 'News', gradient: 'from-red-500/30 to-orange-500/20', icon: <Radio className="w-4 h-4" /> },
+      { id: 'kids', name: 'Kids', gradient: 'from-pink-500/30 to-purple-500/20', icon: <Baby className="w-4 h-4" /> },
+    ],
+  },
+  americas: {
+    id: 'americas',
+    curatorId: 'americas',
+    veeHomepageId: 'homepage_americas',
+    name: 'Americas',
+    tagline: 'HBO, ESPN, Globo — from New York to Sao Paulo.',
+    heroGradient: 'from-sky-900/40 via-[#060609] to-red-900/20',
+    accentColor: '#0EA5E9',
+    accentGlow: 'rgba(14,165,233,0.3)',
+    icon: <Star className="w-5 h-5" />,
+    subtypes: AMERICAS_TYPES,
+    timeGreetings: {
+      morning: 'Good morning Americas',
+      afternoon: 'Afternoon across the Americas',
+      evening: 'Prime time coast to coast',
+      late_night: 'Late night Americas',
+    },
+    crossExperiences: [
+      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'movies', name: 'Cinema', gradient: 'from-amber-500/30 to-red-500/20', icon: <Film className="w-4 h-4" /> },
+      { id: 'entertainment', name: 'Entertainment', gradient: 'from-blue-500/30 to-purple-500/20', icon: <Sparkles className="w-4 h-4" /> },
+      { id: 'europe', name: 'Europe', gradient: 'from-blue-500/30 to-indigo-500/20', icon: <MapPin className="w-4 h-4" /> },
+      { id: 'music', name: 'Music', gradient: 'from-violet-500/30 to-pink-500/20', icon: <Music className="w-4 h-4" /> },
+    ],
+  },
+  arabic: {
+    id: 'arabic',
+    curatorId: 'arabic',
+    veeHomepageId: 'homepage_arabic',
+    name: 'Arabic',
+    tagline: 'MBC, Al Jazeera, beIN, Rotana — the Arab world.',
+    heroGradient: 'from-emerald-900/30 via-[#060609] to-teal-900/20',
+    accentColor: '#059669',
+    accentGlow: 'rgba(5,150,105,0.3)',
+    icon: <Moon className="w-5 h-5" />,
+    subtypes: ARABIC_TYPES,
+    timeGreetings: {
+      morning: 'Sabah al-khayr',
+      afternoon: 'Afternoon viewing',
+      evening: 'Evening prime — the Arab world tunes in',
+      late_night: 'Late night',
+    },
+    crossExperiences: [
+      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'news', name: 'News', gradient: 'from-red-500/30 to-orange-500/20', icon: <Radio className="w-4 h-4" /> },
+      { id: 'faith', name: 'Faith', gradient: 'from-yellow-500/30 to-amber-500/20', icon: <Heart className="w-4 h-4" /> },
+      { id: 'movies', name: 'Cinema', gradient: 'from-amber-500/30 to-red-500/20', icon: <Film className="w-4 h-4" /> },
+      { id: 'africa', name: 'Africa', gradient: 'from-orange-500/30 to-yellow-500/20', icon: <Globe className="w-4 h-4" /> },
+    ],
+  },
+  french: {
+    id: 'french',
+    curatorId: 'french',
+    veeHomepageId: 'homepage_french',
+    name: 'French',
+    tagline: 'TF1, Canal+, France 2, Arte — la francophonie.',
+    heroGradient: 'from-blue-900/30 via-[#060609] to-red-900/20',
+    accentColor: '#6366F1',
+    accentGlow: 'rgba(99,102,241,0.3)',
+    icon: <Flag className="w-5 h-5" />,
+    subtypes: FRENCH_TYPES,
+    timeGreetings: {
+      morning: 'Bonjour',
+      afternoon: 'Bonne apres-midi',
+      evening: 'Prime time francophone',
+      late_night: 'Cinema de nuit',
+    },
+    crossExperiences: [
+      { id: 'africa', name: 'Africa', gradient: 'from-orange-500/30 to-yellow-500/20', icon: <Globe className="w-4 h-4" /> },
+      { id: 'entertainment', name: 'Entertainment', gradient: 'from-blue-500/30 to-purple-500/20', icon: <Sparkles className="w-4 h-4" /> },
+      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'movies', name: 'Cinema', gradient: 'from-amber-500/30 to-red-500/20', icon: <Film className="w-4 h-4" /> },
+      { id: 'europe', name: 'Europe', gradient: 'from-blue-500/30 to-indigo-500/20', icon: <MapPin className="w-4 h-4" /> },
     ],
   },
 };
@@ -524,16 +651,16 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
                 )}
               </div>
               <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-x px-4 pb-2">
-                {veeStreams.slice(0, 15).map((stream, i) => (
+                {veeStreams.slice(0, 25).map((stream, i) => (
                   <button
                     key={stream.stream_id}
                     onClick={() => handlePlay(stream, veeStreams)}
                     className="flex-shrink-0 group"
                     style={{ width: i === 0 ? 160 : 140, ...(i < 10 ? { animation: `vee-card-in 0.6s ease ${i * 70}ms both` } : {}) }}
                   >
-                    <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 transition-all duration-300 group-hover:shadow-lg"
+                    <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 transition-all duration-300 group-hover:shadow-lg flex items-center justify-center"
                       style={{ background: 'rgba(255,255,255,0.03)', boxShadow: i === 0 ? `0 0 20px ${config.accentGlow}` : undefined }}>
-                      <ChannelIcon src={stream.stream_icon} name={stream.name} size="lg" className="!w-full !h-full !rounded-xl" />
+                      <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" />
                       <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-black/60 rounded text-[8px] font-semibold"
                         style={{ color: config.accentColor }}>
                         <span className="w-1 h-1 rounded-full live-badge-pulse" style={{ background: config.accentColor }} />
@@ -624,14 +751,14 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
                 <p className="text-[11px] text-white/20 mt-0.5 pl-3.5">What everyone is watching across all experiences</p>
               </div>
               <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-x px-4 pb-2">
-                {socialStreams.slice(0, 12).map((stream, i) => (
+                {socialStreams.slice(0, 20).map((stream, i) => (
                   <button
                     key={stream.stream_id}
                     onClick={() => handlePlay(stream, socialStreams)}
                     className="flex-shrink-0 w-[120px] group"
                   >
-                    <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 bg-white/[0.03]">
-                      <ChannelIcon src={stream.stream_icon} name={stream.name} size="lg" className="!w-full !h-full !rounded-xl" />
+                    <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 bg-white/[0.03] flex items-center justify-center">
+                      <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" />
                       <div className="absolute top-1 left-1 flex items-center gap-1 px-1 py-0.5 bg-black/60 rounded text-[7px] font-semibold text-emerald-300">
                         <span className="w-1 h-1 rounded-full bg-emerald-400 live-badge-pulse" />
                         LIVE

@@ -701,14 +701,14 @@ function ExperienceShowcase({
               style={i < 6 ? { animation: `vee-card-in 0.5s ease ${i * 60}ms both` } : undefined}
             >
               <div
-                className="relative aspect-[16/10] rounded-xl overflow-hidden transition-all duration-300 group-hover:ring-1"
+                className="relative aspect-[16/10] rounded-xl overflow-hidden transition-all duration-300 group-hover:ring-1 flex items-center justify-center"
                 style={{
                   background: 'rgba(255,255,255,0.04)',
                   boxShadow: i === 0 ? `0 0 12px ${config.accentGlow}` : undefined,
                   ['--tw-ring-color' as string]: config.accentColor,
                 }}
               >
-                <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" className="!w-full !h-full !rounded-xl" />
+                <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" />
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-xl">
                   <Play className="w-3.5 h-3.5 text-white" />
                 </div>

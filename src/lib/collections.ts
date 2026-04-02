@@ -97,7 +97,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
       '234',  // Football (28ch — SuperSport, Sky, TNT)
       '492',  // EPL (21ch — match day team channels)
     ],
-    limit: 15,
+    limit: 25,
     navigateTo: '/live/sports',
   },
   // 2. HOOK — fresh cinema, universal draw
@@ -108,7 +108,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     description: 'Fresh 2025 & 2026 releases',
     type: 'vod',
     categoryIds: ['749', '597'], // English 2026, 2025
-    limit: 15,
+    limit: 25,
     navigateTo: '/movies',
   },
   // 3. MOTHERLAND — Canal+, DSTV, BBC, HBO. The global village
@@ -126,7 +126,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
       '414',  // UK General (26ch — BBC One FHD, ITV FHD)
       '86',   // MBC Arabic (46ch — MBC 1-5, Drama, Max)
     ],
-    limit: 15,
+    limit: 25,
     navigateTo: '/french',
   },
   // 4. PREMIUM — 4K signals quality, builds confidence
@@ -137,7 +137,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     description: 'Ultra HD blockbusters — crystal clear',
     type: 'vod',
     categoryIds: ['122', '34'],  // 4K, Blockbuster
-    limit: 15,
+    limit: 25,
     navigateTo: '/movies',
   },
   // 5. DEPTH — binge material keeps them coming back
@@ -148,7 +148,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     description: 'K-Drama, Turkish & international series',
     type: 'series',
     categoryIds: ['267', '99'],  // Korean, Turkish
-    limit: 15,
+    limit: 25,
     navigateTo: '/series',
   },
   // 6. INFORM — trust anchor, shows we're serious
@@ -163,7 +163,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
       '417',  // UK News (15ch — CNBC FHD, CNN FHD)
       '165',  // Arabic News (44ch — Al Jazeera 4K, France 24)
     ],
-    limit: 12,
+    limit: 20,
     navigateTo: '/live/news',
   },
   // 7. WARMTH — ends on family, softens the scroll
@@ -177,7 +177,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
       '410',  // UK Kids (12ch — Cartoon Network FHD, CBeebies, Nick)
       '32',   // Kids (46ch — Disney 4K, Nick, CN, CBeebies)
     ],
-    limit: 15,
+    limit: 25,
     navigateTo: '/live/kids',
   },
 ];
@@ -188,7 +188,7 @@ export const COLLECTION_CARDS: CollectionCard[] = [
   { id: 'sports', name: 'Sports', emoji: '', gradient: 'from-primary/30 to-primary-dark/30', navigateTo: '/live/sports' },
   { id: 'movies', name: 'Movies', emoji: '', gradient: 'from-primary/25 to-primary-dark/25', navigateTo: '/movies' },
   { id: 'news', name: 'News', emoji: '', gradient: 'from-primary/20 to-white/5', navigateTo: '/live/news' },
-  { id: 'africa', name: 'Popular Here', emoji: '', gradient: 'from-accent/20 to-accent-gold/10', navigateTo: '/live/africa' },
+  { id: 'africa', name: 'The Motherland', emoji: '', gradient: 'from-accent/20 to-accent-gold/10', navigateTo: '/live/africa' },
   { id: 'series', name: 'Series', emoji: '', gradient: 'from-primary/30 to-primary-dark/20', navigateTo: '/series' },
   { id: 'kids', name: 'Kids', emoji: '', gradient: 'from-primary-light/20 to-primary/15', navigateTo: '/live/kids' },
   { id: 'music', name: 'Music', emoji: '', gradient: 'from-primary/25 to-primary-light/15', navigateTo: '/live/music' },
@@ -530,6 +530,73 @@ export const FAITH_TYPES: SportType[] = [
   { id: 'all', name: 'All', categoryIds: ['123', '561'] },
   { id: 'islamic', name: 'Islamic', categoryIds: ['123'] },
   { id: 'christian', name: 'Christian', categoryIds: ['561'] },
+];
+
+// ── The Motherland — DSTV + Canal+ Africa Experience ─────────────
+export const MOTHERLAND_TYPES: SportType[] = [
+  { id: 'all', name: 'All', categoryIds: ['336', '428', '343', '427', '345', '85', '11', '430', '347', '429', '344', '431', '346', '165', '82', '417', '32', '337', '275', '234'] },
+  { id: 'supersport', name: 'SuperSport', categoryIds: ['427', '345', '234', '85'] },    // SuperSport FHD/HD + beIN (DSTV carries beIN)
+  { id: 'canalplus', name: 'Canal+', categoryIds: ['336', '11'] },                         // Canal+ Africa + France feeds
+  { id: 'entertainment', name: 'Entertainment', categoryIds: ['428', '343'] },              // Africa Magic, BET, M-Net, kykNET
+  { id: 'kids', name: 'Kids', categoryIds: ['430', '347', '32'] },                         // DSTV Kids FHD/HD + Cartoon Network, Disney
+  { id: 'news', name: 'News', categoryIds: ['431', '346', '165', '82', '417'] },           // DSTV News, Al Jazeera, BBC, CNN, Arise
+  { id: 'movies', name: 'Movies', categoryIds: ['429', '344', '275'] },                    // DSTV Movies + English genre
+  { id: 'music', name: 'Music & Trace', categoryIds: ['336', '11'] },                      // Trace Africa/Urban/Gospel via Canal+ feeds
+  { id: 'documentary', name: 'Documentary', categoryIds: ['337', '428'] },                 // NatGeo, Discovery via DSTV
+];
+
+// ── Europe Experience ─────────────────────────────────────────────
+export const EUROPE_TYPES: SportType[] = [
+  { id: 'all', name: 'All', categoryIds: ['11', '15', '14', '39', '21', '29', '20', '44', '63', '579', '582', '774', '10', '132', '353', '483', '578', '413', '414', '415', '416', '410', '417', '3'] },
+  { id: 'france', name: 'France', categoryIds: ['11'] },
+  { id: 'germany', name: 'Germany', categoryIds: ['15'] },
+  { id: 'uk', name: 'UK', categoryIds: ['3', '414', '413', '415', '416', '410', '417', '353', '483', '578'] },
+  { id: 'italy', name: 'Italy', categoryIds: ['14'] },
+  { id: 'poland', name: 'Poland', categoryIds: ['39'] },
+  { id: 'netherlands', name: 'Netherlands', categoryIds: ['21'] },
+  { id: 'balkans', name: 'Balkans', categoryIds: ['29', '20', '44'] },
+  { id: 'scandinavia', name: 'Nordic', categoryIds: ['63', '579', '582'] },
+  { id: 'greece', name: 'Greece', categoryIds: ['10'] },
+];
+
+// ── South Asian Experience ────────────────────────────────────────
+export const SOUTH_ASIAN_TYPES: SportType[] = [
+  { id: 'all', name: 'All', categoryIds: ['247', '338', '18', '5', '356', '77', '731', '337', '341', '270', '287', '339', '340', '9', '292', '732', '733', '72', '73', '290', '728', '729', '727', '730', '81', '291', '75', '76', '7', '285', '282'] },
+  { id: 'entertainment', name: 'Entertainment', categoryIds: ['247', '338'] },
+  { id: 'cricket', name: 'Cricket', categoryIds: ['5'] },
+  { id: 'movies', name: 'Movies', categoryIds: ['339', '340', '282'] },
+  { id: 'news', name: 'News', categoryIds: ['77', '731'] },
+  { id: 'music', name: 'Music', categoryIds: ['341', '270', '287'] },
+  { id: 'tamil', name: 'Tamil', categoryIds: ['732', '733', '72'] },
+  { id: 'bangla', name: 'Bangla', categoryIds: ['9', '292'] },
+  { id: 'telugu', name: 'Telugu', categoryIds: ['73', '290'] },
+];
+
+// ── Americas Experience ───────────────────────────────────────────
+export const AMERICAS_TYPES: SportType[] = [
+  { id: 'all', name: 'All', categoryIds: ['2', '31', '741', '24'] },
+  { id: 'usa', name: 'USA', categoryIds: ['2'] },
+  { id: '247', name: '24/7 Channels', categoryIds: ['24'] },
+  { id: 'brazil', name: 'Brazil', categoryIds: ['31'] },
+  { id: 'latam', name: 'Latin America', categoryIds: ['741'] },
+];
+
+// ── Arabic Experience ─────────────────────────────────────────────
+export const ARABIC_TYPES: SportType[] = [
+  { id: 'all', name: 'All', categoryIds: ['86', '165', '156', '87', '13', '555', '181', '180', '178', '83', '549', '556', '554', '553', '548', '129'] },
+  { id: 'mbc', name: 'MBC', categoryIds: ['86'] },
+  { id: 'news', name: 'News', categoryIds: ['165'] },
+  { id: 'sports', name: 'Sports', categoryIds: ['156'] },
+  { id: 'movies', name: 'beIN Movies', categoryIds: ['87'] },
+  { id: 'music', name: 'Music', categoryIds: ['555'] },
+  { id: 'gulf', name: 'Gulf', categoryIds: ['181', '180', '178', '83', '549', '556', '554', '553', '548', '129'] },
+];
+
+// ── French Experience ─────────────────────────────────────────────
+export const FRENCH_TYPES: SportType[] = [
+  { id: 'all', name: 'All', categoryIds: ['11', '336', '39'] },
+  { id: 'france', name: 'France', categoryIds: ['11'] },
+  { id: 'canalplus', name: 'Canal+ Africa', categoryIds: ['336'] },
 ];
 
 export const NEWS_TYPES: SportType[] = [

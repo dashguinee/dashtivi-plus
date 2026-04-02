@@ -29,11 +29,6 @@ export interface XtreamCredentials {
   password: string;
 }
 
-export interface LiveCategory {
-  category_id: string;
-  category_name: string;
-}
-
 export interface LiveStream {
   stream_id: number;
   name: string;
@@ -67,7 +62,7 @@ export interface SeriesInfo {
   info?: Record<string, unknown>;
 }
 
-export interface SeriesSeasonMeta {
+interface SeriesSeasonMeta {
   season_number: number;
   name: string;
   episode_count: number;
@@ -221,10 +216,6 @@ async function cachedFetch<T>(key: string, url: string): Promise<T> {
 
 // --- Live TV ---
 
-export async function getLiveCategories(c: XtreamCredentials): Promise<LiveCategory[]> {
-  return cachedFetch<LiveCategory[]>('live_cats', apiUrl(c, 'get_live_categories'));
-}
-
 /** Lazy-load logo map to keep main bundle small */
 // Logo map removed — 100% icon coverage in database now.
 // enrichIcons only patches icons for the Xtream fallback path, which rarely fires.
@@ -270,11 +261,6 @@ async function enrichIcons(streams: LiveStream[]): Promise<LiveStream[]> {
   return result;
 }
 
-/** @deprecated Relocations now handled by curator experiences in database */
-export function getRelocatedChannels(_experience: string): number[] {
-  return [];
-}
-
 export async function getLiveStreams(c: XtreamCredentials, catId: string): Promise<LiveStream[]> {
   const streams = await cachedFetch<LiveStream[]>(
     `live_streams_${catId}`,
@@ -289,10 +275,6 @@ export async function getAllLiveStreams(c: XtreamCredentials): Promise<LiveStrea
 }
 
 // --- VOD ---
-
-export async function getVodCategories(c: XtreamCredentials): Promise<LiveCategory[]> {
-  return cachedFetch<LiveCategory[]>('vod_cats', apiUrl(c, 'get_vod_categories'));
-}
 
 export async function getVodStreams(c: XtreamCredentials, catId: string): Promise<VodStream[]> {
   return cachedFetch<VodStream[]>(
@@ -338,10 +320,6 @@ export async function getVodInfo(c: XtreamCredentials, vodId: number): Promise<V
 }
 
 // --- Series ---
-
-export async function getSeriesCategories(c: XtreamCredentials): Promise<LiveCategory[]> {
-  return cachedFetch<LiveCategory[]>('series_cats', apiUrl(c, 'get_series_categories'));
-}
 
 export async function getSeries(c: XtreamCredentials, catId: string): Promise<SeriesItem[]> {
   return cachedFetch<SeriesItem[]>(
@@ -405,9 +383,8 @@ export function buildSeriesUrl(c: XtreamCredentials, episodeId: number, ext = 'm
 
 const HEALTH_KEY = 'tivi_channel_health';
 const HEALTH_TTL = 30 * 60 * 1000; // 30 min before recheck
-const PLACEHOLDER_SIZE = 6148352; // Starshare offline placeholder is exactly this size
 
-export type ChannelHealth = 'unknown' | 'live' | 'offline' | 'dead';
+type ChannelHealth = 'unknown' | 'live' | 'offline' | 'dead';
 
 interface HealthEntry {
   status: ChannelHealth;
@@ -425,15 +402,7 @@ function setHealthCache(cache: Record<string, HealthEntry>) {
   try { localStorage.setItem(HEALTH_KEY, JSON.stringify(cache)); } catch {}
 }
 
-export function getChannelHealth(streamId: number): ChannelHealth {
-  const cache = getHealthCache();
-  const entry = cache[String(streamId)];
-  if (!entry) return 'unknown';
-  if (Date.now() - entry.ts > HEALTH_TTL) return 'unknown'; // Expired, recheck
-  return entry.status;
-}
-
-export function markChannelHealth(streamId: number, status: ChannelHealth, size?: number) {
+function markChannelHealth(streamId: number, status: ChannelHealth, size?: number) {
   const cache = getHealthCache();
   cache[String(streamId)] = { status, ts: Date.now(), size };
   setHealthCache(cache);
@@ -448,62 +417,9 @@ export function onStreamFail(streamId: number) {
   markChannelHealth(streamId, 'dead');
 }
 
-// Filter streams: show all unknown + live, hide dead, show offline with badge
-export function filterHealthyStreams(streams: LiveStream[]): LiveStream[] {
-  return streams.filter(s => {
-    const health = getChannelHealth(s.stream_id);
-    return health !== 'dead'; // Show unknown, live, offline — hide confirmed dead
-  });
-}
-
-// Get health badge for UI
-export function getHealthBadge(streamId: number): { show: boolean; label: string; color: string } {
-  const health = getChannelHealth(streamId);
-  switch (health) {
-    case 'offline': return { show: true, label: 'Offline', color: 'bg-amber-500/20 text-amber-400' };
-    case 'dead': return { show: true, label: 'Down', color: 'bg-red-500/20 text-red-400' };
-    default: return { show: false, label: '', color: '' };
-  }
-}
-
-// Batch health check — test a list of stream IDs via VPS
-export async function batchHealthCheck(c: XtreamCredentials, streamIds: number[]): Promise<void> {
-  // Only check unknown channels (don't recheck recently tested ones)
-  const toCheck = streamIds.filter(id => getChannelHealth(id) === 'unknown');
-  if (toCheck.length === 0) return;
-
-  // Check first 5 per batch (don't overload the connection)
-  for (const id of toCheck.slice(0, 5)) {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
-      const url = `${PROXY}/live?id=${id}&u=${enc(c.username)}&p=${enc(c.password)}`;
-      const res = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeout);
-
-      if (res.ok) {
-        const reader = res.body?.getReader();
-        if (reader) {
-          const { value } = await reader.read();
-          reader.cancel();
-          if (value && value.length > 1000) {
-            markChannelHealth(id, 'live', value.length);
-          } else {
-            markChannelHealth(id, 'dead', value?.length || 0);
-          }
-        }
-      } else {
-        markChannelHealth(id, 'dead');
-      }
-    } catch {
-      markChannelHealth(id, 'dead');
-    }
-  }
-}
-
 // --- Quality grouping ---
 
-export interface QualityVariant {
+interface QualityVariant {
   streamId: number;
   quality: 'SD' | 'HD' | 'FHD' | '4K' | 'UHD';
   name: string;
@@ -603,7 +519,7 @@ function setProbeCache(cache: ProbeCache) {
   } catch {}
 }
 
-export function getProbeStatus(streamId: number): string | null {
+function getProbeStatus(streamId: number): string | null {
   const cache = getProbeCache();
   const entry = cache[String(streamId)];
   if (!entry) return null;
@@ -934,12 +850,12 @@ export interface VeePlaylist {
   channels: CuratorChannel[];
 }
 
-export interface VeeShadow {
+interface VeeShadow {
   mood: string;
   channels: CuratorChannel[];
 }
 
-export interface VeeMatchDay {
+interface VeeMatchDay {
   is_match_day: boolean;
   matches: { name: string; league: string; kickoff: string; channels: CuratorChannel[] }[];
   promoted_channels: CuratorChannel[];
@@ -967,7 +883,7 @@ export async function fetchVeeData(): Promise<VeeData | null> {
     const data = await res.json() as VeeData;
     if (!data.homepage?.length) return null;
     veeData = data;
-    console.log('[VEE] Loaded — rows:%d slot:%s', data.homepage.length, data.time_slot);
+    console.debug('[VEE] Loaded — rows:%d slot:%s', data.homepage.length, data.time_slot);
     return data;
   } catch (e) {
     console.warn('[VEE] Fetch failed:', e);
@@ -1034,16 +950,6 @@ export function isCategoryDead(healthData: VpsHealthData, catId: string): boolea
   return healthData.deadCategories.includes(catId);
 }
 
-export function isCategoryOffline(healthData: VpsHealthData, catId: string): boolean {
-  if (!healthData.offlineCategories) return false;
-  return healthData.offlineCategories.includes(catId);
-}
-
-export function getCategoryStatus(healthData: VpsHealthData, catId: string): string {
-  const cat = healthData.categories[catId];
-  return cat?.status || 'unknown';
-}
-
 // --- EPG (Electronic Program Guide) ---
 // ~10% of channels have EPG data (sports, UK, DSTV, India)
 // Titles and descriptions are base64-encoded by the API
@@ -1079,27 +985,8 @@ export async function getShortEpg(c: XtreamCredentials, streamId: number, limit 
   }
 }
 
-/** Get the currently-airing programme for a stream (if EPG available) */
-export async function getNowPlaying(c: XtreamCredentials, streamId: number): Promise<EpgListing | null> {
-  const listings = await getShortEpg(c, streamId, 4);
-  if (listings.length === 0) return null;
-  const now = Date.now() / 1000;
-  return listings.find(l => l.startTimestamp <= now && l.stopTimestamp > now) || listings[0] || null;
-}
-
 function safeAtob(s: string): string {
   try { return atob(s); } catch { return s; }
-}
-
-// --- Thumbnail sort utility ---
-// Sorts streams: HTTPS icons first, then HTTP icons, then no icons
-
-export function sortByIconQuality<T extends { stream_icon: string }>(streams: T[]): T[] {
-  return [...streams].sort((a, b) => {
-    const scoreA = iconScore(a.stream_icon);
-    const scoreB = iconScore(b.stream_icon);
-    return scoreB - scoreA;
-  });
 }
 
 function iconScore(icon: string): number {
@@ -1117,7 +1004,7 @@ function iconScore(icon: string): number {
 const runtimeGemSet = new Set<number>();
 
 /** Register gem IDs from curator data (called when curator loads) */
-export function seedGemSet(curatorData: CuratorData | null) {
+function seedGemSet(curatorData: CuratorData | null) {
   if (!curatorData?.experiences) return;
   for (const channels of Object.values(curatorData.experiences)) {
     if (!Array.isArray(channels)) continue;
@@ -1164,10 +1051,6 @@ export function getFreeChannels(): Promise<FreeChannel[]> {
   return freeChannelPromise;
 }
 
-export function getFreeChannelsByExperience(experience: string): Promise<FreeChannel[]> {
-  return getFreeChannels().then(all => all.filter(ch => ch.experience === experience));
-}
-
 export function getFreeChannelsByCulture(culture: string): Promise<FreeChannel[]> {
   return getFreeChannels().then(all => all.filter(ch => ch.culture === culture));
 }
@@ -1198,17 +1081,6 @@ export function isFreeChannel(streamId: number): boolean {
   return streamId >= 900000;
 }
 
-// --- Cache management ---
-
-export function clearXtreamCache(): void {
-  const keys = Object.keys(localStorage);
-  for (const key of keys) {
-    if (key.startsWith('xtream_')) {
-      localStorage.removeItem(key);
-    }
-  }
-}
-
 // ═══════════════════════════════════════════════════════════════════
 // Supabase VOD Layer — database-backed movie/series catalog
 // Falls back to Xtream API if Supabase unavailable
@@ -1217,7 +1089,7 @@ export function clearXtreamCache(): void {
 const SB_URL = (import.meta.env.VITE_SUPABASE_URL || 'https://mclbbkmpovnvcfmwsoqt.supabase.co').trim();
 const SB_ANON = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
-export interface VodDbItem {
+interface VodDbItem {
   id: number;
   name: string;
   poster: string;
@@ -1232,7 +1104,7 @@ export interface VodDbItem {
   added: number;
 }
 
-export interface SeriesDbItem {
+interface SeriesDbItem {
   id: number;
   name: string;
   cover: string;

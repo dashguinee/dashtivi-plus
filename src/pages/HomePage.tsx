@@ -325,7 +325,7 @@ function DiscoverSports({ credentials, onPlay, navigate, categoryCache }: { cred
           const nl = s.name.toLowerCase();
           return tab.keywords.some(k => nl.includes(k)) && isChannelProbeAlive(s.stream_id);
         });
-        setChannels(prev => ({ ...prev, [activeTab]: filtered.slice(0, 8) }));
+        setChannels(prev => ({ ...prev, [activeTab]: filtered.slice(0, 15) }));
       });
     return () => { mounted = false; };
   }, [activeTab, credentials, tab]);
@@ -651,7 +651,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
     // Netflix hex — top 8 series
     getSeries(credentials, '106').then(items => {
       if (!mounted) return;
-      setNetflixHex(items.slice(0, 8));
+      setNetflixHex(items.slice(0, 15));
     }).catch(() => {});
 
     // DASH Exclusives — Oscar Winners + Blockbusters
@@ -685,7 +685,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           if (r.status === 'fulfilled') all.push(...(r.value as LiveStream[]));
         }
         const alive = all.filter(s => isChannelProbeAlive(s.stream_id));
-        setFixturesHex(alive.slice(0, 6));
+        setFixturesHex(alive.slice(0, 12));
       });
 
     // Discover Football — fan channels (uses shared categoryCache, cleaned keywords)
@@ -702,7 +702,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
         const nl = s.name.toLowerCase();
         return fanKeywords.some(k => nl.includes(k)) && isChannelProbeAlive(s.stream_id);
       });
-      setFootballHex(fans.slice(0, 8));
+      setFootballHex(fans.slice(0, 15));
     }).catch(() => {});
 
     // Platform previews — load directly, no delay
@@ -887,7 +887,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                     src={entry.logo}
                     name={entry.name}
                     size="lg"
-                    className="!w-full !h-full !rounded-xl"
+                    className=""
                   />
                   <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Play className="w-7 h-7 text-white/90" />
@@ -1410,9 +1410,9 @@ function VeeLiveRow({
             className="flex-shrink-0 group"
             style={{ width: i === 0 ? 160 : 140, ...(i < 12 ? { animation: `vee-card-in 0.7s cubic-bezier(0.4, 0, 0.2, 1) ${i * 90}ms both` } : {}) }}
           >
-            <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 transition-shadow duration-300 group-hover:shadow-lg group-hover:shadow-primary/8"
-              style={{ background: 'rgba(255,255,255,0.02)' }}>
-              <ChannelIcon src={stream.stream_icon} name={stream.name} size="lg" className="!w-full !h-full !rounded-xl" />
+            <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 transition-shadow duration-300 group-hover:shadow-lg group-hover:shadow-primary/8 flex items-center justify-center"
+              style={{ background: 'rgba(255,255,255,0.03)' }}>
+              <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" />
               <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-black/50 rounded text-[8px] font-semibold"
                 style={{ color: badgeColor }}>
                 <span className="w-1 h-1 rounded-full live-badge-pulse" style={{ background: dotColor }} />
@@ -1471,7 +1471,7 @@ function CollectionRow({
             >
               <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 transition-shadow duration-300 group-hover:shadow-lg group-hover:shadow-primary/8"
                 style={{ background: 'rgba(255,255,255,0.02)' }}>
-                <ChannelIcon src={stream.stream_icon} name={stream.name} size="lg" className="!w-full !h-full !rounded-xl" />
+                <ChannelIcon src={stream.stream_icon} name={stream.name} size="lg" className="" />
                 <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-black/50 rounded text-[8px] font-semibold text-red-400">
                   <span className="w-1 h-1 rounded-full bg-red-400 live-badge-pulse" />
                   {t(lang, 'live').toUpperCase()}

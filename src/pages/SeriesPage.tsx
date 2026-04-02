@@ -330,7 +330,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       .map(s => ({ series: s, score: getTrendingScore(s, tmdbMap) }))
       .filter(s => s.score > 0.5)
       .sort((a, b) => b.score - a.score)
-      .slice(0, 15)
+      .slice(0, 25)
       .map(s => s.series);
   }, [seriesList, tmdbMap, activeParent, hasTmdb]);
 
@@ -357,7 +357,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       const items = seriesList
         .filter(s => { const t = tmdbMap[`s:${s.series_id}`]; return t && t.r >= d.min && t.g.some(g => d.genres.includes(g)); })
         .sort((a, b) => (tmdbMap[`s:${b.series_id}`]?.r || 0) - (tmdbMap[`s:${a.series_id}`]?.r || 0))
-        .slice(0, 12);
+        .slice(0, 20);
       return items.length >= 4 ? { ...d, items } : null;
     }).filter(Boolean) as { id: string; name: string; items: SeriesItem[] }[];
   }, [seriesList, tmdbMap, activeParent, hasTmdb]);
