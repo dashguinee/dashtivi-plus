@@ -176,7 +176,7 @@ async function loadLiveCollection(
     if (veeId) {
       const veeRow = veeHomepage.find(h => h.id === veeId);
       if (veeRow && veeRow.channels.length > 0) {
-        console.log('[VEE] Using VEE row for %s (%s) — %d channels', collection.id, veeId, veeRow.channels.length);
+        // VEE row matched
         return curatorToLiveStreams(veeRow.channels).slice(0, collection.limit);
       }
     }
@@ -447,7 +447,6 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
     async function load() {
       setError(false);
-      console.log('[HOME] Loading started');
       const t0 = Date.now();
       try {
         // Fetch curator (Supabase-backed) + VEE + health + legacy fallbacks in parallel
@@ -522,7 +521,6 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
         console.error('[HOME] Fatal load error:', err);
         if (mounted) setError(true);
       } finally {
-        console.log('[HOME] Load complete — total:', Date.now() - t0, 'ms');
         if (mounted) setLoading(false);
       }
     }

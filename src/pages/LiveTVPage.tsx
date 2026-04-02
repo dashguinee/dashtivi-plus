@@ -215,7 +215,6 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
         }
 
         // FALLBACK: Legacy category-based loading (if curator unavailable)
-        console.log('[LIVE] Curator unavailable, falling back to category loading');
 
         const [healthData, verifiedData, probeData] = await Promise.all([
           fetchVpsHealth(),
@@ -317,7 +316,6 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
               for (const s of r.value) streamById.set(s.stream_id, s);
             }
           }
-          console.log('[LIVETV] Fetched %d extra categories for classified reach (%d streams in lookup)', extraCatsToFetch.length, streamById.size);
         }
 
         // --- Phase 3: Supplement themes with classified per-channel mapping ---

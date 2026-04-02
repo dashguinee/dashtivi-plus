@@ -30,7 +30,7 @@ startPreload();
 function lazyRetry(factory: () => Promise<{ default: React.ComponentType<any> }>) {
   return lazy(() =>
     factory().catch(() => {
-      console.log('[APP] Stale chunk detected — reloading');
+      // Stale chunk — clear caches and reload
       if ('caches' in window) caches.keys().then(k => k.forEach(c => caches.delete(c)));
       window.location.reload();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,9 +68,7 @@ function UpdateButton() {
         if (!res.ok) return;
         const data = await res.json();
         if (data.version && data.version !== APP_VERSION) {
-          console.log('[UPDATE] Remote version:', data.version, '| Local:', APP_VERSION);
           if (data.force) {
-            console.log('[UPDATE] Force update — reloading now');
             setForceUpdate(true);
             // Clear caches then reload
             if ('caches' in window) {
@@ -108,7 +106,6 @@ function UpdateButton() {
   return (
     <button
       onClick={async () => {
-        console.log('[UPDATE] User tapped — clearing caches and reloading');
         if ('caches' in window) {
           const keys = await caches.keys();
           await Promise.all(keys.map(k => caches.delete(k)));

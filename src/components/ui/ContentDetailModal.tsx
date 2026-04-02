@@ -69,9 +69,10 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   const [vodTrailer, setVodTrailer] = useState<string | null>(null);
   const [vodDirector, setVodDirector] = useState<string | null>(null);
   const [vodCast, setVodCast] = useState<string | null>(null);
+  const [vodLoading, setVodLoading] = useState(type === 'movie');
 
   useEffect(() => {
-    if (type !== 'movie' || !credentials) return;
+    if (type !== 'movie' || !credentials) { setVodLoading(false); return; }
     let mounted = true;
     import('@/lib/xtream').then(({ getVodInfo }) => {
       getVodInfo(credentials, streamId).then(info => {
@@ -82,7 +83,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
         if (i.youtube_trailer) setVodTrailer(i.youtube_trailer);
         if (i.director) setVodDirector(i.director);
         if (i.cast || i.actors) setVodCast(i.cast || i.actors || null);
-      });
+      }).finally(() => { if (mounted) setVodLoading(false); });
     });
     return () => { mounted = false; };
   }, [streamId, type, credentials]);
@@ -275,19 +276,32 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
             </button>
           </div>
 
-          {/* Description from Xtream VOD info */}
-          {description && (
-            <p className="text-sm text-white/50 leading-relaxed line-clamp-3 mb-3">
-              {description}
-            </p>
-          )}
-
-          {/* Director + Cast */}
-          {(vodDirector || vodCast) && (
-            <div className="text-xs text-white/30 space-y-1">
-              {vodDirector && <p>{t(lang, 'director')}: <span className="text-white/50">{vodDirector}</span></p>}
-              {vodCast && <p>{t(lang, 'cast')}: <span className="text-white/50">{vodCast.split(',').slice(0, 4).join(', ')}</span></p>}
+          {/* Description + Credits — with skeleton while loading */}
+          {vodLoading ? (
+            <div className="space-y-2 mb-3 animate-pulse">
+              <div className="h-3 bg-white/5 rounded w-full" />
+              <div className="h-3 bg-white/5 rounded w-4/5" />
+              <div className="h-3 bg-white/5 rounded w-2/3" />
+              <div className="h-2.5 bg-white/5 rounded w-1/2 mt-3" />
             </div>
+          ) : (
+            <>
+              {description && (
+                <p className="text-sm text-white/50 leading-relaxed line-clamp-3 mb-3">
+                  {description}
+                </p>
+              )}
+              {(vodDirector || vodCast) && (
+                <div className="text-xs text-white/30 space-y-1">
+                  {vodDirector && <p>{t(lang, 'director')}: <span className="text-white/50">{vodDirector}</span></p>}
+                  {vodCast && (
+                    <p>{t(lang, 'cast')}: <span className="text-white/50">
+                      {vodCast.split(',').slice(0, 4).join(', ')}{vodCast.split(',').length > 4 ? ' ...' : ''}
+                    </span></p>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
