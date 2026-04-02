@@ -3,7 +3,7 @@ import { Play, Search, X, ChevronRight, LayoutGrid, Trophy, Sparkles, Radio, Bab
 import { useNavigate } from 'react-router-dom';
 import { t, useLanguage } from '@/i18n';
 import type { XtreamCredentials, LiveStream, GroupedChannel, FreeChannel } from '@/lib/xtream';
-import { getLiveStreams, getAllLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getExperienceIds, getExperienceCategoryIds, fetchCuratorData, getCuratorExperience, curatorToLiveStreams, hasCuratorData, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
+import { getLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getExperienceIds, getExperienceCategoryIds, fetchCuratorData, getCuratorExperience, curatorToLiveStreams, hasCuratorData, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
 import {
   LIVETV_THEMES, SPORT_TYPES, ENTERTAINMENT_TYPES, KIDS_TYPES,
   CINEMA_TYPES, MUSIC_TYPES, DISCOVERY_TYPES, FAITH_TYPES, PREMIUM4K_TYPES,
@@ -100,27 +100,48 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // ── Search across all channels (Xtream + free) ─────────────────
+  // ── Search across all channels (curator-first + free) ──────────
   useEffect(() => {
     if (!debouncedQuery.trim()) { setSearchResults([]); return; }
     let mounted = true;
     async function search() {
       setSearchLoading(true);
       try {
-        const [all, freeAll] = await Promise.all([
-          getAllLiveStreams(credentials),
-          getFreeChannels(),
-        ]);
+        // Ensure curator data is loaded
+        const curatorResult = await fetchCuratorData();
+        const freeAll = await getFreeChannels();
         const q = debouncedQuery.toLowerCase();
-        const xtreamResults = all.filter(s => s.name.toLowerCase().includes(q))
-          .filter(s => isChannelProbeAlive(s.stream_id));
+
+        // Search ALL curator experiences (already verified + alive)
+        const seen = new Set<number>();
+        const allCuratorChannels: LiveStream[] = [];
+        if (curatorResult?.experiences) {
+          for (const channels of Object.values(curatorResult.experiences)) {
+            if (Array.isArray(channels)) {
+              for (const ch of channels) {
+                if (!seen.has(ch.id)) {
+                  seen.add(ch.id);
+                  allCuratorChannels.push(...curatorToLiveStreams([ch]));
+                }
+              }
+            }
+          }
+        }
+
+        const curatorResults = allCuratorChannels
+          .filter(s => s.name.toLowerCase().includes(q));
+
+        // Free channels
         const freeResults = freeAll.filter(ch => ch.name.toLowerCase().includes(q));
         const freeAsLive = freeResults.map(freeToLiveStream);
-        // Populate URL map for free results
         if (freeResults.length > 0) {
           setFreeUrlMap(prev => ({ ...prev, ...buildFreeUrlMap(freeResults) }));
         }
-        if (mounted) setSearchResults([...xtreamResults, ...freeAsLive]);
+
+        // Merge: curator + free (no duplicates)
+        const freeIds = new Set(freeAsLive.map(s => s.stream_id));
+        const merged = [...curatorResults.filter(s => !freeIds.has(s.stream_id)), ...freeAsLive];
+        if (mounted) setSearchResults(sortGemsFirst(merged));
       } catch {
         if (mounted) setSearchResults([]);
       } finally {
