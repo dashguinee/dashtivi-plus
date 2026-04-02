@@ -110,6 +110,8 @@ export function usePlayer() {
         }
 
         let retryCount = 0;
+        let connectionResolved = false;
+        let connectionTimeout: ReturnType<typeof setTimeout> | undefined;
 
         // Free HLS channels — use createHlsPlayer (handles Safari native + HLS.js)
         if (isHlsUrl) {
@@ -145,6 +147,13 @@ export function usePlayer() {
           video.src = url;
           video.play().catch(() => {});
 
+          // Connection timeout — if no canplay in 12s, trigger retry
+          connectionTimeout = setTimeout(() => {
+            if (!connectionResolved && !video.readyState) {
+              video.onerror?.(new Event('timeout'));
+            }
+          }, 12000);
+
           const maxRetries = isLive ? 5 : 3;
           video.onerror = () => {
             if (retryCount < maxRetries) {
@@ -156,6 +165,7 @@ export function usePlayer() {
                 video.play().catch(() => {});
               }, 2000);
             } else {
+              clearTimeout(connectionTimeout);
               const idMatch = url.match(/[?&]id=(\d+)/);
               if (idMatch) onStreamFail(parseInt(idMatch[1]));
               markDead(channel.id, 'Stream error');
@@ -164,6 +174,7 @@ export function usePlayer() {
           };
 
           destroyRef.current = () => {
+            clearTimeout(connectionTimeout);
             video.onerror = null;
             video.src = '';
             video.load();
@@ -172,6 +183,7 @@ export function usePlayer() {
         setState((prev) => ({ ...prev, isLoading: false }));
 
         video.oncanplay = () => {
+          connectionResolved = true;
           setState((prev) => ({ ...prev, isLoading: false }));
         };
         video.onplaying = () => {
