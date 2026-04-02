@@ -12,29 +12,13 @@
 // AFRICAN_VIBES_IDS, CANAL_PLUS_IDS — all moved to Supabase database.
 // Channels are now managed via tivi_channels (is_hidden, is_gem, experience).
 
-// @deprecated — all channel placement now managed in Supabase tivi_channels + tivi_channel_experiences
-export const RELOCATE_MAP: Record<number, string> = {};
-
-// @deprecated — hidden channels now managed via is_hidden in tivi_channels
-export const HIDDEN_STREAM_IDS = new Set<number>();
+// Legacy exports removed — all channel data now in Supabase
 
 // ── Cherry-Picked Curated Experiences ──────────��────────────────────
 
 /** "Best of Live" — the 15 channels that make DashTivi+ shine.
  *  Hand-picked mix: 3 sports, 3 news, 3 entertainment, 2 kids, 2 music, 2 documentary.
  *  These are the channels where someone tunes in and says "wow, this works." */
-// @deprecated — best-of now handled by VEE engine
-export const BEST_OF_LIVE: number[] = [];
-
-/** "African Vibes" — Trace, SuperSport, DStv, beIN for the Motherland.
- *  Free African HLS channels are loaded separately by culture='africa'. */
-// @deprecated — african vibes now in curator africa experience
-export const AFRICAN_VIBES_IDS: number[] = [];
-
-/** "Canal+ Collection" — all Canal+ feeds across France + Poland.
- *  Organized: Premium, Sport, Film, Series, Docs, Kids. */
-// @deprecated — canal+ now in curator french experience
-export const CANAL_PLUS_IDS: number[] = [];
 
 // ── Types ─────────────────────────────────────────────────────────
 
