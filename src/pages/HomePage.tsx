@@ -436,6 +436,36 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   const hero = getFeaturedHero();
 
+  // ── Hero banner scroll-aware fade ─────────────────────────────
+  const [heroBannerOpacity, setHeroBannerOpacity] = useState(0);
+  const [heroBannerEntered, setHeroBannerEntered] = useState(false);
+  const heroBannerRef = useRef<HTMLDivElement>(null);
+
+  // Entrance: fade in after mount
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      setHeroBannerEntered(true);
+      setHeroBannerOpacity(1);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  // Exit: fade out + drift up as user scrolls past the banner
+  useEffect(() => {
+    const onScroll = () => {
+      const el = heroBannerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const totalH = el.offsetHeight;
+      if (totalH === 0) return;
+      // Once the banner starts leaving the viewport, fade it out
+      const visible = Math.max(0, Math.min(1, rect.bottom / totalH));
+      setHeroBannerOpacity(visible);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   // Set ambient speed for home — comfortable pace
   useEffect(() => {
     setAmbientSpeed(0.8);
@@ -805,14 +835,23 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   return (
     <div ref={scrollRef} className="pt-16 pb-32">
-      {/* ── Hero Banner (time-aware) ── */}
+      {/* ── Hero Banner (time-aware) — cinematic entrance/exit ── */}
       <div
+        ref={heroBannerRef}
         data-goggle
         className="relative mb-4 overflow-hidden"
         style={{
           height: '22vh',
           minHeight: '160px',
           maxHeight: '220px',
+          opacity: heroBannerEntered ? heroBannerOpacity : 0,
+          transform: heroBannerEntered
+            ? `scale(${0.98 + 0.02 * heroBannerOpacity}) translateY(${(1 - heroBannerOpacity) * -8}px)`
+            : 'scale(0.98)',
+          transition: heroBannerEntered
+            ? 'opacity 0.8s ease-out, transform 0.8s ease-out'
+            : 'opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1)',
+          willChange: 'opacity, transform',
         }}
       >
         <div className={`absolute inset-0 bg-gradient-to-br ${hero.gradient}`} />

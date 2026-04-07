@@ -8,6 +8,7 @@ const translations = {
     navMovies: 'Films',
     navSeries: 'Séries',
     navWorldEX: 'WorldEX',
+    navHub: 'Hub',
     navFrench: 'Français',
 
     // ── Header ────────────────────────────────────────────────
@@ -387,6 +388,7 @@ const translations = {
     navMovies: 'Movies',
     navSeries: 'Series',
     navWorldEX: 'WorldEX',
+    navHub: 'Hub',
     navFrench: 'French',
 
     // ── Header ────────────────────────────────────────────────

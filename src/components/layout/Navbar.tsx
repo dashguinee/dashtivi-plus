@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Tv, Clapperboard, PlayCircle, Globe } from 'lucide-react';
+import { Home, Tv, Clapperboard, PlayCircle, Users } from 'lucide-react';
 import { useLanguage } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
 
@@ -16,7 +16,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/live', labelKey: 'navLiveTV', icon: Tv, isLive: true },
   { path: '/movies', labelKey: 'navMovies', icon: Clapperboard },
   { path: '/series', labelKey: 'navSeries', icon: PlayCircle },
-  { path: '/french', labelKey: 'navWorldEX', icon: Globe },
+  { path: '/hub', labelKey: 'navHub', icon: Users },
 ];
 
 export const Navbar: React.FC = () => {

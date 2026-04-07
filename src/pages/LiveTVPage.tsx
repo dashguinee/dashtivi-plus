@@ -94,6 +94,20 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // Persistent category filter — visible always in search bar area
   const [searchCategory, setSearchCategory] = useState<string | null>(null);
 
+  // ── Header visibility — detect when header hides on scroll ────
+  const [headerVisible, setHeaderVisible] = useState(true);
+  useEffect(() => {
+    const onScroll = () => {
+      const header = document.querySelector('header');
+      if (!header) return;
+      const t = getComputedStyle(header).transform;
+      const visible = t === 'none' || t === 'matrix(1, 0, 0, 1, 0, 0)';
+      setHeaderVisible(visible);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   // ── Probe staleness ─────────────────────────────────────────────
   const [probeStale, setProbeStale] = useState(false);
 
@@ -479,8 +493,17 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   return (
     <div className="pt-16 pb-32 min-h-screen">
-      {/* ── Search bar ───────────────────────────────────────────── */}
-      <div className="sticky top-14 z-20 py-4 px-4 bg-[#0A0A0A]/90 backdrop-blur-lg border-b border-white/5">
+      {/* ── Search bar — frosted glass, slides up when header hides ── */}
+      <div
+        className="sticky z-20 py-4 px-4 border-b border-white/5"
+        style={{
+          top: headerVisible ? '3.5rem' : '0px',
+          background: headerVisible ? 'rgba(10,10,10,0.90)' : 'rgba(0,0,0,0.60)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          transition: 'top 0.5s ease-out, background 0.5s ease-out',
+        }}
+      >
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" />
           <input

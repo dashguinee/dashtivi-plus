@@ -45,6 +45,7 @@ const LiveTVPage = lazyRetry(() => import('@/pages/LiveTVPage').then((m) => ({ d
 const MoviesPage = lazyRetry(() => import('@/pages/MoviesPage').then((m) => ({ default: m.MoviesPage })));
 const SeriesPage = lazyRetry(() => import('@/pages/SeriesPage').then((m) => ({ default: m.SeriesPage })));
 const FrenchPage = lazyRetry(() => import('@/pages/FrenchPage').then((m) => ({ default: m.FrenchPage })));
+const DaHubPage = lazyRetry(() => import('@/pages/DaHubPage').then((m) => ({ default: m.DaHubPage })));
 const WelcomePage = lazyRetry(() => import('@/pages/WelcomePage').then((m) => ({ default: m.WelcomePage })));
 const PlatformsPage = lazyRetry(() => import('@/pages/PlatformsPage').then((m) => ({ default: m.PlatformsPage })));
 const ExperienceHomePage = lazyRetry(() => import('@/pages/ExperienceHomePage').then((m) => ({ default: m.ExperienceHomePage })));
@@ -277,6 +278,7 @@ function AppContent() {
                   <Route path="/movies" element={<ErrorBoundary><MoviesPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/series" element={<ErrorBoundary><SeriesPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/french" element={<ErrorBoundary><FrenchPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
+                  <Route path="/hub" element={<ErrorBoundary><DaHubPage /></ErrorBoundary>} />
                   <Route path="/originals" element={<ErrorBoundary><PlatformsPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
