@@ -137,7 +137,7 @@ export const DaHubPage: React.FC = () => {
                 Da<span style={{ color: '#c9f03c' }}>Hub</span>
               </h1>
               <p className="text-[11px] text-white/25 tracking-[0.2em] uppercase mt-1.5">
-                Your DASH community
+                Watch together. Discover together.
               </p>
             </div>
           </div>
@@ -148,12 +148,12 @@ export const DaHubPage: React.FC = () => {
       <div className="px-4 mt-4 space-y-4 dahub-stagger-2">
 
         {/* Friends row */}
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-1">
+        <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-3 px-1">
           {FRIENDS.map((friend, i) => (
-            <div key={friend.name} className="flex flex-col items-center gap-1.5 flex-shrink-0">
+            <div key={friend.name} className="flex flex-col items-center gap-1.5 flex-shrink-0" style={{ minWidth: 56 }}>
               <div className="relative">
                 <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center text-sm font-bold text-white/90 transition-transform duration-300 hover:scale-110 cursor-pointer"
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-xs font-bold text-white/90 transition-transform duration-300 hover:scale-110 cursor-pointer"
                   style={{
                     background: `linear-gradient(135deg, ${friend.color}40, ${friend.color}20)`,
                     boxShadow: `0 0 0 2px ${friend.color}40`,
@@ -360,16 +360,19 @@ export const DaHubPage: React.FC = () => {
                   <p className="text-[10px] text-violet-300/40 tracking-widest uppercase">Music + Vibes</p>
                 </div>
               </div>
-              <span
-                className="text-[10px] font-semibold px-2.5 py-1 rounded-full"
+              <a
+                href="https://music.dasuperhub.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] font-semibold px-2.5 py-1 rounded-full hover:scale-105 transition-transform duration-300"
                 style={{
                   background: 'rgba(139,92,246,0.12)',
                   color: '#a78bfa',
                   border: '1px solid rgba(139,92,246,0.2)',
                 }}
               >
-                Coming Soon
-              </span>
+                Explore
+              </a>
             </div>
 
             {/* Mock player card */}
@@ -466,13 +469,18 @@ export const DaHubPage: React.FC = () => {
             </div>
 
             {/* Tagline */}
-            <div className="flex items-center justify-center gap-2 mt-5">
+            <a
+              href="https://music.dasuperhub.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 mt-5 hover:opacity-80 transition-opacity"
+            >
               <Sparkles className="w-3.5 h-3.5 text-violet-400/40" />
               <p className="text-[11px] text-violet-300/30 tracking-wider uppercase font-medium">
-                Coming to DashTivi+
+                Open VOYO Music
               </p>
               <Sparkles className="w-3.5 h-3.5 text-violet-400/40" />
-            </div>
+            </a>
           </div>
         </div>
       </div>
@@ -541,7 +549,7 @@ export const DaHubPage: React.FC = () => {
             <span className="text-[10px] font-bold text-[#C77DFF]">+</span>
           </div>
           <p className="text-[9px] text-white/20 tracking-widest uppercase">
-            More than streaming
+            Stream. Connect. Create.
           </p>
         </div>
       </div>
