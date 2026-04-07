@@ -12,6 +12,7 @@ import {
 } from '@/lib/collections';
 import type { LiveTheme, SportType, BrowseExperience } from '@/lib/collections';
 import { getSmartThemeOrder, recordThemeWatch } from '@/lib/intelligence';
+import { useSmartSticky } from '@/hooks/useSmartSticky';
 
 // Map theme IDs to their child experience sub-tabs
 const THEME_SUBTYPES: Record<string, SportType[]> = {
@@ -94,19 +95,8 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // Persistent category filter — visible always in search bar area
   const [searchCategory, setSearchCategory] = useState<string | null>(null);
 
-  // ── Header visibility — detect when header hides on scroll ────
-  const [headerVisible, setHeaderVisible] = useState(true);
-  useEffect(() => {
-    const onScroll = () => {
-      const header = document.querySelector('header');
-      if (!header) return;
-      const t = getComputedStyle(header).transform;
-      const visible = t === 'none' || t === 'matrix(1, 0, 0, 1, 0, 0)';
-      setHeaderVisible(visible);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  // ── Smart sticky — hides search on sustained scroll, peeks back after idle ──
+  const { stickyHidden, headerVisible } = useSmartSticky();
 
   // ── Probe staleness ─────────────────────────────────────────────
   const [probeStale, setProbeStale] = useState(false);
@@ -493,15 +483,20 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   return (
     <div className="pt-16 pb-32 min-h-screen">
-      {/* ── Search bar — frosted glass, slides up when header hides ── */}
+      {/* ── Search bar — frosted glass, smart sticky ── */}
       <div
-        className="sticky z-20 py-4 px-4 border-b border-white/5"
+        className="sticky z-20 py-4"
         style={{
           top: headerVisible ? '3.5rem' : '0px',
-          background: headerVisible ? 'rgba(10,10,10,0.90)' : 'rgba(0,0,0,0.60)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          transition: 'top 0.5s ease-out, background 0.5s ease-out',
+          background: headerVisible ? 'rgba(10,10,10,0.92)' : 'rgba(0,0,0,0.35)',
+          backdropFilter: 'blur(28px)',
+          WebkitBackdropFilter: 'blur(28px)',
+          borderBottom: headerVisible ? '1px solid rgba(255,255,255,0.05)' : '1px solid transparent',
+          padding: headerVisible ? '1rem 1rem' : '0.75rem 1.5rem',
+          opacity: stickyHidden ? 0.07 : 1,
+          transform: stickyHidden ? 'translateY(0)' : 'translateY(0)',
+          transition: 'top 0.5s ease-out, background 0.6s ease-out, border-color 0.6s ease-out, padding 0.5s ease-out, opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+          pointerEvents: stickyHidden ? 'none' : 'auto',
         }}
       >
         <div className="relative">
@@ -512,7 +507,14 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t(lang, 'searchChannels')}
-            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-text-secondary focus:outline-none focus:border-primary/50 focus:bg-white/[0.07] transition-colors"
+            className={`w-full rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-text-secondary focus:outline-none transition-all duration-500 ${
+              headerVisible
+                ? 'bg-white/5 border border-white/10 focus:border-primary/50 focus:bg-white/[0.07]'
+                : 'bg-white/[0.06] border border-white/[0.08] shadow-[0_0_15px_rgba(201,240,60,0.04)] focus:border-primary/30 focus:bg-white/[0.08]'
+            }`}
+            style={!headerVisible ? {
+              backgroundImage: 'linear-gradient(135deg, rgba(201,240,60,0.03) 0%, transparent 40%, transparent 60%, rgba(201,240,60,0.02) 100%)',
+            } : undefined}
           />
           {(searchQuery || searchCategory) && (
             <button
