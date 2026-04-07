@@ -313,6 +313,111 @@ export const DaHubPage: React.FC = () => {
         </div>
       </div>
 
+      {/* ── Section VEE: AI Intelligence Carousel ──────────────────── */}
+      <div className="mt-6 dahub-stagger-3">
+        <div className="flex items-center gap-2 mb-3 px-5">
+          <div
+            className="w-5 h-5 rounded-md flex items-center justify-center"
+            style={{ background: 'rgba(201,240,60,0.12)' }}
+          >
+            <Sparkles className="w-3 h-3 text-[#c9f03c]/70" />
+          </div>
+          <h3 className="text-sm font-semibold text-white/60 tracking-wide">VEE</h3>
+          <span className="text-[10px] text-white/15 ml-1">for you</span>
+        </div>
+
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-3">
+          {/* Card 1: Personalization prompt */}
+          <div
+            className="flex-shrink-0 w-[260px] rounded-2xl p-4 border relative overflow-hidden"
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              borderColor: 'rgba(201,240,60,0.08)',
+              backdropFilter: 'blur(16px)',
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-[#c9f03c]/[0.03] to-transparent" />
+            <div className="relative">
+              <p className="text-[11px] text-[#c9f03c]/50 font-semibold tracking-wide uppercase mb-2">Personalize</p>
+              <p className="text-[13px] text-white/70 leading-relaxed mb-3">What's your favorite football team?</p>
+              <div className="flex flex-wrap gap-1.5">
+                {['Barcelona', 'Man United', 'PSG', 'Real Madrid', 'Arsenal'].map(team => (
+                  <button
+                    key={team}
+                    className="text-[10px] px-2.5 py-1 rounded-full font-medium transition-all duration-300 hover:scale-105"
+                    style={{
+                      background: 'rgba(201,240,60,0.06)',
+                      color: 'rgba(201,240,60,0.6)',
+                      border: '1px solid rgba(201,240,60,0.1)',
+                    }}
+                  >
+                    {team}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Smart insight */}
+          <div
+            className="flex-shrink-0 w-[240px] rounded-2xl p-4 border relative overflow-hidden"
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              borderColor: 'rgba(255,255,255,0.06)',
+              backdropFilter: 'blur(16px)',
+            }}
+          >
+            <div className="relative">
+              <p className="text-[11px] text-white/30 font-semibold tracking-wide uppercase mb-2">Insight</p>
+              <p className="text-[13px] text-white/70 leading-relaxed">You watched 3 Premier League matches this week. Arsenal plays Chelsea tomorrow at 20:00.</p>
+              <div className="flex items-center gap-1.5 mt-3">
+                <Eye className="w-3 h-3 text-[#c9f03c]/40" />
+                <span className="text-[10px] text-[#c9f03c]/40 font-medium">Set reminder</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: Content suggestion */}
+          <div
+            className="flex-shrink-0 w-[240px] rounded-2xl p-4 border relative overflow-hidden"
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              borderColor: 'rgba(255,255,255,0.06)',
+              backdropFilter: 'blur(16px)',
+            }}
+          >
+            <div className="relative">
+              <p className="text-[11px] text-white/30 font-semibold tracking-wide uppercase mb-2">For You</p>
+              <p className="text-[13px] text-white/70 leading-relaxed">Based on your African cinema taste — try Motherland TV tonight. 12 new episodes dropped.</p>
+              <div className="flex items-center gap-1.5 mt-3">
+                <Play className="w-3 h-3 text-[#c9f03c]/40" />
+                <span className="text-[10px] text-[#c9f03c]/40 font-medium">Watch now</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 4: Social insight */}
+          <div
+            className="flex-shrink-0 w-[240px] rounded-2xl p-4 border relative overflow-hidden"
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              borderColor: 'rgba(157,78,221,0.08)',
+              backdropFilter: 'blur(16px)',
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-[#9D4EDD]/[0.03] to-transparent" />
+            <div className="relative">
+              <p className="text-[11px] text-[#C77DFF]/40 font-semibold tracking-wide uppercase mb-2">Social</p>
+              <p className="text-[13px] text-white/70 leading-relaxed">Kai and 2 others are watching the same series as you. Start a watch party?</p>
+              <div className="flex items-center gap-1.5 mt-3">
+                <Users className="w-3 h-3 text-[#C77DFF]/40" />
+                <span className="text-[10px] text-[#C77DFF]/40 font-medium">Create party</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ── Section C: VOYO Music Teaser ─────────────────────────── */}
       <div className="px-4 mt-8 dahub-stagger-3">
         <div
