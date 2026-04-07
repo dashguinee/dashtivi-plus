@@ -199,8 +199,10 @@ export const VideoPlayer: React.FC<Props> = ({
       cinemaAbortedRef.current = true;
       clearTimeout(cinemaMinTimerRef.current);
       clearTimeout(cinemaMaxTimerRef.current);
-      // Ensure unmute on cleanup — direct DOM as fallback safety
-      if (videoRef.current) videoRef.current.muted = false;
+      // Only unmute if cinema intro owned the mute — don't force unmute on channel switch
+      if (cinemaMutedByUsRef.current && videoRef.current) {
+        videoRef.current.muted = false;
+      }
       cinemaMutedByUsRef.current = false;
     };
   }, [state.channel, state.isLoading]);
