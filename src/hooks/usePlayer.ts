@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { markDead, markAlive } from '@/hooks/useChannelHealth';
 import { onStreamSuccess, onStreamFail, getStreamQuality, setStreamQuality } from '@/lib/xtream';
 import { createHlsPlayer } from '@/lib/hls';
+import { connectBoost, disconnectBoost } from '@/lib/audio-boost';
 import type { HlsInstance } from '@/lib/hls';
 import type { Channel, PlayerState } from '@/types';
 
@@ -35,9 +36,19 @@ export function usePlayer() {
   const hlsRef = useRef<HlsInstance | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const fadeInRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const playGeneration = useRef(0); // Guards against stale handlers from rapid channel switches
 
   const cleanup = useCallback(() => {
-    // Destroy HLS.js instance if active (free channels)
+    disconnectBoost();
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    if (fadeInRef.current) {
+      clearInterval(fadeInRef.current);
+      fadeInRef.current = undefined;
+    }
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
@@ -50,6 +61,9 @@ export function usePlayer() {
 
   const playChannel = useCallback(
     async (channel: Channel) => {
+      // Disconnect previous Web Audio boost chain before setting up new stream
+      disconnectBoost();
+
       // Abort any previous pre-flight fetch
       if (abortRef.current) abortRef.current.abort();
       abortRef.current = new AbortController();
@@ -58,24 +72,33 @@ export function usePlayer() {
       const video = videoRef.current;
       const isSwitch = !!video && !!video.src && !video.paused;
 
-      // Smooth audio fade-out before killing stream (500ms — matches visual transition)
+      // Smooth fade-out (250ms — 5 steps, ease-out curve)
       if (isSwitch && video) {
         const startVol = video.volume;
-        const steps = 10;
-        for (let i = 1; i <= steps; i++) {
-          video.volume = Math.max(0, startVol * (1 - i / steps));
+        for (let i = 1; i <= 5; i++) {
+          const t = i / 5;
+          video.volume = Math.max(0, startVol * (1 - t * t)); // ease-out: fast start, gentle zero
           await new Promise(r => setTimeout(r, 50));
         }
+        video.volume = 0;
+        video.pause();
       }
 
-      // Full cleanup — kill any existing stream
-      cleanup();
+      // Stop event handlers so old stream doesn't trigger state changes
       if (video) {
         video.onerror = null;
         video.onplaying = null;
-        video.src = '';
-        video.load();
+        video.oncanplay = null;
+        video.onpause = null;
+        video.onwaiting = null;
+        video.ontimeupdate = null;
+        video.ondurationchange = null;
       }
+
+      // Cleanup HLS/destroy refs but DON'T clear video.src yet
+      if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
+      if (destroyRef.current) { destroyRef.current(); destroyRef.current = null; }
+      if (fadeInRef.current) { clearInterval(fadeInRef.current); fadeInRef.current = undefined; }
 
       // Preserve fullscreen + pip + mute state across channel switches
       setState((prev) => ({
@@ -93,12 +116,19 @@ export function usePlayer() {
         duration: 0,
       }));
 
-      // Small delay to ensure video element is clean
-      requestAnimationFrame(async () => {
-        const video = videoRef.current;
-        if (!video) return;
+      // Start loading new stream — wait for video element if not yet mounted (first play)
+      const loadVideo = async () => {
+        let video = videoRef.current;
+        if (!video) {
+          // First play: React hasn't rendered the <video> element yet — wait for mount
+          for (let i = 0; i < 20; i++) {
+            await new Promise(r => setTimeout(r, 25));
+            video = videoRef.current;
+            if (video) break;
+          }
+          if (!video) return;
+        }
 
-        // Rebuild URL with CURRENT quality setting (URL may be stale from initial play)
         let url = channel.url;
         const isLive = url.includes('/live?');
         const isVod = url.includes('/vod?');
@@ -112,13 +142,20 @@ export function usePlayer() {
         let retryCount = 0;
         let connectionResolved = false;
         let connectionTimeout: ReturnType<typeof setTimeout> | undefined;
+        // Generation guard — if playChannel is called again, stale handlers bail out
+        const generation = ++playGeneration.current;
+        const isStale = () => generation !== playGeneration.current;
 
-        // Free HLS channels — use createHlsPlayer (handles Safari native + HLS.js)
         if (isHlsUrl) {
-          const hlsInstance = createHlsPlayer(video, url, undefined, (errMsg) => {
+          // Clear old stream right before HLS attach (HLS needs clean element)
+          video.src = '';
+          video.load();
+          const hlsInstance = await createHlsPlayer(video, url, undefined, (errMsg) => {
+            if (isStale()) return; // Don't update state for superseded streams
             markDead(channel.id, errMsg);
             setState((prev) => ({ ...prev, error: 'Stream interrupted — tap Reconnect to resume', isLoading: false }));
           });
+          if (isStale()) { hlsInstance.destroy(); return; } // Rapid switch — bail
           hlsRef.current = hlsInstance;
           destroyRef.current = () => {
             hlsInstance.destroy();
@@ -126,10 +163,13 @@ export function usePlayer() {
             video.onerror = null;
           };
         } else {
-          // Xtream proxy channels — pre-flight to detect stream limit
-          if (isLive) {
+          // Skip pre-flight on channel switch — just set src directly
+          // Pre-flight only on first play (isSwitch=false) to detect stream limits
+          let probeStatus = 0;
+          if (isLive && !isSwitch) {
             try {
               const probe = await fetch(url, { method: 'GET', signal });
+              probeStatus = probe.status;
               if (probe.status === 409) {
                 const data = await probe.json();
                 if (data.error === 'stream_limit') {
@@ -138,24 +178,48 @@ export function usePlayer() {
                   return;
                 }
               }
-              // Got a valid response — cancel it, let video element handle the actual stream
               probe.body?.cancel();
             } catch { /* timeout or network — let video element try anyway */ }
           }
           setStreamLimit(null);
-          video.volume = 0.65; // Start warm, not silent — subtle ramp to full
+          video.volume = 0;
+          video.pause();
+          video.removeAttribute('src');
           video.src = url;
           video.play().catch(() => {});
 
-          // Connection timeout — if no canplay in 12s, trigger retry
+          // Connection timeout — VOD gets 15s (large files), live gets 8s
+          const timeout = (isVod || url.includes('?url=')) ? 15000 : 8000;
           connectionTimeout = setTimeout(() => {
-            if (!connectionResolved && !video.readyState) {
+            if (!connectionResolved && !video.readyState && destroyRef.current) {
               video.onerror?.(new Event('timeout'));
             }
-          }, 12000);
+          }, timeout);
 
-          const maxRetries = isLive ? 5 : 3;
-          video.onerror = () => {
+          const maxRetries = isLive ? 5 : 4;
+          let triedFallback = false;
+
+          // VOD fallback: parse direct proxy URL → construct /vod? remux URL
+          // Direct proxy: ${PROXY}?url=http://host/movie/u/p/id.ext
+          // Remux:        ${PROXY}/vod?id=X&u=U&p=P&ext=E&type=T
+          function buildFallbackUrl(): string | null {
+            if (isLive || isVod) return null; // Already a structured URL
+            if (!url.includes('?url=')) return null;
+            try {
+              const encoded = url.split('?url=')[1];
+              if (!encoded) return null;
+              const decoded = decodeURIComponent(encoded);
+              // Pattern: http://host/{type}/{user}/{pass}/{id}.{ext}
+              const m = decoded.match(/\/(movie|series)\/([^/]+)\/([^/]+)\/(\d+)\.(\w+)/);
+              if (!m) return null;
+              const [, type, u, p, id, ext] = m;
+              const proxy = url.split('?url=')[0];
+              return `${proxy}/vod?id=${id}&u=${u}&p=${p}&ext=${ext}&type=${type}`;
+            } catch { return null; }
+          }
+
+          video.onerror = (evt) => {
+            if (isStale()) return;
             if (retryCount < maxRetries) {
               retryCount++;
               setState((prev) => ({ ...prev, error: `Retry ${retryCount}/${maxRetries}`, isPlaying: false }));
@@ -164,135 +228,224 @@ export function usePlayer() {
                 video.src = url;
                 video.play().catch(() => {});
               }, 2000);
+            } else if (!triedFallback) {
+              // Last chance: try FFmpeg remux for VOD (handles wrong extension, container mismatch)
+              const fallback = channel.fallbackUrl || buildFallbackUrl();
+              if (fallback) {
+                triedFallback = true;
+                retryCount = 0;
+                console.log('[PLAYER] Direct proxy failed, trying FFmpeg remux fallback');
+                setState((prev) => ({ ...prev, error: null, isLoading: true }));
+                url = fallback;
+                video.src = fallback;
+                video.play().catch(() => {});
+                return;
+              }
+              // No fallback available — show error
+              clearTimeout(connectionTimeout);
+              const idMatch = url.match(/[?&]id=(\d+)/);
+              if (idMatch) onStreamFail(parseInt(idMatch[1]));
+              markDead(channel.id, 'Stream error');
+              setState((prev) => ({ ...prev, error: 'Stream unavailable — tap Reconnect', isLoading: false }));
             } else {
               clearTimeout(connectionTimeout);
               const idMatch = url.match(/[?&]id=(\d+)/);
               if (idMatch) onStreamFail(parseInt(idMatch[1]));
               markDead(channel.id, 'Stream error');
-              setState((prev) => ({ ...prev, error: 'Stream interrupted — tap Reconnect to resume', isLoading: false }));
+
+              let errorMsg = 'Stream interrupted — tap Reconnect to resume';
+              const isTimeout = evt instanceof Event && evt.type === 'timeout';
+              if (isTimeout) {
+                errorMsg = 'Connection timed out — tap to retry';
+              } else if (probeStatus === 403) {
+                errorMsg = 'Access denied — stream unavailable';
+              } else if (probeStatus === 409) {
+                errorMsg = 'Stream limit reached — close other streams';
+              } else if (probeStatus === 404) {
+                errorMsg = 'Channel not found';
+              }
+
+              setState((prev) => ({ ...prev, error: errorMsg, isLoading: false }));
             }
           };
 
           destroyRef.current = () => {
             clearTimeout(connectionTimeout);
+            if (fadeInRef.current) { clearInterval(fadeInRef.current); fadeInRef.current = undefined; }
             video.onerror = null;
-            video.src = '';
-            video.load();
+            // Don't video.src=''+load() — it pops the audio chain.
+            // The new src assignment in playChannel will replace cleanly.
+            video.pause();
+            video.volume = 0;
           };
         }
         setState((prev) => ({ ...prev, isLoading: false }));
 
         video.oncanplay = () => {
+          if (isStale()) return;
           connectionResolved = true;
           setState((prev) => ({ ...prev, isLoading: false }));
         };
         video.onplaying = () => {
+          if (isStale()) return;
           retryCount = 0;
           markAlive(channel.id);
           const idMatch = url.match(/[?&]id=(\d+)/);
           if (idMatch) onStreamSuccess(parseInt(idMatch[1]));
+          // Connect audio presence EQ (warmth, body, clarity — always on)
+          connectBoost(video);
           setState((prev) => ({ ...prev, isPlaying: true, isLoading: false, error: null }));
-          // Smooth audio fade-in (500ms — matches visual transition)
+          // Smooth fade-in: 12 steps × 40ms = 480ms
           const targetVol = video.muted ? 0 : 1;
-          if (video.volume < targetVol) {
-            let v = video.volume;
-            const step = (targetVol - v) / 10;
-            const fadeIn = setInterval(() => {
-              v = Math.min(targetVol, v + step);
-              video.volume = v;
-              if (v >= targetVol) clearInterval(fadeIn);
-            }, 50);
+          if (targetVol > 0 && video.volume < targetVol) {
+            if (fadeInRef.current) clearInterval(fadeInRef.current);
+            video.volume = 0; // Ensure clean start from silence
+            let step = 0;
+            const totalSteps = 12;
+            fadeInRef.current = setInterval(() => {
+              step++;
+              // Ease-out curve — fast start, gentle end
+              const t = step / totalSteps;
+              video.volume = Math.min(targetVol, targetVol * (1 - Math.pow(1 - t, 3)));
+              if (step >= totalSteps) {
+                video.volume = targetVol;
+                clearInterval(fadeInRef.current);
+                fadeInRef.current = undefined;
+              }
+            }, 40);
           }
         };
         video.onpause = () => setState((prev) => ({ ...prev, isPlaying: false }));
         video.onwaiting = () => {
+          if (isStale()) return;
           setState((prev) => ({ ...prev, isLoading: true }));
         };
 
-        // ── Adaptive quality ladder for live channels ──
-        // Tiers: eco (480p) → 720p → 1080p → direct (passthrough)
-        // Starts at current setting, measures bandwidth, steps up safely.
-        // Any buffering at a tier → step back down permanently to previous tier.
+        // ── Flow: passthrough-first adaptive streaming ──
+        // Always start with SOURCE (passthrough) — 86% of channels are SD/HD,
+        // they stream fine without transcoding. Don't penalize good connections.
+        //
+        // On buffer stall: let the browser recover naturally (it has its own buffer).
+        // On SECOND stall within 30s: drop to eco (480p FFmpeg) for this channel.
+        // Remember per-channel: if a channel needed eco, start on eco next time.
+        // After 60s stable on eco: try source again (one attempt only).
+        //
+        // Flow pill reads video.videoHeight for actual resolution display.
         if (isLive) {
-          type QTier = 'eco' | '720' | '1080' | 'direct';
-          const TIERS: QTier[] = ['eco', '720', '1080', 'direct'];
-          const TIER_LABELS: Record<QTier, string> = { eco: '480p', '720': '720p', '1080': '1080p', direct: 'HD' };
-          const TIER_PARAMS: Record<QTier, string> = { eco: '&q=eco', '720': '&q=720', '1080': '&q=1080', direct: '' };
+          const sourceUrl = url.replace(/&q=eco/, '');
+          const ecoUrl = sourceUrl + '&q=eco';
 
-          // Start at eco or current setting
-          const startQuality = getStreamQuality();
-          let currentTier: QTier = startQuality === 'eco' ? 'eco' : 'direct';
-          let maxTier: QTier = 'direct'; // ceiling — drops on failure
-          let stableStart = 0;
-          let bufferCount = 0;
-          const STABLE_TIME = 8000; // 8s stable before stepping up
-          const BUFFER_LIMIT = 2; // 2 buffers at any tier → step down
+          // Per-channel memory: did this channel need eco before?
+          const channelFlowKey = 'flow-eco-' + (url.match(/id=(\d+)/)?.[1] || '');
+          const needsEco = !!localStorage.getItem(channelFlowKey);
+          let onSource = !needsEco;
+          let stallCount = 0;
+          let firstStallAt = 0;
+          let ecoRecoveryDone = false;
 
-          setState((prev) => ({ ...prev, quality: TIER_LABELS[currentTier] }));
-
-          const buildUrl = (tier: QTier) => {
-            const base = url.replace(/&q=(eco|720|1080)/, '');
-            return base + TIER_PARAMS[tier];
-          };
-
-          const switchTo = (tier: QTier) => {
-            currentTier = tier;
-            bufferCount = 0;
-            stableStart = 0;
-            setState((prev) => ({ ...prev, quality: TIER_LABELS[tier], isLoading: true }));
-            video.src = buildUrl(tier);
+          // Start on eco if channel previously needed it
+          if (needsEco && !url.includes('&q=eco')) {
+            video.src = ecoUrl;
             video.play().catch(() => {});
-          };
+          }
 
-          const stepDown = () => {
-            const idx = TIERS.indexOf(currentTier);
-            if (idx > 0) {
-              maxTier = TIERS[idx - 1]; // lock ceiling
-              switchTo(TIERS[idx - 1]);
+          const readResolution = () => {
+            if (!video) return;
+            const h = video.videoHeight;
+            if (h > 0) {
+              const label = h >= 2160 ? '4K' : h >= 1080 ? '1080p' : h >= 720 ? '720p' : h >= 480 ? '480p' : `${h}p`;
+              setState((prev) => prev.quality !== label ? { ...prev, quality: label } : prev);
             }
           };
 
-          const stepUp = () => {
-            const idx = TIERS.indexOf(currentTier);
-            const maxIdx = TIERS.indexOf(maxTier);
-            if (idx < maxIdx) {
-              switchTo(TIERS[idx + 1]);
+          const dropToEco = () => {
+            if (!onSource) return;
+            const resolution = video.videoHeight;
+            onSource = false;
+            stallCount = 0;
+            firstStallAt = 0;
+            localStorage.setItem(channelFlowKey, '1');
+            // Mute before quality switch to prevent audio pop
+            const prevVol = video.volume;
+            video.volume = 0;
+            video.pause();
+            video.removeAttribute('src');
+            video.src = ecoUrl;
+            video.play().catch(() => {});
+            // Restore volume after new source loads
+            video.addEventListener('playing', () => { video.volume = prevVol; }, { once: true });
+            // Telemetry — fire and forget
+            const streamId = url.match(/id=(\d+)/)?.[1];
+            if (streamId) {
+              const sbUrl = (import.meta.env.VITE_SUPABASE_URL || 'https://mclbbkmpovnvcfmwsoqt.supabase.co').trim();
+              const sbKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+              if (sbKey) {
+                fetch(`${sbUrl}/rest/v1/tivi_flow_events`, {
+                  method: 'POST',
+                  headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+                  body: JSON.stringify({ stream_id: parseInt(streamId), resolution: resolution > 0 ? `${resolution}p` : null, stall_count: 2 }),
+                }).catch(() => {});
+              }
             }
           };
 
-          const checkUpgrade = () => {
+          const flowCheck = () => {
             if (!video || video.paused) return;
-            const idx = TIERS.indexOf(currentTier);
-            const maxIdx = TIERS.indexOf(maxTier);
-            if (idx >= maxIdx) return; // already at ceiling
+            readResolution();
 
-            if (!stableStart) { stableStart = Date.now(); return; }
-            if (Date.now() - stableStart < STABLE_TIME) return;
-
-            // Check buffer health
-            const buffered = video.buffered;
-            if (buffered.length > 0) {
-              const ahead = buffered.end(buffered.length - 1) - video.currentTime;
-              if (ahead >= 3) stepUp();
+            // On eco: try source recovery once after 60s stable
+            if (!onSource && !ecoRecoveryDone) {
+              if (video.buffered.length > 0) {
+                const ahead = video.buffered.end(video.buffered.length - 1) - video.currentTime;
+                if (ahead >= 8) {
+                  // Been stable long enough — try source one more time
+                  if (!firstStallAt) { firstStallAt = Date.now(); return; }
+                  if (Date.now() - firstStallAt >= 60000) {
+                    ecoRecoveryDone = true;
+                    onSource = true;
+                    stallCount = 0;
+                    firstStallAt = 0;
+                    const vol = video.volume;
+                    video.volume = 0;
+                    video.pause();
+                    video.removeAttribute('src');
+                    video.src = sourceUrl;
+                    video.addEventListener('playing', () => { video.volume = vol; }, { once: true });
+                    video.play().catch(() => {});
+                  }
+                }
+              }
             }
           };
 
-          const adaptiveInterval = setInterval(checkUpgrade, 2000);
+          const flowInterval = setInterval(flowCheck, 3000);
+          video.addEventListener('loadeddata', readResolution, { once: true });
 
           const origWaiting = video.onwaiting;
           video.onwaiting = () => {
-            stableStart = 0;
-            bufferCount++;
-            if (bufferCount >= BUFFER_LIMIT && TIERS.indexOf(currentTier) > 0) {
-              stepDown();
-            }
+            if (isStale()) return; // Guard against stale closures from rapid channel switches
             if (typeof origWaiting === 'function') origWaiting.call(video, new Event('waiting'));
             else setState((prev) => ({ ...prev, isLoading: true }));
+
+            if (!onSource) return; // already on eco, let browser buffer naturally
+
+            stallCount++;
+            if (stallCount === 1) {
+              // First stall: let browser recover, just note the time
+              firstStallAt = Date.now();
+            } else if (stallCount >= 2 && firstStallAt && Date.now() - firstStallAt < 30000) {
+              // Second stall within 30s of first: this channel can't handle source
+              dropToEco();
+            } else {
+              // Second stall but >30s apart: reset, it was a one-off
+              stallCount = 1;
+              firstStallAt = Date.now();
+            }
           };
 
           const origDestroy = destroyRef.current;
           destroyRef.current = () => {
-            clearInterval(adaptiveInterval);
+            clearInterval(flowInterval);
             if (origDestroy) origDestroy();
           };
         }
@@ -345,7 +498,8 @@ export function usePlayer() {
           }
         };
 
-      });
+      };
+      loadVideo();
     },
     [cleanup]
   );
@@ -421,8 +575,11 @@ export function usePlayer() {
     cleanup();
     const video = videoRef.current;
     if (video) {
-      video.src = '';
-      video.load();
+      // Don't video.src=''+load() — it invalidates the MediaElementSourceNode.
+      // Just pause and silence. The element stays alive for the EQ chain.
+      video.pause();
+      video.volume = 0;
+      video.removeAttribute('src');
     }
     setState({
       channel: null,

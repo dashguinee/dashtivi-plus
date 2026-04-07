@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tivi-cache-v1774881020413';
+const CACHE_NAME = 'tivi-cache-v1775543803944';
 
 // --- INSTALL ---
 self.addEventListener('install', () => {
@@ -119,8 +119,19 @@ self.addEventListener('fetch', (event) => {
     // Only cache same-origin from here on
     if (!url.startsWith(self.location.origin)) return;
 
-    // --- JSON DATA FILES: network-first (these change frequently) ---
-    // probe-results.json, tmdb-data.json, free-channels-curated.json, etc.
+    // --- LIVE DATA: network-only (curator + vee change frequently, must be fresh) ---
+    if (url.includes('curator.json') || url.includes('vee.json')) {
+      event.respondWith(
+        fetch(request).catch(
+          () => new Response('{}', {
+            headers: { 'Content-Type': 'application/json' },
+          })
+        )
+      );
+      return;
+    }
+
+    // --- JSON DATA FILES: network-first (probe, tmdb, free-channels) ---
     if (url.endsWith('.json') && !url.includes('manifest.json')) {
       event.respondWith(
         networkFirstThenCache(request, '{}').catch(

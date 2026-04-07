@@ -71,7 +71,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     id: 'live-sports',
     name: 'Live Sports',
     emoji: '',
-    description: 'beIN 4K, SuperSport, Sky Sports, EPL',
+    description: 'Live 4K · Premier League · Global Sports',
     type: 'live',
     categoryIds: [
       '345',  // DStv Super (32ch — SuperSport FHD, African sports backbone)
@@ -100,10 +100,10 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     id: 'world-cinema',
     name: 'The Global Village',
     emoji: '',
-    description: 'Canal+, DSTV, BBC, HBO, MBC — all in one place',
+    description: 'Africa · Europe · Americas — the whole world, one place',
     type: 'live',
     categoryIds: [
-      '336',  // AFRICA CANAL+ (247ch — French African powerhouse)
+      '336',  // AFRICA CANAL+ (247ch — Africa Frenchn powerhouse)
       '343',  // DSTV Entertainment (84ch — African drama, Mzansi Magic)
       '2',    // USA (93ch — HBO, Starz, Showtime)
       '3',    // UK Entertainment (39ch — Ch4, Comedy Central, Sky)
@@ -111,7 +111,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
       '86',   // MBC Arabic (46ch — MBC 1-5, Drama, Max)
     ],
     limit: 25,
-    navigateTo: '/french',
+    navigateTo: '/live/africa',
   },
   // 4. PREMIUM — 4K signals quality, builds confidence
   {
@@ -140,7 +140,7 @@ export const HOMEPAGE_COLLECTIONS: Collection[] = [
     id: 'news-world',
     name: 'Stay Informed',
     emoji: '',
-    description: 'CNN, BBC, Al Jazeera 4K, Sky News',
+    description: 'World News · 4K · Breaking · 24/7',
     type: 'live',
     categoryIds: [
       '82',   // English News (22ch — CNN HD, BBC News, Sky News)
@@ -275,7 +275,7 @@ export const LIVETV_THEMES: LiveTheme[] = [
     id: 'sports',
     name: 'Sports',
     emoji: '',
-    description: 'beIN, Sky Sports, SuperSport & more',
+    description: '4K · Live · Every League · Every Match',
     categoryIds: [
       '85',   // beIN Sports (124ch, 39 gems, 36 4K — strongest sports package)
       '578',  // Real 4K (31ch — true UHD Sky Sports, LaLiga TV)
@@ -311,7 +311,7 @@ export const LIVETV_THEMES: LiveTheme[] = [
     id: 'entertainment',
     name: 'Entertainment',
     emoji: '',
-    description: 'UK, USA, Canal+ & French channels',
+    description: 'Drama · Comedy · Reality · Worldwide',
     categoryIds: [
       '3',    // UK Entertainment (39ch, 8 gems — Ch4, Ch5, Comedy Central, Sky)
       '414',  // UK General (26ch, 16 gems — BBC One FHD, ITV FHD)
@@ -322,6 +322,10 @@ export const LIVETV_THEMES: LiveTheme[] = [
       '338',  // India Entertainment (additional)
       '19',   // UK Asian (38ch, 9 gems)
       '24',   // US 24/7
+      '343',  // DSTV Entertainment (African Drama subtab)
+      '336',  // Africa Canal+ (African Drama subtab)
+      '344',  // DSTV Movies (Nollywood subtab)
+      '429',  // DSTV Movies Alt (Nollywood subtab)
     ],
     gradient: 'from-primary/80 to-primary-dark/80',
     glowColor: 'shadow-primary/20',
@@ -330,7 +334,7 @@ export const LIVETV_THEMES: LiveTheme[] = [
     id: 'news',
     name: 'News',
     emoji: '',
-    description: 'CNN, BBC, Al Jazeera, Sky News',
+    description: 'Breaking · World · Arabic · 24/7',
     categoryIds: [
       '82',   // English News (22ch, 14 gems — CNN HD, BBC News, Sky News, Fox)
       '417',  // UK News (15ch, 11 gems — CNBC FHD, CNN FHD, Sky News HD)
@@ -360,7 +364,7 @@ export const LIVETV_THEMES: LiveTheme[] = [
     id: 'movies247',
     name: 'Movie Channels',
     emoji: '',
-    description: '24/7 cinema from beIN, Netflix, Bollywood',
+    description: '24/7 Cinema · Blockbusters · Bollywood',
     categoryIds: [
       '87',   // beIN Movies (29ch, 8 gems — 4K + HD, Cinema + Series + Drama)
       '275',  // English Movies 24/7
@@ -446,8 +450,8 @@ export interface SportType {
 export const SPORT_TYPES: SportType[] = [
   { id: 'all', name: 'All Sports', categoryIds: ['85', '578', '353', '483', '234', '345', '427', '492', '5', '6', '342', '550', '138', '212', '356', '156', '137', '516', '139', '726', '328'] },
   { id: 'football', name: 'Football Non-Stop', categoryIds: ['492', '85', '234', '345'] },  // EPL team channels, beIN, general football, DStv SuperSport
-  { id: 'bein', name: 'beIN Zone', categoryIds: ['85'] },   // 93% alive, all premium — 4K/FHD/HD
-  { id: 'sky', name: 'Sky Sports', categoryIds: ['578', '353', '483'] },  // 4K first, then FHD, then additional
+  { id: 'bein', name: 'Premium 4K', categoryIds: ['85'] },   // 93% alive, all premium — 4K/FHD/HD
+  { id: 'sky', name: 'UK Sports', categoryIds: ['578', '353', '483'] },  // 4K first, then FHD, then additional
   { id: 'cricket', name: 'Cricket Ground', categoryIds: ['5'] },  // 57ch, 37 gems
   { id: 'nfl', name: 'NFL', categoryIds: ['516'] },  // match day only — 5% alive outside game days
   { id: 'fans', name: 'Fans Space', categoryIds: ['234'] },  // LFC TV, MUTV, team channels
@@ -464,9 +468,9 @@ export const ENTERTAINMENT_TYPES: SportType[] = [
   { id: 'all', name: 'All', categoryIds: ['3', '414', '2', '11', '39', '247', '338', '19', '24'] },
   { id: 'uk', name: 'UK Lounge', categoryIds: ['414', '3'] },       // BBC, ITV, Ch4, Sky
   { id: 'usa', name: 'USA Tonight', categoryIds: ['2'] },           // HBO, Starz, Showtime
-  { id: 'french', name: 'Canal+ & France', categoryIds: ['11', '39'] },  // Canal+ via France + Poland feeds, TF1, M6, Arte
-  { id: 'african', name: 'African Drama', categoryIds: ['343', '336'] }, // DSTV Entertainment + Africa Canal+
-  { id: 'nollywood', name: 'Nollywood & Africa', categoryIds: ['344', '429', '343'] }, // DSTV Movies + Entertainment
+  { id: 'french', name: 'French & Europe', categoryIds: ['11', '39'] },  // France + Poland feeds, TF1, M6, Arte
+  { id: 'african', name: 'African Drama', categoryIds: ['343', '336'] }, // African Entertainment
+  { id: 'nollywood', name: 'Nollywood & Africa', categoryIds: ['344', '429', '343'] }, // African Movies + Entertainment
   { id: 'asian', name: 'Asian Vibes', categoryIds: ['247', '338', '19'] },
 ];
 
@@ -493,7 +497,7 @@ export const CINEMA_TYPES: SportType[] = [
 
 export const MUSIC_TYPES: SportType[] = [
   { id: 'all', name: 'All Vibes', categoryIds: ['416', '341', '555', '270', '287'] },
-  { id: 'afro', name: 'Afro Beats', categoryIds: [] },              // Free channels (experience: music, culture: africa)
+  { id: 'afro', name: 'Afro Beats', categoryIds: ['555', '416'] },   // Trace Muzika (555) + MTV (416, includes MTV Base)
   { id: 'gospel', name: 'Gospel & Praise', categoryIds: ['561'] },  // Faith music crossover — essential for SL
   { id: 'mtv', name: 'MTV World', categoryIds: ['416'] },
   { id: 'bollywood', name: 'Bollywood Beats', categoryIds: ['341', '270'] },
@@ -519,13 +523,13 @@ export const FAITH_TYPES: SportType[] = [
 // ── The Motherland — DSTV + Canal+ Africa Experience ─────────────
 export const MOTHERLAND_TYPES: SportType[] = [
   { id: 'all', name: 'All', categoryIds: ['336', '428', '343', '427', '345', '85', '11', '430', '347', '429', '344', '431', '346', '165', '82', '417', '32', '337', '275', '234'] },
-  { id: 'supersport', name: 'SuperSport', categoryIds: ['427', '345', '234', '85'] },    // SuperSport FHD/HD + beIN (DSTV carries beIN)
-  { id: 'canalplus', name: 'Canal+', categoryIds: ['336', '11'] },                         // Canal+ Africa + France feeds
+  { id: 'supersport', name: 'Sports', categoryIds: ['427', '345', '234', '85'] },           // African sports + premium
+  { id: 'canalplus', name: 'Africa French', categoryIds: ['336', '11'] },                  // Francophone African + France feeds
   { id: 'entertainment', name: 'Entertainment', categoryIds: ['428', '343'] },              // Africa Magic, BET, M-Net, kykNET
   { id: 'kids', name: 'Kids', categoryIds: ['430', '347', '32'] },                         // DSTV Kids FHD/HD + Cartoon Network, Disney
   { id: 'news', name: 'News', categoryIds: ['431', '346', '165', '82', '417'] },           // DSTV News, Al Jazeera, BBC, CNN, Arise
   { id: 'movies', name: 'Movies', categoryIds: ['429', '344', '275'] },                    // DSTV Movies + English genre
-  { id: 'music', name: 'Music & Trace', categoryIds: ['336', '11'] },                      // Trace Africa/Urban/Gospel via Canal+ feeds
+  { id: 'music', name: 'Music & Vibes', categoryIds: ['336', '11'] },                      // African music, gospel, urban
   { id: 'documentary', name: 'Documentary', categoryIds: ['337', '428'] },                 // NatGeo, Discovery via DSTV
 ];
 
@@ -580,7 +584,7 @@ export const ARABIC_TYPES: SportType[] = [
 export const FRENCH_TYPES: SportType[] = [
   { id: 'all', name: 'All', categoryIds: ['11', '336', '39'] },
   { id: 'france', name: 'France', categoryIds: ['11'] },
-  { id: 'canalplus', name: 'Canal+ Africa', categoryIds: ['336'] },
+  { id: 'canalplus', name: 'Africa French', categoryIds: ['336'] },
 ];
 
 export const NEWS_TYPES: SportType[] = [
@@ -781,7 +785,7 @@ export const BROWSE_EXPERIENCES: BrowseExperience[] = [
     icon: 'languages',
     categoryIds: [
       '11',   // France (162ch — Canal+, TF1, M6)
-      '336',  // AFRICA CANAL+ (247ch — French African)
+      '336',  // AFRICA CANAL+ (247ch — Africa Frenchn)
     ],
   },
   {

@@ -14,8 +14,6 @@ import {
   Zap,
 } from 'lucide-react';
 import type { PlayerState } from '@/types';
-import { getStreamQuality, setStreamQuality } from '@/lib/xtream';
-import type { StreamQuality } from '@/lib/xtream';
 
 /** Format seconds into H:MM:SS or M:SS */
 function formatTime(seconds: number): string {
@@ -61,16 +59,14 @@ export const PlayerControls: React.FC<Props> = ({
   onToggleSubs,
 }) => {
   const [showVolume, setShowVolume] = useState(false);
-  const [streamQuality, setQuality] = useState<StreamQuality>(getStreamQuality());
   const volumeRef = useRef<HTMLDivElement>(null);
 
   const category = state.channel?.category?.toLowerCase() ?? '';
   const isVod = category === 'movie' || category === 'series';
-  const isFlow = streamQuality === 'eco';
 
   return (
     <div
-      className={`absolute inset-0 flex flex-col justify-between transition-opacity duration-300 ${
+      className={`absolute inset-0 flex flex-col justify-between transition-opacity duration-200 ${
         visible ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}
     >
@@ -110,16 +106,20 @@ export const PlayerControls: React.FC<Props> = ({
         </button>
       </div>
 
-      {/* Center play button */}
+      {/* Center play button — ghost for live TV, visible for VOD */}
       <div className="flex-1 flex items-center justify-center">
         <button
           onClick={onTogglePlay}
-          className="w-16 h-16 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center hover:bg-primary transition-[transform,background-color] duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-primary/30"
+          className={`rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 ${
+            isVod
+              ? 'w-16 h-16 bg-primary/80 backdrop-blur-sm hover:bg-primary hover:scale-105 shadow-lg shadow-primary/30'
+              : 'w-12 h-12 bg-white/[0.07] hover:bg-white/[0.12]'
+          }`}
         >
           {state.isPlaying ? (
-            <Pause className="w-8 h-8 text-white" />
+            <Pause className={isVod ? 'w-8 h-8 text-white' : 'w-5 h-5 text-white/30'} />
           ) : (
-            <Play className="w-8 h-8 text-white ml-1" />
+            <Play className={isVod ? 'w-8 h-8 text-white ml-1' : 'w-5 h-5 text-white/30 ml-0.5'} />
           )}
         </button>
       </div>
@@ -136,10 +136,9 @@ export const PlayerControls: React.FC<Props> = ({
               className="relative flex-1 h-2 bg-white/10 rounded-full cursor-pointer group py-2"
               onClick={(e) => {
                 if (!onSeek) return;
-                // Only seek if stream supports it (mp4 passthrough, not FFmpeg remux)
-                const url = state.channel?.url || '';
-                const canSeek = url.includes('/?url=') && !url.includes('/vod?');
-                if (!canSeek) return;
+                // Seek works for all VOD formats — both direct proxy (/?url=) and FFmpeg remux (/vod?)
+                // The browser handles range requests for direct, and the remux endpoint supports seeking
+                // via the video element's currentTime assignment
                 const rect = e.currentTarget.getBoundingClientRect();
                 const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
                 onSeek(pct * state.duration);
@@ -167,16 +166,18 @@ export const PlayerControls: React.FC<Props> = ({
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {/* Play/Pause */}
+            {/* Play/Pause — ghost on live, visible on VOD */}
             <button
               onClick={onTogglePlay}
-              className="w-11 h-11 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+              className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
+                isVod ? 'hover:bg-white/10' : 'hover:bg-white/5'
+              }`}
               aria-label={state.isPlaying ? 'Pause' : 'Play'}
             >
               {state.isPlaying ? (
-                <Pause className="w-5 h-5" />
+                <Pause className={isVod ? 'w-5 h-5' : 'w-4 h-4 text-white/20'} />
               ) : (
-                <Play className="w-5 h-5 ml-0.5" />
+                <Play className={isVod ? 'w-5 h-5 ml-0.5' : 'w-4 h-4 text-white/20 ml-0.5'} />
               )}
             </button>
 
@@ -199,7 +200,6 @@ export const PlayerControls: React.FC<Props> = ({
                 )}
               </button>
 
-              {/* Volume slider */}
               <div
                 className={`overflow-hidden transition-[width,opacity] duration-300 ${
                   showVolume ? 'w-20 opacity-100 ml-1' : 'w-0 opacity-0'
@@ -224,36 +224,58 @@ export const PlayerControls: React.FC<Props> = ({
               </span>
             )}
 
-            {/* StreamFlow toggle — direct, no menu */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                const next: StreamQuality = isFlow ? 'hd' : 'eco';
-                setStreamQuality(next);
-                setQuality(next);
-                onQualityChange(next, next === 'eco' ? 1 : 0);
-              }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ml-2 transition-colors duration-300 ${
-                isFlow
-                  ? 'bg-primary/20 text-primary-light border border-primary/30'
-                  : 'bg-white/10 text-white/60 border border-white/10'
-              }`}
-            >
-              {isFlow ? <Waves className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
-              <span className="text-[11px] font-semibold tracking-wide">
-                {isFlow ? 'Flow' : 'HD'}
-              </span>
-            </button>
+            {/* Flow pill — tap to toggle Flow on/off */}
+            {state.quality && state.quality !== 'Auto' && (
+              <button
+                key={state.quality}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Toggle: clear per-channel eco memory and force passthrough
+                  const id = state.channel?.url?.match(/id=(\d+)/)?.[1];
+                  if (id) localStorage.removeItem('flow-eco-' + id);
+                  onQualityChange('hd', 0);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full ml-2 bg-white/[0.03] border transition-colors duration-1000 active:scale-95"
+                style={{
+                  borderColor: state.quality === '4K' ? 'rgba(245,158,11,0.4)'
+                    : state.quality === '1080p' ? 'rgba(0,212,255,0.3)'
+                    : state.quality === '720p' ? 'rgba(157,78,221,0.25)'
+                    : 'rgba(255,255,255,0.08)',
+                  animation: 'flow-pill-flash 2s ease-out',
+                }}
+              >
+                <span className="text-[9px] font-medium text-white/30 tracking-wider">Flow</span>
+                <span className="text-[8px] text-white/15">·</span>
+                <span className="text-[10px] font-semibold text-white/40 tracking-wide">
+                  {state.quality === '4K' ? 'UHD' : state.quality === '1080p' ? 'HD' : state.quality === '480p' ? 'Steady' : state.quality}
+                </span>
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-1">
-            {/* Download button — only for VOD/series (mp4/mkv content) */}
-            {state.channel?.url && (decodeURIComponent(state.channel.url).includes('.mp4') || decodeURIComponent(state.channel.url).includes('.mkv')) && (
+            {/* Download button — for all VOD content (movies + series) */}
+            {isVod && state.channel?.url && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   if (state.channel?.url) {
-                    window.open(state.channel.url, '_blank', 'noopener,noreferrer');
+                    // Use anchor + download attribute for proper file download
+                    const a = document.createElement('a');
+                    a.href = state.channel.url;
+                    // Generate filename from channel name
+                    const safeName = (state.channel.name || 'video')
+                      .replace(/[^a-zA-Z0-9\s\-_.()]/g, '')
+                      .replace(/\s+/g, '_')
+                      .substring(0, 100);
+                    // Detect extension from URL
+                    const urlExt = state.channel.url.match(/\.(\w{2,4})(?:\?|$)/)?.[1] || 'mp4';
+                    a.download = `${safeName}.${urlExt}`;
+                    a.target = '_blank';
+                    a.rel = 'noopener noreferrer';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
                   }
                 }}
                 className="w-11 h-11 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Tv, LogOut, Volume2, VolumeX } from 'lucide-react';
 import { toggleAmbient, isAmbientEnabled } from '@/lib/ambient-audio';
@@ -16,15 +16,58 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
   const isHome = location.pathname === '/';
   const [ambientOn, setAmbientOn] = useState(() => isAmbientEnabled());
 
+  // ── Scroll-aware hide: down = hide, up = show ──────────────
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollY = useRef(0);
+  const ticking = useRef(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (ticking.current) return;
+      ticking.current = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const delta = y - lastScrollY.current;
+        // Let the user scroll deep before hiding — indulge, don't rush
+        if (delta > 12 && y > 250) {
+          setHeaderHidden(true);
+        } else if (delta < -3) {
+          setHeaderHidden(false);
+        }
+        lastScrollY.current = y;
+        ticking.current = false;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Reset on route change
+  useEffect(() => {
+    setHeaderHidden(false);
+    lastScrollY.current = 0;
+  }, [location.pathname]);
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 safe-top">
+    <header
+      className="fixed top-0 left-0 right-0 z-40 safe-top"
+      style={{
+        transform: headerHidden ? 'translateY(-100%)' : 'translateY(0)',
+        opacity: headerHidden ? 0 : 1,
+        // Slow luxurious hide, instant show
+        transition: headerHidden
+          ? 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)'
+          : 'transform 0.3s ease-out, opacity 0.2s ease-out',
+        willChange: 'transform, opacity',
+      }}
+    >
       {/* PERF FIX: replaced glass-strong with solid bg on non-home pages.
           backdrop-filter: blur(40px) on a sticky header recalculates every scroll frame. */}
       <div
         className={`flex items-center justify-between px-4 py-3 transition-[background-color,border-color] duration-500 ${
           isHome
-            ? 'bg-gradient-to-b from-black/60 via-black/30 to-transparent'
-            : 'bg-[rgba(10,10,10,0.95)] border-b border-white/[0.06]'
+            ? 'bg-gradient-to-b from-black/30 via-black/10 to-transparent'
+            : 'backdrop-blur-lg bg-[rgba(10,10,10,0.55)] border-b border-white/[0.04]'
         }`}
       >
         {/* Logo */}

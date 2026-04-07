@@ -1,71 +1,75 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 
 /**
  * useScrollFocus — makes cards in horizontal scroll rows respond to their position.
  * Center card brightens with a purple contour. Edge cards dim.
- * Applied to all containers with `data-focus-lens` + `.scroll-smooth-x`.
  *
- * PERF: Event-driven — only recalculates on scroll/resize events + one initial pass.
- * Previous version ran a perpetual rAF loop (~60fps) even when idle.
+ * v2: Uses IntersectionObserver per scroll container instead of getBoundingClientRect
+ * on every scroll frame. Zero layout reads, async, browser-optimized.
  */
 export function useScrollFocus() {
-  const rafId = useRef(0);
-
-  const update = useCallback(() => {
-    const containers = document.querySelectorAll<HTMLElement>('[data-focus-lens].scroll-smooth-x');
-
-    containers.forEach(container => {
-      const rect = container.getBoundingClientRect();
-      // Skip containers not in viewport
-      if (rect.bottom < 0 || rect.top > window.innerHeight) return;
-
-      const containerCenter = rect.left + rect.width / 2;
-      const children = container.children;
-
-      for (let i = 0; i < children.length; i++) {
-        const child = children[i] as HTMLElement;
-        if (!child.classList.contains('scroll-focus-card')) {
-          child.classList.add('scroll-focus-card');
-        }
-
-        const childRect = child.getBoundingClientRect();
-        const childCenter = childRect.left + childRect.width / 2;
-        const dist = Math.abs(childCenter - containerCenter);
-        const containerHalf = rect.width / 2;
-
-        if (dist < 60) {
-          child.setAttribute('data-focus', 'center');
-        } else if (dist < containerHalf * 0.5) {
-          child.setAttribute('data-focus', 'near');
-        } else {
-          child.setAttribute('data-focus', 'far');
-        }
-      }
-    });
-  }, []);
+  const observersRef = useRef<IntersectionObserver[]>([]);
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const scheduleUpdate = () => {
-      cancelAnimationFrame(rafId.current);
-      rafId.current = requestAnimationFrame(update);
+    const setup = () => {
+      // Cleanup previous observers
+      observersRef.current.forEach(o => o.disconnect());
+      observersRef.current = [];
+
+      const containers = document.querySelectorAll<HTMLElement>('[data-focus-lens].scroll-smooth-x');
+
+      containers.forEach(container => {
+        // Create observer rooted in the scroll container
+        // Center 40% = "center", middle zone = "near", outer = "far"
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              const el = entry.target as HTMLElement;
+              if (!el.classList.contains('scroll-focus-card')) {
+                el.classList.add('scroll-focus-card');
+              }
+              if (entry.intersectionRatio > 0.8) {
+                el.setAttribute('data-focus', 'center');
+              } else if (entry.intersectionRatio > 0.3) {
+                el.setAttribute('data-focus', 'near');
+              } else {
+                el.setAttribute('data-focus', 'far');
+              }
+            }
+          },
+          {
+            root: container,
+            threshold: [0, 0.3, 0.8],
+          }
+        );
+
+        // Observe all children
+        for (let i = 0; i < container.children.length; i++) {
+          observer.observe(container.children[i]);
+        }
+
+        observersRef.current.push(observer);
+      });
     };
 
-    // Initial pass after DOM settles
-    const timer = setTimeout(scheduleUpdate, 200);
+    // Initial setup after DOM settles
+    const timer = setTimeout(setup, 300);
 
-    // Listen for scroll on all focus-lens containers (capture phase for horizontal scroll)
-    const onScroll = () => scheduleUpdate();
-    // Use capture to catch scroll events on child elements
-    document.addEventListener('scroll', onScroll, { capture: true, passive: true });
-    window.addEventListener('resize', onScroll, { passive: true });
+    // Re-setup when new containers appear (lazy content loading)
+    const mutation = new MutationObserver(() => {
+      const current = document.querySelectorAll('[data-focus-lens].scroll-smooth-x').length;
+      if (current !== observersRef.current.length) {
+        setup();
+      }
+    });
+    mutation.observe(document.body, { childList: true, subtree: true });
 
     return () => {
       clearTimeout(timer);
-      cancelAnimationFrame(rafId.current);
-      document.removeEventListener('scroll', onScroll, true);
-      window.removeEventListener('resize', onScroll);
+      observersRef.current.forEach(o => o.disconnect());
+      mutation.disconnect();
     };
-  }, [update]);
+  }, []);
 }

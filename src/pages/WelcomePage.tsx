@@ -14,7 +14,7 @@ const GENRE_GRADIENTS = [
   'from-yellow-900/80 to-amber-900/60',
   'from-slate-900/80 to-zinc-800/60',
   'from-pink-900/80 to-rose-900/60',
-  'from-cyan-900/80 to-teal-900/60',
+  'from-cyan-900/80 to-blue-900/60',
 ];
 
 export const WelcomePage: React.FC = () => {

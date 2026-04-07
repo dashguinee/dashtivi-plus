@@ -17,7 +17,7 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
     document.getElementById('pre-splash')?.remove();
 
     // Phase 1: dark → brand
-    const t1 = setTimeout(() => setPhase('brand'), 300);
+    const t1 = setTimeout(() => setPhase('brand'), 500);
 
     // Phase 2: wait for assets + minimum brand time (auth has 3s max)
     const minBrandTime = new Promise<void>(r => setTimeout(r, 2200));
@@ -28,8 +28,8 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
       const proceed = () => {
         // verbose: '[SPLASH] Proceeding'
         setPhase('ready');
-        setTimeout(() => setPhase('exit'), 500);
-        setTimeout(() => onComplete(), 1100);
+        setTimeout(() => setPhase('exit'), 700);
+        setTimeout(() => onComplete(), 2600);
       };
       const waitForAuth = () => {
         if (authRef.current || Date.now() - authStart > 3000) {
@@ -76,6 +76,14 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
           <span className="text-[26px] font-light tracking-wide text-white/40" style={{ fontFamily: "'Outfit', sans-serif", marginLeft: '2px' }}>tivi</span>
           <span className="text-primary-light text-[18px] font-bold ml-1">+</span>
         </h1>
+        <p
+          className={`mt-2 text-[11px] font-light tracking-[0.25em] uppercase transition-opacity duration-1000 ${
+            phase === 'ready' || phase === 'exit' ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{ color: 'rgba(255,255,255,0.18)', fontFamily: "'Outfit', sans-serif" }}
+        >
+          Bring Joy
+        </p>
 
         {/* Loading bar */}
         <div

@@ -8,9 +8,16 @@
  */
 
 let audioCtx: AudioContext | null = null;
+let activeOscillators: OscillatorNode[] = [];
 
 export function playDashCinemaSound(): void {
   try {
+    // Stop any still-playing oscillators from a previous rapid invocation
+    for (const osc of activeOscillators) {
+      try { osc.stop(); } catch { /* already stopped */ }
+    }
+    activeOscillators = [];
+
     // Reuse or create AudioContext
     if (!audioCtx || audioCtx.state === 'closed') {
       audioCtx = new AudioContext();
@@ -42,6 +49,8 @@ export function playDashCinemaSound(): void {
     sweepGain.connect(master);
     sweep.start(now);
     sweep.stop(now + 1.4);
+    activeOscillators.push(sweep);
+    sweep.onended = () => { activeOscillators = activeOscillators.filter(o => o !== sweep); };
 
     // === "toun" — first bass hit (1.1s) ===
     const hit1 = ctx.createOscillator();
@@ -57,6 +66,8 @@ export function playDashCinemaSound(): void {
     hit1Gain.connect(master);
     hit1.start(now + 1.1);
     hit1.stop(now + 1.9);
+    activeOscillators.push(hit1);
+    hit1.onended = () => { activeOscillators = activeOscillators.filter(o => o !== hit1); };
 
     // === "doum" — second deeper bass hit (1.6s) ===
     const hit2 = ctx.createOscillator();
@@ -72,6 +83,8 @@ export function playDashCinemaSound(): void {
     hit2Gain.connect(master);
     hit2.start(now + 1.6);
     hit2.stop(now + 2.6);
+    activeOscillators.push(hit2);
+    hit2.onended = () => { activeOscillators = activeOscillators.filter(o => o !== hit2); };
 
     // === Sub-bass rumble underneath both hits ===
     const sub = ctx.createOscillator();
@@ -86,6 +99,8 @@ export function playDashCinemaSound(): void {
     subGain.connect(master);
     sub.start(now + 1.1);
     sub.stop(now + 2.6);
+    activeOscillators.push(sub);
+    sub.onended = () => { activeOscillators = activeOscillators.filter(o => o !== sub); };
 
     // No cleanup — reuse the AudioContext for next play
   } catch {

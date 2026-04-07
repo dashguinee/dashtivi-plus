@@ -6,6 +6,7 @@ import {
 import { useLanguage } from '@/i18n';
 import type { CuratedFeedItem, SupabaseFeedItem } from '@/lib/feed-curator';
 import { curateFeed } from '@/lib/feed-curator';
+import { getCuratorExperience, safeImageUrl } from '@/lib/xtream';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -89,7 +90,7 @@ function FeedCard({ item }: { item: CuratedFeedItem }) {
   const BadgeIcon = badge.Icon;
   const isTmdb = item.type === 'trending';
   const isLive = item.type === 'live_moment';
-  const hasPoster = isTmdb && item.imageUrl;
+  const hasPoster = !!item.imageUrl;
 
   // Close overlay on outside click
   useEffect(() => {
@@ -319,9 +320,21 @@ export const FeedSection: React.FC<{ className?: string }> = React.memo(({ class
 
     const url = `${SB_URL}/feed_items?select=id,title,subtitle,body_preview,feed_type,category,image_url,action_url,icon,color,created_at&is_active=eq.true&order=created_at.desc&limit=10`;
 
+    // Grab top channel icons for live moment cards
+    const getIcons = () => {
+      const icons: { sports?: string; news?: string; cinema?: string } = {};
+      const sportsChans = getCuratorExperience('sports');
+      const newsChans = getCuratorExperience('news');
+      const movieChans = getCuratorExperience('movies');
+      if (sportsChans?.[0]) icons.sports = safeImageUrl(sportsChans[0].icon) || undefined;
+      if (newsChans?.[0]) icons.news = safeImageUrl(newsChans[0].icon) || undefined;
+      if (movieChans?.[0]) icons.cinema = safeImageUrl(movieChans[0].icon) || undefined;
+      return icons;
+    };
+
     fetch(url, { headers: { apikey: SB_ANON, Authorization: `Bearer ${SB_ANON}` } })
       .then(res => { if (!res.ok) throw new Error(); return res.json(); })
-      .then((data: SupabaseFeedItem[]) => mounted ? curateFeed(data || []) : null)
+      .then((data: SupabaseFeedItem[]) => mounted ? curateFeed(data || [], getIcons()) : null)
       .then(curated => {
         if (!mounted || !curated) return;
         setItems(curated);
@@ -330,7 +343,7 @@ export const FeedSection: React.FC<{ className?: string }> = React.memo(({ class
       })
       .catch(() => {
         if (!mounted) return;
-        curateFeed([]).then(curated => {
+        curateFeed([], getIcons()).then(curated => {
           if (!mounted) return;
           if (curated.length > 0) setItems(curated);
           else setError(true);

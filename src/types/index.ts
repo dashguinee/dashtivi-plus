@@ -10,6 +10,8 @@ export interface Channel {
   logo?: string;
   /** Known duration in seconds from TMDB — used when browser can't detect duration */
   knownDuration?: number;
+  /** FFmpeg remux URL — used as fallback when direct proxy fails (wrong extension, container mismatch) */
+  fallbackUrl?: string;
 }
 
 export interface PlayerState {
@@ -36,6 +38,10 @@ export interface WatchHistoryEntry {
   channelId: string;
   watchedAt: number;
   duration: number;
+  /** Where the user stopped (seconds from start) */
+  currentTime?: number;
+  /** Total content length in seconds */
+  totalDuration?: number;
   /** Channel metadata for "Continue Watching" — stored alongside history */
   name?: string;
   logo?: string;

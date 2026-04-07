@@ -81,91 +81,364 @@ export interface VeeMovieCollection {
   parentTabs?: string[];
   /** Optional: filter by category IDs instead of TMDB genres */
   categoryIds?: string[];
+  /** Top 10 row — UI renders numbered cards */
+  isTop10?: boolean;
+  /** Time-aware: only visible during certain hours (0-23) */
+  visibleAfterHour?: number;
 }
+
+// ── Helpers ───────────────────────────────────────────────────────
 
 function tmdbKey(m: VodStream): string { return `m:${m.stream_id}`; }
 function tmdbRating(m: VodStream, map: Record<string, TmdbEntry>): number { return map[tmdbKey(m)]?.r || 0; }
+
 function byRatingDesc(a: VodStream, b: VodStream, map: Record<string, TmdbEntry>): number {
   return tmdbRating(b, map) - tmdbRating(a, map);
 }
 
+/** Rating + recency combo for "trending" sort — recent high-rated content surfaces first */
+function byTrendingScore(a: VodStream, b: VodStream, map: Record<string, TmdbEntry>): number {
+  const scoreA = tmdbRating(a, map) + (parseInt(a.added || '0', 10) / 1e9);
+  const scoreB = tmdbRating(b, map) + (parseInt(b.added || '0', 10) / 1e9);
+  return scoreB - scoreA;
+}
+
+/** Check if a movie was added within the last N days */
+function addedWithinDays(m: VodStream, days: number): boolean {
+  if (!m.added) return false;
+  const ts = parseInt(m.added, 10);
+  if (ts <= 0) return false;
+  return ts >= Date.now() / 1000 - days * 86400;
+}
+
+/** Check if movie is from a recent year (parsed from TMDB or name) */
+function isRecentYear(m: VodStream, t: TmdbEntry | null, minYear: number): boolean {
+  // TMDB year field if available
+  if (t?.y) {
+    const yr = parseInt(t.y, 10);
+    if (yr >= minYear) return true;
+  }
+  // Fallback: parse year from name like "Movie (2025)"
+  const match = m.name.match(/\((\d{4})\)/);
+  return match ? parseInt(match[1], 10) >= minYear : false;
+}
+
+// ── Movie genre IDs (TMDB) ────────────────────────────────────────
+
+const G = {
+  ACTION: 28, ADVENTURE: 12, ANIMATION: 16, COMEDY: 35,
+  CRIME: 80, DOCUMENTARY: 99, DRAMA: 18, FAMILY: 10751,
+  FANTASY: 14, HISTORY: 36, HORROR: 27, MUSIC: 10402,
+  MYSTERY: 9648, ROMANCE: 10749, SCIFI: 878, THRILLER: 53,
+  WAR: 10752, WESTERN: 37,
+} as const;
+
+const hasGenre = (t: TmdbEntry | null, ...ids: number[]): boolean =>
+  t !== null && ids.some(id => t.g.includes(id));
+
+// ── Collections ───────────────────────────────────────────────────
+
 export const VEE_MOVIE_COLLECTIONS: VeeMovieCollection[] = [
+  // 1. MARQUEE — Top 10 This Week
   {
-    id: 'top-rated',
-    name: 'Critically Acclaimed',
-    tagline: 'The ones that stayed with people',
-    filter: (_m, t) => t !== null && t.r >= 7.5,
-    sort: byRatingDesc,
-    limit: 20,
+    id: 'top-10-weekly',
+    name: 'Top 10 Movies This Week',
+    tagline: 'The most-watched right now',
+    isTop10: true,
+    filter: (_m, t) => t !== null && t.r >= 7.0 && isRecentYear(_m, t, 2024),
+    sort: byTrendingScore,
+    limit: 10,
   },
+
+  // 2. New on DashTivi+
   {
-    id: 'fresh-drops',
-    name: 'Fresh Drops',
-    tagline: 'Just added — catch them first',
-    filter: (m, _t) => {
-      if (m.added) {
-        const addedTs = parseInt(m.added, 10);
-        if (addedTs > 0) {
-          const weekAgo = Date.now() / 1000 - 7 * 86400;
-          return addedTs >= weekAgo;
-        }
-      }
-      // Fallback: check for 2025/2026 in name
-      const yr = m.name.match(/\((\d{4})\)/);
-      return yr ? parseInt(yr[1], 10) >= 2025 : false;
+    id: 'new-on-dashtivi',
+    name: 'New on DashTivi+',
+    tagline: 'Just landed — catch them first',
+    filter: (m, _t) => addedWithinDays(m, 14),
+    sort: (a, b, map) => {
+      // Newest first, tiebreak by rating
+      const timeDiff = parseInt(b.added || '0', 10) - parseInt(a.added || '0', 10);
+      return timeDiff !== 0 ? timeDiff : tmdbRating(b, map) - tmdbRating(a, map);
     },
-    sort: (a, b) => parseInt(b.added || '0', 10) - parseInt(a.added || '0', 10),
-    limit: 20,
+    limit: 25,
   },
+
+  // 3. Award-Winning Cinema
   {
-    id: 'friday-night',
-    name: 'Friday Night',
-    tagline: 'Action, thriller, something with pace',
-    filter: (_m, t) => t !== null && (t.g.includes(28) || t.g.includes(53) || t.g.includes(80)),
+    id: 'award-winning',
+    name: 'Award-Winning Cinema',
+    tagline: 'The films that defined their year',
+    filter: (_m, t) => t !== null && t.r >= 8.0 && hasGenre(t, G.DRAMA, G.HISTORY),
     sort: byRatingDesc,
     limit: 20,
   },
+
+  // 4. Adrenaline Rush
+  {
+    id: 'adrenaline-rush',
+    name: 'Adrenaline Rush',
+    tagline: 'Non-stop action, zero chill',
+    filter: (_m, t) => t !== null && t.r >= 6.5 && hasGenre(t, G.ACTION, G.THRILLER, G.CRIME),
+    sort: byTrendingScore,
+    limit: 25,
+  },
+
+  // 5. Feel-Good Favorites
   {
     id: 'feel-good',
-    name: 'Feel Good',
-    tagline: 'Comedy, family, something light',
-    filter: (_m, t) => t !== null && (t.g.includes(35) || t.g.includes(10751) || t.g.includes(10749)),
+    name: 'Feel-Good Favorites',
+    tagline: 'Comfort watching at its best',
+    filter: (_m, t) => t !== null && t.r >= 6.0 && hasGenre(t, G.COMEDY, G.ROMANCE, G.FAMILY, G.ANIMATION),
+    sort: byRatingDesc,
+    limit: 25,
+  },
+
+  // 6. Mind-Bending
+  {
+    id: 'mind-bending',
+    name: 'Mind-Bending',
+    tagline: 'Reality is optional',
+    filter: (_m, t) => t !== null && t.r >= 7.0 && hasGenre(t, G.SCIFI, G.MYSTERY, G.FANTASY),
     sort: byRatingDesc,
     limit: 20,
   },
+
+  // 7. True Stories
   {
-    id: 'deep-watch',
-    name: 'Deep Watch',
-    tagline: 'Drama, mystery, the ones that make you think',
-    filter: (_m, t) => t !== null && (t.g.includes(18) || t.g.includes(9648) || t.g.includes(36)),
+    id: 'true-stories',
+    name: 'True Stories',
+    tagline: 'Real life, unscripted',
+    filter: (_m, t) => hasGenre(t, G.DOCUMENTARY),
     sort: byRatingDesc,
     limit: 20,
   },
+
+  // 8. Hidden Gems — high quality but low visibility
   {
-    id: 'sci-fi-fantasy',
-    name: 'Other Worlds',
-    tagline: 'Sci-fi, fantasy, beyond reality',
-    filter: (_m, t) => t !== null && (t.g.includes(878) || t.g.includes(14)),
+    id: 'hidden-gems',
+    name: 'Hidden Gems',
+    tagline: 'Brilliant films most people missed',
+    filter: (_m, t) => {
+      if (!t || t.r < 7.5) return false;
+      // "Hidden" = no trailer AND sparse genre tags (fewer than 3 genres)
+      const noTrailer = !t.y;
+      const sparseGenres = t.g.length < 3;
+      return noTrailer || sparseGenres;
+    },
     sort: byRatingDesc,
     limit: 20,
   },
+
+  // 9. Late Night Picks — time-aware, only after 9pm
   {
-    id: 'african-cinema',
-    name: 'African Cinema',
-    tagline: 'Stories from the continent',
-    filter: (m, _t) => false, // category-based: resolved at render time
+    id: 'late-night',
+    name: 'Late Night Picks',
+    tagline: 'For when the lights are off',
+    visibleAfterHour: 21,
+    filter: (_m, t) => {
+      if (new Date().getHours() < 21) return false;
+      return t !== null && t.r >= 6.0 && hasGenre(t, G.HORROR, G.THRILLER);
+    },
+    sort: byRatingDesc,
+    limit: 20,
+  },
+
+  // 10. World Cinema — category-based
+  {
+    id: 'world-cinema',
+    name: 'World Cinema',
+    tagline: 'Stories without borders',
+    filter: (_m, _t) => false, // category-based: resolved at render time
+    sort: byRatingDesc,
+    limit: 25,
+    categoryIds: ['95', '537', '772', '609', '267', '766', '599', '88', '100'], // Turkish, Korean, Indian, Arabic, Bangla
+  },
+
+  // 11. 4K Ultra
+  {
+    id: '4k-ultra',
+    name: '4K Ultra',
+    tagline: 'Crystal clear, no compromise',
+    filter: (_m, _t) => false, // category-based: resolved at render time
+    sort: byRatingDesc,
+    limit: 25,
+    categoryIds: ['122', '120'], // Hollywood 4K + Bollywood 4K
+  },
+
+  // 12. African Stories
+  {
+    id: 'african-stories',
+    name: 'African Stories',
+    tagline: 'Voices from the continent',
+    filter: (_m, _t) => false, // category-based: resolved at render time
     sort: byRatingDesc,
     limit: 20,
     categoryIds: ['580'], // Afrikaans / African content
   },
+
+  // 13. Critically Acclaimed
   {
-    id: '4k-showcase',
-    name: '4K Showcase',
-    tagline: 'Crystal clear, no compromise',
-    filter: (m, _t) => false, // category-based: resolved at render time
+    id: 'critically-acclaimed',
+    name: 'Critically Acclaimed',
+    tagline: 'Only the finest make this list',
+    filter: (_m, t) => t !== null && t.r >= 8.5,
+    sort: byRatingDesc,
+    limit: 15,
+  },
+
+  // 14. Weekend Blockbusters
+  {
+    id: 'weekend-blockbusters',
+    name: 'Weekend Blockbusters',
+    tagline: 'Big screen energy, couch delivery',
+    filter: (_m, t) => t !== null && t.r >= 6.0 && hasGenre(t, G.ACTION, G.ADVENTURE, G.SCIFI),
+    sort: byTrendingScore,
+    limit: 25,
+  },
+
+  // 15. Romantic Escapes
+  {
+    id: 'romantic-escapes',
+    name: 'Romantic Escapes',
+    tagline: 'Love stories worth falling for',
+    filter: (_m, t) => t !== null && t.r >= 6.5 && t.g.includes(G.ROMANCE) && t.g.includes(G.DRAMA),
     sort: byRatingDesc,
     limit: 20,
-    categoryIds: ['122', '120'], // Hollywood 4K + Bollywood 4K
+  },
+
+  // 16. Laugh Out Loud
+  {
+    id: 'laugh-out-loud',
+    name: 'Laugh Out Loud',
+    tagline: 'Pure comedy, no strings attached',
+    filter: (_m, t) => t !== null && t.r >= 6.0 && t.g.includes(G.COMEDY) && !t.g.includes(G.ROMANCE),
+    sort: byTrendingScore,
+    limit: 25,
+  },
+
+  // 17. Nollywood Originals
+  {
+    id: 'nollywood-originals',
+    name: 'Nollywood Originals',
+    tagline: 'Nigeria to the world',
+    filter: (_m, _t) => false, // category-based: resolved at render time
+    sort: byRatingDesc,
+    limit: 25,
+    categoryIds: ['580'], // Afrikaans / African content — includes Nollywood
+  },
+
+  // 18. Bollywood Blockbusters
+  {
+    id: 'bollywood-blockbusters',
+    name: 'Bollywood Blockbusters',
+    tagline: 'Masala, emotion, spectacle — all in one',
+    filter: (_m, _t) => false, // category-based: resolved at render time
+    sort: byTrendingScore,
+    limit: 25,
+    categoryIds: ['33', '527', '766', '599'], // Bollywood classic + 2024 + latest
+  },
+
+  // 19. Turkish Drama
+  {
+    id: 'turkish-drama',
+    name: 'Turkish Drama',
+    tagline: 'Dizi that keeps you up all night',
+    filter: (_m, _t) => false, // category-based: resolved at render time
+    sort: byRatingDesc,
+    limit: 25,
+    categoryIds: ['95', '537', '772', '609'], // Turkish classic + 2024 + latest
+  },
+
+  // 20. Korean Wave
+  {
+    id: 'korean-wave',
+    name: 'Korean Wave',
+    tagline: 'Hallyu hits different',
+    filter: (_m, _t) => false, // category-based: resolved at render time
+    sort: byRatingDesc,
+    limit: 20,
+    categoryIds: ['267'], // Korean content
+  },
+
+  // 21. Family Movie Night
+  {
+    id: 'family-movie-night',
+    name: 'Family Movie Night',
+    tagline: 'Something everyone can agree on',
+    filter: (_m, t) => t !== null && t.r >= 5.5 && hasGenre(t, G.FAMILY, G.ANIMATION, G.COMEDY),
+    sort: byRatingDesc,
+    limit: 25,
+  },
+
+  // 22. Franchise Universe
+  {
+    id: 'franchise-universe',
+    name: 'Franchise Universe',
+    tagline: 'Worlds bigger than one movie',
+    filter: (_m, _t) => false, // category-based: resolved at render time
+    sort: byRatingDesc,
+    limit: 30,
+    categoryIds: ['147', '157', '160', '153', '154', '216', '219'], // Marvel, Star Wars, HP, FF, JP, Terminator, Alien
+  },
+
+  // 23. Epic Sagas
+  {
+    id: 'epic-sagas',
+    name: 'Epic Sagas',
+    tagline: 'History forged in fire and glory',
+    filter: (_m, t) => t !== null && t.r >= 7.0 && hasGenre(t, G.HISTORY, G.WAR, G.ADVENTURE),
+    sort: byRatingDesc,
+    limit: 20,
+  },
+
+  // 24. Midnight Horror
+  {
+    id: 'midnight-horror',
+    name: 'Midnight Horror',
+    tagline: 'You asked for this',
+    visibleAfterHour: 22,
+    filter: (_m, t) => {
+      if (new Date().getHours() < 22) return false;
+      return t !== null && t.r >= 5.5 && hasGenre(t, G.HORROR);
+    },
+    sort: byRatingDesc,
+    limit: 20,
+  },
+
+  // 25. Fresh from Studios
+  {
+    id: 'fresh-from-studios',
+    name: 'Fresh from Studios',
+    tagline: "This week's arrivals",
+    filter: (m, t) => t !== null && t.r >= 6.0 && addedWithinDays(m, 7),
+    sort: (a, b, map) => {
+      const timeDiff = parseInt(b.added || '0', 10) - parseInt(a.added || '0', 10);
+      return timeDiff !== 0 ? timeDiff : tmdbRating(b, map) - tmdbRating(a, map);
+    },
+    limit: 20,
+  },
+
+  // 26. Underrated Masterpieces
+  {
+    id: 'underrated-masterpieces',
+    name: 'Underrated Masterpieces',
+    tagline: 'The ones that slipped through',
+    filter: (_m, t) => t !== null && t.r >= 7.8 && !t.t,
+    sort: byRatingDesc,
+    limit: 15,
+  },
+
+  // 27. Netflix Originals
+  {
+    id: 'netflix-originals',
+    name: 'Netflix Originals',
+    tagline: 'Exclusive stories, only here',
+    filter: (_m, _t) => false, // category-based: resolved at render time
+    sort: byTrendingScore,
+    limit: 25,
+    categoryIds: ['169', '168'], // Netflix English + Hindi
+    parentTabs: ['netflix'],
   },
 ];
 

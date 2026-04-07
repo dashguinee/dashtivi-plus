@@ -16,7 +16,7 @@ export const MOOD_GENRES: Record<string, number[]> = {
 
 const MOOD_OPTIONS = [
   { key: 'adrenaline', icon: <Flame className="w-5 h-5" />,  label: 'Adrenaline Rush', gradient: 'from-red-900/60 to-orange-900/60', neonColor: 'rgba(239,68,68,0.35)' },
-  { key: 'chill',      icon: <Waves className="w-5 h-5" />,  label: 'Chill & Vibes',   gradient: 'from-cyan-900/60 to-teal-900/60',  neonColor: 'rgba(6,182,212,0.35)' },
+  { key: 'chill',      icon: <Waves className="w-5 h-5" />,  label: 'Chill & Vibes',   gradient: 'from-cyan-900/60 to-blue-900/60',  neonColor: 'rgba(6,182,212,0.35)' },
   { key: 'mind-games', icon: <Brain className="w-5 h-5" />,  label: 'Mind Games',      gradient: 'from-purple-900/60 to-violet-900/60', neonColor: 'rgba(139,92,246,0.35)' },
   { key: 'feel-good',  icon: <Heart className="w-5 h-5" />,  label: 'Feel Good',       gradient: 'from-pink-900/60 to-rose-900/60',   neonColor: 'rgba(244,63,94,0.35)' },
   { key: 'date-night', icon: <Wine className="w-5 h-5" />,   label: 'Date Night',      gradient: 'from-rose-900/60 to-red-900/60',    neonColor: 'rgba(251,113,133,0.35)' },

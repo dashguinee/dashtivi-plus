@@ -5,20 +5,25 @@ interface Props {
   text?: string;
 }
 
+/**
+ * DASH Premium Loader — neon beam sweep instead of boring spinner.
+ * A thin light beam scans horizontally, contained to its section.
+ */
 export const LoadingSpinner: React.FC<Props> = ({ size = 'md', text }) => {
-  const sizes = {
-    sm: 'w-6 h-6',
-    md: 'w-10 h-10',
-    lg: 'w-16 h-16',
-  };
-
+  const widths = { sm: 'w-12', md: 'w-20', lg: 'w-28' };
   return (
     <div className="flex flex-col items-center justify-center gap-3">
-      <div className={`${sizes[size]} relative`}>
-        <div className="absolute inset-0 rounded-full border-2 border-bg-elevated" />
-        <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
+      <div className={`${widths[size]} h-[2px] rounded-full overflow-hidden`} style={{ background: 'rgba(255,255,255,0.04)' }}>
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: '40%',
+            background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.6), rgba(199,125,255,0.8), rgba(157,78,221,0.6), transparent)',
+            animation: 'dash-beam 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+          }}
+        />
       </div>
-      {text && <p className="text-sm text-text-secondary animate-pulse">{text}</p>}
+      {text && <p className="text-[11px] text-white/25 font-light tracking-wide">{text}</p>}
     </div>
   );
 };
@@ -31,8 +36,15 @@ export const FullPageLoader: React.FC = () => (
         <span className="text-[20px] font-light tracking-wide text-white/40" style={{ fontFamily: "'Outfit', sans-serif", marginLeft: '1px' }}>tivi</span>
         <span className="text-primary-light text-[14px] font-bold ml-0.5">+</span>
       </h1>
-      <div className="mt-4 mx-auto w-8 h-[2px] rounded-full overflow-hidden bg-white/5">
-        <div className="h-full w-full bg-primary/60 rounded-full" style={{ animation: 'loading-bar 1.5s ease-in-out infinite' }} />
+      <div className="mt-4 mx-auto w-10 h-[2px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)' }}>
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: '40%',
+            background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.6), rgba(199,125,255,0.8), rgba(157,78,221,0.6), transparent)',
+            animation: 'dash-beam 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+          }}
+        />
       </div>
     </div>
   </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Play, ChevronLeft, ChevronRight, Search, X, Trophy, Baby, Sparkles, Radio, Film, Music, Globe, Heart, Home, MapPin, Sun, Star, Moon, Flag } from 'lucide-react';
 import { t, useLanguage } from '@/i18n';
@@ -18,6 +18,7 @@ import {
   buildFreeUrlMap,
   isFreeChannel,
   groupChannelsByQuality,
+  getChannelMeta,
   safeImageUrl,
 } from '@/lib/xtream';
 import type { VeePlaylist } from '@/lib/xtream';
@@ -25,12 +26,12 @@ import {
   SPORT_TYPES, KIDS_TYPES, ENTERTAINMENT_TYPES, CINEMA_TYPES,
   MUSIC_TYPES, DISCOVERY_TYPES, FAITH_TYPES, NEWS_TYPES,
   MOTHERLAND_TYPES, EUROPE_TYPES, SOUTH_ASIAN_TYPES,
-  AMERICAS_TYPES, ARABIC_TYPES, FRENCH_TYPES,
+  AMERICAS_TYPES, ARABIC_TYPES, FRENCH_TYPES, PREMIUM4K_TYPES,
 } from '@/lib/collections';
 import type { SportType } from '@/lib/collections';
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { setAmbientSpeed, setAmbientExperience } from '@/lib/ambient-audio';
-import { ChannelIcon } from '@/components/ui/ChannelIcon';
+import { ChannelIcon, ChannelBadge } from '@/components/ui/ChannelIcon';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { isDead } from '@/hooks/useChannelHealth';
 import type { Channel } from '@/types';
@@ -59,9 +60,9 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
     veeHomepageId: 'homepage_sports',
     name: 'Sports',
     tagline: 'Every match. Every league. Every moment.',
-    heroGradient: 'from-emerald-900/40 via-[#060609] to-blue-900/20',
-    accentColor: '#10B981',
-    accentGlow: 'rgba(16,185,129,0.3)',
+    heroGradient: 'from-cyan-900/40 via-[#060609] to-blue-900/20',
+    accentColor: '#00D4FF',
+    accentGlow: 'rgba(0,212,255,0.3)',
     icon: <Trophy className="w-5 h-5" />,
     subtypes: SPORT_TYPES,
     timeGreetings: {
@@ -96,7 +97,7 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
       late_night: 'Bedtime stories',
     },
     crossExperiences: [
-      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'sports', name: 'Sports', gradient: 'from-cyan-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
       { id: 'entertainment', name: 'Entertainment', gradient: 'from-blue-500/30 to-purple-500/20', icon: <Sparkles className="w-4 h-4" /> },
       { id: 'music', name: 'Music', gradient: 'from-violet-500/30 to-pink-500/20', icon: <Music className="w-4 h-4" /> },
       { id: 'movies', name: 'Cinema', gradient: 'from-amber-500/30 to-red-500/20', icon: <Film className="w-4 h-4" /> },
@@ -108,7 +109,7 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
     curatorId: 'entertainment',
     veeHomepageId: 'homepage_entertainment',
     name: 'Entertainment',
-    tagline: 'BBC, HBO, Canal+, Nollywood — prime time, every time.',
+    tagline: 'Drama · Comedy · Reality · Nollywood — prime time, every time.',
     heroGradient: 'from-blue-900/40 via-[#060609] to-purple-900/20',
     accentColor: '#818CF8',
     accentGlow: 'rgba(129,140,248,0.3)',
@@ -121,7 +122,7 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
       late_night: 'Late night binge',
     },
     crossExperiences: [
-      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'sports', name: 'Sports', gradient: 'from-cyan-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
       { id: 'movies', name: 'Cinema', gradient: 'from-amber-500/30 to-red-500/20', icon: <Film className="w-4 h-4" /> },
       { id: 'news', name: 'News', gradient: 'from-red-500/30 to-orange-500/20', icon: <Radio className="w-4 h-4" /> },
       { id: 'music', name: 'Music', gradient: 'from-violet-500/30 to-pink-500/20', icon: <Music className="w-4 h-4" /> },
@@ -133,7 +134,7 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
     curatorId: 'news',
     veeHomepageId: 'homepage_news',
     name: 'News',
-    tagline: 'CNN, BBC, Al Jazeera — stay informed, stay sharp.',
+    tagline: 'Breaking · World · Arabic — stay informed, stay sharp.',
     heroGradient: 'from-red-900/35 via-[#060609] to-slate-900/20',
     accentColor: '#EF4444',
     accentGlow: 'rgba(239,68,68,0.3)',
@@ -146,9 +147,9 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
       late_night: 'Overnight world desk',
     },
     crossExperiences: [
-      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'sports', name: 'Sports', gradient: 'from-cyan-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
       { id: 'entertainment', name: 'Entertainment', gradient: 'from-blue-500/30 to-purple-500/20', icon: <Sparkles className="w-4 h-4" /> },
-      { id: 'documentary', name: 'Docs', gradient: 'from-teal-500/30 to-green-500/20', icon: <Globe className="w-4 h-4" /> },
+      { id: 'documentary', name: 'Docs', gradient: 'from-blue-500/30 to-indigo-500/20', icon: <Globe className="w-4 h-4" /> },
       { id: 'movies', name: 'Cinema', gradient: 'from-amber-500/30 to-red-500/20', icon: <Film className="w-4 h-4" /> },
       { id: 'faith', name: 'Faith', gradient: 'from-yellow-500/30 to-amber-500/20', icon: <Heart className="w-4 h-4" /> },
     ],
@@ -172,7 +173,7 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
     },
     crossExperiences: [
       { id: 'entertainment', name: 'Entertainment', gradient: 'from-blue-500/30 to-purple-500/20', icon: <Sparkles className="w-4 h-4" /> },
-      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'sports', name: 'Sports', gradient: 'from-cyan-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
       { id: 'kids', name: 'Kids', gradient: 'from-pink-500/30 to-purple-500/20', icon: <Baby className="w-4 h-4" /> },
       { id: 'movies', name: 'Cinema', gradient: 'from-amber-500/30 to-red-500/20', icon: <Film className="w-4 h-4" /> },
       { id: 'faith', name: 'Faith', gradient: 'from-yellow-500/30 to-amber-500/20', icon: <Heart className="w-4 h-4" /> },
@@ -197,9 +198,9 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
     },
     crossExperiences: [
       { id: 'entertainment', name: 'Entertainment', gradient: 'from-blue-500/30 to-purple-500/20', icon: <Sparkles className="w-4 h-4" /> },
-      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'sports', name: 'Sports', gradient: 'from-cyan-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
       { id: 'music', name: 'Music', gradient: 'from-violet-500/30 to-pink-500/20', icon: <Music className="w-4 h-4" /> },
-      { id: 'documentary', name: 'Docs', gradient: 'from-teal-500/30 to-green-500/20', icon: <Globe className="w-4 h-4" /> },
+      { id: 'documentary', name: 'Docs', gradient: 'from-blue-500/30 to-indigo-500/20', icon: <Globe className="w-4 h-4" /> },
       { id: 'kids', name: 'Kids', gradient: 'from-pink-500/30 to-purple-500/20', icon: <Baby className="w-4 h-4" /> },
     ],
   },
@@ -209,9 +210,9 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
     veeHomepageId: 'homepage_documentary',
     name: 'Docs & Discovery',
     tagline: 'Discovery, NatGeo, BBC Earth — feed your curiosity.',
-    heroGradient: 'from-teal-900/40 via-[#060609] to-green-900/20',
-    accentColor: '#14B8A6',
-    accentGlow: 'rgba(20,184,166,0.3)',
+    heroGradient: 'from-blue-900/40 via-[#060609] to-indigo-900/20',
+    accentColor: '#6366F1',
+    accentGlow: 'rgba(99,102,241,0.3)',
     icon: <Globe className="w-5 h-5" />,
     subtypes: DISCOVERY_TYPES,
     timeGreetings: {
@@ -223,7 +224,7 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
     crossExperiences: [
       { id: 'news', name: 'News', gradient: 'from-red-500/30 to-orange-500/20', icon: <Radio className="w-4 h-4" /> },
       { id: 'entertainment', name: 'Entertainment', gradient: 'from-blue-500/30 to-purple-500/20', icon: <Sparkles className="w-4 h-4" /> },
-      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'sports', name: 'Sports', gradient: 'from-cyan-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
       { id: 'movies', name: 'Cinema', gradient: 'from-amber-500/30 to-red-500/20', icon: <Film className="w-4 h-4" /> },
       { id: 'faith', name: 'Faith', gradient: 'from-yellow-500/30 to-amber-500/20', icon: <Heart className="w-4 h-4" /> },
     ],
@@ -247,7 +248,7 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
     },
     crossExperiences: [
       { id: 'music', name: 'Music', gradient: 'from-violet-500/30 to-pink-500/20', icon: <Music className="w-4 h-4" /> },
-      { id: 'documentary', name: 'Docs', gradient: 'from-teal-500/30 to-green-500/20', icon: <Globe className="w-4 h-4" /> },
+      { id: 'documentary', name: 'Docs', gradient: 'from-blue-500/30 to-indigo-500/20', icon: <Globe className="w-4 h-4" /> },
       { id: 'news', name: 'News', gradient: 'from-red-500/30 to-orange-500/20', icon: <Radio className="w-4 h-4" /> },
       { id: 'entertainment', name: 'Entertainment', gradient: 'from-blue-500/30 to-purple-500/20', icon: <Sparkles className="w-4 h-4" /> },
       { id: 'kids', name: 'Kids', gradient: 'from-pink-500/30 to-purple-500/20', icon: <Baby className="w-4 h-4" /> },
@@ -258,7 +259,7 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
     curatorId: 'africa',
     veeHomepageId: 'homepage_africa',
     name: 'The Motherland',
-    tagline: 'beIN, SuperSport, Trace — the continent is live.',
+    tagline: 'Africa Live · Sports · Entertainment · the continent is live.',
     heroGradient: 'from-orange-900/40 via-[#060609] to-amber-900/20',
     accentColor: '#F97316',
     accentGlow: 'rgba(249,115,22,0.35)',
@@ -271,7 +272,7 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
       late_night: 'African nights — the continent never sleeps',
     },
     crossExperiences: [
-      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'sports', name: 'Sports', gradient: 'from-cyan-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
       { id: 'entertainment', name: 'Entertainment', gradient: 'from-blue-500/30 to-purple-500/20', icon: <Sparkles className="w-4 h-4" /> },
       { id: 'kids', name: 'Kids', gradient: 'from-pink-500/30 to-purple-500/20', icon: <Baby className="w-4 h-4" /> },
       { id: 'music', name: 'Music', gradient: 'from-violet-500/30 to-pink-500/20', icon: <Music className="w-4 h-4" /> },
@@ -283,7 +284,7 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
     curatorId: 'europe',
     veeHomepageId: 'homepage_europe',
     name: 'Europe',
-    tagline: 'Sky, Canal+, BBC, RAI — the continent\'s best.',
+    tagline: 'UK · France · Germany · Italy — the continent\'s best.',
     heroGradient: 'from-blue-900/40 via-[#060609] to-indigo-900/20',
     accentColor: '#3B82F6',
     accentGlow: 'rgba(59,130,246,0.3)',
@@ -296,11 +297,11 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
       late_night: 'Late night European cinema',
     },
     crossExperiences: [
-      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'sports', name: 'Sports', gradient: 'from-cyan-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
       { id: 'movies', name: 'Cinema', gradient: 'from-amber-500/30 to-red-500/20', icon: <Film className="w-4 h-4" /> },
       { id: 'africa', name: 'Africa', gradient: 'from-orange-500/30 to-yellow-500/20', icon: <Globe className="w-4 h-4" /> },
       { id: 'french', name: 'French', gradient: 'from-blue-500/30 to-red-500/20', icon: <Flag className="w-4 h-4" /> },
-      { id: 'documentary', name: 'Docs', gradient: 'from-teal-500/30 to-green-500/20', icon: <Globe className="w-4 h-4" /> },
+      { id: 'documentary', name: 'Docs', gradient: 'from-blue-500/30 to-indigo-500/20', icon: <Globe className="w-4 h-4" /> },
     ],
   },
   south_asian: {
@@ -321,7 +322,7 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
       late_night: 'Late night Bollywood',
     },
     crossExperiences: [
-      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'sports', name: 'Sports', gradient: 'from-cyan-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
       { id: 'movies', name: 'Cinema', gradient: 'from-amber-500/30 to-red-500/20', icon: <Film className="w-4 h-4" /> },
       { id: 'music', name: 'Music', gradient: 'from-violet-500/30 to-pink-500/20', icon: <Music className="w-4 h-4" /> },
       { id: 'news', name: 'News', gradient: 'from-red-500/30 to-orange-500/20', icon: <Radio className="w-4 h-4" /> },
@@ -346,7 +347,7 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
       late_night: 'Late night Americas',
     },
     crossExperiences: [
-      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'sports', name: 'Sports', gradient: 'from-cyan-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
       { id: 'movies', name: 'Cinema', gradient: 'from-amber-500/30 to-red-500/20', icon: <Film className="w-4 h-4" /> },
       { id: 'entertainment', name: 'Entertainment', gradient: 'from-blue-500/30 to-purple-500/20', icon: <Sparkles className="w-4 h-4" /> },
       { id: 'europe', name: 'Europe', gradient: 'from-blue-500/30 to-indigo-500/20', icon: <MapPin className="w-4 h-4" /> },
@@ -359,9 +360,9 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
     veeHomepageId: 'homepage_arabic',
     name: 'Arabic',
     tagline: 'MBC, Al Jazeera, beIN, Rotana — the Arab world.',
-    heroGradient: 'from-emerald-900/30 via-[#060609] to-teal-900/20',
-    accentColor: '#059669',
-    accentGlow: 'rgba(5,150,105,0.3)',
+    heroGradient: 'from-amber-900/30 via-[#060609] to-orange-900/20',
+    accentColor: '#F59E0B',
+    accentGlow: 'rgba(245,158,11,0.3)',
     icon: <Moon className="w-5 h-5" />,
     subtypes: ARABIC_TYPES,
     timeGreetings: {
@@ -371,7 +372,7 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
       late_night: 'Late night',
     },
     crossExperiences: [
-      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'sports', name: 'Sports', gradient: 'from-cyan-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
       { id: 'news', name: 'News', gradient: 'from-red-500/30 to-orange-500/20', icon: <Radio className="w-4 h-4" /> },
       { id: 'faith', name: 'Faith', gradient: 'from-yellow-500/30 to-amber-500/20', icon: <Heart className="w-4 h-4" /> },
       { id: 'movies', name: 'Cinema', gradient: 'from-amber-500/30 to-red-500/20', icon: <Film className="w-4 h-4" /> },
@@ -398,9 +399,34 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
     crossExperiences: [
       { id: 'africa', name: 'Africa', gradient: 'from-orange-500/30 to-yellow-500/20', icon: <Globe className="w-4 h-4" /> },
       { id: 'entertainment', name: 'Entertainment', gradient: 'from-blue-500/30 to-purple-500/20', icon: <Sparkles className="w-4 h-4" /> },
-      { id: 'sports', name: 'Sports', gradient: 'from-emerald-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'sports', name: 'Sports', gradient: 'from-cyan-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
       { id: 'movies', name: 'Cinema', gradient: 'from-amber-500/30 to-red-500/20', icon: <Film className="w-4 h-4" /> },
       { id: 'europe', name: 'Europe', gradient: 'from-blue-500/30 to-indigo-500/20', icon: <MapPin className="w-4 h-4" /> },
+    ],
+  },
+  premium4k: {
+    id: 'premium4k',
+    curatorId: 'premium4k',
+    veeHomepageId: 'homepage_premium4k',
+    name: 'Premium 4K',
+    tagline: 'Ultra HD sports, cinema & docs — every pixel matters.',
+    heroGradient: 'from-yellow-900/30 via-[#060609] to-amber-900/20',
+    accentColor: '#EAB308',
+    accentGlow: 'rgba(234,179,8,0.3)',
+    icon: <Sparkles className="w-5 h-5" />,
+    subtypes: PREMIUM4K_TYPES,
+    timeGreetings: {
+      morning: 'Morning in 4K',
+      afternoon: '4K afternoon — crystal clear',
+      evening: 'Prime time in Ultra HD',
+      late_night: 'Late night 4K cinema',
+    },
+    crossExperiences: [
+      { id: 'sports', name: 'Sports', gradient: 'from-cyan-500/30 to-blue-500/20', icon: <Trophy className="w-4 h-4" /> },
+      { id: 'movies', name: 'Cinema', gradient: 'from-amber-500/30 to-red-500/20', icon: <Film className="w-4 h-4" /> },
+      { id: 'documentary', name: 'Docs', gradient: 'from-blue-500/30 to-indigo-500/20', icon: <Globe className="w-4 h-4" /> },
+      { id: 'entertainment', name: 'Entertainment', gradient: 'from-blue-500/30 to-purple-500/20', icon: <Sparkles className="w-4 h-4" /> },
+      { id: 'music', name: 'Music', gradient: 'from-violet-500/30 to-pink-500/20', icon: <Music className="w-4 h-4" /> },
     ],
   },
 };
@@ -437,6 +463,11 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchActive, setSearchActive] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  const GRID_PAGE_SIZE = 60;
+  const [gridVisibleCount, setGridVisibleCount] = useState(GRID_PAGE_SIZE);
+
+  // Reset visible count when experience or sub-tab changes
+  useEffect(() => { setGridVisibleCount(GRID_PAGE_SIZE); }, [experienceId, activeSubTab]);
 
   const timeSlot = getTimeSlot();
 
@@ -491,9 +522,11 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
           streams = [...streams, ...freeAsLive];
         }
 
-        // Filter alive + sort gems first
+        // Filter alive — curator order is pre-sorted (gems + narrative), don't re-sort
         streams = streams.filter(s => isChannelProbeAlive(s.stream_id));
-        streams = sortGemsFirst(streams);
+        if (!curatorResult) {
+          streams = sortGemsFirst(streams);
+        }
         setAllStreams(streams);
 
         // VEE data
@@ -564,15 +597,30 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
     ? curatorToLiveStreams(veeSocialProof.channels).filter(s => isChannelProbeAlive(s.stream_id))
     : [];
 
-  // Group quality variants for the main grid
-  const grouped = groupChannelsByQuality(searchFiltered);
-  const deduped = grouped.map(g => {
-    const best = g.variants.reduce((a, b) => {
-      const order: Record<string, number> = { '4k': 4, 'fhd': 3, 'hd': 2, 'sd': 1, 'unknown': 0 };
-      return (order[b.quality] || 0) > (order[a.quality] || 0) ? b : a;
-    });
-    return searchFiltered.find(s => s.stream_id === best.streamId) || searchFiltered[0];
-  }).filter(Boolean);
+  // Group quality variants for the main grid (memoized to avoid re-compute on every render)
+  const deduped = useMemo(() => {
+    const grouped = groupChannelsByQuality(searchFiltered);
+    const streams = grouped.map(g => {
+      const best = g.variants.reduce((a, b) => {
+        const order: Record<string, number> = { '4k': 4, 'fhd': 3, 'hd': 2, 'sd': 1, 'unknown': 0 };
+        return (order[b.quality] || 0) > (order[a.quality] || 0) ? b : a;
+      });
+      return searchFiltered.find(s => s.stream_id === best.streamId) || searchFiltered[0];
+    }).filter(Boolean);
+    // Gently float English channels toward the front — only within first 15 positions
+    // This preserves curator narrative order for the bulk while ensuring EN prominence up top
+    if (streams.length > 5) {
+      const head = streams.slice(0, 15);
+      const tail = streams.slice(15);
+      head.sort((a, b) => {
+        const aEn = getChannelMeta(a.stream_id)?.isEnglish ? 1 : 0;
+        const bEn = getChannelMeta(b.stream_id)?.isEnglish ? 1 : 0;
+        return bEn - aEn; // English first, stable within group
+      });
+      return [...head, ...tail];
+    }
+    return streams;
+  }, [searchFiltered]);
 
   return (
     <div className="pt-14 pb-32 min-h-screen">
@@ -596,7 +644,7 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
           </div>
           <div>
             <h1 className="text-2xl font-black text-white tracking-tight">{config.name}</h1>
-            <p className="text-xs text-white/40">{allStreams.length} channels live</p>
+            <p className="text-xs text-white/40">{deduped.length} channels live</p>
           </div>
         </div>
 
@@ -656,7 +704,7 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
                     key={stream.stream_id}
                     onClick={() => handlePlay(stream, veeStreams)}
                     className="flex-shrink-0 group"
-                    style={{ width: i === 0 ? 160 : 140, ...(i < 10 ? { animation: `vee-card-in 0.6s ease ${i * 70}ms both` } : {}) }}
+                    style={{ width: i === 0 ? 160 : 140, ...(i < 10 ? { animation: `vee-card-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) ${i * 100}ms both` } : {}) }}
                   >
                     <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 transition-all duration-300 group-hover:shadow-lg flex items-center justify-center"
                       style={{ background: 'rgba(255,255,255,0.03)', boxShadow: i === 0 ? `0 0 20px ${config.accentGlow}` : undefined }}>
@@ -666,11 +714,13 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
                         <span className="w-1 h-1 rounded-full live-badge-pulse" style={{ background: config.accentColor }} />
                         LIVE
                       </div>
-                      {i === 0 && (
+                      {i === 0 ? (
                         <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded text-[7px] font-bold bg-black/60"
                           style={{ color: config.accentColor }}>
                           #1 PICK
                         </div>
+                      ) : (
+                        <ChannelBadge streamId={stream.stream_id} />
                       )}
                     </div>
                     <p className="text-[10px] text-white/40 truncate group-hover:text-white/70 transition-colors">{stream.name}</p>
@@ -711,18 +761,19 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
               </h2>
               <span className="text-[11px] text-white/25">{deduped.length} channels</span>
             </div>
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3">
-              {deduped.map((stream, i) => (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
+              {deduped.slice(0, gridVisibleCount).map((stream, i) => (
                 <button
                   key={stream.stream_id}
                   onClick={() => handlePlay(stream, deduped)}
                   className="group"
-                  style={i < 20 ? { animation: `vee-card-in 0.5s ease ${i * 30}ms both` } : undefined}
+                  style={i < 20 ? { animation: `vee-card-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${i * 70}ms both` } : undefined}
                 >
-                  <div className="relative aspect-[4/3] rounded-xl bg-white/[0.04] border border-white/8 flex items-center justify-center overflow-hidden
-                    group-hover:border-white/20 group-hover:shadow-lg active:scale-95 transition-all duration-300"
-                    style={{ boxShadow: `0 0 0 0 ${config.accentGlow}` }}>
+                  <div className="relative aspect-[4/3] rounded-xl card-surface flex items-center justify-center overflow-hidden
+                    group-hover:border-white/15 active:scale-95"
+                  >
                     <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" />
+                    <ChannelBadge streamId={stream.stream_id} compact />
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-xl">
                       <Play className="w-4 h-4 text-white" />
                     </div>
@@ -738,6 +789,19 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
                 {searchQuery ? 'No channels match your search' : 'No channels available'}
               </div>
             )}
+            {deduped.length > gridVisibleCount && (
+              <div className="flex flex-col items-center gap-3 mt-6 mb-4">
+                <p className="text-xs text-white/30">
+                  Showing {gridVisibleCount} of {deduped.length} channels
+                </p>
+                <button
+                  onClick={() => setGridVisibleCount(prev => prev + GRID_PAGE_SIZE)}
+                  className="bg-white/5 border border-white/10 rounded-xl px-6 py-3 text-sm text-white/50 hover:text-white hover:bg-white/10 backdrop-blur-sm transition-[color,background-color] duration-300"
+                >
+                  Load More
+                </button>
+              </div>
+            )}
           </section>
 
           {/* ── Social Proof Row (Popular Right Now) ─────────────────── */}
@@ -745,7 +809,7 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
             <section className="mb-8">
               <div className="px-4 mb-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" style={{ boxShadow: '0 0 6px rgba(52,211,153,0.5)' }} />
+                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" style={{ boxShadow: '0 0 6px rgba(0,212,255,0.5)' }} />
                   <h2 className="text-base font-black text-white">Popular Right Now</h2>
                 </div>
                 <p className="text-[11px] text-white/20 mt-0.5 pl-3.5">What everyone is watching across all experiences</p>
@@ -759,8 +823,8 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
                   >
                     <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 bg-white/[0.03] flex items-center justify-center">
                       <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" />
-                      <div className="absolute top-1 left-1 flex items-center gap-1 px-1 py-0.5 bg-black/60 rounded text-[7px] font-semibold text-emerald-300">
-                        <span className="w-1 h-1 rounded-full bg-emerald-400 live-badge-pulse" />
+                      <div className="absolute top-1 left-1 flex items-center gap-1 px-1 py-0.5 bg-black/60 rounded text-[7px] font-semibold text-cyan-300">
+                        <span className="w-1 h-1 rounded-full bg-cyan-400 live-badge-pulse" />
                         LIVE
                       </div>
                     </div>

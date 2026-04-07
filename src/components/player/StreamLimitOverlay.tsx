@@ -65,7 +65,7 @@ export function StreamLimitOverlay({ info, onDismiss, onUpgrade }: Props) {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-white">{info.upgrade.familyPlan.label}</span>
-                <span className="text-[10px] font-bold text-green-400 bg-green-500/20 px-1.5 py-0.5 rounded-full">
+                <span className="text-[10px] font-bold text-cyan-400 bg-cyan-500/20 px-1.5 py-0.5 rounded-full">
                   {info.upgrade.familyPlan.discount}
                 </span>
               </div>

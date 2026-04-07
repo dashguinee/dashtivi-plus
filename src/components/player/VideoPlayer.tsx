@@ -1,13 +1,23 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { PlayerControls } from './PlayerControls';
-import { RefreshCw, AlertTriangle, Waves, ChevronLeft as ChevLeft, ChevronRight as ChevRight } from 'lucide-react';
+import { RefreshCw, AlertTriangle, Waves, ChevronLeft as ChevLeft, ChevronRight as ChevRight, SkipForward, SkipBack } from 'lucide-react';
 import { useAdjacentChannels, usePlaylistState, setCurrentChannel } from '@/lib/playlist';
+import { useKeyboard } from '@/hooks/useKeyboard';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { SmartMatch } from './SmartMatch';
 import { EpgWidget } from './EpgWidget';
 import { getStreamQuality, setStreamQuality } from '@/lib/xtream';
 import type { Channel, PlayerState } from '@/types';
+
+function detectVod(state: PlayerState): boolean {
+  const cat = state.channel?.category?.toLowerCase() ?? '';
+  if (cat === 'movie' || cat === 'series') return true;
+  const url = state.channel?.url ?? '';
+  if (url.includes('/vod?') || url.includes('/series/')) return true;
+  if (/\.(mp4|mkv|avi)/.test(decodeURIComponent(url))) return true;
+  return false;
+}
 
 interface Props {
   state: PlayerState;
@@ -44,7 +54,69 @@ export const VideoPlayer: React.FC<Props> = ({
 }) => {
   const [controlsVisible, setControlsVisible] = useState(true);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const switchCooldownRef = useRef(false); // suppresses controls flash on live channel switch
+  const prevChannelIdRef = useRef<string | null>(null);
   const [showEcoPrompt, setShowEcoPrompt] = useState(false);
+  const [seekIndicator, setSeekIndicator] = useState(false);
+  const [seekDirection, setSeekDirection] = useState<'forward' | 'backward'>('forward');
+
+  const isVod = detectVod(state);
+
+  const touchStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const lastTapRef = useRef<{ x: number; t: number }>({ x: 0, t: 0 });
+  const { prev: adjPrev, next: adjNext } = useAdjacentChannels();
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY, t: Date.now() };
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    const start = touchStartRef.current;
+    if (!start) return;
+    touchStartRef.current = null;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+    const elapsed = Date.now() - start.t;
+
+    // Horizontal swipe: >50px horizontal, <30px vertical, <300ms — live channels only
+    if (absDx > 50 && absDy < 30 && elapsed < 300 && !isVod) {
+      if (dx < 0 && adjNext) {
+        setCurrentChannel(adjNext.id);
+        onRetry(adjNext);
+      } else if (dx > 0 && adjPrev) {
+        setCurrentChannel(adjPrev.id);
+        onRetry(adjPrev);
+      }
+      return;
+    }
+
+    // Double-tap: +10s forward (right side) or -10s backward (left side) — VOD only
+    if (isVod && absDx < 20 && absDy < 20) {
+      const now = Date.now();
+      const screenW = window.innerWidth;
+      const isRightSide = touch.clientX > screenW * 0.55;
+      const isLeftSide = touch.clientX < screenW * 0.45;
+      if ((isRightSide || isLeftSide) && now - lastTapRef.current.t < 300 && Math.abs(touch.clientX - lastTapRef.current.x) < 60) {
+        if (onSeek && state.duration > 0) {
+          if (isRightSide) {
+            onSeek(Math.min(state.duration, state.currentTime + 10));
+          } else {
+            onSeek(Math.max(0, state.currentTime - 10));
+          }
+          setSeekIndicator(true);
+          setSeekDirection(isRightSide ? 'forward' : 'backward');
+          setTimeout(() => setSeekIndicator(false), 600);
+        }
+        lastTapRef.current = { x: 0, t: 0 };
+        return;
+      }
+      lastTapRef.current = { x: touch.clientX, t: now };
+    }
+  }, [isVod, adjPrev, adjNext, onRetry, onSeek, state.duration, state.currentTime]);
 
   // Auto-retry with backoff: 3s → 6s → 10s, then give up to manual
   const autoRetryRef = useRef(0);
@@ -68,8 +140,23 @@ export const VideoPlayer: React.FC<Props> = ({
   const bufferCountRef = useRef(0);
   const bufferTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
+  // Live TV: suppress controls on channel switch — let stream settle first
+  // But keep carousel/recommendations visible for continuous browsing
+  const [switchingChannel, setSwitchingChannel] = useState(false);
+  useEffect(() => {
+    const id = state.channel?.id ?? null;
+    if (id && id !== prevChannelIdRef.current && prevChannelIdRef.current !== null && !isVod) {
+      switchCooldownRef.current = true;
+      setSwitchingChannel(true);
+      setControlsVisible(false);
+    }
+    prevChannelIdRef.current = id;
+  }, [state.channel?.id, isVod]);
+
   // Cinema intro — shows until video is READY (not a fixed timer)
   const [showCinemaIntro, setShowCinemaIntro] = useState(false);
+  // Post-cinema blackout: pure black screen between intro and playback (no overlay, no controls)
+  const [postCinemaBlackout, setPostCinemaBlackout] = useState(false);
   const cinemaChannelRef = useRef<string | null>(null);
   const cinemaMinTimeRef = useRef(false); // has minimum 2.5s elapsed?
 
@@ -77,6 +164,8 @@ export const VideoPlayer: React.FC<Props> = ({
   const cinemaMaxTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Trigger cinema intro when a VOD channel starts loading
+  const cinemaAbortedRef = useRef(false);
+  const cinemaMutedByUsRef = useRef(false); // tracks if cinema intro owns the mute
   useEffect(() => {
     const isVod = state.channel?.category === 'movie' || state.channel?.category === 'series';
     const channelId = state.channel?.id ?? null;
@@ -84,20 +173,35 @@ export const VideoPlayer: React.FC<Props> = ({
     if (isVod && state.isLoading && channelId !== cinemaChannelRef.current) {
       cinemaChannelRef.current = channelId;
       cinemaMinTimeRef.current = false;
+      cinemaAbortedRef.current = false;
       setShowCinemaIntro(true);
-      if (videoRef.current) videoRef.current.muted = true;
+      // Bug 3 fix: mute via onToggleMute to sync both DOM and React state
+      if (videoRef.current && !state.isMuted) {
+        onToggleMute();
+        cinemaMutedByUsRef.current = true;
+      }
       cinemaMinTimerRef.current = setTimeout(() => { cinemaMinTimeRef.current = true; }, 2500);
-      cinemaMaxTimerRef.current = setTimeout(() => { setShowCinemaIntro(false); if (videoRef.current) videoRef.current.muted = false; }, 8000);
+      // Bug 2 fix: check aborted flag before unmuting at max timeout
+      cinemaMaxTimerRef.current = setTimeout(() => {
+        if (cinemaAbortedRef.current) return;
+        // Cinema time expired — transition to black screen, unmute deferred to blackout lift
+        setShowCinemaIntro(false);
+        setPostCinemaBlackout(true);
+        setControlsVisible(false);
+      }, 8000);
     } else if (!state.channel) {
       cinemaChannelRef.current = null;
       setShowCinemaIntro(false);
+      setPostCinemaBlackout(false);
     }
 
     return () => {
+      cinemaAbortedRef.current = true;
       clearTimeout(cinemaMinTimerRef.current);
       clearTimeout(cinemaMaxTimerRef.current);
-      // Ensure unmute on cleanup
+      // Ensure unmute on cleanup — direct DOM as fallback safety
       if (videoRef.current) videoRef.current.muted = false;
+      cinemaMutedByUsRef.current = false;
     };
   }, [state.channel, state.isLoading]);
 
@@ -107,100 +211,121 @@ export const VideoPlayer: React.FC<Props> = ({
       const video = videoRef.current;
       // Verify video has actually decoded frames (readyState >= HAVE_CURRENT_DATA)
       if (video && video.readyState >= 2) {
-        // UNMUTE video as cinema intro fades — audio starts clean with video
-        video.muted = false;
-        // Hide controls for 3s after intro — let the movie breathe
+        if (cinemaMutedByUsRef.current) {
+          if (video.muted) onToggleMute();
+          cinemaMutedByUsRef.current = false;
+        }
+        cinemaAbortedRef.current = true;
         setControlsVisible(false);
-        setTimeout(() => setShowCinemaIntro(false), 500);
+        setShowCinemaIntro(false);
+        // No blackout needed — video is already playing with frames decoded
       } else {
-        // Video not fully ready — give it another second
-        setTimeout(() => {
-          if (videoRef.current) videoRef.current.muted = false;
-          setControlsVisible(false);
-          setShowCinemaIntro(false);
-        }, 1000);
+        // Video not fully ready — enter blackout (pure black until frames arrive)
+        cinemaAbortedRef.current = true;
+        setShowCinemaIntro(false);
+        setPostCinemaBlackout(true);
+        setControlsVisible(false);
+        // Unmute will happen when blackout lifts
       }
     }
   }, [showCinemaIntro, state.isPlaying]);
 
+  // Also enter blackout when cinema max timer fires but video isn't playing yet
+  // (the 8s max timer in the cinema effect above sets showCinemaIntro=false)
+
+  // Lift blackout once video has decoded frames
+  useEffect(() => {
+    if (postCinemaBlackout && state.isPlaying) {
+      const video = videoRef.current;
+      if (video && video.readyState >= 2) {
+        // Unmute if cinema intro owned the mute
+        if (cinemaMutedByUsRef.current) {
+          if (video.muted) onToggleMute();
+          cinemaMutedByUsRef.current = false;
+        }
+        setPostCinemaBlackout(false);
+        // Let movie breathe — controls hidden for 3s
+        setControlsVisible(false);
+        hideTimerRef.current = setTimeout(() => setControlsVisible(true), 3000);
+      } else {
+        // Not fully decoded yet — poll briefly
+        const poll = setInterval(() => {
+          if (videoRef.current && videoRef.current.readyState >= 2) {
+            clearInterval(poll);
+            if (cinemaMutedByUsRef.current) {
+              if (videoRef.current.muted) onToggleMute();
+              cinemaMutedByUsRef.current = false;
+            }
+            setPostCinemaBlackout(false);
+            setControlsVisible(false);
+          }
+        }, 200);
+        return () => clearInterval(poll);
+      }
+    }
+  }, [postCinemaBlackout, state.isPlaying]);
+
+  const isPlayingRef = useRef(state.isPlaying);
+  useEffect(() => { isPlayingRef.current = state.isPlaying; }, [state.isPlaying]);
+
   const showControls = useCallback(() => {
+    if (switchCooldownRef.current) return; // During live switch cooldown, don't flash controls
     setControlsVisible(true);
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     hideTimerRef.current = setTimeout(() => {
-      if (state.isPlaying) setControlsVisible(false);
+      if (isPlayingRef.current) setControlsVisible(false);
     }, 4500);
-  }, [state.isPlaying]);
+  }, []);
 
-  // Show controls when paused
+  // Live TV: hide controls on channel switch, reveal gently after 2s
+  // VOD: show controls when paused
   useEffect(() => {
     if (!state.isPlaying) {
-      setControlsVisible(true);
-      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      if (!switchCooldownRef.current && !showCinemaIntro && !postCinemaBlackout) {
+        setControlsVisible(true);
+        if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      }
+    } else if (!isVod && switchCooldownRef.current) {
+      // Live channel just started playing — wait 2s, then gently show, then auto-hide
+      setSwitchingChannel(false);
+      setControlsVisible(false);
+      hideTimerRef.current = setTimeout(() => {
+        switchCooldownRef.current = false;
+        setControlsVisible(true);
+        hideTimerRef.current = setTimeout(() => setControlsVisible(false), 3000);
+      }, 2000);
     } else {
+      switchCooldownRef.current = false;
+      setSwitchingChannel(false);
       showControls();
     }
-  }, [state.isPlaying, showControls]);
+  }, [state.isPlaying, showControls, isVod]);
 
-  // Keyboard controls
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case ' ':
-        case 'k':
-          e.preventDefault();
-          onTogglePlay();
-          break;
-        case 'f':
-          e.preventDefault();
-          onToggleFullscreen();
-          break;
-        case 'm':
-          e.preventDefault();
-          onToggleMute();
-          break;
-        case 'Escape':
-          if (state.isFullscreen) onToggleFullscreen();
-          else onClose();
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          onVolumeChange(Math.min(1, state.volume + 0.1));
-          break;
-        case 'ArrowDown':
-          e.preventDefault();
-          onVolumeChange(Math.max(0, state.volume - 0.1));
-          break;
-        case 'ArrowLeft':
-          if (onSeek && state.duration > 0) {
-            e.preventDefault();
-            onSeek(Math.max(0, state.currentTime - 10));
-          }
-          break;
-        case 'ArrowRight':
-          if (onSeek && state.duration > 0) {
-            e.preventDefault();
-            onSeek(Math.min(state.duration, state.currentTime + 10));
-          }
-          break;
-        case 'Home':
-          if (onSeek && state.duration > 0 && !state.channel?.url?.includes('/live?')) {
-            e.preventDefault();
-            onSeek(0);
-          }
-          break;
-        case 'End':
-          if (onSeek && state.duration > 0 && !state.channel?.url?.includes('/live?')) {
-            e.preventDefault();
-            onSeek(Math.max(0, state.duration - 2));
-          }
-          break;
-      }
-      showControls();
-    };
+  // Keyboard controls — extracted to useKeyboard hook
+  const handleNextChannel = useCallback(() => {
+    if (adjNext) { setCurrentChannel(adjNext.id); onRetry(adjNext); }
+  }, [adjNext, onRetry]);
 
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [state, onTogglePlay, onToggleFullscreen, onToggleMute, onVolumeChange, onClose, showControls]);
+  const handlePrevChannel = useCallback(() => {
+    if (adjPrev) { setCurrentChannel(adjPrev.id); onRetry(adjPrev); }
+  }, [adjPrev, onRetry]);
+
+  useKeyboard({
+    isActive: !!state.channel,
+    isPlaying: state.isPlaying,
+    isMuted: state.isMuted,
+    isVod,
+    onTogglePlay,
+    onToggleMute,
+    onToggleFullscreen,
+    onSeek,
+    currentTime: state.currentTime,
+    duration: state.duration,
+    onNext: adjNext ? handleNextChannel : undefined,
+    onPrev: adjPrev ? handlePrevChannel : undefined,
+    onClose,
+    onShowControls: showControls,
+  });
 
   // Buffering detection — suggest Eco mode after repeated buffering
   useEffect(() => {
@@ -242,23 +367,25 @@ export const VideoPlayer: React.FC<Props> = ({
 
     // Build subs URL from VOD URL params
     const subsUrl = url.replace('/vod?', '/subs?');
+    const subsAbort = new AbortController();
 
-    fetch(subsUrl).then(res => {
+    let activeBlobUrl: string | null = null;
+
+    fetch(subsUrl, { signal: subsAbort.signal }).then(res => {
       if (res.status === 200) {
         return res.blob().then(blob => {
-          const blobUrl = URL.createObjectURL(blob);
-          // Remove existing tracks
-          while (video.textTracks.length > 0) {
-            const track = video.querySelector('track');
-            if (track) track.remove();
-            else break;
-          }
+          activeBlobUrl = URL.createObjectURL(blob);
+          // Remove existing tracks (proper iteration — don't use querySelector loop)
+          Array.from(video.querySelectorAll('track')).forEach(t => {
+            if (t.src) URL.revokeObjectURL(t.src);
+            t.remove();
+          });
           // Add new track
           const track = document.createElement('track');
           track.kind = 'subtitles';
           track.label = 'English';
           track.srclang = 'en';
-          track.src = blobUrl;
+          track.src = activeBlobUrl;
           track.default = false;
           video.appendChild(track);
           setHasSubs(true);
@@ -268,7 +395,15 @@ export const VideoPlayer: React.FC<Props> = ({
         setHasSubs(false);
         setSubsUnavailable(true);
       }
-    }).catch(() => { setHasSubs(false); setSubsUnavailable(true); });
+    }).catch((err) => { if (err.name !== 'AbortError') { setHasSubs(false); setSubsUnavailable(true); } });
+
+    return () => {
+      subsAbort.abort();
+      // Revoke blob URL on cleanup — prevents memory leak
+      if (activeBlobUrl) URL.revokeObjectURL(activeBlobUrl);
+      // Remove tracks from video element
+      if (video) Array.from(video.querySelectorAll('track')).forEach(t => t.remove());
+    };
   }, [state.channel, videoRef]);
 
   const toggleSubs = useCallback(() => {
@@ -303,45 +438,73 @@ export const VideoPlayer: React.FC<Props> = ({
   return (
     <div
       ref={containerRef as React.RefObject<HTMLDivElement>}
-      className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+      className="fixed inset-0 z-[51] flex items-center justify-center"
       onMouseMove={showControls}
+      onTouchStart={(e) => { showControls(); handleTouchStart(e); }}
+      onTouchEnd={handleTouchEnd}
       onClick={() => {
         if (controlsVisible) showControls();
         else setControlsVisible(true);
       }}
     >
-      {/* Video element */}
-      <video
-        ref={videoRef as React.RefObject<HTMLVideoElement>}
-        className="w-full h-full object-contain"
-        playsInline
-        autoPlay
-      />
+      {/* Video element lives in App.tsx (persistent, never unmounts).
+          It renders at z-50 behind this overlay when full player is active.
+          No <video> here — eliminates mount/unmount audio orphaning. */}
 
       {/* Cinema intro — VOD only, runs independently of loading state */}
       {showCinemaIntro && (
-        <DashCinemaLoader title={state.channel?.name} />
+        <>
+          <DashCinemaLoader title={state.channel?.name} />
+          {/* Escape hatch — always accessible during cinema intro */}
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowCinemaIntro(false); onClose(); }}
+            className="absolute top-4 right-4 z-[60] w-10 h-10 rounded-full bg-white/10 flex items-center justify-center active:scale-90 transition-transform"
+            aria-label="Close"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
+            className="absolute bottom-6 left-6 z-[60] w-10 h-10 rounded-full bg-white/10 flex items-center justify-center active:scale-90 transition-transform"
+            aria-label="Pause"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="white"><rect x="2" y="1" width="3.5" height="12" rx="1"/><rect x="8.5" y="1" width="3.5" height="12" rx="1"/></svg>
+          </button>
+        </>
       )}
 
-      {/* Branded loading — soft overlay on channel switch, full screen on first load */}
-      {state.isLoading && !state.error && !state.isPlaying && !showCinemaIntro && (
-        <div className={`absolute inset-0 flex items-center justify-center z-40 transition-opacity duration-500 ${
-          state.channel ? 'bg-[#060609]/80 backdrop-blur-sm' : 'bg-[#060609]'
-        }`}>
-          <div className="text-center">
-            <h1 className="mb-3">
-              <span className="text-[24px] font-black tracking-tight text-white uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>DASH</span>
-              <span className="text-[18px] font-light tracking-wide text-white/40" style={{ fontFamily: "'Outfit', sans-serif" }}>tivi</span>
-              <span className="text-primary-light text-[13px] font-bold ml-0.5">+</span>
-            </h1>
-            {state.channel?.name && (
-              <p className="text-[11px] text-white/20 font-light tracking-wide max-w-[200px] mx-auto truncate">
-                {state.channel.name}
-              </p>
+      {seekIndicator && (
+        <div className={`absolute ${seekDirection === 'forward' ? 'right-16' : 'left-16'} top-1/2 -translate-y-1/2 z-50 pointer-events-none animate-pulse`}>
+          <div className="flex items-center gap-1 bg-black/60 rounded-full px-3 py-2">
+            {seekDirection === 'forward' ? (
+              <SkipForward className="w-5 h-5 text-white" />
+            ) : (
+              <SkipBack className="w-5 h-5 text-white" />
             )}
-            <div className="mt-4 mx-auto w-10 h-[2px] rounded-full overflow-hidden bg-white/5">
-              <div className="h-full w-full bg-primary/50 rounded-full" style={{ animation: 'loading-bar 1.5s ease-in-out infinite' }} />
-            </div>
+            <span className="text-sm text-white font-medium">10s</span>
+          </div>
+        </div>
+      )}
+
+      {/* Post-cinema blackout — pure black screen while video buffers after DASH intro */}
+      {postCinemaBlackout && (
+        <div className="absolute inset-0 z-40 bg-[#060609]" />
+      )}
+
+      {/* Subtle loading — no branding, just a thin beam on translucent overlay */}
+      {state.isLoading && !state.error && !state.isPlaying && !showCinemaIntro && !postCinemaBlackout && (
+        <div className={`absolute inset-0 flex items-center justify-center z-40 transition-opacity duration-500 ${
+          state.channel ? 'bg-black/40' : 'bg-[#060609]'
+        }`}>
+          <div className="w-12 h-[1.5px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)' }}>
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: '40%',
+                background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.4), rgba(157,78,221,0.6), rgba(157,78,221,0.4), transparent)',
+                animation: 'dash-beam 2s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+              }}
+            />
           </div>
         </div>
       )}
@@ -361,7 +524,7 @@ export const VideoPlayer: React.FC<Props> = ({
               <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
                 <AlertTriangle className="w-6 h-6 text-white/30" />
               </div>
-              <p className="text-sm text-white/40">Channel unavailable</p>
+              <p className="text-sm text-white/40">{state.error || 'Unable to connect — tap to try again'}</p>
               <button
                 onClick={() => { autoRetryRef.current = 0; state.channel && onRetry(state.channel); }}
                 className="flex items-center gap-2 px-6 py-3 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors"
@@ -406,28 +569,34 @@ export const VideoPlayer: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Channel switching arrows — large edge zones */}
-      <ChannelArrows
-        controlsVisible={controlsVisible}
-        isLive={!!state.channel?.url?.includes('/live?')}
-        onRetry={onRetry}
-        showControls={showControls}
-      />
+      {/* Channel switching arrows — large edge zones (live only, hidden for VOD) */}
+      {!isVod && (
+        <ChannelArrows
+          controlsVisible={controlsVisible}
+          isLive={!!state.channel?.url?.includes('/live?')}
+          onRetry={onRetry}
+          showControls={showControls}
+        />
+      )}
 
-      {/* Top corner prev/next hints */}
-      <ChannelHints
-        visible={controlsVisible}
-        isLive={!!state.channel?.url?.includes('/live?')}
-        onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
-      />
+      {/* Top corner prev/next hints (live only, hidden for VOD) */}
+      {!isVod && (
+        <ChannelHints
+          visible={controlsVisible}
+          isLive={!!state.channel?.url?.includes('/live?')}
+          onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
+        />
+      )}
 
-      {/* Landscape genre quick-switch */}
-      <LandscapeGenreBar
-        visible={controlsVisible}
-        isFullscreen={state.isFullscreen}
-        isLive={!!state.channel?.url?.includes('/live?')}
-        onGenreSwitch={onGenreSwitch}
-      />
+      {/* Landscape genre quick-switch (live only, hidden for VOD) */}
+      {!isVod && (
+        <LandscapeGenreBar
+          visible={controlsVisible}
+          isFullscreen={state.isFullscreen}
+          isLive={!!state.channel?.url?.includes('/live?')}
+          onGenreSwitch={onGenreSwitch}
+        />
+      )}
 
       {/* EPG Widget — bottom-left now playing + schedule */}
       <EpgWidget
@@ -436,23 +605,29 @@ export const VideoPlayer: React.FC<Props> = ({
         isLive={!!state.channel?.url?.includes('/live?')}
       />
 
-      {/* Smart Match — quality variants + family channels */}
-      <SmartMatchOverlay
-        channel={state.channel}
-        visible={controlsVisible && !showEcoPrompt}
-        isLive={!!state.channel?.url?.includes('/live?')}
-        onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
-      />
+      {/* Smart Match — quality variants + family channels (live only, hidden for VOD) */}
+      {/* Stays visible during channel switch so user can keep browsing */}
+      {!isVod && (
+        <SmartMatchOverlay
+          channel={state.channel}
+          visible={(controlsVisible || switchingChannel) && !showEcoPrompt}
+          isLive={!!state.channel?.url?.includes('/live?')}
+          onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
+        />
+      )}
 
-      {/* Channel carousel — concave arc conveyor belt */}
-      <ChannelCarousel
-        visible={controlsVisible && !showEcoPrompt}
-        isLive={!!state.channel?.url?.includes('/live?')}
-        onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
-      />
+      {/* Channel carousel — concave arc conveyor belt (live only, hidden for VOD) */}
+      {/* Stays visible during channel switch so user can keep browsing */}
+      {!isVod && (
+        <ChannelCarousel
+          visible={(controlsVisible || switchingChannel) && !showEcoPrompt}
+          isLive={!!state.channel?.url?.includes('/live?')}
+          onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
+        />
+      )}
 
-      {/* Controls overlay — hidden during cinema intro */}
-      {!showCinemaIntro && (
+      {/* Controls overlay — hidden during cinema intro and post-cinema blackout */}
+      {!showCinemaIntro && !postCinemaBlackout && (
         <PlayerControls
           state={state}
           onTogglePlay={onTogglePlay}
@@ -778,7 +953,7 @@ function LandscapeGenreBar({
     { id: 'entertainment', name: 'Entertainment',  gradient: 'from-purple-500 to-violet-700' },
     { id: 'kids',          name: 'Kids',           gradient: 'from-pink-500 to-rose-600' },
     { id: 'movies247',     name: 'Movies',         gradient: 'from-red-500 to-rose-700' },
-    { id: 'documentary',   name: 'Discovery',      gradient: 'from-teal-500 to-cyan-700' },
+    { id: 'documentary',   name: 'Discovery',      gradient: 'from-blue-500 to-indigo-700' },
     { id: 'music',         name: 'Music',           gradient: 'from-fuchsia-500 to-pink-700' },
   ];
 

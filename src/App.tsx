@@ -10,6 +10,7 @@ import { StreamLimitOverlay } from '@/components/player/StreamLimitOverlay';
 import { MiniPlayer } from '@/components/player/MiniPlayer';
 import { FullPageLoader } from '@/components/ui/LoadingSpinner';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { OfflineBanner } from '@/components/ui/OfflineBanner';
 import { usePlayer } from '@/hooks/usePlayer';
 import { useAuth } from '@/hooks/useAuth';
 import { useWatchHistory } from '@/hooks/useWatchHistory';
@@ -130,6 +131,11 @@ function ScrollToTop() {
   return null;
 }
 
+function PageTransition({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation();
+  return <div key={pathname} className="page-enter">{children}</div>;
+}
+
 function AppContent() {
   const { credentials, logout } = useAuth();
   const player = usePlayer();
@@ -159,14 +165,15 @@ function AppContent() {
   );
 
   const handleClosePlayer = useCallback(() => {
-    unmuteAmbient();
+    // Don't unmute ambient — video still plays in MiniPlayer
+    // Ambient only unmutes when video fully stops (handleStopPlayer)
     setShowFullPlayer(false);
   }, []);
 
   const handleStopPlayer = useCallback(() => {
-    unmuteAmbient();
     setShowFullPlayer(false);
     player.stop();
+    unmuteAmbient();
   }, [player]);
 
   const handleExpandMini = useCallback(() => {
@@ -199,11 +206,13 @@ function AppContent() {
           el.style.opacity = '0';
           isVisible = false;
         }
-        // Audio pulse — only update scale when visible, throttled
+        // Audio pulse — drives blob scale + goggle lens breathing
+        const pulse = getAmbientPulse();
         if (isVisible) {
-          const pulse = getAmbientPulse();
           el.style.transform = `translateX(-50%) scale(${1.0 + pulse * 0.03})`;
         }
+        // Broadcast pulse as CSS variable — goggle lens + card glow breathe with music
+        document.documentElement.style.setProperty('--pulse', pulse.toFixed(3));
       }
       requestAnimationFrame(animate);
     };
@@ -217,6 +226,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-bg relative" onClick={handleAmbientStart}>
+      <OfflineBanner />
       {/* Pull-to-refresh indicator */}
       {ptr.pulling && (
         <div
@@ -241,29 +251,35 @@ function AppContent() {
           </div>
         </div>
       )}
-      <CosmicBackground />
-      {/* PERF FIX: removed blob-3 (orange) — 2 blobs sufficient, less GPU load */}
-      <div ref={blobsRef} className="ambient-blobs">
-        <div className="ambient-blob ambient-blob-1" />
-        <div className="ambient-blob ambient-blob-2" />
-      </div>
+      {/* Hide all background layers when full player is active — prevents visual leak + saves GPU */}
+      {!showFullPlayer && (
+        <>
+          <CosmicBackground />
+          <div ref={blobsRef} className="ambient-blobs">
+            <div className="ambient-blob ambient-blob-1" />
+            <div className="ambient-blob ambient-blob-2" />
+          </div>
+          <div className="brand-atmosphere" />
+          <div className="goggle-lens" />
+        </>
+      )}
       <div className="relative z-10">
         <ScrollToTop />
         <Header onLogout={logout} />
         <Navbar />
-        <main className="pb-20 lg:pb-0 lg:pl-[72px]">
+        <main className="pb-20 lg:pb-0 lg:pl-[72px] safe-bottom-content">
           <ErrorBoundary>
             <Suspense fallback={<div className="pt-20 px-4 space-y-6 animate-pulse"><div className="h-[22vh] rounded-2xl bg-white/[0.02]" /><div className="flex gap-2">{[1,2,3,4].map(i=><div key={i} className="h-8 w-16 rounded-full bg-white/[0.03]" />)}</div><div className="space-y-4">{[1,2,3].map(i=><div key={i} className="h-32 rounded-xl bg-white/[0.02]" />)}</div></div>}>
-              <Routes>
-                <Route path="/" element={<ErrorBoundary><HomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
-                <Route path="/live/:experienceId" element={<ErrorBoundary><ExperienceHomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
-                <Route path="/live" element={<ErrorBoundary><LiveTVPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
-                <Route path="/movies" element={<ErrorBoundary><MoviesPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
-                <Route path="/series" element={<ErrorBoundary><SeriesPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
-                <Route path="/french" element={<ErrorBoundary><FrenchPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
-                <Route path="/originals" element={<ErrorBoundary><PlatformsPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
+                <Routes>
+                  <Route path="/" element={<ErrorBoundary><HomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
+                  <Route path="/live/:experienceId" element={<ErrorBoundary><ExperienceHomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
+                  <Route path="/live" element={<ErrorBoundary><LiveTVPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
+                  <Route path="/movies" element={<ErrorBoundary><MoviesPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
+                  <Route path="/series" element={<ErrorBoundary><SeriesPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
+                  <Route path="/french" element={<ErrorBoundary><FrenchPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
+                  <Route path="/originals" element={<ErrorBoundary><PlatformsPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
             </Suspense>
           </ErrorBoundary>
         </main>
@@ -290,9 +306,24 @@ function AppContent() {
         )}
         <MiniPlayer state={player.state} videoRef={player.videoRef} onTogglePlay={player.togglePlay}
           onClose={handleStopPlayer} onExpand={handleExpandMini} visible={!showFullPlayer && !!player.state.channel} />
-        {!showFullPlayer && player.state.channel && (
-          <video ref={player.videoRef as React.RefObject<HTMLVideoElement>} className="fixed -top-[9999px] -left-[9999px] w-1 h-1" playsInline autoPlay />
-        )}
+        {/* Single persistent <video> element — NEVER unmounted.
+            Full player mode: fills screen behind VideoPlayer controls overlay.
+            Mini/hidden mode: 1x1 offscreen, keeps playing (no orphaned audio).
+            createMediaElementSource only works once per element — this stays alive forever. */}
+        <video
+          ref={player.videoRef as React.RefObject<HTMLVideoElement>}
+          className={showFullPlayer && player.state.channel
+            ? `fixed inset-0 z-50 w-full h-full object-contain bg-black transition-[filter,transform] duration-500 ${
+                player.state.isLoading && !player.state.isPlaying ? 'blur-sm scale-[1.01]' : ''
+              }`
+            : player.state.channel
+              ? 'fixed -top-[9999px] -left-[9999px] w-1 h-1'
+              : 'hidden'
+          }
+          crossOrigin="anonymous"
+          playsInline
+          autoPlay
+        />
         <UpdateButton />
       </div>
     </div>

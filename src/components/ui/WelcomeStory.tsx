@@ -8,10 +8,10 @@ import React, { useState, useEffect, useRef } from 'react';
  */
 
 const EXPERIENCES = [
-  { text: 'Sports', glow: 'rgba(34,197,94,0.4)', x: '-28%', y: '-25%' },
+  { text: 'Sports', glow: 'rgba(0,212,255,0.4)', x: '-28%', y: '-25%' },
   { text: 'Cinema', glow: 'rgba(239,68,68,0.4)', x: '22%', y: '-18%' },
   { text: 'Music', glow: 'rgba(168,85,247,0.4)', x: '-22%', y: '12%' },
-  { text: 'Discovery', glow: 'rgba(20,184,166,0.4)', x: '26%', y: '18%' },
+  { text: 'Discovery', glow: 'rgba(99,102,241,0.4)', x: '26%', y: '18%' },
   { text: 'Stories', glow: 'rgba(59,130,246,0.4)', x: '0%', y: '-2%' },
 ];
 

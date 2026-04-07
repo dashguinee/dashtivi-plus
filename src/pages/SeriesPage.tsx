@@ -1,16 +1,20 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { Play, X, Download, Search, SlidersHorizontal } from 'lucide-react';
+import { Play, X, Download, Search, SlidersHorizontal, Plus, Star } from 'lucide-react';
 import type { XtreamCredentials, SeriesItem, SeriesInfo, Episode } from '@/lib/xtream';
-import { getSeries, getSeriesInfo, buildSeriesUrl, getTmdbMap, getSeriesByCategory, seriesDbToItem, searchSeries } from '@/lib/xtream';
+import { getSeries, getSeriesInfo, buildSeriesUrl, buildVodFallbackUrl, getTmdbMap, getSeriesByCategory, seriesDbToItem, searchSeries } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
+import { TMDB_GENRES } from '@/lib/tmdb-map.generated';
 import { PosterCard } from '@/components/ui/PosterCard';
 import { VeeCollectionRow } from '@/components/ui/VeeCollectionRow';
 import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { NeonGate, RowCountBadge, cardScaleStyle } from '@/components/ui/NeonGate';
 import { SERIES_TABS, GENRE_FILTERS, SORT_MODES, VEE_SERIES_COLLECTIONS, type SortMode, type VeeSeriesCollection } from '@/lib/series-collections';
 import { t, useLanguage } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
 import type { Channel } from '@/types';
+import { useSmartSticky } from '@/hooks/useSmartSticky';
 
 // ── i18n mood row mapping ─────────────────────────────────────────
 const MOOD_NAME_MAP: Record<string, TranslationKey> = {
@@ -102,6 +106,7 @@ interface Props {
 
 export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const { lang } = useLanguage();
+  const { stickyClass, stickyStyle } = useSmartSticky();
   // Tab state
   const [activeParent, setActiveParent] = useState(SERIES_TABS[0].id);
   const [activeSubtab, setActiveSubtab] = useState(SERIES_TABS[0].subtabs[0].id);
@@ -292,14 +297,16 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       return filtered;
     }
 
-    return [...filtered].sort((a, b) => {
-      const ta = tmdbMap[`s:${a.series_id}`];
-      const tb = tmdbMap[`s:${b.series_id}`];
-      if (sortMode === 'rating') return (tb?.r || 0) - (ta?.r || 0);
-      if (sortMode === 'newest') return parseYear(b.name) - parseYear(a.name);
-      // smart: trending score
-      return getTrendingScore(b, tmdbMap) - getTrendingScore(a, tmdbMap);
-    });
+    if (sortMode === 'rating') {
+      return [...filtered].sort((a, b) => (tmdbMap[`s:${b.series_id}`]?.r || 0) - (tmdbMap[`s:${a.series_id}`]?.r || 0));
+    }
+    if (sortMode === 'newest') {
+      return [...filtered].sort((a, b) => parseYear(b.name) - parseYear(a.name));
+    }
+    // smart: pre-compute scores once, then sort by lookup
+    const scoreMap = new Map<number, number>();
+    for (const s of filtered) scoreMap.set(s.series_id, getTrendingScore(s, tmdbMap));
+    return [...filtered].sort((a, b) => (scoreMap.get(b.series_id) || 0) - (scoreMap.get(a.series_id) || 0));
   }, [seriesList, searchResults, isSearching, activeGenre, sortMode, tmdbMap, hasTmdb]);
 
   // ── Genre counts (how many series per genre in current view) ──
@@ -368,7 +375,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     if (!hasTmdb || seriesList.length === 0) return [];
     return VEE_SERIES_COLLECTIONS
       .filter(col => !col.parentTabs || col.parentTabs.length === 0 || col.parentTabs.includes(activeParent))
-      .map(col => {
+      .map((col: VeeSeriesCollection) => {
         let pool: SeriesItem[];
         if (col.categoryIds && col.categoryIds.length > 0) {
           const catSet = new Set(col.categoryIds);
@@ -389,17 +396,24 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       .filter(Boolean) as { collection: VeeSeriesCollection; items: { id: number; name: string; poster: string; rating?: string; tmdbKey: string }[] }[];
   }, [seriesList, tmdbMap, hasTmdb, activeParent]);
 
-  // ── Series detail handlers ────────────────────────────────────
+  // ── Hero billboard — pick highest-rated recent series with backdrop ──
 
-  // 15-second timeout for episodes loading
-  useEffect(() => {
-    if (!loadingInfo) return;
-    const t = setTimeout(() => {
-      setEpisodesUnavailable(true);
-      setLoadingInfo(false);
-    }, 15000);
-    return () => clearTimeout(t);
-  }, [loadingInfo]);
+  const heroSeries = useMemo(() => {
+    if (!hasTmdb || seriesList.length === 0) return null;
+    const candidates = seriesList
+      .map(s => {
+        const tmdb = tmdbMap[`s:${s.series_id}`];
+        if (!tmdb?.p || !tmdb.r) return null;
+        const year = parseYear(s.name);
+        if (year < 2023) return null;
+        return { series: s, tmdb, score: tmdb.r + (year >= 2025 ? 2 : year >= 2024 ? 1 : 0) };
+      })
+      .filter(Boolean) as { series: SeriesItem; tmdb: TmdbEntry; score: number }[];
+    candidates.sort((a, b) => b.score - a.score);
+    return candidates[0] || null;
+  }, [seriesList, tmdbMap, hasTmdb]);
+
+  // ── Series detail handlers ────────────────────────────────────
 
   const handleSelectSeries = useCallback(
     async (series: SeriesItem) => {
@@ -407,15 +421,27 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       setLoadingInfo(true);
       setSeriesInfo(null);
       setEpisodesUnavailable(false);
+      // Race-safe timeout — tied to THIS request, not global loading state
+      let timedOut = false;
+      const timeout = setTimeout(() => {
+        timedOut = true;
+        setEpisodesUnavailable(true);
+        setLoadingInfo(false);
+      }, 15000);
       try {
         const info = await getSeriesInfo(credentials, series.series_id);
+        clearTimeout(timeout);
+        if (timedOut) return; // Timeout already fired, don't overwrite
         setSeriesInfo(info);
         const seasonKeys = Object.keys(info.episodes || {});
         if (seasonKeys.length > 0) setActiveSeason(seasonKeys[0]);
         setLoadingInfo(false);
       } catch {
-        setEpisodesUnavailable(true);
-        setLoadingInfo(false);
+        clearTimeout(timeout);
+        if (!timedOut) {
+          setEpisodesUnavailable(true);
+          setLoadingInfo(false);
+        }
       }
     },
     [credentials]
@@ -423,12 +449,14 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   const handlePlayEpisode = useCallback(
     (episode: Episode) => {
+      const ext = episode.container_extension || 'mp4';
       onPlay({
         id: `series-${episode.id}`,
         name: `${selectedSeries?.name || ''} - ${episode.title || `E${episode.episode_num}`}`,
-        url: buildSeriesUrl(credentials, episode.id, episode.container_extension || 'mp4'),
+        url: buildSeriesUrl(credentials, episode.id, ext),
         logo: selectedSeries?.cover,
         category: 'series',
+        fallbackUrl: buildVodFallbackUrl(credentials, episode.id, ext, 'series'),
       });
       setSelectedSeries(null);
     },
@@ -459,18 +487,68 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   return (
     <div className="pt-16 pb-32">
-      {/* ── Page Identity Header — Binge Culture ── */}
-      <div className="relative overflow-hidden" style={{ height: '120px' }}>
-        <div className="absolute inset-0 bg-gradient-to-b from-indigo-900/30 via-[#060609] to-[#060609]" />
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-800/10 to-transparent" />
-        <div className="relative h-full flex flex-col justify-end px-5 pb-5">
-          <h1 className="text-[28px] font-black text-white tracking-tight leading-none">Series</h1>
-          <p className="text-[11px] text-white/25 tracking-widest uppercase mt-1.5">One more episode</p>
+      {/* ── Hero Billboard ── */}
+      {heroSeries ? (
+        <div className="relative overflow-hidden" style={{ height: 'clamp(200px, 55vh, 400px)' }}>
+          {/* Backdrop image */}
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url(https://image.tmdb.org/t/p/w1280${heroSeries.tmdb.p})`,
+              backgroundAttachment: 'scroll',
+              transform: 'scale(1.05)',
+            }}
+          />
+          {/* Gradient overlays */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#060609] via-[#060609]/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#060609]/80 via-transparent to-transparent" />
+          {/* Content — bottom left */}
+          <div className="absolute bottom-0 left-0 right-0 p-5 pb-6">
+            <h1 className="text-[24px] md:text-[32px] font-black text-white tracking-tight leading-tight line-clamp-2 mb-2">
+              {heroSeries.series.name.replace(/\s*\(\d{4}\)\s*$/, '')}
+            </h1>
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
+              {heroSeries.tmdb.r > 0 && (
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-yellow-500/20 text-yellow-400 text-[11px] font-bold">
+                  <Star className="w-3 h-3 fill-yellow-400" />
+                  {heroSeries.tmdb.r.toFixed(1)}
+                </span>
+              )}
+              {(() => { const ym = heroSeries.series.name.match(/\((\d{4})\)/); return ym ? <span className="text-[11px] text-white/50 font-medium">{ym[1]}</span> : null; })()}
+              {heroSeries.tmdb.g?.slice(0, 3).map(gid => (
+                <span key={gid} className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] text-white/60 font-medium">
+                  {TMDB_GENRES[gid] || ''}
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setDetailSeries(heroSeries.series)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white"
+                style={{ background: 'linear-gradient(135deg, #9D4EDD, #7B2FBE)' }}
+              >
+                <Play className="w-4 h-4 fill-white" />
+                Play
+              </button>
+              <button
+                onClick={() => setDetailSeries(heroSeries.series)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white/80 border border-white/20 bg-white/5 hover:bg-white/10 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                My List
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="pt-16 pb-5 px-5">
+          <h1 className="text-[22px] font-semibold text-white/85 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.02em' }}>Series</h1>
+          <div className="w-16 h-[2px] rounded-full mt-2" style={{ background: 'linear-gradient(90deg, rgba(99,102,241,0.5) 0%, rgba(99,102,241,0.15) 60%, transparent 100%)' }} />
+        </div>
+      )}
 
       {/* ── Sticky header ── */}
-      <div className="sticky top-14 z-20 bg-[#0A0A0A]/95 backdrop-blur-lg border-b border-white/5">
+      <div className={stickyClass} style={stickyStyle}>
         {/* Search */}
         <div className="px-4 pt-4 pb-2">
           <div className="relative">
@@ -573,14 +651,16 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           <h2 className="text-sm font-semibold text-white/80 mb-3 flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
             {t(lang, 'trendingRightNow')}
+            <RowCountBadge count={trendingSeries.length} label="series" />
           </h2>
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
-            {trendingSeries.map(s => (
-              <div key={s.series_id} className="flex-shrink-0 w-[120px]">
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 items-end">
+            {trendingSeries.map((s, i) => (
+              <div key={s.series_id} className="flex-shrink-0 w-[120px]" style={cardScaleStyle(i)}>
                 <PosterCard title={s.name} poster={s.cover} rating={s.rating}
                   tmdbData={tmdbMap[`s:${s.series_id}`]} onClick={() => setDetailSeries(s)} />
               </div>
             ))}
+            <NeonGate navigateTo="/series" />
           </div>
         </div>
       )}
@@ -591,15 +671,19 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           {moodRows.map(row => (
             <section key={row.id}>
               <div className="px-4 mb-2">
-                <h3 className="text-[15px] font-semibold text-white/50" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{MOOD_NAME_MAP[row.name] ? t(lang, MOOD_NAME_MAP[row.name]) : row.name}</h3>
+                <h3 className="text-[15px] font-semibold text-white/50 flex items-center gap-1.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  {MOOD_NAME_MAP[row.name] ? t(lang, MOOD_NAME_MAP[row.name]) : row.name}
+                  <RowCountBadge count={row.items.length} label="series" />
+                </h3>
               </div>
-              <div className="flex gap-3.5 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-2">
-                {row.items.map(s => (
-                  <div key={s.series_id} className="flex-shrink-0 w-[108px]">
+              <div className="flex gap-3.5 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-2 items-end">
+                {row.items.map((s, i) => (
+                  <div key={s.series_id} className="flex-shrink-0 w-[108px]" style={cardScaleStyle(i)}>
                     <PosterCard title={s.name} poster={s.cover} rating={s.rating}
                       tmdbData={tmdbMap[`s:${s.series_id}`]} onClick={() => setDetailSeries(s)} />
                   </div>
                 ))}
+                <NeonGate navigateTo="/series" />
               </div>
             </section>
           ))}
@@ -607,23 +691,41 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         </div>
       )}
 
-      {/* ── VEE Intelligence rows ── */}
+      {/* ── VEE Intelligence rows — with breathing hierarchy ── */}
       {!isSearching && !loading && activeGenre === 0 && veeCollectionRows.length > 0 && (
-        <div className="space-y-8 py-5 mb-4">
-          {veeCollectionRows.map(({ collection, items }) => (
-            <VeeCollectionRow
-              key={collection.id}
-              name={collection.name}
-              tagline={collection.tagline}
-              items={items}
-              tmdbMap={tmdbMap}
-              onItemClick={(id) => {
-                const series = seriesList.find(s => s.series_id === id);
-                if (series) setDetailSeries(series);
-              }}
-            />
-          ))}
-          <div className="mx-6 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.08), transparent)' }} />
+        <div className="py-5 mb-4">
+          {veeCollectionRows.map(({ collection, items }, rowIndex) => {
+            // Row breathing: first row = Top 10 (140px), second = 120px, rest = 108px
+            const isFirstRow = rowIndex === 0;
+            const isSecondRow = rowIndex === 1;
+            const cardWidth = isFirstRow ? 140 : isSecondRow ? 120 : 108;
+            // Section divider every 3 rows
+            const showDivider = rowIndex > 0 && rowIndex % 3 === 0;
+
+            return (
+              <React.Fragment key={collection.id}>
+                {showDivider && (
+                  <div className="mx-6 my-6 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.08), transparent)' }} />
+                )}
+                <div className="mb-8">
+                  <VeeCollectionRow
+                    name={isFirstRow ? `Top 10 ${collection.name}` : collection.name}
+                    tagline={collection.tagline}
+                    items={isFirstRow ? items.slice(0, 10) : items}
+                    tmdbMap={tmdbMap}
+                    isTop10={isFirstRow}
+                    cardWidth={cardWidth}
+                    navigateTo="/series"
+                    countLabel="series"
+                    onItemClick={(id) => {
+                      const series = seriesList.find(s => s.series_id === id);
+                      if (series) setDetailSeries(series);
+                    }}
+                  />
+                </div>
+              </React.Fragment>
+            );
+          })}
         </div>
       )}
 
@@ -649,14 +751,13 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
             className="px-5 py-2.5 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors">{t(lang, 'retry')}</button>
         </div>
       ) : filteredAndSorted.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 text-text-muted text-sm gap-2">
-          {isSearching ? t(lang, 'noSeriesMatch') : activeGenre !== 0 ? (
-            <>
-              <span>{t(lang, 'noSeriesGenre')}</span>
-              <button onClick={() => setActiveGenre(0)} className="text-primary text-xs">{t(lang, 'showAll')}</button>
-            </>
-          ) : t(lang, 'noSeriesInCategory')}
-        </div>
+        isSearching || activeGenre !== 0 ? (
+          <EmptyState icon="tv" title={isSearching ? t(lang, 'noSeriesMatch') : t(lang, 'noSeriesGenre')} subtitle="Try a different search or genre" />
+        ) : (
+          <div className="flex flex-col items-center justify-center py-24 text-text-muted text-sm gap-2">
+            {t(lang, 'noSeriesInCategory')}
+          </div>
+        )
       ) : (
         <>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5">
@@ -789,7 +890,16 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                         onClick={(e) => {
                           e.stopPropagation();
                           const url = buildSeriesUrl(credentials, ep.id, ep.container_extension || 'mp4');
-                          window.open(url, '_blank', 'noopener,noreferrer');
+                          const a = document.createElement('a');
+                          a.href = url;
+                          const seriesName = (selectedSeries?.name || 'series').replace(/[^a-zA-Z0-9\s\-_.()]/g, '').replace(/\s+/g, '_').substring(0, 60);
+                          const epName = (ep.title || `E${ep.episode_num}`).replace(/[^a-zA-Z0-9\s\-_.()]/g, '').replace(/\s+/g, '_').substring(0, 40);
+                          a.download = `${seriesName}_S${ep.season}_${epName}.${ep.container_extension || 'mp4'}`;
+                          a.target = '_blank';
+                          a.rel = 'noopener noreferrer';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
                         }}
                         className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 hover:bg-white/10 transition-colors"
                         title={t(lang, 'download')}

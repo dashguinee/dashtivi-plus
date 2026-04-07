@@ -16,6 +16,7 @@ let currentSpeed = 0.8;
 let targetSpeed = 0.8;
 let transitionInterval: ReturnType<typeof setInterval> | null = null;
 let isEnabled = false;
+let isMutedForStream = false;
 
 const VPS = 'https://stream.zionsynapse.online/ambient';
 
@@ -71,13 +72,17 @@ export function initAmbient(): void {
   });
 
   audio.addEventListener('ended', () => {
-    if (!audio || !isEnabled) return;
+    if (!audio || !isEnabled || isMutedForStream) return;
     fadeOutStarted = false;
-    rotationIndex = (rotationIndex + 1) % HOME_ROTATION.length;
-    audio.src = HOME_ROTATION[rotationIndex];
-    audio.volume = 0;
-    audio.play().catch(() => {});
-    fadeVolume(0, VOLUME, 3000);
+    // Small delay before rotating — prevents overlap with user interactions
+    setTimeout(() => {
+      if (!audio || !isEnabled || isMutedForStream) return;
+      rotationIndex = (rotationIndex + 1) % HOME_ROTATION.length;
+      audio.src = HOME_ROTATION[rotationIndex];
+      audio.volume = 0;
+      audio.play().catch(() => {});
+      fadeVolume(0, VOLUME, 3000);
+    }, 500);
   });
 
   audio.addEventListener('error', () => {});
@@ -86,6 +91,7 @@ export function initAmbient(): void {
 }
 
 export function startAmbient(): void {
+  if (isMutedForStream) return;
   if (!audio) initAmbient();
   if (!audio) return;
   audio.volume = 0;
@@ -137,17 +143,25 @@ export function setAmbientSpeed(speed: number): void {
 
 export function muteAmbient(): void {
   if (!audio) return;
-  fadeVolume(audio.volume, 0, 2000);
+  isMutedForStream = true;
+  // Kill any active fade-in — prevents interval from bumping volume back up
+  if (activeFadeInterval) { clearInterval(activeFadeInterval); activeFadeInterval = null; }
+  if (transitionInterval) { clearInterval(transitionInterval); transitionInterval = null; }
+  audio.volume = 0;
+  audio.pause();
 }
 
 export function unmuteAmbient(): void {
-  if (!audio) return;
-  fadeVolume(0, VOLUME, 2000);
+  if (!audio || !isEnabled) return;
+  isMutedForStream = false;
+  audio.play().then(() => {
+    if (audio && !isMutedForStream) fadeVolume(0, VOLUME, 2000);
+  }).catch(() => {});
 }
 
 export function setAmbientExperience(experience: string): void {
   const trackUrl = EXPERIENCE_TRACKS[experience] || EXPERIENCE_TRACKS['home'];
-  if (!audio) return;
+  if (!audio || isMutedForStream) return;
   if (audio.src.includes(trackUrl.split('/').pop()!)) return;
 
   const originalVolume = audio.volume;
@@ -166,16 +180,20 @@ export function getAmbientState(): { enabled: boolean; speed: number; playing: b
 
 // ── Smooth volume fade utility ──────────────────────────────────────────
 
+let activeFadeInterval: ReturnType<typeof setInterval> | null = null;
+
 function fadeVolume(from: number, to: number, durationMs: number, onComplete?: () => void): void {
   if (!audio) return;
+  // Kill any previous fade — prevents stacking
+  if (activeFadeInterval) { clearInterval(activeFadeInterval); activeFadeInterval = null; }
   const steps = Math.max(10, Math.floor(durationMs / 75));
   const stepMs = durationMs / steps;
   let step = 0;
-  const interval = setInterval(() => {
+  activeFadeInterval = setInterval(() => {
     step++;
     if (audio) audio.volume = Math.max(0, Math.min(1, from + (to - from) * (step / steps)));
     if (step >= steps) {
-      clearInterval(interval);
+      if (activeFadeInterval) { clearInterval(activeFadeInterval); activeFadeInterval = null; }
       if (audio) audio.volume = Math.max(0, Math.min(1, to));
       if (onComplete) onComplete();
     }

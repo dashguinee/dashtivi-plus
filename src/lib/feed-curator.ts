@@ -94,9 +94,15 @@ export async function generateTmdbTrending(count = 5): Promise<CuratedFeedItem[]
   });
 }
 
-// ── Generate live moment cards (no fake images — branded gradient only) ───
+// ── Curated backdrop images for live moment cards ───
+const LIVE_BACKDROPS = {
+  sports: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&h=400&fit=crop&q=80',
+  cinema: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600&h=400&fit=crop&q=80',
+  news: 'https://images.unsplash.com/photo-1495020689067-958852a7765e?w=600&h=400&fit=crop&q=80',
+  general: 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=600&h=400&fit=crop&q=80',
+};
 
-export function generateLiveMoments(): CuratedFeedItem[] {
+export function generateLiveMoments(_channelIcons?: { sports?: string; news?: string; cinema?: string }, _tmdbPosters?: string[]): CuratedFeedItem[] {
   const hour = new Date().getHours();
   const items: CuratedFeedItem[] = [];
 
@@ -104,13 +110,14 @@ export function generateLiveMoments(): CuratedFeedItem[] {
   if ((hour >= 12 && hour <= 16) || (hour >= 18 && hour <= 23)) {
     items.push({
       id: 'live-sports-' + Math.floor(Date.now() / 3600000),
-      title: hour >= 18 ? 'Premier League — Live Now' : 'Live Sports on Air',
+      title: hour >= 18 ? 'Prime Time Sports — Live Now' : 'Live Sports on Air',
       body: hour >= 18
-        ? 'Evening kickoffs are happening. Tap to tune in.'
+        ? 'Evening matches are happening. Tap to tune in.'
         : 'Afternoon sports block is on. Catch it live.',
       type: 'live_moment',
       badge: 'Live',
-      navigateTo: '/live',
+      imageUrl: LIVE_BACKDROPS.sports,
+      navigateTo: '/live/sports',
       timestamp: new Date().toISOString(),
       reactionSeed: 28 + (hour % 10),
     });
@@ -121,10 +128,11 @@ export function generateLiveMoments(): CuratedFeedItem[] {
     items.push({
       id: 'live-cinema-' + Math.floor(Date.now() / 3600000),
       title: 'Late Night Cinema — 24/7',
-      body: 'Cinema channels running all night.',
+      body: 'Cinema channels running all night. Dive in.',
       type: 'live_moment',
       badge: 'Live',
-      navigateTo: '/live',
+      imageUrl: LIVE_BACKDROPS.cinema,
+      navigateTo: '/movies',
       timestamp: new Date().toISOString(),
       reactionSeed: 15,
     });
@@ -134,13 +142,29 @@ export function generateLiveMoments(): CuratedFeedItem[] {
   if (hour >= 6 && hour < 10) {
     items.push({
       id: 'live-news-' + Math.floor(Date.now() / 3600000),
-      title: 'Morning News — Start Informed',
-      body: 'World news channels are live.',
+      title: 'Morning Briefing — Start Informed',
+      body: 'World news channels are live. Stay sharp.',
       type: 'live_moment',
       badge: 'Live',
-      navigateTo: '/live',
+      imageUrl: LIVE_BACKDROPS.news,
+      navigateTo: '/live/news',
       timestamp: new Date().toISOString(),
       reactionSeed: 12,
+    });
+  }
+
+  // Default: always show at least one live card
+  if (items.length === 0) {
+    items.push({
+      id: 'live-now-' + Math.floor(Date.now() / 3600000),
+      title: 'Live Right Now',
+      body: 'Thousands of channels streaming. What are you watching?',
+      type: 'live_moment',
+      badge: 'Live',
+      imageUrl: LIVE_BACKDROPS.general,
+      navigateTo: '/live',
+      timestamp: new Date().toISOString(),
+      reactionSeed: 20,
     });
   }
 
@@ -177,7 +201,7 @@ function mapSupabaseItem(item: SupabaseFeedItem, fallbackPosters: string[]): Cur
 
 // ── Main curator — interleave all sources ─────────────────────────────────
 
-export async function curateFeed(supabaseItems: SupabaseFeedItem[]): Promise<CuratedFeedItem[]> {
+export async function curateFeed(supabaseItems: SupabaseFeedItem[], channelIcons?: { sports?: string; news?: string; cinema?: string }): Promise<CuratedFeedItem[]> {
   const tmdbCards = await generateTmdbTrending(8);
   const liveMoments = generateLiveMoments();
 

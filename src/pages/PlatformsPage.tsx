@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { Play, Download, X } from 'lucide-react';
 import type { XtreamCredentials, SeriesItem, SeriesInfo, Episode, VodStream } from '@/lib/xtream';
-import { getSeries, getSeriesInfo, buildSeriesUrl, getTmdbMap } from '@/lib/xtream';
+import { getSeries, getSeriesInfo, buildSeriesUrl, buildVodFallbackUrl, getTmdbMap } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { PosterCard } from '@/components/ui/PosterCard';
 import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
@@ -40,6 +40,11 @@ export const PlatformsPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const [loadingInfo, setLoadingInfo] = useState(false);
   const [episodesUnavailable, setEpisodesUnavailable] = useState(false);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+  const GRID_PAGE_SIZE = 60;
+  const [gridVisibleCount, setGridVisibleCount] = useState(GRID_PAGE_SIZE);
+
+  // Reset visible count when platform changes
+  useEffect(() => { setGridVisibleCount(GRID_PAGE_SIZE); }, [activePlatform]);
 
   // Load TMDB
   useEffect(() => {
@@ -111,12 +116,14 @@ export const PlatformsPage: React.FC<Props> = ({ credentials, onPlay }) => {
   }, [credentials]);
 
   const handlePlayEpisode = useCallback((episode: Episode) => {
+    const ext = episode.container_extension || 'mp4';
     onPlay({
       id: `series-${episode.id}`,
       name: `${selectedSeries?.name || ''} - ${episode.title || `E${episode.episode_num}`}`,
-      url: buildSeriesUrl(credentials, episode.id, episode.container_extension || 'mp4'),
+      url: buildSeriesUrl(credentials, episode.id, ext),
       logo: selectedSeries?.cover,
       category: 'series',
+      fallbackUrl: buildVodFallbackUrl(credentials, episode.id, ext, 'series'),
     });
     setSelectedSeries(null);
   }, [credentials, onPlay, selectedSeries]);
@@ -221,18 +228,33 @@ export const PlatformsPage: React.FC<Props> = ({ credentials, onPlay }) => {
           No series found
         </div>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 p-4">
-          {sortedSeries.map((series) => (
-            <PosterCard
-              key={series.series_id}
-              title={series.name}
-              poster={series.cover}
-              rating={series.rating}
-              tmdbData={tmdbMap[`s:${series.series_id}`]}
-              onClick={() => setDetailSeries(series)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 p-4">
+            {sortedSeries.slice(0, gridVisibleCount).map((series) => (
+              <PosterCard
+                key={series.series_id}
+                title={series.name}
+                poster={series.cover}
+                rating={series.rating}
+                tmdbData={tmdbMap[`s:${series.series_id}`]}
+                onClick={() => setDetailSeries(series)}
+              />
+            ))}
+          </div>
+          {sortedSeries.length > gridVisibleCount && (
+            <div className="flex flex-col items-center gap-3 px-4 mt-2 mb-4 pb-4">
+              <p className="text-xs text-white/30">
+                Showing {gridVisibleCount} of {sortedSeries.length} series
+              </p>
+              <button
+                onClick={() => setGridVisibleCount(prev => prev + GRID_PAGE_SIZE)}
+                className="bg-white/5 border border-white/10 rounded-xl px-6 py-3 text-sm text-white/50 hover:text-white hover:bg-white/10 backdrop-blur-sm transition-[color,background-color] duration-300"
+              >
+                Load More
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* ContentDetailModal */}
@@ -307,7 +329,20 @@ export const PlatformsPage: React.FC<Props> = ({ credentials, onPlay }) => {
                         <p className="text-xs text-text-muted">S{ep.season} E{ep.episode_num} &middot; {ep.container_extension?.toUpperCase() || 'MP4'}</p>
                       </button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); window.open(buildSeriesUrl(credentials, ep.id, ep.container_extension || 'mp4'), '_blank', 'noopener,noreferrer'); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const url = buildSeriesUrl(credentials, ep.id, ep.container_extension || 'mp4');
+                          const a = document.createElement('a');
+                          a.href = url;
+                          const sName = (selectedSeries?.name || 'series').replace(/[^a-zA-Z0-9\s\-_.()]/g, '').replace(/\s+/g, '_').substring(0, 60);
+                          const eName = (ep.title || `E${ep.episode_num}`).replace(/[^a-zA-Z0-9\s\-_.()]/g, '').replace(/\s+/g, '_').substring(0, 40);
+                          a.download = `${sName}_S${ep.season}_${eName}.${ep.container_extension || 'mp4'}`;
+                          a.target = '_blank';
+                          a.rel = 'noopener noreferrer';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                        }}
                         className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 hover:bg-white/10 transition-colors"
                         title="Download"
                       >

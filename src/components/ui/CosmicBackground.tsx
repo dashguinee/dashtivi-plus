@@ -4,9 +4,13 @@ import React, { useEffect, useRef } from 'react';
  * CosmicBackground — Animated space-feel background layer.
  * Canvas-based star field + CSS animated gradient orbs.
  * Renders behind all content for that 2050 depth feel.
+ *
+ * PERF: Pauses drawing when page is scrolled past the visible area
+ * or when document is hidden. Uses IntersectionObserver to detect.
  */
 export const CosmicBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Skip star canvas on mobile — too subtle to notice, saves GPU
@@ -18,6 +22,7 @@ export const CosmicBackground: React.FC = () => {
     if (!ctx) return;
 
     let animId: number;
+    let visible = true;
     let stars: { x: number; y: number; r: number; speed: number; opacity: number; pulse: number }[] = [];
 
     const resize = () => {
@@ -27,8 +32,6 @@ export const CosmicBackground: React.FC = () => {
     };
 
     const initStars = () => {
-      // PERF FIX: cap star count at 120 — on large screens the old formula
-      // could create 250+ stars, each drawn every frame. 120 is visually identical.
       const raw = Math.floor((canvas.width * canvas.height) / 8000);
       const count = Math.min(raw, 120);
       stars = Array.from({ length: count }, () => ({
@@ -42,7 +45,7 @@ export const CosmicBackground: React.FC = () => {
     };
 
     const draw = (time: number) => {
-      if (document.hidden) { animId = requestAnimationFrame(draw); return; }
+      if (document.hidden || !visible) { animId = requestAnimationFrame(draw); return; }
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       for (const star of stars) {
@@ -63,6 +66,13 @@ export const CosmicBackground: React.FC = () => {
       animId = requestAnimationFrame(draw);
     };
 
+    // Pause canvas when scrolled past (not visible)
+    const observer = new IntersectionObserver(
+      ([entry]) => { visible = entry.isIntersecting; },
+      { threshold: 0 }
+    );
+    if (containerRef.current) observer.observe(containerRef.current);
+
     resize();
     animId = requestAnimationFrame(draw);
     window.addEventListener('resize', resize);
@@ -70,15 +80,14 @@ export const CosmicBackground: React.FC = () => {
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', resize);
+      observer.disconnect();
     };
   }, []);
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+    <div ref={containerRef} className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
       {/* Star field canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 opacity-60" />
-
-      {/* Orbs removed — ambient blobs in App.tsx handle the glow now */}
 
       {/* Subtle aurora band */}
       <div className="absolute top-0 left-0 right-0 h-[40vh] bg-gradient-to-b from-primary/[0.03] via-transparent to-transparent" />

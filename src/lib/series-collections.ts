@@ -78,73 +78,293 @@ export interface VeeSeriesCollection {
   limit: number;
   parentTabs?: string[];
   categoryIds?: string[];
+  /** Top 10 row — UI renders numbered cards */
+  isTop10?: boolean;
 }
+
+// ── Helpers ───────────────────────────────────────────────────────
 
 function tmdbKey(s: SeriesItem): string { return `s:${s.series_id}`; }
 function tmdbRating(s: SeriesItem, map: Record<string, TmdbEntry>): number { return map[tmdbKey(s)]?.r || 0; }
+
 function byRatingDesc(a: SeriesItem, b: SeriesItem, map: Record<string, TmdbEntry>): number {
   return tmdbRating(b, map) - tmdbRating(a, map);
 }
 
+/** Rating + recency combo for trending sort */
+function byTrendingScore(a: SeriesItem, b: SeriesItem, map: Record<string, TmdbEntry>): number {
+  const scoreA = tmdbRating(a, map) + (parseInt(a.last_modified || '0', 10) / 1e9);
+  const scoreB = tmdbRating(b, map) + (parseInt(b.last_modified || '0', 10) / 1e9);
+  return scoreB - scoreA;
+}
+
+/** Check if series was modified within the last N days */
+function modifiedWithinDays(s: SeriesItem, days: number): boolean {
+  if (!s.last_modified) return false;
+  const ts = parseInt(s.last_modified, 10);
+  if (ts <= 0) return false;
+  return ts >= Date.now() / 1000 - days * 86400;
+}
+
+/** Check if series is from a recent year */
+function isRecentYear(s: SeriesItem, t: TmdbEntry | null, minYear: number): boolean {
+  if (t?.y) {
+    const yr = parseInt(t.y, 10);
+    if (yr >= minYear) return true;
+  }
+  const match = s.name.match(/\((\d{4})\)/);
+  return match ? parseInt(match[1], 10) >= minYear : false;
+}
+
+// ── TV genre IDs (TMDB) ───────────────────────────────────────────
+
+const G = {
+  ACTION_ADV: 10759, ANIMATION: 16, COMEDY: 35, CRIME: 80,
+  DOCUMENTARY: 99, DRAMA: 18, FAMILY: 10751, KIDS: 10762,
+  MYSTERY: 9648, REALITY: 10764, SCIFI_FANTASY: 10765,
+  THRILLER: 53, HORROR: 27, ROMANCE: 10749,
+} as const;
+
+const hasGenre = (t: TmdbEntry | null, ...ids: number[]): boolean =>
+  t !== null && ids.some(id => t.g.includes(id));
+
+// ── Collections ───────────────────────────────────────────────────
+
 export const VEE_SERIES_COLLECTIONS: VeeSeriesCollection[] = [
+  // 1. MARQUEE — Top 10 Series This Week
+  {
+    id: 'top-10-series',
+    name: 'Top 10 Series This Week',
+    tagline: 'Everyone is watching these',
+    isTop10: true,
+    filter: (_s, t) => t !== null && t.r >= 7.5 && isRecentYear(_s, t, 2024),
+    sort: byTrendingScore,
+    limit: 10,
+  },
+
+  // 2. Binge-Worthy
   {
     id: 'binge-worthy',
     name: 'Binge-Worthy',
     tagline: 'Start one, finish all',
-    filter: (_s, t) => t !== null && t.r >= 8.0,
+    filter: (_s, t) => t !== null && t.r >= 8.0 && hasGenre(t, G.DRAMA, G.CRIME, G.THRILLER),
     sort: byRatingDesc,
     limit: 20,
   },
+
+  // 3. New Seasons Dropping
   {
     id: 'new-seasons',
-    name: 'New Seasons',
+    name: 'New Seasons Dropping',
     tagline: 'Your favorites are back',
-    filter: (s, _t) => {
-      if (s.last_modified) {
-        const ts = parseInt(s.last_modified, 10);
-        if (ts > 0) {
-          const twoWeeksAgo = Date.now() / 1000 - 14 * 86400;
-          return ts >= twoWeeksAgo;
-        }
-      }
-      const yr = s.name.match(/\((\d{4})\)/);
-      return yr ? parseInt(yr[1], 10) >= 2025 : false;
-    },
+    filter: (s, _t) => modifiedWithinDays(s, 14),
     sort: (a, b) => parseInt(b.last_modified || '0', 10) - parseInt(a.last_modified || '0', 10),
-    limit: 20,
+    limit: 25,
   },
+
+  // 4. K-Drama Essentials — category-based
   {
     id: 'k-drama',
-    name: 'K-Drama',
+    name: 'K-Drama Essentials',
     tagline: 'Korean storytelling at its finest',
-    filter: (s, _t) => false, // category-based
+    filter: (_s, _t) => false, // category-based
     sort: byRatingDesc,
-    limit: 20,
+    limit: 25,
     categoryIds: ['267', '658', '713', '715'],
   },
+
+  // 5. Turkish Hits — category-based
   {
-    id: 'turkish-drama',
-    name: 'Turkish Drama',
+    id: 'turkish-hits',
+    name: 'Turkish Hits',
     tagline: 'Epic love, epic drama',
-    filter: (s, _t) => false, // category-based
+    filter: (_s, _t) => false, // category-based
     sort: byRatingDesc,
-    limit: 20,
+    limit: 25,
     categoryIds: ['99'],
   },
+
+  // 6. Comedy Central
   {
-    id: 'documentary-series',
-    name: 'Real Stories',
-    tagline: 'Truth is stranger',
-    filter: (_s, t) => t !== null && t.g.includes(99),
+    id: 'comedy-central',
+    name: 'Comedy Central',
+    tagline: 'Guaranteed laughs',
+    filter: (_s, t) => t !== null && t.r >= 6.5 && hasGenre(t, G.COMEDY, G.ANIMATION),
     sort: byRatingDesc,
     limit: 20,
   },
+
+  // 7. Crime Files
   {
-    id: 'crime-thriller',
-    name: 'Crime & Thriller',
-    tagline: 'Who did it?',
-    filter: (_s, t) => t !== null && (t.g.includes(80) || t.g.includes(53)),
+    id: 'crime-files',
+    name: 'Crime Files',
+    tagline: 'Who did it? Keep watching to find out',
+    filter: (_s, t) => t !== null && t.r >= 7.0 && hasGenre(t, G.CRIME, G.MYSTERY, G.THRILLER),
     sort: byRatingDesc,
+    limit: 20,
+  },
+
+  // 8. Docuseries
+  {
+    id: 'docuseries',
+    name: 'Docuseries',
+    tagline: 'Real stories, multiple episodes',
+    filter: (_s, t) => hasGenre(t, G.DOCUMENTARY),
+    sort: byRatingDesc,
+    limit: 20,
+  },
+
+  // 9. Reality & Competition
+  {
+    id: 'reality-competition',
+    name: 'Reality & Competition',
+    tagline: 'Drama you can\'t script',
+    filter: (_s, t) => hasGenre(t, G.REALITY),
+    sort: byRatingDesc,
+    limit: 20,
+  },
+
+  // 10. Family Watch
+  {
+    id: 'family-watch',
+    name: 'Family Watch',
+    tagline: 'Safe for the whole crew',
+    filter: (_s, t) => t !== null && t.r >= 5.5 && hasGenre(t, G.FAMILY, G.KIDS, G.ANIMATION),
+    sort: byRatingDesc,
+    limit: 20,
+  },
+
+  // 11. Critically Acclaimed TV
+  {
+    id: 'critically-acclaimed',
+    name: 'Critically Acclaimed TV',
+    tagline: 'Television at its peak',
+    filter: (_s, t) => t !== null && t.r >= 8.5,
+    sort: byRatingDesc,
+    limit: 15,
+  },
+
+  // 12. Binge in a Weekend
+  {
+    id: 'binge-weekend',
+    name: 'Binge in a Weekend',
+    tagline: 'Start Friday, finish Sunday',
+    filter: (_s, t) => t !== null && t.r >= 7.0 && hasGenre(t, G.DRAMA, G.THRILLER, G.CRIME),
+    sort: byRatingDesc,
+    limit: 20,
+  },
+
+  // 13. Light & Easy
+  {
+    id: 'light-easy',
+    name: 'Light & Easy',
+    tagline: 'Zero stress, all laughs',
+    filter: (_s, t) =>
+      t !== null && t.r >= 6.0 &&
+      hasGenre(t, G.COMEDY, G.ANIMATION) &&
+      !hasGenre(t, G.CRIME, G.THRILLER),
+    sort: byRatingDesc,
+    limit: 25,
+  },
+
+  // 14. International Hits — category-based (Turkish + Korean)
+  {
+    id: 'international-hits',
+    name: 'International Hits',
+    tagline: 'Beyond borders',
+    filter: (_s, _t) => false,
+    sort: byRatingDesc,
+    limit: 25,
+    categoryIds: ['99', '267', '658', '713', '715'],
+  },
+
+  // 15. Netflix Originals — category-based
+  {
+    id: 'netflix-originals',
+    name: 'Netflix Originals',
+    tagline: 'The shows that changed streaming',
+    filter: (_s, _t) => false,
+    sort: byRatingDesc,
+    limit: 25,
+    categoryIds: ['106', '171'],
+    parentTabs: ['platforms'],
+  },
+
+  // 16. HBO Must-Watch — category-based
+  {
+    id: 'hbo-must-watch',
+    name: 'HBO Must-Watch',
+    tagline: 'Premium television, no compromises',
+    filter: (_s, _t) => false,
+    sort: byRatingDesc,
+    limit: 25,
+    categoryIds: ['188'],
+    parentTabs: ['platforms'],
+  },
+
+  // 17. True Crime
+  {
+    id: 'true-crime',
+    name: 'True Crime',
+    tagline: 'Based on real events',
+    filter: (_s, t) =>
+      t !== null && t.r >= 6.5 &&
+      (hasGenre(t, G.CRIME, G.MYSTERY) && hasGenre(t, G.DOCUMENTARY)),
+    sort: byRatingDesc,
+    limit: 20,
+  },
+
+  // 18. Anime & Animation
+  {
+    id: 'anime-animation',
+    name: 'Anime & Animation',
+    tagline: 'Worlds without limits',
+    filter: (_s, t) => hasGenre(t, G.ANIMATION),
+    sort: byRatingDesc,
+    limit: 25,
+  },
+
+  // 19. Sci-Fi Universes
+  {
+    id: 'scifi-universes',
+    name: 'Sci-Fi Universes',
+    tagline: 'Other worlds, other rules',
+    filter: (_s, t) => t !== null && t.r >= 6.5 && hasGenre(t, G.SCIFI_FANTASY),
+    sort: byRatingDesc,
+    limit: 20,
+  },
+
+  // 20. Period Drama
+  {
+    id: 'period-drama',
+    name: 'Period Drama',
+    tagline: 'Step back in time',
+    filter: (_s, t) =>
+      t !== null && t.r >= 7.0 &&
+      hasGenre(t, G.DRAMA) &&
+      hasGenre(t, 10768), // War & Politics
+    sort: byRatingDesc,
+    limit: 20,
+  },
+
+  // 21. Hindi TV Hits — category-based
+  {
+    id: 'hindi-tv-hits',
+    name: 'Hindi TV Hits',
+    tagline: 'Desi entertainment',
+    filter: (_s, _t) => false,
+    sort: byRatingDesc,
+    limit: 25,
+    categoryIds: ['161'],
+  },
+
+  // 22. Fresh Episodes
+  {
+    id: 'fresh-episodes',
+    name: 'Fresh Episodes',
+    tagline: 'New episodes just dropped',
+    filter: (s, _t) => modifiedWithinDays(s, 7),
+    sort: (a, b) => parseInt(b.last_modified || '0', 10) - parseInt(a.last_modified || '0', 10),
     limit: 20,
   },
 ];

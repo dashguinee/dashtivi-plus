@@ -101,7 +101,7 @@ const PlatformCard = React.memo(function PlatformCard({
       style={{
         width: 240,
         boxShadow: `0 4px 20px ${platform.color}12, 0 0 0 1px ${platform.color}18`,
-        animation: `platform-card-in 0.9s cubic-bezier(0.4, 0, 0.2, 1) ${index * 90}ms both`,
+        animation: `platform-card-in 1.1s cubic-bezier(0.16, 1, 0.3, 1) ${index * 130}ms both`,
       }}
     >
       {/* Brand gradient fill — the signature look */}

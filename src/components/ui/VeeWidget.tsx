@@ -82,7 +82,7 @@ const FALLBACK_GRADIENTS = [
   'from-purple-900/80 to-indigo-900/80',
   'from-red-900/80 to-pink-900/80',
   'from-blue-900/80 to-cyan-900/80',
-  'from-emerald-900/80 to-teal-900/80',
+  'from-purple-900/80 to-blue-900/80',
 ];
 
 function getGradient(title: string): string {
@@ -118,7 +118,7 @@ const VeeCard: React.FC<{
       style={{
         borderColor: `${neonColor}33`,
         boxShadow: `0 0 8px ${neonColor}22`,
-        animation: `vee-card-in 0.8s cubic-bezier(0.4, 0, 0.2, 1) ${index * 90}ms both`,
+        animation: `vee-card-in 1s cubic-bezier(0.16, 1, 0.3, 1) ${index * 120}ms both`,
       }}
     >
       {hasPoster ? (
@@ -149,17 +149,11 @@ const VeeCard: React.FC<{
         </div>
       </div>
 
-      {/* Trailer button */}
+      {/* Trailer badge — visual indicator only, tap card to play */}
       {hasTrailer && (
-        <div
-          className="absolute bottom-10 left-1.5 z-20"
-          onClick={(e) => {
-            e.stopPropagation();
-            onTrailer!(tmdb!.y!, clean, poster || undefined);
-          }}
-        >
-          <div className="w-6 h-6 rounded-lg bg-black/50 hover:bg-primary/40 flex items-center justify-center transition-colors cursor-pointer" style={{ border: '1px solid rgba(157,78,221,0.2)' }}>
-            <Clapperboard className="w-3 h-3 text-primary-light/80" />
+        <div className="absolute top-1.5 right-1.5 z-20">
+          <div className="w-5 h-5 rounded-md bg-black/50 flex items-center justify-center" style={{ border: '1px solid rgba(157,78,221,0.15)' }}>
+            <Clapperboard className="w-2.5 h-2.5 text-primary-light/60" />
           </div>
         </div>
       )}

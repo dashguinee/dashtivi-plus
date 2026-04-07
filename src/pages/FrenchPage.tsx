@@ -30,7 +30,7 @@ const REGIONS: WorldRegion[] = [
     categoryIds: ['336', '428', '343', '427', '345', '429', '344', '430', '347', '431', '346', '85', '11'],
     name: 'Motherland',
     flag: '\u2600',
-    vibe: 'Canal+ Africa \u00B7 DStv \u00B7 SuperSport \u00B7 beIN \u00B7 120+ Free',
+    vibe: 'Africa Live \u00B7 Sports \u00B7 Entertainment \u00B7 News \u00B7 120+ Free',
     gradient: 'from-amber-600 to-orange-800',
     glowColor: 'shadow-amber-500/30',
   },
@@ -39,16 +39,16 @@ const REGIONS: WorldRegion[] = [
     categoryIds: ['86', '165', '83', '175', '181', '180', '178', '549', '555', '553', '548', '129', '556', '554', '87', '156', '13'],
     name: 'Crossing the Sahara',
     flag: '\u2728',
-    vibe: 'MBC \u00B7 Al Jazeera \u00B7 beIN Movies \u00B7 Gulf',
-    gradient: 'from-emerald-600 to-teal-800',
-    glowColor: 'shadow-emerald-500/30',
+    vibe: 'Arabic Cinema \u00B7 News \u00B7 Sports \u00B7 Gulf Vibes',
+    gradient: 'from-violet-600 to-blue-800',
+    glowColor: 'shadow-violet-500/30',
   },
   {
     id: 'isles',
     categoryIds: ['3', '414', '413', '410', '415', '416', '417', '19', '483', '353', '411', '139'],
     name: 'The Isles',
     flag: '\u265B',
-    vibe: 'BBC \u00B7 Sky \u00B7 ITV \u00B7 Premier League',
+    vibe: 'UK Live \u00B7 Sports \u00B7 Cinema \u00B7 Premier League',
     gradient: 'from-red-500 to-rose-700',
     glowColor: 'shadow-red-500/30',
   },
@@ -76,15 +76,15 @@ const REGIONS: WorldRegion[] = [
     name: 'Crescent & Star',
     flag: '\u262A',
     vibe: 'Pakistan \u00B7 Nepal \u00B7 Sri Lanka',
-    gradient: 'from-green-600 to-emerald-800',
-    glowColor: 'shadow-green-500/30',
+    gradient: 'from-indigo-600 to-violet-800',
+    glowColor: 'shadow-indigo-500/30',
   },
   {
     id: 'usa',
     categoryIds: ['2', '24'],
     name: 'Big USA',
     flag: '\u2605',
-    vibe: 'CNN \u00B7 ESPN \u00B7 Fox \u00B7 24/7',
+    vibe: 'News \u00B7 Sports \u00B7 Entertainment \u00B7 24/7',
     gradient: 'from-sky-500 to-blue-700',
     glowColor: 'shadow-sky-500/30',
   },
@@ -93,8 +93,8 @@ const REGIONS: WorldRegion[] = [
     categoryIds: ['751', '28'],
     name: 'The Gulf & Persian',
     flag: '\u2741',
-    vibe: 'Iran International \u00B7 BBC Persian \u00B7 Afghan voices',
-    gradient: 'from-cyan-600 to-teal-800',
+    vibe: 'Persian Cinema \u00B7 News \u00B7 Afghan Voices',
+    gradient: 'from-cyan-600 to-blue-800',
     glowColor: 'shadow-cyan-500/30',
   },
   {
@@ -103,8 +103,8 @@ const REGIONS: WorldRegion[] = [
     name: 'The Pacific',
     flag: '\u2307',
     vibe: 'Philippines \u00B7 Australia',
-    gradient: 'from-teal-500 to-cyan-700',
-    glowColor: 'shadow-teal-500/30',
+    gradient: 'from-indigo-500 to-cyan-700',
+    glowColor: 'shadow-indigo-500/30',
   },
   {
     id: 'americas',
@@ -497,6 +497,11 @@ function ChannelGrid({
   onAliveCount?: (count: number) => void;
 }) {
   const [, setProbeVersion] = useState(0);
+  const GRID_PAGE_SIZE = 60;
+  const [visibleCount, setVisibleCount] = useState(GRID_PAGE_SIZE);
+
+  // Reset visible count when streams change (region switch)
+  useEffect(() => { setVisibleCount(GRID_PAGE_SIZE); }, [streams]);
 
   useEffect(() => {
     if (streams.length === 0) return;
@@ -515,24 +520,39 @@ function ChannelGrid({
   }, [alive.length, onAliveCount]);
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-      {alive.map((stream) => (
-        <button
-          key={stream.stream_id}
-          onClick={() => onPlay(stream)}
-          className="group relative bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 flex flex-col items-center gap-3 card-press hover:scale-[1.03] active:scale-[0.96] hover:bg-white/[0.07] hover:border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-[background-color,border-color,box-shadow] duration-300"
-        >
-          <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" />
-          <p className="text-[11px] text-text-secondary text-center truncate w-full group-hover:text-white transition-colors leading-tight">
-            {stream.name}
-          </p>
-          <div className="absolute inset-0 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="w-10 h-10 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center shadow-lg shadow-primary/30">
-              <Play className="w-5 h-5 text-white ml-0.5" />
+    <>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {alive.slice(0, visibleCount).map((stream) => (
+          <button
+            key={stream.stream_id}
+            onClick={() => onPlay(stream)}
+            className="group relative bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 flex flex-col items-center gap-3 card-press hover:scale-[1.03] active:scale-[0.96] hover:bg-white/[0.07] hover:border-primary/20 hover:shadow-lg hover:shadow-primary/10 transition-[background-color,border-color,box-shadow] duration-300"
+          >
+            <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" />
+            <p className="text-[11px] text-text-secondary text-center truncate w-full group-hover:text-white transition-colors leading-tight">
+              {stream.name}
+            </p>
+            <div className="absolute inset-0 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="w-10 h-10 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center shadow-lg shadow-primary/30">
+                <Play className="w-5 h-5 text-white ml-0.5" />
+              </div>
             </div>
-          </div>
-        </button>
-      ))}
-    </div>
+          </button>
+        ))}
+      </div>
+      {alive.length > visibleCount && (
+        <div className="flex flex-col items-center gap-3 mt-6 mb-4">
+          <p className="text-xs text-white/30">
+            Showing {visibleCount} of {alive.length} channels
+          </p>
+          <button
+            onClick={() => setVisibleCount(prev => prev + GRID_PAGE_SIZE)}
+            className="bg-white/5 border border-white/10 rounded-xl px-6 py-3 text-sm text-white/50 hover:text-white hover:bg-white/10 backdrop-blur-sm transition-[color,background-color] duration-300"
+          >
+            Load More
+          </button>
+        </div>
+      )}
+    </>
   );
 }

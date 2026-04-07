@@ -8,7 +8,7 @@ const MAX_HISTORY = 50;
 export function useWatchHistory() {
   const [history, setHistory] = useState<WatchHistoryEntry[]>(() => getItem(KEY, []));
 
-  const addToHistory = useCallback((channelOrId: string | Channel, duration?: number) => {
+  const addToHistory = useCallback((channelOrId: string | Channel, duration?: number, currentTime?: number, totalDuration?: number) => {
     setHistory((prev) => {
       const isChannel = typeof channelOrId !== 'string';
       const channelId = isChannel ? channelOrId.id : channelOrId;
@@ -19,6 +19,8 @@ export function useWatchHistory() {
         channelId,
         watchedAt: Date.now(),
         duration: duration || 0,
+        ...(currentTime != null ? { currentTime } : {}),
+        ...(totalDuration != null ? { totalDuration } : {}),
         ...(isChannel
           ? {
               name: channelOrId.name,
@@ -34,12 +36,17 @@ export function useWatchHistory() {
     });
   }, []);
 
-  const updateDuration = useCallback((channelId: string, duration: number) => {
+  const updateDuration = useCallback((channelId: string, duration: number, currentTime?: number, totalDuration?: number) => {
     setHistory((prev) => {
       const idx = prev.findIndex((h) => h.channelId === channelId);
       if (idx === -1) return prev;
       const next = [...prev];
-      next[idx] = { ...next[idx], duration };
+      next[idx] = {
+        ...next[idx],
+        duration,
+        ...(currentTime != null ? { currentTime } : {}),
+        ...(totalDuration != null ? { totalDuration } : {}),
+      };
       setItem(KEY, next);
       return next;
     });

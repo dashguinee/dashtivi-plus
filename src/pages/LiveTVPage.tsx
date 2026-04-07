@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Play, Search, X, ChevronRight, LayoutGrid, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { NeonGate, cardScaleStyle } from '@/components/ui/NeonGate';
 import { t, useLanguage } from '@/i18n';
 import type { XtreamCredentials, LiveStream, GroupedChannel, FreeChannel } from '@/lib/xtream';
 import { getLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getExperienceIds, getExperienceCategoryIds, fetchCuratorData, getCuratorExperience, curatorToLiveStreams, hasCuratorData, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
@@ -26,8 +27,9 @@ const THEME_SUBTYPES: Record<string, SportType[]> = {
 };
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { setAmbientSpeed, setAmbientExperience } from '@/lib/ambient-audio';
-import { ChannelIcon } from '@/components/ui/ChannelIcon';
+import { ChannelIcon, ChannelBadge } from '@/components/ui/ChannelIcon';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { isDead } from '@/hooks/useChannelHealth';
 import type { Channel } from '@/types';
 
@@ -55,8 +57,21 @@ const THEME_TO_EXPERIENCE: Record<string, string[]> = {
   'movies247': ['movies'],
   'documentary': ['documentary'],
   'music': ['music'],
+  'faith': ['faith'],
   'premium4k': ['sports', 'movies', 'documentary'],
 };
+
+// Category filter options for search — maps to curator experience IDs
+const SEARCH_CATEGORY_OPTIONS = [
+  { id: 'sports',        label: 'Sports',        emoji: '\u26BD' },
+  { id: 'entertainment', label: 'Entertainment', emoji: '\uD83C\uDFAD' },
+  { id: 'news',          label: 'News',          emoji: '\uD83D\uDCF0' },
+  { id: 'kids',          label: 'Kids',          emoji: '\uD83E\uDDF8' },
+  { id: 'movies',        label: 'Cinema',        emoji: '\uD83C\uDFAC' },
+  { id: 'music',         label: 'Music',         emoji: '\uD83C\uDFB5' },
+  { id: 'documentary',   label: 'Discovery',     emoji: '\uD83C\uDF0D' },
+  { id: 'faith',         label: 'Faith',         emoji: '\u2728' },
+] as const;
 
 interface Props {
   credentials: XtreamCredentials;
@@ -65,6 +80,7 @@ interface Props {
 
 export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const { lang } = useLanguage();
+  const navigate = useNavigate();
 
 
   // ── Search state ──────────────────────────────────────────────
@@ -73,6 +89,10 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const [searchResults, setSearchResults] = useState<LiveStream[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [searchExpFilter, setSearchExpFilter] = useState<string[]>([]);
+  const [searchExpMap, setSearchExpMap] = useState<Record<number, string[]>>({});
+  // Persistent category filter — visible always in search bar area
+  const [searchCategory, setSearchCategory] = useState<string | null>(null);
 
   // ── Probe staleness ─────────────────────────────────────────────
   const [probeStale, setProbeStale] = useState(false);
@@ -92,7 +112,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const [browseError, setBrowseError] = useState(false);
   const [browseRetryKey, setBrowseRetryKey] = useState(0);
 
-  const isSearching = debouncedQuery.trim().length > 0;
+  const isSearching = debouncedQuery.trim().length > 0 || searchCategory !== null;
 
   // ── Debounce search ───────────────────────────────────────────
   useEffect(() => {
@@ -101,8 +121,11 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
   }, [searchQuery]);
 
   // ── Search across all channels (curator-first + free) ──────────
+  // Triggers on text query change OR category filter change
   useEffect(() => {
-    if (!debouncedQuery.trim()) { setSearchResults([]); return; }
+    const hasText = debouncedQuery.trim().length > 0;
+    const hasCat = searchCategory !== null;
+    if (!hasText && !hasCat) { setSearchResults([]); setSearchExpFilter([]); setSearchExpMap({}); return; }
     let mounted = true;
     async function search() {
       setSearchLoading(true);
@@ -110,15 +133,19 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
         // Ensure curator data is loaded
         const curatorResult = await fetchCuratorData();
         const freeAll = await getFreeChannels();
-        const q = debouncedQuery.toLowerCase();
+        const q = hasText ? debouncedQuery.toLowerCase() : '';
 
         // Search ALL curator experiences (already verified + alive)
+        // Build experience map: channel id -> experience ids it belongs to
         const seen = new Set<number>();
         const allCuratorChannels: LiveStream[] = [];
+        const expMap: Record<number, string[]> = {};
         if (curatorResult?.experiences) {
-          for (const channels of Object.values(curatorResult.experiences)) {
+          for (const [expId, channels] of Object.entries(curatorResult.experiences)) {
             if (Array.isArray(channels)) {
               for (const ch of channels) {
+                if (!expMap[ch.id]) expMap[ch.id] = [];
+                if (!expMap[ch.id].includes(expId)) expMap[ch.id].push(expId);
                 if (!seen.has(ch.id)) {
                   seen.add(ch.id);
                   allCuratorChannels.push(...curatorToLiveStreams([ch]));
@@ -128,21 +155,47 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
           }
         }
 
-        const curatorResults = allCuratorChannels
-          .filter(s => s.name.toLowerCase().includes(q));
+        // Apply category filter first (if active), then text filter
+        let curatorPool = allCuratorChannels;
+        if (hasCat) {
+          curatorPool = curatorPool.filter(s => {
+            const exps = expMap[s.stream_id];
+            return exps && exps.includes(searchCategory!);
+          });
+        }
 
-        // Free channels
-        const freeResults = freeAll.filter(ch => ch.name.toLowerCase().includes(q));
+        const curatorResults = hasText
+          ? curatorPool.filter(s => s.name.toLowerCase().includes(q))
+          : curatorPool;
+
+        // Free channels — filter by category experience tag, then text
+        let freePool = freeAll;
+        if (hasCat) {
+          freePool = freePool.filter(ch => ch.experience === searchCategory);
+        }
+        const freeResults = hasText
+          ? freePool.filter(ch => ch.name.toLowerCase().includes(q))
+          : freePool;
         const freeAsLive = freeResults.map(freeToLiveStream);
         if (freeResults.length > 0) {
           setFreeUrlMap(prev => ({ ...prev, ...buildFreeUrlMap(freeResults) }));
         }
 
+        // Add free channels to expMap so they show in experience filters
+        for (const f of freeAsLive) {
+          if (!expMap[f.stream_id]) expMap[f.stream_id] = [];
+          if (!expMap[f.stream_id].includes('free')) expMap[f.stream_id].push('free');
+        }
+
         // Merge: curator + free (no duplicates)
         const freeIds = new Set(freeAsLive.map(s => s.stream_id));
         const merged = [...curatorResults.filter(s => !freeIds.has(s.stream_id)), ...freeAsLive];
-        console.info('[SEARCH] "%s" → %d results (curator:%d free:%d)', q, merged.length, curatorResults.length, freeAsLive.length);
-        if (mounted) setSearchResults(sortGemsFirst(merged));
+        console.info('[SEARCH] q="%s" cat=%s -> %d results (curator:%d free:%d)', q || '(none)', searchCategory || 'all', merged.length, curatorResults.length, freeAsLive.length);
+        if (mounted) {
+          setSearchResults(sortGemsFirst(merged));
+          setSearchExpMap(expMap);
+          setSearchExpFilter([]); // Reset sub-filter on new search
+        }
       } catch (err) {
         console.error('[SEARCH] Failed:', err);
         if (mounted) setSearchResults([]);
@@ -152,7 +205,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
     }
     search();
     return () => { mounted = false; };
-  }, [debouncedQuery, credentials]);
+  }, [debouncedQuery, searchCategory, credentials]);
 
   // ── Smart theme ordering based on user affinity ─────────────────
   const smartThemeOrder = React.useMemo(() => {
@@ -438,14 +491,30 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             placeholder={t(lang, 'searchChannels')}
             className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder:text-text-secondary focus:outline-none focus:border-primary/50 focus:bg-white/[0.07] transition-colors"
           />
-          {searchQuery && (
+          {(searchQuery || searchCategory) && (
             <button
-              onClick={() => { setSearchQuery(''); searchInputRef.current?.focus(); }}
+              onClick={() => { setSearchQuery(''); setSearchCategory(null); searchInputRef.current?.focus(); }}
               className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
             >
               <X className="w-3 h-3 text-text-secondary" />
             </button>
           )}
+        </div>
+        {/* ── Category filter pills ──────────────────────────────── */}
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide mt-3 -mx-1 px-1 pb-1">
+          {SEARCH_CATEGORY_OPTIONS.map(opt => (
+            <button
+              key={opt.id}
+              onClick={() => setSearchCategory(searchCategory === opt.id ? null : opt.id)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+                searchCategory === opt.id
+                  ? 'bg-primary text-white shadow-lg shadow-primary/25 scale-[1.02]'
+                  : 'bg-white/5 text-white/50 border border-white/8 hover:bg-white/10 hover:text-white/70'
+              }`}
+            >
+              {opt.emoji} {opt.label}
+            </button>
+          ))}
         </div>
         {isSearching && (
           <p className="text-xs text-text-secondary mt-2">
@@ -470,11 +539,17 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             <LoadingSpinner size="lg" text={t(lang, 'searching')} />
           </div>
         ) : searchResults.length === 0 ? (
-          <div className="flex items-center justify-center py-24 text-text-muted text-sm">
-            {t(lang, 'noChannelsMatch')}
-          </div>
+          <EmptyState icon="tv" title={t(lang, 'noChannelsMatch')} subtitle="Try a different search" />
         ) : (
-          <SearchGrid streams={searchResults} credentials={credentials} onPlay={onPlay} freeUrlMap={freeUrlMap} />
+          <SearchResultsWithFilter
+            streams={searchResults}
+            credentials={credentials}
+            onPlay={onPlay}
+            freeUrlMap={freeUrlMap}
+            expMap={searchExpMap}
+            activeFilter={searchExpFilter}
+            onFilterChange={setSearchExpFilter}
+          />
         )
       ) : (
         <>
@@ -485,38 +560,70 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             </div>
           ) : (
             <div className="pt-4">
-              {smartThemeOrder.map((theme, idx) => (
+              {smartThemeOrder.map((theme, idx) => {
+                // Skip ThemeRow if this theme has a showcase card (no double headers)
+                const hasShowcase = !!SHOWCASE_CONFIG[theme.id];
+                return (
                 <React.Fragment key={theme.id}>
-                  <ThemeRow
-                    theme={theme}
-                    streams={themeStreams[theme.id] || []}
-                    credentials={credentials}
-                    onPlay={handlePlayFromList}
-                    onThemeSelect={(themeId) => {
-                      setAmbientExperience(themeId);
-                      setAmbientSpeed(0.85);
-                    }}
-                  />
-                  {/* Experience Showcases — visual breaks between rows */}
-                  {idx === 0 && SHOWCASE_CONFIG['sports'] && (
-                    <ExperienceShowcase experienceId="sports" streams={themeStreams['sports'] || []} onPlay={handlePlayFromList} />
+                  {!hasShowcase && (
+                    <ThemeRow
+                      theme={theme}
+                      streams={themeStreams[theme.id] || []}
+                      credentials={credentials}
+                      onPlay={handlePlayFromList}
+                      onThemeSelect={(themeId) => {
+                        setAmbientExperience(themeId);
+                        setAmbientSpeed(0.85);
+                      }}
+                    />
                   )}
-                  {idx === 1 && SHOWCASE_CONFIG['entertainment'] && (
-                    <ExperienceShowcase experienceId="entertainment" streams={themeStreams['entertainment'] || []} onPlay={handlePlayFromList} />
-                  )}
-                  {idx === 2 && SHOWCASE_CONFIG['kids'] && (
-                    <ExperienceShowcase experienceId="kids" streams={themeStreams['kids'] || []} onPlay={handlePlayFromList} />
-                  )}
-                  {idx === 3 && SHOWCASE_CONFIG['movies'] && (
-                    <ExperienceShowcase experienceId="movies" streams={themeStreams['movies247'] || []} onPlay={handlePlayFromList} />
-                  )}
-                  {idx === 5 && SHOWCASE_CONFIG['documentary'] && (
-                    <ExperienceShowcase experienceId="documentary" streams={themeStreams['documentary'] || []} onPlay={handlePlayFromList} />
+                  {/* Experience Showcase — mapped by theme ID */}
+                  {SHOWCASE_CONFIG[theme.id] && (
+                    <ExperienceShowcase
+                      experienceId={theme.id}
+                      streams={themeStreams[theme.id] || []}
+                      onPlay={handlePlayFromList}
+                      subtypes={THEME_SUBTYPES[theme.id]}
+                    />
                   )}
                 </React.Fragment>
-              ))}
+                );
+              })}
             </div>
           )}
+
+          {/* ── WorldEX Portal ──────────────────────────────── */}
+          <div className="mx-4 mt-6 mb-4">
+            <button
+              onClick={() => navigate('/french')}
+              className="w-full rounded-2xl overflow-hidden relative group active:scale-[0.98] transition-transform duration-200"
+              style={{ background: 'rgba(255,255,255,0.02)' }}
+            >
+              {/* Gradient backdrop */}
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-900/40 via-violet-900/20 to-transparent pointer-events-none" />
+              <div className="relative p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
+                    style={{ background: 'linear-gradient(135deg, #D97706, #7C3AED)', boxShadow: '0 0 16px rgba(217,119,6,0.25)' }}
+                  >
+                    <Globe className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-base font-black text-white tracking-tight">WorldEX</h3>
+                    <p className="text-[10px] text-white/30">{t(lang, 'aTasteOfTheWorld')}</p>
+                  </div>
+                </div>
+                <div
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-300 group-hover:scale-105"
+                  style={{ background: '#D97706', color: '#fff', boxShadow: '0 0 12px rgba(217,119,6,0.25)' }}
+                >
+                  Explore
+                  <ArrowRight className="w-3 h-3" />
+                </div>
+              </div>
+            </button>
+          </div>
 
           {/* ── Browse All Categories ─────────────────────────── */}
           <div className="px-4 mt-4">
@@ -599,11 +706,11 @@ const SHOWCASE_CONFIG: Record<string, {
 }> = {
   sports: {
     name: 'Sports',
-    tagline: 'Every match. Every league.',
+    tagline: '4K · Live · Every match, every league.',
     route: '/live/sports',
-    gradient: 'from-emerald-900/50 via-emerald-900/20 to-transparent',
-    accentColor: '#10B981',
-    accentGlow: 'rgba(16,185,129,0.25)',
+    gradient: 'from-cyan-900/50 via-cyan-900/20 to-transparent',
+    accentColor: '#00D4FF',
+    accentGlow: 'rgba(0,212,255,0.25)',
     icon: <Trophy className="w-5 h-5" />,
   },
   kids: {
@@ -617,7 +724,7 @@ const SHOWCASE_CONFIG: Record<string, {
   },
   entertainment: {
     name: 'Entertainment',
-    tagline: 'BBC, HBO, Canal+ — prime time.',
+    tagline: 'Drama · Comedy · Reality — prime time.',
     route: '/live/entertainment',
     gradient: 'from-indigo-900/50 via-indigo-900/20 to-transparent',
     accentColor: '#818CF8',
@@ -626,7 +733,7 @@ const SHOWCASE_CONFIG: Record<string, {
   },
   news: {
     name: 'News',
-    tagline: 'CNN, BBC, Al Jazeera — stay sharp.',
+    tagline: 'Breaking · World · 24/7 — stay sharp.',
     route: '/live/news',
     gradient: 'from-red-900/50 via-red-900/20 to-transparent',
     accentColor: '#EF4444',
@@ -635,7 +742,7 @@ const SHOWCASE_CONFIG: Record<string, {
   },
   music: {
     name: 'Music & Vibes',
-    tagline: 'Trace, MTV, gospel — every mood.',
+    tagline: 'Rhythms · Gospel · Vibes — every mood.',
     route: '/live/music',
     gradient: 'from-violet-900/50 via-violet-900/20 to-transparent',
     accentColor: '#A855F7',
@@ -644,21 +751,49 @@ const SHOWCASE_CONFIG: Record<string, {
   },
   documentary: {
     name: 'Docs & Discovery',
-    tagline: 'Discovery, NatGeo, BBC Earth.',
+    tagline: 'Explore · Learn · Discover the world.',
     route: '/live/documentary',
-    gradient: 'from-teal-900/50 via-teal-900/20 to-transparent',
-    accentColor: '#14B8A6',
-    accentGlow: 'rgba(20,184,166,0.25)',
+    gradient: 'from-blue-900/50 via-blue-900/20 to-transparent',
+    accentColor: '#6366F1',
+    accentGlow: 'rgba(99,102,241,0.25)',
     icon: <Globe className="w-5 h-5" />,
   },
   movies: {
     name: 'Cinema',
-    tagline: 'HBO, Sky Cinema — 24/7 showtime.',
+    tagline: 'Blockbusters · Classics — 24/7 showtime.',
     route: '/live/movies',
     gradient: 'from-amber-900/50 via-amber-900/20 to-transparent',
     accentColor: '#F59E0B',
     accentGlow: 'rgba(245,158,11,0.25)',
     icon: <Film className="w-5 h-5" />,
+  },
+  // Alias: theme ID is movies247 but showcase config key is movies
+  movies247: {
+    name: 'Cinema',
+    tagline: 'Blockbusters · Classics — 24/7 showtime.',
+    route: '/live/movies',
+    gradient: 'from-amber-900/50 via-amber-900/20 to-transparent',
+    accentColor: '#F59E0B',
+    accentGlow: 'rgba(245,158,11,0.25)',
+    icon: <Film className="w-5 h-5" />,
+  },
+  faith: {
+    name: 'Faith',
+    tagline: 'Quran, Gospel, Prayer — nourish your soul.',
+    route: '/live/faith',
+    gradient: 'from-amber-900/40 via-yellow-900/20 to-transparent',
+    accentColor: '#D97706',
+    accentGlow: 'rgba(217,119,6,0.25)',
+    icon: <Heart className="w-5 h-5" />,
+  },
+  premium4k: {
+    name: 'Premium 4K',
+    tagline: 'Ultra HD — crystal clear, every pixel.',
+    route: '/live/premium4k',
+    gradient: 'from-yellow-900/40 via-amber-900/20 to-transparent',
+    accentColor: '#EAB308',
+    accentGlow: 'rgba(234,179,8,0.25)',
+    icon: <Sparkles className="w-5 h-5" />,
   },
 };
 
@@ -666,18 +801,33 @@ function ExperienceShowcase({
   experienceId,
   streams,
   onPlay,
+  subtypes,
 }: {
   experienceId: string;
   streams: LiveStream[];
   onPlay: (stream: LiveStream, allStreams: LiveStream[]) => void;
+  subtypes?: SportType[];
 }) {
   const navigate = useNavigate();
+  const { lang } = useLanguage();
   const config = SHOWCASE_CONFIG[experienceId];
+  const [activeSubTab, setActiveSubTab] = useState<string>('all');
   if (!config) return null;
 
   const alive = streams.filter(s => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id));
-  const top = sortGemsFirst(alive).slice(0, 6);
-  if (top.length === 0) return null;
+
+  // Filter by subtab if active
+  let filtered = alive;
+  if (activeSubTab !== 'all' && subtypes) {
+    const sub = subtypes.find(s => s.id === activeSubTab);
+    if (sub) {
+      const catSet = new Set(sub.categoryIds);
+      filtered = alive.filter(s => isFreeChannel(s.stream_id) || catSet.has(String(s.category_id)));
+    }
+  }
+
+  const top = sortGemsFirst(filtered).slice(0, 8);
+  if (alive.length === 0) return null;
 
   return (
     <div className="mx-4 mb-8 rounded-2xl overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.02)' }}>
@@ -686,7 +836,7 @@ function ExperienceShowcase({
 
       <div className="relative p-4">
         {/* Header row */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2.5">
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center text-white"
@@ -713,39 +863,60 @@ function ExperienceShowcase({
           </button>
         </div>
 
-        {/* Preview channel strip — wider, cinematic aspect */}
-        <div className="flex gap-2">
+        {/* Subtab pills — only if subtypes exist and more than 2 */}
+        {subtypes && subtypes.length > 2 && (
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide mb-3">
+            {subtypes.slice(0, 8).map(sub => (
+              <button
+                key={sub.id}
+                onClick={() => setActiveSubTab(sub.id === activeSubTab ? 'all' : sub.id)}
+                className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors duration-200 ${
+                  sub.id === activeSubTab
+                    ? 'text-white'
+                    : 'bg-white/5 text-white/40 hover:text-white/70'
+                }`}
+                style={sub.id === activeSubTab ? { background: config.accentColor, boxShadow: `0 0 8px ${config.accentGlow}` } : undefined}
+              >
+                {sub.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Channel strip */}
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 items-end">
           {top.map((stream, i) => (
             <button
               key={stream.stream_id}
-              onClick={() => onPlay(stream, alive)}
-              className="flex-1 min-w-0 group"
-              style={i < 6 ? { animation: `vee-card-in 0.5s ease ${i * 60}ms both` } : undefined}
+              onClick={() => onPlay(stream, filtered)}
+              className="flex-shrink-0 group"
+              style={{ width: i === 0 ? 150 : 125, ...cardScaleStyle(i), ...(i < 8 ? { animation: `vee-card-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${i * 90}ms both` } : {}) }}
             >
               <div
-                className="relative aspect-[16/10] rounded-xl overflow-hidden transition-all duration-300 group-hover:ring-1 flex items-center justify-center"
+                className="relative aspect-[16/10] rounded-xl overflow-hidden transition-all duration-300 group-hover:ring-1 flex items-center justify-center card-glass"
                 style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  boxShadow: i === 0 ? `0 0 12px ${config.accentGlow}` : undefined,
+                  boxShadow: i === 0 ? `0 0 16px ${config.accentGlow}` : undefined,
                   ['--tw-ring-color' as string]: config.accentColor,
                 }}
               >
-                <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" />
+                <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" eager />
+                <ChannelBadge streamId={stream.stream_id} compact />
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-xl">
-                  <Play className="w-3.5 h-3.5 text-white" />
+                  <Play className="w-4 h-4 text-white" />
                 </div>
               </div>
-              <p className="text-[8px] text-white/25 text-center mt-1 truncate group-hover:text-white/50 transition-colors">
+              <p className="text-[9px] text-white/30 text-center mt-1.5 truncate group-hover:text-white/50 transition-colors">
                 {stream.name}
               </p>
             </button>
           ))}
+          <NeonGate navigateTo={config.route} />
         </div>
 
         {/* Channel count footer */}
         <div className="flex items-center justify-center mt-3 gap-1.5">
           <div className="w-1 h-1 rounded-full" style={{ background: config.accentColor, opacity: 0.5 }} />
-          <span className="text-[9px] text-white/20">{alive.length} channels</span>
+          <span className="text-[9px] text-white/20">{filtered.length} channels</span>
         </div>
       </div>
     </div>
@@ -763,7 +934,7 @@ function dedupeStreams(streams: LiveStream[]): LiveStream[] {
 
 // ── Theme Row ─────────────────────────────────────────────────────
 
-function ThemeRow({
+const ThemeRow = React.memo(function ThemeRow({
   theme,
   streams,
   credentials,
@@ -879,17 +1050,19 @@ function ThemeRow({
       )}
 
       {/* Horizontal scroll of channels — larger cards */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2">
-        {displayed.map((stream) => (
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2 items-end">
+        {displayed.map((stream, i) => (
           <button
             key={stream.stream_id}
             onClick={() => onPlay(stream, sorted)}
-            className="flex-shrink-0 w-[100px] group"
+            className={`flex-shrink-0 group ${i === 0 ? 'w-[140px]' : 'w-[110px]'}`}
+            style={cardScaleStyle(i)}
           >
-            <div className="relative w-[100px] h-[68px] rounded-xl bg-white/[0.04] border border-white/8 flex items-center justify-center overflow-hidden
+            <div className={`relative rounded-xl flex items-center justify-center overflow-hidden
                             group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/10 group-hover:scale-[1.03]
-                            active:scale-95 transition-all duration-300">
+                            active:scale-95 transition-all duration-300 ${i === 0 ? 'w-[140px] h-[90px] card-hero' : 'w-[110px] h-[72px] card-surface'}`}>
               <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" />
+              <ChannelBadge streamId={stream.stream_id} compact />
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-xl">
                 <Play className="w-4 h-4 text-white" />
               </div>
@@ -900,17 +1073,18 @@ function ThemeRow({
             </p>
           </button>
         ))}
+        {expRoute && <NeonGate navigateTo={expRoute} />}
       </div>
     </div>
   );
-}
+});
 
 // ── Browse Grid (with quality grouping + probing) ─────────────────
 
 const QUALITY_COLORS: Record<string, string> = {
   'SD': 'bg-white/10 text-white/40',
   'HD': 'bg-blue-500/20 text-blue-400',
-  'FHD': 'bg-emerald-500/20 text-emerald-400',
+  'FHD': 'bg-violet-500/20 text-violet-400',
   '4K': 'bg-amber-500/20 text-amber-400',
   'UHD': 'bg-purple-500/20 text-purple-400',
 };
@@ -927,6 +1101,11 @@ function BrowseGrid({
   const { lang } = useLanguage();
   const [selectedGroup, setSelectedGroup] = useState<GroupedChannel | null>(null);
   const [, setProbeVersion] = useState(0);
+  const BROWSE_PAGE_SIZE = 60;
+  const [browseVisibleCount, setBrowseVisibleCount] = useState(BROWSE_PAGE_SIZE);
+
+  // Reset visible count when streams change (new experience selected)
+  useEffect(() => { setBrowseVisibleCount(BROWSE_PAGE_SIZE); }, [streams]);
 
   // Background probe (throttled to every 30 min)
   useEffect(() => {
@@ -962,7 +1141,7 @@ function BrowseGrid({
   return (
     <>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
-        {grouped.map((group) => (
+        {grouped.slice(0, browseVisibleCount).map((group) => (
           <button
             key={group.name}
             onClick={() => handleTap(group)}
@@ -993,6 +1172,20 @@ function BrowseGrid({
           </button>
         ))}
       </div>
+
+      {grouped.length > browseVisibleCount && (
+        <div className="flex flex-col items-center gap-3 px-4 mt-2 mb-4">
+          <p className="text-xs text-white/30">
+            {t(lang, 'showing') || 'Showing'} {browseVisibleCount} / {grouped.length}
+          </p>
+          <button
+            onClick={() => setBrowseVisibleCount(prev => prev + BROWSE_PAGE_SIZE)}
+            className="bg-white/5 border border-white/10 rounded-xl px-6 py-3 text-sm text-white/50 hover:text-white hover:bg-white/10 backdrop-blur-sm transition-[color,background-color] duration-300"
+          >
+            {t(lang, 'showMore') || 'Load More'}
+          </button>
+        </div>
+      )}
 
       {/* Quality picker modal */}
       {selectedGroup && (
@@ -1028,6 +1221,108 @@ function BrowseGrid({
   );
 }
 
+// ── Experience display names for search filter chips ────────────────
+
+const EXP_DISPLAY_NAMES: Record<string, string> = {
+  sports: 'Sports',
+  entertainment: 'Entertainment',
+  news: 'News',
+  kids: 'Kids',
+  movies: 'Cinema',
+  faith: 'Faith',
+  music: 'Music',
+  documentary: 'Discovery',
+  premium4k: '4K',
+  african: 'Africa',
+  indian: 'India',
+  arabic: 'Arabic',
+  french: 'French',
+};
+
+// ── Search Results with Category Filter ─────────────────────────────
+
+function SearchResultsWithFilter({ streams, credentials, onPlay, freeUrlMap, expMap, activeFilter, onFilterChange }: {
+  streams: LiveStream[];
+  credentials: XtreamCredentials;
+  onPlay: (channel: Channel) => void;
+  freeUrlMap: Record<number, string>;
+  expMap: Record<number, string[]>;
+  activeFilter: string[];
+  onFilterChange: (filter: string[]) => void;
+}) {
+  const expCounts = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const s of streams) {
+      const exps = expMap[s.stream_id];
+      if (exps) {
+        for (const e of exps) {
+          counts[e] = (counts[e] || 0) + 1;
+        }
+      }
+    }
+    return counts;
+  }, [streams, expMap]);
+
+  const availableExps = React.useMemo(() => {
+    return Object.entries(expCounts)
+      .filter(([, count]) => count > 0)
+      .sort((a, b) => b[1] - a[1])
+      .map(([id]) => id);
+  }, [expCounts]);
+
+  const filtered = React.useMemo(() => {
+    if (activeFilter.length === 0) return streams;
+    return streams.filter(s => {
+      const exps = expMap[s.stream_id];
+      if (!exps) return false;
+      return activeFilter.some(f => exps.includes(f));
+    });
+  }, [streams, activeFilter, expMap]);
+
+  if (availableExps.length <= 1) {
+    return <SearchGrid streams={streams} credentials={credentials} onPlay={onPlay} freeUrlMap={freeUrlMap} />;
+  }
+
+  const toggleFilter = (expId: string) => {
+    if (activeFilter.includes(expId)) {
+      onFilterChange(activeFilter.filter(f => f !== expId));
+    } else {
+      onFilterChange([...activeFilter, expId]);
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pt-2 pb-1">
+        <button
+          onClick={() => onFilterChange([])}
+          className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors duration-200 ${
+            activeFilter.length === 0
+              ? 'bg-primary text-white shadow-lg shadow-primary/20'
+              : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/70'
+          }`}
+        >
+          All ({streams.length})
+        </button>
+        {availableExps.map(expId => (
+          <button
+            key={expId}
+            onClick={() => toggleFilter(expId)}
+            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors duration-200 ${
+              activeFilter.includes(expId)
+                ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/70'
+            }`}
+          >
+            {EXP_DISPLAY_NAMES[expId] || expId} ({expCounts[expId]})
+          </button>
+        ))}
+      </div>
+      <SearchGrid streams={filtered} credentials={credentials} onPlay={onPlay} freeUrlMap={freeUrlMap} />
+    </div>
+  );
+}
+
 // ── Search Grid (simple, no quality grouping) ─────────────────────
 
 function SearchGrid({ streams, credentials, onPlay, freeUrlMap }: {
@@ -1036,11 +1331,11 @@ function SearchGrid({ streams, credentials, onPlay, freeUrlMap }: {
   onPlay: (channel: Channel) => void;
   freeUrlMap: Record<number, string>;
 }) {
+  const [limit, setLimit] = useState(60);
   const alive = streams.filter(s => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id));
 
   const handlePlay = useCallback(
     (stream: LiveStream) => {
-      // Build playlist from alive search results
       const channels = alive.map(s => ({
         id: `live-${s.stream_id}`,
         name: s.name,
@@ -1061,24 +1356,37 @@ function SearchGrid({ streams, credentials, onPlay, freeUrlMap }: {
   );
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
-      {alive.slice(0, 100).map((stream) => (
-        <button
-          key={stream.stream_id}
-          onClick={() => handlePlay(stream)}
-          className="group relative bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col items-center gap-2 hover:bg-white/10 hover:border-primary/30 transition-colors duration-300"
-        >
-          <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" />
-          <p className="text-xs text-text-secondary text-center truncate w-full group-hover:text-white transition-colors">
-            {stream.name}
-          </p>
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="w-10 h-10 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center shadow-lg shadow-primary/30">
-              <Play className="w-5 h-5 text-white ml-0.5" />
+    <div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
+        {alive.slice(0, limit).map((stream) => (
+          <button
+            key={stream.stream_id}
+            onClick={() => handlePlay(stream)}
+            className="group relative bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col items-center gap-2 hover:bg-white/10 hover:border-primary/30 transition-colors duration-300"
+          >
+            <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" />
+            <p className="text-xs text-text-secondary text-center truncate w-full group-hover:text-white transition-colors">
+              {stream.name}
+            </p>
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="w-10 h-10 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center shadow-lg shadow-primary/30">
+                <Play className="w-5 h-5 text-white ml-0.5" />
+              </div>
             </div>
-          </div>
-        </button>
-      ))}
+          </button>
+        ))}
+      </div>
+      {alive.length > limit && (
+        <div className="flex flex-col items-center gap-2 py-4">
+          <p className="text-[11px] text-white/30">{Math.min(limit, alive.length)} of {alive.length}</p>
+          <button
+            onClick={() => setLimit(l => l + 60)}
+            className="px-5 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            Show more
+          </button>
+        </div>
+      )}
     </div>
   );
 }

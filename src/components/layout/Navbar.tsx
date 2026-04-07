@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Tv, Clapperboard, PlayCircle, Globe } from 'lucide-react';
 import { useLanguage } from '@/i18n';
@@ -25,28 +25,64 @@ export const Navbar: React.FC = () => {
   const location = useLocation();
   const [sidebarHover, setSidebarHover] = useState(false);
   const [navGlow, setNavGlow] = useState(false);
+  const [navFaded, setNavFaded] = useState(false);
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Auto-fade: 10s idle → 70% opacity, 7s after interaction → fade again
+  const lastInteraction = useRef(0);
+  const resetFadeTimer = useCallback((delay = 10000) => {
+    setNavFaded(false);
+    clearTimeout(fadeTimerRef.current);
+    fadeTimerRef.current = setTimeout(() => setNavFaded(true), delay);
+  }, []);
+
+  useEffect(() => {
+    resetFadeTimer(10000);
+    // Throttled: only reset if 2s+ since last interaction (avoids state churn on scroll)
+    const onTouch = () => {
+      const now = Date.now();
+      if (now - lastInteraction.current < 2000) return;
+      lastInteraction.current = now;
+      resetFadeTimer(7000);
+    };
+    window.addEventListener('touchstart', onTouch, { passive: true });
+    window.addEventListener('scroll', onTouch, { passive: true });
+    return () => {
+      clearTimeout(fadeTimerRef.current);
+      window.removeEventListener('touchstart', onTouch);
+      window.removeEventListener('scroll', onTouch);
+    };
+  }, [resetFadeTimer]);
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
   };
 
+  const haptic = () => {
+    if (navigator.vibrate) navigator.vibrate(3);
+  };
+
   const handleTap = useCallback((path: string) => {
+    haptic();
     navigate(path);
     setNavGlow(true);
     setTimeout(() => setNavGlow(false), 2000);
-  }, [navigate]);
+    resetFadeTimer(7000);
+  }, [navigate, resetFadeTimer]);
 
   return (
     <>
       {/* MOBILE BOTTOM NAV — OG dasuperhub style */}
-      <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 pointer-events-none">
+      <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 pointer-events-none safe-bottom"
+        style={{ opacity: navFaded ? 0.7 : 1, transition: 'opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1)' }}
+      >
         <div
-          className="backdrop-blur-2xl max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto transition-[background-color,border-color,box-shadow] duration-500"
+          className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto transition-[background-color,border-color,box-shadow] duration-500"
           style={{
             background: navGlow
-              ? 'linear-gradient(135deg, rgba(157,78,221,0.15) 0%, rgba(10,10,15,0.95) 50%, rgba(157,78,221,0.1) 100%)'
-              : 'rgba(10, 10, 15, 0.92)',
+              ? 'linear-gradient(135deg, rgba(157,78,221,0.12) 0%, rgba(10,10,15,0.65) 50%, rgba(157,78,221,0.08) 100%)'
+              : 'rgba(10, 10, 15, 0.55)',
             border: navGlow
               ? '1px solid rgba(157, 78, 221, 0.5)'
               : '1px solid rgba(157, 78, 221, 0.12)',
@@ -127,9 +163,9 @@ export const Navbar: React.FC = () => {
         className="hidden lg:flex fixed left-0 top-0 bottom-0 z-40 flex-col transition-[width] duration-300 ease-out"
         style={{
           width: sidebarHover ? 220 : 72,
-          background: 'rgba(10, 10, 15, 0.90)',
-          backdropFilter: 'blur(24px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          background: 'rgba(10, 10, 15, 0.60)',
+          backdropFilter: 'blur(16px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(16px) saturate(150%)',
           borderRight: '1px solid rgba(157, 78, 221, 0.1)',
         }}
         onMouseEnter={() => setSidebarHover(true)}
