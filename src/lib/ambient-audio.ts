@@ -123,7 +123,7 @@ export function toggleAmbient(): boolean {
 
 export function setAmbientSpeed(speed: number): void {
   targetSpeed = Math.max(0.5, Math.min(1.2, speed));
-  if (!audio) return;
+  if (!audio || isMutedForStream) return;
   if (transitionInterval) clearInterval(transitionInterval);
   const steps = 40;
   const stepSize = (targetSpeed - currentSpeed) / steps;

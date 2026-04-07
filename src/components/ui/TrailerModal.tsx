@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { X, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
+import { CosmicClose } from './CosmicClose';
 
 // Embed sources — fallback chain: YouTube nocookie → Piped → Invidious
 const EMBED_SOURCES = [
@@ -59,13 +60,9 @@ export const TrailerModal: React.FC<TrailerModalProps> = ({
       onClick={onClose}
     >
       {/* Close button */}
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-white/8 border border-white/10 hover:bg-white/15 flex items-center justify-center transition-colors duration-300"
-        aria-label="Close trailer"
-      >
-        <X className="w-5 h-5 text-white/70" />
-      </button>
+      <div className="absolute top-4 right-4 z-50">
+        <CosmicClose onClick={onClose} />
+      </div>
 
       {/* Content */}
       <div

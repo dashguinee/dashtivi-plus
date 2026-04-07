@@ -429,7 +429,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     <div className="pt-16 pb-32">
       {/* ── Hero Billboard ── */}
       {heroMovie ? (
-        <div className="relative overflow-hidden" style={{ height: 'clamp(200px, 55vh, 400px)' }}>
+        <div className="relative overflow-hidden" style={{ height: 'clamp(140px, 25vh, 280px)' }}>
           {/* Backdrop image */}
           <div
             className="absolute inset-0 bg-cover bg-center"
@@ -472,10 +472,9 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               </button>
               <button
                 onClick={() => setDetailMovie(heroMovie.movie)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white/80 border border-white/20 bg-white/5 hover:bg-white/10 transition-colors"
+                className="flex items-center justify-center w-10 h-10 rounded-full border border-white/20 bg-white/5 hover:bg-white/10 transition-colors"
               >
-                <Plus className="w-4 h-4" />
-                My List
+                <Plus className="w-4 h-4 text-white/80" />
               </button>
             </div>
           </div>
@@ -616,7 +615,6 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                   {t(lang, pack.nameKey as TranslationKey)}
                   <RowCountBadge count={items.length} label="movies" />
                 </h3>
-                <p className="text-[11px] text-white/25 mt-0.5">{t(lang, pack.descKey as TranslationKey)}</p>
               </div>
               <div className="flex gap-3.5 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-2 items-end">
                 {items.map((m, i) => (
@@ -629,7 +627,6 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               </div>
             </section>
           ))}
-          <div className="mx-6 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.08), transparent)' }} />
         </div>
       )}
 
@@ -641,18 +638,12 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
             const isFirstRow = rowIndex === 0;
             const isSecondRow = rowIndex === 1;
             const cardWidth = isFirstRow ? 140 : isSecondRow ? 120 : 108;
-            // Section divider every 3 rows
-            const showDivider = rowIndex > 0 && rowIndex % 3 === 0;
-
             return (
               <React.Fragment key={collection.id}>
-                {showDivider && (
-                  <div className="mx-6 my-6 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(245,158,11,0.08), transparent)' }} />
-                )}
                 <div className="mb-8">
                   <VeeCollectionRow
-                    name={isFirstRow ? `Top 10 ${collection.name}` : collection.name}
-                    tagline={collection.tagline}
+                    name={collection.name}
+                    tagline=""
                     items={isFirstRow ? items.slice(0, 10) : items}
                     tmdbMap={tmdbMap}
                     isTop10={isFirstRow}
@@ -690,7 +681,12 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <p className="text-text-muted text-sm">{t(lang, 'unableToLoadRetry')}</p>
           <button onClick={() => { setMoviesError(false); setLoading(true); setRetryKey(k => k + 1); }}
-            className="px-5 py-2.5 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors">{t(lang, 'retry')}</button>
+            className="group px-5 py-2.5 rounded-xl text-[12px] font-medium tracking-wide transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+            style={{
+              background: 'linear-gradient(135deg, rgba(157,78,221,0.15) 0%, rgba(157,78,221,0.06) 100%)',
+              border: '1px solid rgba(157,78,221,0.25)',
+              color: 'rgba(157,78,221,0.85)',
+            }}>{t(lang, 'retry')}</button>
         </div>
       ) : filteredAndSorted.length === 0 ? (
         isSearching || activeGenre !== 0 ? (
@@ -728,15 +724,31 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
             ))}
           </div>
           {!isSearching && filteredAndSorted.length > displayLimit && (
-            <div className="flex flex-col items-center gap-3 pb-8 mt-6 mb-4">
-              <p className="text-xs text-white/30 text-center">
-                {t(lang, 'showing')} {Math.min(displayLimit, filteredAndSorted.length).toLocaleString()} {t(lang, 'of')} {filteredAndSorted.length.toLocaleString()}
-              </p>
+            <div className="flex flex-col items-center gap-1 pb-8 mt-4 mb-4">
               <button
                 onClick={() => setDisplayLimit(prev => prev + PAGE_SIZE)}
-                className="bg-white/5 border border-white/10 rounded-xl px-6 py-3 text-sm text-white/50 hover:text-white hover:bg-white/10 transition-[color,background-color] duration-300 show-more-breathe"
+                className="group w-full relative overflow-hidden rounded-2xl py-3.5 transition-all duration-300 hover:scale-[1.005] active:scale-[0.995]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(157,78,221,0.02) 100%)',
+                  border: '1px solid rgba(157,78,221,0.1)',
+                }}
               >
-                {t(lang, 'showMore')}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.04) 50%, transparent 100%)' }}
+                />
+                <div className="relative flex flex-col items-center justify-center gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-medium tracking-[0.15em] uppercase" style={{ color: 'rgba(157,78,221,0.55)' }}>
+                      {t(lang, 'showMore')}
+                    </span>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="group-hover:translate-y-0.5 transition-transform duration-300">
+                      <path d="M6 2v8M2 6l4 4 4-4" stroke="rgba(157,78,221,0.4)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                    {t(lang, 'showing')} {Math.min(displayLimit, filteredAndSorted.length).toLocaleString()} {t(lang, 'of')} {filteredAndSorted.length.toLocaleString()}
+                  </span>
+                </div>
               </button>
             </div>
           )}

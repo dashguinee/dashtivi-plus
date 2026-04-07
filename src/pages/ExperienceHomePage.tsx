@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Play, ChevronLeft, ChevronRight, Search, X, Trophy, Baby, Sparkles, Radio, Film, Music, Globe, Heart, Home, MapPin, Sun, Star, Moon, Flag } from 'lucide-react';
+import { Play, ChevronRight, Search, X, Trophy, Baby, Sparkles, Radio, Film, Music, Globe, Heart, Home, MapPin, Sun, Star, Moon, Flag } from 'lucide-react';
 import { t, useLanguage } from '@/i18n';
 import type { XtreamCredentials, LiveStream, CuratorChannel } from '@/lib/xtream';
 import {
@@ -578,7 +578,17 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
     const sub = config.subtypes.find(s => s.id === activeSubTab);
     if (sub) {
       const catSet = new Set(sub.categoryIds);
-      filtered = allStreams.filter(s => catSet.has(String(s.category_id)));
+      filtered = allStreams.filter(s => {
+        if (!catSet.has(String(s.category_id))) return false;
+        const nl = s.name.toLowerCase();
+        if (sub.nameFilter?.length) {
+          if (!sub.nameFilter.some(k => nl.includes(k))) return false;
+        }
+        if (sub.nameExclude?.length) {
+          if (sub.nameExclude.some(k => nl.includes(k))) return false;
+        }
+        return true;
+      });
     }
   }
 
@@ -625,17 +635,26 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
   return (
     <div className="pt-14 pb-32 min-h-screen">
       {/* ── Hero Banner ────────────────────────────────────────────── */}
-      <div className={`relative px-4 pt-6 pb-8 bg-gradient-to-b ${config.heroGradient}`}>
+      <div className={`relative px-4 pt-4 pb-4 bg-gradient-to-b ${config.heroGradient}`}>
         {/* Back button */}
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-1 text-white/50 hover:text-white transition-colors mb-4"
+          className="group flex items-center gap-1.5 pr-3 pl-2 py-1.5 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.97] mb-3"
+          style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
         >
-          <ChevronLeft className="w-4 h-4" />
-          <span className="text-xs">Back</span>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+            className="group-hover:-translate-x-0.5 transition-transform duration-200">
+            <path d="M8.5 3L4.5 7l4 4" stroke="rgba(157,78,221,0.5)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="text-[10px] font-medium tracking-wide uppercase" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            Back
+          </span>
         </button>
 
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
             style={{ background: config.accentColor, boxShadow: `0 0 20px ${config.accentGlow}` }}
@@ -648,13 +667,6 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
           </div>
         </div>
 
-        <p className="text-sm text-white/60 mt-1">{config.tagline}</p>
-
-        {/* Time-aware greeting */}
-        <div className="mt-3 flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full" style={{ background: config.accentColor }} />
-          <span className="text-xs text-white/30">{config.timeGreetings[timeSlot]}</span>
-        </div>
       </div>
 
       {/* ── Search ──────────────────────────────────────────────────── */}
@@ -694,12 +706,9 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
                   <div className="w-1.5 h-1.5 rounded-full" style={{ background: config.accentColor, boxShadow: `0 0 6px ${config.accentGlow}` }} />
                   <h2 className="text-lg font-black text-white">Top Picks</h2>
                 </div>
-                {veeRow?.tagline && (
-                  <p className="text-[11px] text-white/25 mt-0.5 pl-3.5">{veeRow.tagline}</p>
-                )}
               </div>
               <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-x px-4 pb-2">
-                {veeStreams.slice(0, 25).map((stream, i) => (
+                {veeStreams.slice(0, 40).map((stream, i) => (
                   <button
                     key={stream.stream_id}
                     onClick={() => handlePlay(stream, veeStreams)}
@@ -714,14 +723,7 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
                         <span className="w-1 h-1 rounded-full live-badge-pulse" style={{ background: config.accentColor }} />
                         LIVE
                       </div>
-                      {i === 0 ? (
-                        <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded text-[7px] font-bold bg-black/60"
-                          style={{ color: config.accentColor }}>
-                          #1 PICK
-                        </div>
-                      ) : (
-                        <ChannelBadge streamId={stream.stream_id} />
-                      )}
+                      <ChannelBadge streamId={stream.stream_id} />
                     </div>
                     <p className="text-[10px] text-white/40 truncate group-hover:text-white/70 transition-colors">{stream.name}</p>
                   </button>
@@ -790,15 +792,31 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
               </div>
             )}
             {deduped.length > gridVisibleCount && (
-              <div className="flex flex-col items-center gap-3 mt-6 mb-4">
-                <p className="text-xs text-white/30">
-                  Showing {gridVisibleCount} of {deduped.length} channels
-                </p>
+              <div className="flex flex-col items-center gap-1 mt-4 mb-4">
                 <button
                   onClick={() => setGridVisibleCount(prev => prev + GRID_PAGE_SIZE)}
-                  className="bg-white/5 border border-white/10 rounded-xl px-6 py-3 text-sm text-white/50 hover:text-white hover:bg-white/10 backdrop-blur-sm transition-[color,background-color] duration-300"
+                  className="group w-full relative overflow-hidden rounded-2xl py-3.5 transition-all duration-300 hover:scale-[1.005] active:scale-[0.995]"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(157,78,221,0.02) 100%)',
+                    border: '1px solid rgba(157,78,221,0.1)',
+                  }}
                 >
-                  Load More
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.04) 50%, transparent 100%)' }}
+                  />
+                  <div className="relative flex flex-col items-center justify-center gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-medium tracking-[0.15em] uppercase" style={{ color: 'rgba(157,78,221,0.55)' }}>
+                        Discover more
+                      </span>
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="group-hover:translate-y-0.5 transition-transform duration-300">
+                        <path d="M6 2v8M2 6l4 4 4-4" stroke="rgba(157,78,221,0.4)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                    <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                      {gridVisibleCount} of {deduped.length} channels
+                    </span>
+                  </div>
                 </button>
               </div>
             )}
@@ -812,10 +830,9 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
                   <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" style={{ boxShadow: '0 0 6px rgba(0,212,255,0.5)' }} />
                   <h2 className="text-base font-black text-white">Popular Right Now</h2>
                 </div>
-                <p className="text-[11px] text-white/20 mt-0.5 pl-3.5">What everyone is watching across all experiences</p>
               </div>
               <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-x px-4 pb-2">
-                {socialStreams.slice(0, 20).map((stream, i) => (
+                {socialStreams.slice(0, 30).map((stream, i) => (
                   <button
                     key={stream.stream_id}
                     onClick={() => handlePlay(stream, socialStreams)}
@@ -835,45 +852,6 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
             </section>
           )}
 
-          {/* ── Explore Other Experiences ────────────────────────────── */}
-          {!searchQuery && (
-            <section className="mb-8 px-4">
-              <h2 className="text-base font-black text-white mb-3">Explore More</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {config.crossExperiences.map((exp) => (
-                  <button
-                    key={exp.id}
-                    onClick={() => {
-                      if (EXPERIENCE_CONFIGS[exp.id]) {
-                        navigate(`/live/${exp.id}`);
-                      } else {
-                        navigate('/live');
-                      }
-                    }}
-                    className={`relative overflow-hidden rounded-xl p-4 bg-gradient-to-br ${exp.gradient} border border-white/5 hover:border-white/15 transition-all duration-300 active:scale-[0.97]`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-white/70">{exp.icon}</span>
-                      <span className="text-sm font-bold text-white/80">{exp.name}</span>
-                    </div>
-                    <ChevronRight className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20" />
-                  </button>
-                ))}
-
-                {/* Always include Home */}
-                <button
-                  onClick={() => navigate('/')}
-                  className="relative overflow-hidden rounded-xl p-4 bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/5 hover:border-white/15 transition-all duration-300 active:scale-[0.97]"
-                >
-                  <div className="flex items-center gap-2">
-                    <Home className="w-4 h-4 text-white/70" />
-                    <span className="text-sm font-bold text-white/80">Home</span>
-                  </div>
-                  <ChevronRight className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20" />
-                </button>
-              </div>
-            </section>
-          )}
 
           {/* ── Bottom callback — sticky quick nav ───────────────────── */}
           <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 px-2 py-1.5 rounded-full bg-black/80 backdrop-blur-lg border border-white/10 shadow-lg"

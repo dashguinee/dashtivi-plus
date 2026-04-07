@@ -510,7 +510,7 @@ const translations = {
     tennis: 'Tennis',
 
     // ── Live TV Page ──────────────────────────────────────────
-    searchChannels: 'Search channels...',
+    searchChannels: 'Find a channel...',
     searching: 'Searching...',
     channelFound: 'channel found',
     channelsFound: 'channels found',
@@ -519,14 +519,14 @@ const translations = {
     noChannelsMatch: 'No channels match your search',
     browseAllCategories: 'Browse All Categories',
     seeLess: 'See less',
-    unableToLoad: 'Unable to load',
-    retry: 'Retry',
+    unableToLoad: 'Signal lost',
+    retry: 'Reconnect',
     noChannelsInCategory: 'No channels in this category',
     selectQuality: 'Select quality',
     best: 'Best',
     high: 'High',
     standard: 'Standard',
-    loading: 'Loading...',
+    loading: 'Tuning signal...',
 
     // ── Live TV Theme names ───────────────────────────────────
     themeSports: 'Sports',
@@ -540,9 +540,9 @@ const translations = {
     themeFaith: 'Faith',
 
     // ── Movies Page ───────────────────────────────────────────
-    searchMovies: 'Search movies...',
+    searchMovies: 'Search 60,000+ titles...',
     trendingNow: 'Trending Now',
-    showMore: 'Show More',
+    showMore: 'Discover more',
     showing: 'Showing',
     of: 'of',
     clearFilter: 'Clear filter',
@@ -550,7 +550,7 @@ const translations = {
     noMoviesGenre: 'No movies of this genre here',
     showAll: 'Show all',
     noMoviesInCategory: 'No movies in this category',
-    unableToLoadRetry: 'Unable to load — tap to retry',
+    unableToLoadRetry: 'Signal lost. Tap to reconnect.',
     top50: 'Top 50 results',
     found: 'found',
     download: 'Download',
@@ -615,13 +615,13 @@ const translations = {
     tabInternational: 'International',
 
     // ── Series Page ───────────────────────────────────────────
-    searchSeries: 'Search series...',
+    searchSeries: 'Find a series to binge...',
     trendingRightNow: 'Trending Right Now',
     noSeriesMatch: 'No series match your search',
     noSeriesGenre: 'No series of this genre here',
     noSeriesInCategory: 'No series in this category',
     loadingSeries: 'Loading series...',
-    showMoreRemaining: 'Show More',
+    showMoreRemaining: 'Discover more',
     remaining: 'remaining',
     loadingEpisodes: 'Loading episodes...',
     episodesUnavailable: 'Episodes unavailable',
@@ -696,7 +696,7 @@ const translations = {
     typeSeries: 'Series',
 
     // ── Home Page — breakers & error ─────────────────────────────
-    unableToLoadTapRetry: 'Unable to load — tap to retry',
+    unableToLoadTapRetry: 'Signal lost. Tap to reconnect.',
     dPlusCollection: 'D+ Collection',
 
     // ── Search status ────────────────────────────────────────────
@@ -715,7 +715,7 @@ const translations = {
 
     // ── Feed Section ──────────────────────────────────────────
     whatsHappening: 'What\'s happening on DASH',
-    showMoreFeed: 'Show More',
+    showMoreFeed: 'Discover more',
     liveNow: 'Live Now',
     watchOnTivi: 'Watch on TiVi',
     seeOnDash: 'See on DASH',

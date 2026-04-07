@@ -1,66 +1,64 @@
 import React from 'react';
 
-interface Props {
-  size?: 'sm' | 'md' | 'lg';
-  text?: string;
-}
-
-/**
- * DASH Premium Loader — neon beam sweep instead of boring spinner.
- * A thin light beam scans horizontally, contained to its section.
- */
-export const LoadingSpinner: React.FC<Props> = ({ size = 'md', text }) => {
-  const widths = { sm: 'w-12', md: 'w-20', lg: 'w-28' };
+export function LoadingSpinner({ text }: { size?: 'sm' | 'md' | 'lg'; text?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3">
-      <div className={`${widths[size]} h-[2px] rounded-full overflow-hidden`} style={{ background: 'rgba(255,255,255,0.04)' }}>
-        <div
-          className="h-full rounded-full"
-          style={{
-            width: '40%',
-            background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.6), rgba(199,125,255,0.8), rgba(157,78,221,0.6), transparent)',
-            animation: 'dash-beam 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite',
-          }}
-        />
+    <div className="flex flex-col items-center justify-center py-16 gap-4">
+      <div className="relative w-14 h-14">
+        {[0, 1, 2].map(i => (
+          <div key={i} className="absolute inset-0 rounded-full"
+            style={{
+              border: '1.5px solid rgba(157,78,221,0.25)',
+              animation: `signal-pulse 1.8s ease-in-out ${i * 0.4}s infinite`,
+              transform: `scale(${1 + i * 0.35})`,
+            }}
+          />
+        ))}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#9D4EDD', boxShadow: '0 0 12px rgba(157,78,221,0.6)' }} />
+        </div>
       </div>
-      {text && <p className="text-[11px] text-white/25 font-light tracking-wide">{text}</p>}
+      {text && (
+        <span className="text-[11px] font-mono tracking-[0.2em] uppercase" style={{ color: 'rgba(157,78,221,0.45)' }}>
+          {text}
+        </span>
+      )}
     </div>
   );
-};
+}
 
-export const FullPageLoader: React.FC = () => (
-  <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: '#060609' }}>
-    <div className="text-center">
-      <h1>
-        <span className="text-[28px] font-black tracking-tight text-white uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>DASH</span>
-        <span className="text-[20px] font-light tracking-wide text-white/40" style={{ fontFamily: "'Outfit', sans-serif", marginLeft: '1px' }}>tivi</span>
-        <span className="text-primary-light text-[14px] font-bold ml-0.5">+</span>
-      </h1>
-      <div className="mt-4 mx-auto w-10 h-[2px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)' }}>
-        <div
-          className="h-full rounded-full"
-          style={{
-            width: '40%',
-            background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.6), rgba(199,125,255,0.8), rgba(157,78,221,0.6), transparent)',
-            animation: 'dash-beam 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite',
-          }}
-        />
-      </div>
+export function FullPageLoader() {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-[#0a0a12]/90 z-50">
+      <LoadingSpinner text="Tuning signal" />
     </div>
-  </div>
-);
+  );
+}
 
 export const SkeletonCard: React.FC<{ className?: string }> = ({ className = '' }) => (
   <div className={`skeleton rounded-xl ${className}`} />
 );
 
-export const SkeletonRow: React.FC = () => (
-  <div className="space-y-3 px-4">
-    <div className="skeleton h-6 w-40 rounded" />
-    <div className="flex gap-3 overflow-hidden">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <SkeletonCard key={i} className="w-40 h-24 flex-shrink-0" />
-      ))}
+export function SkeletonRow() {
+  return (
+    <div className="px-4 py-3">
+      <div className="h-4 w-28 rounded-lg mb-3" style={{ background: 'rgba(157,78,221,0.08)' }} />
+      <div className="flex gap-3 overflow-hidden">
+        {[0, 1, 2, 3].map(i => (
+          <div key={i} className="flex-shrink-0 rounded-xl overflow-hidden" style={{ width: 130, border: '1px solid rgba(157,78,221,0.06)' }}>
+            <div className="aspect-video relative overflow-hidden" style={{ background: 'rgba(157,78,221,0.04)' }}>
+              <div className="absolute inset-0" style={{
+                background: 'linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.08) 50%, transparent 100%)',
+                backgroundSize: '200% 100%',
+                animation: `cosmic-sweep 2.4s ease-in-out ${i * 0.15}s infinite`,
+              }} />
+            </div>
+            <div className="p-2.5 space-y-1.5">
+              <div className="h-2.5 rounded-full w-3/4" style={{ background: 'rgba(157,78,221,0.08)' }} />
+              <div className="h-2 rounded-full w-1/2" style={{ background: 'rgba(255,255,255,0.04)' }} />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+}

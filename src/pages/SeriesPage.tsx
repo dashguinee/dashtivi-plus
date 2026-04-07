@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { Play, X, Download, Search, SlidersHorizontal, Plus, Star } from 'lucide-react';
+import { Play, X, Download, Search, SlidersHorizontal, Star } from 'lucide-react';
 import type { XtreamCredentials, SeriesItem, SeriesInfo, Episode } from '@/lib/xtream';
 import { getSeries, getSeriesInfo, buildSeriesUrl, buildVodFallbackUrl, getTmdbMap, getSeriesByCategory, seriesDbToItem, searchSeries } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
@@ -7,6 +7,7 @@ import { TMDB_GENRES } from '@/lib/tmdb-map.generated';
 import { PosterCard } from '@/components/ui/PosterCard';
 import { VeeCollectionRow } from '@/components/ui/VeeCollectionRow';
 import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
+import { CosmicClose } from '@/components/ui/CosmicClose';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { NeonGate, RowCountBadge, cardScaleStyle } from '@/components/ui/NeonGate';
@@ -489,7 +490,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     <div className="pt-16 pb-32">
       {/* ── Hero Billboard ── */}
       {heroSeries ? (
-        <div className="relative overflow-hidden" style={{ height: 'clamp(200px, 55vh, 400px)' }}>
+        <div className="relative overflow-hidden" style={{ height: 'clamp(180px, 40vh, 280px)' }}>
           {/* Backdrop image */}
           <div
             className="absolute inset-0 bg-cover bg-center"
@@ -529,13 +530,6 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               >
                 <Play className="w-4 h-4 fill-white" />
                 Play
-              </button>
-              <button
-                onClick={() => setDetailSeries(heroSeries.series)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white/80 border border-white/20 bg-white/5 hover:bg-white/10 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                My List
               </button>
             </div>
           </div>
@@ -687,7 +681,6 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               </div>
             </section>
           ))}
-          <div className="mx-6 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.08), transparent)' }} />
         </div>
       )}
 
@@ -699,31 +692,23 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
             const isFirstRow = rowIndex === 0;
             const isSecondRow = rowIndex === 1;
             const cardWidth = isFirstRow ? 140 : isSecondRow ? 120 : 108;
-            // Section divider every 3 rows
-            const showDivider = rowIndex > 0 && rowIndex % 3 === 0;
 
             return (
-              <React.Fragment key={collection.id}>
-                {showDivider && (
-                  <div className="mx-6 my-6 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.08), transparent)' }} />
-                )}
-                <div className="mb-8">
-                  <VeeCollectionRow
-                    name={isFirstRow ? `Top 10 ${collection.name}` : collection.name}
-                    tagline={collection.tagline}
-                    items={isFirstRow ? items.slice(0, 10) : items}
-                    tmdbMap={tmdbMap}
-                    isTop10={isFirstRow}
-                    cardWidth={cardWidth}
-                    navigateTo="/series"
-                    countLabel="series"
-                    onItemClick={(id) => {
-                      const series = seriesList.find(s => s.series_id === id);
-                      if (series) setDetailSeries(series);
-                    }}
-                  />
-                </div>
-              </React.Fragment>
+              <div key={collection.id} className="mb-8">
+                <VeeCollectionRow
+                  name={collection.name}
+                  items={isFirstRow ? items.slice(0, 10) : items}
+                  tmdbMap={tmdbMap}
+                  isTop10={isFirstRow}
+                  cardWidth={cardWidth}
+                  navigateTo="/series"
+                  countLabel="series"
+                  onItemClick={(id) => {
+                    const series = seriesList.find(s => s.series_id === id);
+                    if (series) setDetailSeries(series);
+                  }}
+                />
+              </div>
             );
           })}
         </div>
@@ -748,7 +733,12 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <p className="text-text-muted text-sm">{t(lang, 'unableToLoadRetry')}</p>
           <button onClick={() => { setSeriesError(false); setLoading(true); setRetryKey(k => k + 1); }}
-            className="px-5 py-2.5 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors">{t(lang, 'retry')}</button>
+            className="group px-5 py-2.5 rounded-xl text-[12px] font-medium tracking-wide transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+            style={{
+              background: 'linear-gradient(135deg, rgba(157,78,221,0.15) 0%, rgba(157,78,221,0.06) 100%)',
+              border: '1px solid rgba(157,78,221,0.25)',
+              color: 'rgba(157,78,221,0.85)',
+            }}>{t(lang, 'retry')}</button>
         </div>
       ) : filteredAndSorted.length === 0 ? (
         isSearching || activeGenre !== 0 ? (
@@ -775,12 +765,31 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
           {/* Show More button */}
           {filteredAndSorted.length > displayLimit && (
-            <div className="flex justify-center mt-6 mb-4 pb-8">
+            <div className="flex flex-col items-center gap-1 mt-4 mb-4 pb-8">
               <button
                 onClick={() => setDisplayLimit(l => l + PAGE_SIZE)}
-                className="px-6 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white/60 hover:bg-white/10 hover:text-white transition-[color,background-color] duration-300 show-more-breathe"
+                className="group w-full relative overflow-hidden rounded-2xl py-3.5 transition-all duration-300 hover:scale-[1.005] active:scale-[0.995]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(157,78,221,0.02) 100%)',
+                  border: '1px solid rgba(157,78,221,0.1)',
+                }}
               >
-                {t(lang, 'showMore')} ({filteredAndSorted.length - displayLimit} {t(lang, 'remaining')})
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.04) 50%, transparent 100%)' }}
+                />
+                <div className="relative flex flex-col items-center justify-center gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-medium tracking-[0.15em] uppercase" style={{ color: 'rgba(157,78,221,0.55)' }}>
+                      {t(lang, 'showMore')}
+                    </span>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="group-hover:translate-y-0.5 transition-transform duration-300">
+                      <path d="M6 2v8M2 6l4 4 4-4" stroke="rgba(157,78,221,0.4)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                    {filteredAndSorted.length - displayLimit} {t(lang, 'remaining')}
+                  </span>
+                </div>
               </button>
             </div>
           )}
@@ -822,12 +831,9 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 <div className="w-full h-full bg-gradient-to-br from-primary/30 to-primary-dark/30" />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-transparent to-transparent" />
-              <button
-                onClick={closeEpisodeModal}
-                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="absolute top-3 right-3">
+                <CosmicClose onClick={closeEpisodeModal} size="sm" />
+              </div>
               <div className="absolute bottom-3 left-4 right-4">
                 <h2 className="text-xl font-bold text-white">{selectedSeries.name}</h2>
               </div>

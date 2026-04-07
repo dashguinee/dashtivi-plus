@@ -1,0 +1,40 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="voyoTextGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF69B4"/>
+      <stop offset="50%" style="stop-color:#DA70D6"/>
+      <stop offset="100%" style="stop-color:#9370DB"/>
+    </linearGradient>
+    <filter id="voyoGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="#1a0a2e"/>
+
+  <!-- Subtle background glow -->
+  <ellipse cx="256" cy="256" rx="200" ry="150" fill="#8b5cf6" opacity="0.1"/>
+
+  <!-- VOYO Text -->
+  <text x="256" y="270"
+        font-family="system-ui, -apple-system, sans-serif"
+        font-size="140"
+        font-weight="800"
+        fill="url(#voyoTextGrad)"
+        text-anchor="middle"
+        filter="url(#voyoGlow)">VOYO</text>
+
+  <!-- MUSIC subtitle -->
+  <text x="256" y="330"
+        font-family="system-ui, sans-serif"
+        font-size="32"
+        font-weight="400"
+        fill="#666"
+        letter-spacing="12"
+        text-anchor="middle">MUSIC</text>
+</svg>

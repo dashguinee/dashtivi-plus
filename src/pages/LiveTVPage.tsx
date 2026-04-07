@@ -617,39 +617,6 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             </div>
           )}
 
-          {/* ── WorldEX Portal ──────────────────────────────── */}
-          <div className="mx-4 mt-6 mb-4">
-            <button
-              onClick={() => navigate('/french')}
-              className="w-full rounded-2xl overflow-hidden relative group active:scale-[0.98] transition-transform duration-200"
-              style={{ background: 'rgba(255,255,255,0.02)' }}
-            >
-              {/* Gradient backdrop */}
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-900/40 via-violet-900/20 to-transparent pointer-events-none" />
-              <div className="relative p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
-                    style={{ background: 'linear-gradient(135deg, #D97706, #7C3AED)', boxShadow: '0 0 16px rgba(217,119,6,0.25)' }}
-                  >
-                    <Globe className="w-5 h-5" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-base font-black text-white tracking-tight">WorldEX</h3>
-                    <p className="text-[10px] text-white/30">{t(lang, 'aTasteOfTheWorld')}</p>
-                  </div>
-                </div>
-                <div
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-300 group-hover:scale-105"
-                  style={{ background: '#D97706', color: '#fff', boxShadow: '0 0 12px rgba(217,119,6,0.25)' }}
-                >
-                  Explore
-                  <ArrowRight className="w-3 h-3" />
-                </div>
-              </div>
-            </button>
-          </div>
-
           {/* ── Browse All Categories ─────────────────────────── */}
           <div className="px-4 mt-4">
             <button
@@ -692,7 +659,12 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
                   <p className="text-text-muted text-sm">{t(lang, 'unableToLoad')}</p>
                   <button
                     onClick={() => { setBrowseError(false); setBrowseRetryKey(k => k + 1); }}
-                    className="px-4 py-2 bg-primary rounded-xl text-sm font-medium hover:bg-primary-light transition-colors"
+                    className="group px-5 py-2.5 rounded-xl text-[12px] font-medium tracking-wide transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(157,78,221,0.15) 0%, rgba(157,78,221,0.06) 100%)',
+                      border: '1px solid rgba(157,78,221,0.25)',
+                      color: 'rgba(157,78,221,0.85)',
+                    }}
                   >
                     {t(lang, 'retry')}
                   </button>
@@ -731,7 +703,7 @@ const SHOWCASE_CONFIG: Record<string, {
 }> = {
   sports: {
     name: 'Sports',
-    tagline: '4K · Live · Every match, every league.',
+    tagline: '',
     route: '/live/sports',
     gradient: 'from-cyan-900/50 via-cyan-900/20 to-transparent',
     accentColor: '#00D4FF',
@@ -740,7 +712,7 @@ const SHOWCASE_CONFIG: Record<string, {
   },
   kids: {
     name: 'Kids & Family',
-    tagline: 'Safe, fun, always on.',
+    tagline: '',
     route: '/live/kids',
     gradient: 'from-pink-900/50 via-pink-900/20 to-transparent',
     accentColor: '#EC4899',
@@ -749,7 +721,7 @@ const SHOWCASE_CONFIG: Record<string, {
   },
   entertainment: {
     name: 'Entertainment',
-    tagline: 'Drama · Comedy · Reality — prime time.',
+    tagline: '',
     route: '/live/entertainment',
     gradient: 'from-indigo-900/50 via-indigo-900/20 to-transparent',
     accentColor: '#818CF8',
@@ -758,7 +730,7 @@ const SHOWCASE_CONFIG: Record<string, {
   },
   news: {
     name: 'News',
-    tagline: 'Breaking · World · 24/7 — stay sharp.',
+    tagline: '',
     route: '/live/news',
     gradient: 'from-red-900/50 via-red-900/20 to-transparent',
     accentColor: '#EF4444',
@@ -767,7 +739,7 @@ const SHOWCASE_CONFIG: Record<string, {
   },
   music: {
     name: 'Music & Vibes',
-    tagline: 'Rhythms · Gospel · Vibes — every mood.',
+    tagline: '',
     route: '/live/music',
     gradient: 'from-violet-900/50 via-violet-900/20 to-transparent',
     accentColor: '#A855F7',
@@ -776,7 +748,7 @@ const SHOWCASE_CONFIG: Record<string, {
   },
   documentary: {
     name: 'Docs & Discovery',
-    tagline: 'Explore · Learn · Discover the world.',
+    tagline: '',
     route: '/live/documentary',
     gradient: 'from-blue-900/50 via-blue-900/20 to-transparent',
     accentColor: '#6366F1',
@@ -785,7 +757,7 @@ const SHOWCASE_CONFIG: Record<string, {
   },
   movies: {
     name: 'Cinema',
-    tagline: 'Blockbusters · Classics — 24/7 showtime.',
+    tagline: '',
     route: '/live/movies',
     gradient: 'from-amber-900/50 via-amber-900/20 to-transparent',
     accentColor: '#F59E0B',
@@ -795,7 +767,7 @@ const SHOWCASE_CONFIG: Record<string, {
   // Alias: theme ID is movies247 but showcase config key is movies
   movies247: {
     name: 'Cinema',
-    tagline: 'Blockbusters · Classics — 24/7 showtime.',
+    tagline: '',
     route: '/live/movies',
     gradient: 'from-amber-900/50 via-amber-900/20 to-transparent',
     accentColor: '#F59E0B',
@@ -804,7 +776,7 @@ const SHOWCASE_CONFIG: Record<string, {
   },
   faith: {
     name: 'Faith',
-    tagline: 'Quran, Gospel, Prayer — nourish your soul.',
+    tagline: '',
     route: '/live/faith',
     gradient: 'from-amber-900/40 via-yellow-900/20 to-transparent',
     accentColor: '#D97706',
@@ -813,7 +785,7 @@ const SHOWCASE_CONFIG: Record<string, {
   },
   premium4k: {
     name: 'Premium 4K',
-    tagline: 'Ultra HD — crystal clear, every pixel.',
+    tagline: '',
     route: '/live/premium4k',
     gradient: 'from-yellow-900/40 via-amber-900/20 to-transparent',
     accentColor: '#EAB308',
@@ -871,7 +843,6 @@ function ExperienceShowcase({
             </div>
             <div>
               <h3 className="text-base font-black text-white tracking-tight">{config.name}</h3>
-              <p className="text-[10px] text-white/30">{config.tagline}</p>
             </div>
           </div>
           <button
@@ -1199,15 +1170,31 @@ function BrowseGrid({
       </div>
 
       {grouped.length > browseVisibleCount && (
-        <div className="flex flex-col items-center gap-3 px-4 mt-2 mb-4">
-          <p className="text-xs text-white/30">
-            {t(lang, 'showing') || 'Showing'} {browseVisibleCount} / {grouped.length}
-          </p>
+        <div className="flex flex-col items-center gap-1 px-4 mt-2 mb-4">
           <button
             onClick={() => setBrowseVisibleCount(prev => prev + BROWSE_PAGE_SIZE)}
-            className="bg-white/5 border border-white/10 rounded-xl px-6 py-3 text-sm text-white/50 hover:text-white hover:bg-white/10 backdrop-blur-sm transition-[color,background-color] duration-300"
+            className="group w-full relative overflow-hidden rounded-2xl py-3.5 transition-all duration-300 hover:scale-[1.005] active:scale-[0.995]"
+            style={{
+              background: 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(157,78,221,0.02) 100%)',
+              border: '1px solid rgba(157,78,221,0.1)',
+            }}
           >
-            {t(lang, 'showMore') || 'Load More'}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.04) 50%, transparent 100%)' }}
+            />
+            <div className="relative flex flex-col items-center justify-center gap-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-medium tracking-[0.15em] uppercase" style={{ color: 'rgba(157,78,221,0.55)' }}>
+                  {t(lang, 'showMore') || 'Discover more'}
+                </span>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="group-hover:translate-y-0.5 transition-transform duration-300">
+                  <path d="M6 2v8M2 6l4 4 4-4" stroke="rgba(157,78,221,0.4)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                {browseVisibleCount} / {grouped.length}
+              </span>
+            </div>
           </button>
         </div>
       )}

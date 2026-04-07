@@ -504,37 +504,6 @@
     60% { opacity: 0.25; }
   }
 
-  /* ═══ SPORTS BREAK — gentle float + fade like a waiting screen ═══ */
-  @keyframes sports-ball-float {
-    0%, 100% { transform: translateY(0); opacity: 0.3; }
-    25% { transform: translateY(-6px); opacity: 0.5; }
-    50% { transform: translateY(-2px); opacity: 0.25; }
-    75% { transform: translateY(-8px); opacity: 0.45; }
-  }
-
-  /* ═══ BECAUSE YOU WATCHED — wandering orange firefly glow ═══ */
-  @keyframes firefly-glide {
-    0%   { left: -5%;  top: 30%; opacity: 0; }
-    8%   { opacity: 0.7; }
-    18%  { left: 12%;  top: 20%; }
-    30%  { left: 28%;  top: 45%; opacity: 0.5; }
-    42%  { left: 45%;  top: 25%; opacity: 0.8; }
-    55%  { left: 60%;  top: 50%; opacity: 0.4; }
-    68%  { left: 75%;  top: 30%; opacity: 0.7; }
-    82%  { left: 88%;  top: 45%; opacity: 0.5; }
-    92%  { left: 100%; top: 35%; opacity: 0; }
-    100% { left: 105%; top: 35%; opacity: 0; }
-  }
-
-  /* ═══ DASH EXCLUSIVES — cinema ticket light shimmer (uses blade-pass) ═══ */
-  @keyframes dash-ticket-shimmer {
-    0% { transform: translateX(-120%) skewX(-15deg); opacity: 0; }
-    5% { opacity: 1; }
-    30% { transform: translateX(280%) skewX(-15deg); opacity: 1; }
-    35% { opacity: 0; }
-    100% { opacity: 0; transform: translateX(280%) skewX(-15deg); }
-  }
-
   /* ═══ DASH EXCLUSIVES — neon pulse on portrait cards ═══ */
   @keyframes dash-neon-pulse {
     0%, 100% { box-shadow: 0 0 6px rgba(157,78,221,0.15), 0 0 0 1px rgba(157,78,221,0.1); }
@@ -1276,21 +1245,21 @@
 /* ═══ ROW HIERARCHY — visual importance tiers for content rows ═══ */
 /* Hero tier: first/most important row — largest cards, generous breathing */
 .row-tier-hero {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
 
 /* Featured tier: rows 1-2 — medium-large cards, comfortable breathing */
 .row-tier-featured {
-  margin-bottom: 1.75rem;
+  margin-bottom: 2rem;
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
 }
 
 /* Standard tier: rows 3+ — compact cards, tighter rhythm */
 .row-tier-standard {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 /* ═══ CARD SIZE TIERS — height hierarchy for horizontal scroll rows ═══ */
@@ -1448,6 +1417,22 @@
 @keyframes offline-slide-up {
   from { transform: translateY(0); }
   to { transform: translateY(-100%); }
+}
+
+/* ═══ SIGNAL & SWEEP ANIMATIONS ═══ */
+@keyframes signal-pulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes cosmic-sweep {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100vh); }
+  100% { transform: translateY(100vh); }
 }
 
 /* ═══ PAGE TRANSITIONS ═══ */

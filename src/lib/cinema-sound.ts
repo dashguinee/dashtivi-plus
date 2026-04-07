@@ -100,9 +100,13 @@ export function playDashCinemaSound(): void {
     sub.start(now + 1.1);
     sub.stop(now + 2.6);
     activeOscillators.push(sub);
-    sub.onended = () => { activeOscillators = activeOscillators.filter(o => o !== sub); };
-
-    // No cleanup — reuse the AudioContext for next play
+    sub.onended = () => {
+      activeOscillators = activeOscillators.filter(o => o !== sub);
+      // When all oscillators done, disconnect master from speakers
+      if (activeOscillators.length === 0) {
+        try { master.disconnect(); } catch {}
+      }
+    };
   } catch {
     // Web Audio not available — silent fallback
   }

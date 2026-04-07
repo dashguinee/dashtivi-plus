@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback, useState, useRef } from 'react';
-import { Play, Star, Clock, X } from 'lucide-react';
+import { Play, Star, Clock } from 'lucide-react';
+import { CosmicClose } from './CosmicClose';
 import { t, useLanguage } from '@/i18n';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { safeImageUrl, type XtreamCredentials } from '@/lib/xtream';
@@ -236,9 +237,9 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
           <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-black/50" />
         </div>
 
-        <button onClick={onClose} className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center hover:bg-white/15 transition-colors" aria-label="Close">
-          <X className="w-5 h-5 text-white/80" />
-        </button>
+        <div className="absolute top-4 right-4 z-50">
+          <CosmicClose onClick={onClose} />
+        </div>
 
         {/* Details at bottom */}
         <div className="absolute bottom-0 left-0 right-0 z-20" onClick={(e) => e.stopPropagation()}>
@@ -265,9 +266,9 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close */}
-        <button onClick={onClose} className="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center transition-colors" aria-label="Close">
-          <X className="w-5 h-5 text-white" />
-        </button>
+        <div className="absolute top-3 right-3 z-20">
+          <CosmicClose onClick={onClose} />
+        </div>
 
         {/* Media area — poster with trailer overlay if available */}
         <div className="relative w-full pb-[56%] rounded-xl overflow-hidden bg-black">

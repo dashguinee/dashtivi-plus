@@ -10,7 +10,7 @@ import { NeonGate, RowCountBadge, cardScaleStyle } from '@/components/ui/NeonGat
 
 interface VeeCollectionRowProps {
   name: string;
-  tagline: string;
+  tagline?: string;
   items: Array<{
     id: number;
     name: string;
@@ -66,7 +66,7 @@ export const VeeCollectionRow: React.FC<VeeCollectionRowProps> = React.memo(({
           {name}
           <RowCountBadge count={items.length} label={countLabel} />
         </h3>
-        <p className="text-[11px] text-white/25 mt-0.5">{tagline}</p>
+        {tagline && <p className="text-[11px] text-white/25 mt-0.5">{tagline}</p>}
       </div>
       <div
         ref={scrollRef}

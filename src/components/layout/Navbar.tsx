@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Tv, Clapperboard, PlayCircle, Users } from 'lucide-react';
 import { useLanguage } from '@/i18n';
@@ -25,34 +25,6 @@ export const Navbar: React.FC = () => {
   const location = useLocation();
   const [sidebarHover, setSidebarHover] = useState(false);
   const [navGlow, setNavGlow] = useState(false);
-  const [navFaded, setNavFaded] = useState(false);
-  const fadeTimerRef = useRef<ReturnType<typeof setTimeout>>();
-
-  // Auto-fade: 10s idle → 70% opacity, 7s after interaction → fade again
-  const lastInteraction = useRef(0);
-  const resetFadeTimer = useCallback((delay = 10000) => {
-    setNavFaded(false);
-    clearTimeout(fadeTimerRef.current);
-    fadeTimerRef.current = setTimeout(() => setNavFaded(true), delay);
-  }, []);
-
-  useEffect(() => {
-    resetFadeTimer(10000);
-    // Throttled: only reset if 2s+ since last interaction (avoids state churn on scroll)
-    const onTouch = () => {
-      const now = Date.now();
-      if (now - lastInteraction.current < 2000) return;
-      lastInteraction.current = now;
-      resetFadeTimer(7000);
-    };
-    window.addEventListener('touchstart', onTouch, { passive: true });
-    window.addEventListener('scroll', onTouch, { passive: true });
-    return () => {
-      clearTimeout(fadeTimerRef.current);
-      window.removeEventListener('touchstart', onTouch);
-      window.removeEventListener('scroll', onTouch);
-    };
-  }, [resetFadeTimer]);
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -68,14 +40,12 @@ export const Navbar: React.FC = () => {
     navigate(path);
     setNavGlow(true);
     setTimeout(() => setNavGlow(false), 2000);
-    resetFadeTimer(7000);
-  }, [navigate, resetFadeTimer]);
+  }, [navigate]);
 
   return (
     <>
       {/* MOBILE BOTTOM NAV — OG dasuperhub style */}
       <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 pointer-events-none safe-bottom"
-        style={{ opacity: navFaded ? 0.7 : 1, transition: 'opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1)' }}
       >
         <div
           className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto transition-[background-color,border-color,box-shadow] duration-500"

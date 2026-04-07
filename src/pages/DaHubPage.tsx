@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Users, MessageCircle, Play, Music, Gamepad2, Bot, Zap,
+  Users, MessageCircle, Play, Music, Gamepad2, Zap,
   Eye, Send, ChevronRight, Headphones, Sparkles,
 } from 'lucide-react';
 
@@ -33,31 +33,34 @@ const VOYO_GENRES = ['Afrobeats', 'Hip-Hop', 'Amapiano', 'R&B'];
 
 const ECOSYSTEM = [
   {
-    id: 'daclub',
-    name: 'DaClub',
-    tagline: 'Social gaming & hangouts',
-    icon: Gamepad2,
-    color: '#f472b6',
-    gradient: 'from-pink-500/20 to-rose-600/10',
-    url: 'https://daclub.dasuperhub.com',
+    id: 'voyo',
+    name: 'VOYO',
+    tagline: 'Music streaming',
+    icon: Music,
+    logo: '/logos/voyo.svg',
+    color: '#a78bfa',
+    gradient: 'from-violet-500/20 to-purple-600/10',
+    url: 'https://music.dasuperhub.com',
   },
   {
     id: 'games',
     name: 'DASH Games',
     tagline: 'Casual games arcade',
-    icon: Zap,
+    icon: Gamepad2,
+    logo: '/logos/gaming.svg',
     color: '#fb923c',
     gradient: 'from-orange-500/20 to-amber-600/10',
     url: 'https://games.dasuperhub.com',
   },
   {
-    id: 'guinius',
-    name: 'Guinius',
-    tagline: 'AI assistant in Soussou',
-    icon: Bot,
-    color: '#38bdf8',
-    gradient: 'from-sky-500/20 to-cyan-600/10',
-    url: null,
+    id: 'daclub',
+    name: 'DaClub',
+    tagline: 'Social gaming & hangouts',
+    icon: Gamepad2,
+    logo: '/logos/daclub.svg',
+    color: '#f472b6',
+    gradient: 'from-pink-500/20 to-rose-600/10',
+    url: 'https://daclub.dasuperhub.com',
   },
 ];
 
@@ -616,13 +619,17 @@ export const DaHubPage: React.FC = () => {
                 />
                 <div className="relative flex items-center gap-3">
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-300"
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-300 overflow-hidden"
                     style={{
                       background: `${product.color}15`,
                       border: `1px solid ${product.color}20`,
                     }}
                   >
-                    <Icon className="w-5 h-5" style={{ color: `${product.color}99` }} />
+                    {product.logo ? (
+                      <img src={product.logo} alt={product.name} className="w-7 h-7 object-contain" />
+                    ) : (
+                      <Icon className="w-5 h-5" style={{ color: `${product.color}99` }} />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-bold text-white/80 group-hover:text-white transition-colors">
@@ -641,9 +648,29 @@ export const DaHubPage: React.FC = () => {
           })}
         </div>
 
-        {/* Footer brand */}
-        <div className="mt-10 flex flex-col items-center gap-2 opacity-30">
-          <div className="flex items-center gap-1.5">
+        {/* Footer — product logos */}
+        <div className="mt-10 flex flex-col items-center gap-5">
+          <div className="flex items-center gap-6">
+            {ECOSYSTEM.map((product) => (
+              <a
+                key={product.id}
+                href={product.url || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-1.5 opacity-40 hover:opacity-70 transition-opacity duration-300"
+              >
+                {product.logo ? (
+                  <img src={product.logo} alt={product.name} className="w-8 h-8 object-contain" />
+                ) : (
+                  <product.icon className="w-6 h-6" style={{ color: product.color }} />
+                )}
+                <span className="text-[8px] font-bold tracking-wider uppercase text-white/30">
+                  {product.name}
+                </span>
+              </a>
+            ))}
+          </div>
+          <div className="flex items-center gap-1.5 opacity-25">
             <span
               className="text-sm font-black tracking-tight"
               style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif" }}
@@ -653,9 +680,6 @@ export const DaHubPage: React.FC = () => {
             <span className="text-[10px] text-white/40 font-light">tivi</span>
             <span className="text-[10px] font-bold text-[#C77DFF]">+</span>
           </div>
-          <p className="text-[9px] text-white/20 tracking-widest uppercase">
-            Stream. Connect. Create.
-          </p>
         </div>
       </div>
     </div>

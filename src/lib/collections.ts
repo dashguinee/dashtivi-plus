@@ -444,6 +444,10 @@ export interface SportType {
   id: string;
   name: string;
   categoryIds: string[];
+  /** Optional name-based filter — channels must match at least one keyword (case-insensitive) */
+  nameFilter?: string[];
+  /** Optional name-based exclusion — channels matching any keyword are excluded */
+  nameExclude?: string[];
 }
 
 // Child experiences within Sports — DASH-branded rooms
@@ -475,24 +479,25 @@ export const ENTERTAINMENT_TYPES: SportType[] = [
 ];
 
 export const KIDS_TYPES: SportType[] = [
-  { id: 'all', name: 'All', categoryIds: ['410', '32'] },           // UK Kids first (11 gems, FHD quality), then main Kids
-  { id: 'cartoons', name: 'Cartoon World', categoryIds: ['32'] },
-  { id: 'littleones', name: 'Little Ones', categoryIds: ['32'] },   // Filtered by name: baby, rhyme, panda
-  { id: 'adventure', name: 'Adventure', categoryIds: ['32'] },      // Filtered by name: avatar, paw patrol, spongebob
-  { id: 'ukkids', name: 'UK Kids', categoryIds: ['410'] },          // CN FHD, CBeebies FHD, Nick FHD, Sky Kids FHD
+  { id: 'all', name: 'All', categoryIds: ['410', '32'] },
+  { id: 'cartoons', name: 'Cartoons', categoryIds: ['32', '410'], nameFilter: ['cartoon', 'nick', 'disney', 'boomerang', 'ben 10', 'ducktales', 'looney', 'sponge', 'avatar', 'spider', 'doraemon', 'shinchan', 'pj mask', 'peppa', 'paw'] },
+  { id: 'littleones', name: 'Little Ones', categoryIds: ['32', '410'], nameFilter: ['baby', 'rhyme', 'panda', 'chu chu', 'finger', 'nursery', 'abcd', 'colour', 'boom buddies', 'hickory', 'shape', 'story', 'art-fun', 'cbeebies', 'nick jr', 'baraem', 'jeem'] },
+  { id: 'shows', name: 'Shows', categoryIds: ['32', '410'], nameFilter: ['disney channel', 'disney xd', 'disney jr', 'nickelodeon', 'nick jr', 'sky kids', 'cartoon network', 'cbeebies', 'gulli', 'spacetoon', 'majid', 'discovery kids', 'baby tv', 'telekids', 'rotana kids'] },
+  { id: 'ukkids', name: 'UK Kids', categoryIds: ['410'] },
 ];
 
 export const CINEMA_TYPES: SportType[] = [
   { id: 'all', name: 'All', categoryIds: ['87', '413', '429', '344', '340', '339', '275', '57', '282', '280'] },
-  { id: 'nollywood', name: 'Nollywood', categoryIds: ['344', '429'] },        // DSTV Movies — #1 for SL
-  { id: 'bein', name: 'beIN Cinema', categoryIds: ['87'] },                   // 5x 4K, premium
-  { id: 'sky', name: 'Sky Cinema', categoryIds: ['413'] },                    // 7x FHD gems
-  { id: 'bollywood', name: 'Bollywood Palace', categoryIds: ['282', '339', '340'] },
-  { id: 'action', name: 'Action Vault', categoryIds: ['275'] },
-  { id: 'comedy', name: 'Comedy Corner', categoryIds: ['275'] },
-  { id: 'horror', name: 'Horror Room', categoryIds: ['275'] },
+  { id: 'sky', name: 'Sky Cinema', categoryIds: ['413'] },
+  { id: 'bein', name: 'beIN Movies', categoryIds: ['87'] },
+  { id: 'hbo', name: 'HBO & Premium', categoryIds: ['275', '413', '340'], nameFilter: ['hbo', 'showtime', 'starz', 'cinemax', 'lifetime movie'] },
+  { id: 'action', name: 'Action', categoryIds: ['275', '340'], nameFilter: ['action', 'thriller', 'fast and furious', 'mission impossible', 'die hard', 'bourne', 'terminator', 'marine', 'war movie'] },
+  { id: 'scifi', name: 'Sci-Fi & Fantasy', categoryIds: ['275', '340'], nameFilter: ['sci-fi', 'fantasy', 'star war', 'star trek', 'matrix', 'marvel', 'superman', 'spider man', 'lord of the ring', 'men in black', 'planet of the ape', 'alien', 'monsterverse', 'lego'] },
+  { id: 'horror', name: 'Horror', categoryIds: ['275', '340'], nameFilter: ['horror', 'conjuring', 'saw', 'scary', 'friday the 13', 'resident evil', 'final destination', 'mummy'] },
+  { id: 'family', name: 'Family', categoryIds: ['275', '413', '87'], nameFilter: ['family', 'kids', 'animated', 'toy story', 'ice age', 'shrek', 'kung fu panda', 'finding nemo', 'incredibles', 'despicable', 'chipmunks', 'muppet', 'how to train', 'jumanji'] },
+  { id: 'nollywood', name: 'Nollywood', categoryIds: ['344', '429'] },
+  { id: 'bollywood', name: 'Bollywood', categoryIds: ['282', '339', '340'] },
   { id: 'netflix', name: 'Netflix Loop', categoryIds: ['57'] },
-  { id: '4k', name: '4K Cinema', categoryIds: ['87', '340', '339'] },         // All 4K movie channels
 ];
 
 export const MUSIC_TYPES: SportType[] = [
@@ -507,17 +512,20 @@ export const MUSIC_TYPES: SportType[] = [
 ];
 
 export const DISCOVERY_TYPES: SportType[] = [
-  { id: 'all', name: 'All', categoryIds: ['415', '337'] },           // UK Docs first (18 gems — Discovery FHD, NatGeo, Sky History/Nature)
-  { id: 'wild', name: 'Wild Planet', categoryIds: ['337', '415'] },  // Filtered: animal, natgeo, bbc earth
-  { id: 'science', name: 'Science Lab', categoryIds: ['337', '415'] }, // Filtered: discovery, science
-  { id: 'history', name: 'History Vault', categoryIds: ['415', '337'] }, // UK History first (Sky History FHD), then India History
-  { id: 'crime', name: 'Crime Files', categoryIds: ['415'] },        // Filtered: investigation, court
+  { id: 'all', name: 'All', categoryIds: ['415', '337'] },
+  { id: 'nature', name: 'Nature & Wild', categoryIds: ['337', '415'], nameFilter: ['nat geo', 'national geo', 'animal', 'bbc earth', 'planet earth', 'love nature', 'sky nature', 'myzen nature', 'zoo'] },
+  { id: 'discovery', name: 'Discovery', categoryIds: ['337', '415'], nameFilter: ['discovery', 'science', 'turbo', 'curiosity'] },
+  { id: 'history', name: 'History', categoryIds: ['415', '337'], nameFilter: ['history', 'museum', 'toute l\'histoire', 'histoire'] },
+  { id: 'crime', name: 'True Crime', categoryIds: ['415', '337'], nameFilter: ['investigation', 'crime', 'court'] },
+  { id: 'travel', name: 'Travel', categoryIds: ['415', '337'], nameFilter: ['travel', 'trek', 'equidia'] },
 ];
 
 export const FAITH_TYPES: SportType[] = [
   { id: 'all', name: 'All', categoryIds: ['123', '561'] },
-  { id: 'islamic', name: 'Islamic', categoryIds: ['123'] },
+  { id: 'islamic', name: 'Islamic', categoryIds: ['123'], nameExclude: ['quran', 'makkah', 'mecca', 'karbala', 'imam hussein'] },
+  { id: 'quran', name: 'Quran', categoryIds: ['123'], nameFilter: ['quran', 'makkah', 'mecca', 'sudais', 'fateh', 'iqraa'] },
   { id: 'christian', name: 'Christian', categoryIds: ['561'] },
+  { id: 'shia', name: 'Shia', categoryIds: ['123'], nameFilter: ['karbala', 'imam hussein', 'ahlulbayt', 'alzahra', 'thaqalayn', 'al manar'] },
 ];
 
 // ── The Motherland — DSTV + Canal+ Africa Experience ─────────────
@@ -563,10 +571,11 @@ export const SOUTH_ASIAN_TYPES: SportType[] = [
 // ── Americas Experience ───────────────────────────────────────────
 export const AMERICAS_TYPES: SportType[] = [
   { id: 'all', name: 'All', categoryIds: ['2', '31', '741', '24'] },
-  { id: 'usa', name: 'USA', categoryIds: ['2'] },
-  { id: '247', name: '24/7 Channels', categoryIds: ['24'] },
+  { id: 'usa', name: 'USA', categoryIds: ['2'], nameFilter: ['us:', 'usa:', 'us ', 'usa '] },
+  { id: 'canada', name: 'Canada', categoryIds: ['2', '741'], nameFilter: ['ca ', 'ca:', '|ca|', 'ca-fr', 'ca(fr)', 'tsn'] },
   { id: 'brazil', name: 'Brazil', categoryIds: ['31'] },
-  { id: 'latam', name: 'Latin America', categoryIds: ['741'] },
+  { id: 'sports', name: 'Sports', categoryIds: ['2', '31'], nameFilter: ['espn', 'fox sport', 'nfl', 'nhl', 'mlb', 'nba', 'sportv', 'combate', 'tsn', 'sportsnet'] },
+  { id: '247', name: '24/7', categoryIds: ['24'] },
 ];
 
 // ── Arabic Experience ─────────────────────────────────────────────
@@ -583,17 +592,22 @@ export const ARABIC_TYPES: SportType[] = [
 // ── French Experience ─────────────────────────────────────────────
 export const FRENCH_TYPES: SportType[] = [
   { id: 'all', name: 'All', categoryIds: ['11', '336', '39'] },
-  { id: 'france', name: 'France', categoryIds: ['11'] },
+  { id: 'france', name: 'France', categoryIds: ['11'], nameFilter: ['fra |', 'tf1', 'france 2', 'france 4', 'm6', 'bfm', 'rtl'] },
+  { id: 'cinema', name: 'Cinema', categoryIds: ['11'], nameFilter: ['cin', 'ocs', 'action', 'serie club', 'syfy', 'warner', 'comedie', '13eme', 'crime district', 'drive in', 'novelas', 'scream'] },
+  { id: 'sports', name: 'Sports', categoryIds: ['11'], nameFilter: ['bein', 'eurosport', 'sport', 'fight', 'fuel', 'auto'] },
+  { id: 'kids', name: 'Kids', categoryIds: ['11'], nameFilter: ['cartoon', 'nickelodeon', 'gulli', 'boomerang', 'cartoonito', 'tele toon', 'canal j', 'dreamworks'] },
+  { id: 'news', name: 'News', categoryIds: ['11'], nameFilter: ['bfm', 'euronews', 'france 24', 'b smart', 'tech & co'] },
   { id: 'canalplus', name: 'Africa French', categoryIds: ['336'] },
 ];
 
 export const NEWS_TYPES: SportType[] = [
   { id: 'all', name: 'All News', categoryIds: ['82', '417', '165', '730', '77', '98'] },
-  { id: 'world', name: 'World News', categoryIds: ['82', '417'] },        // CNN, BBC, Sky News, Fox News
-  { id: 'african', name: 'African News', categoryIds: ['82'] },           // Channels TV, AIT, SLBC — filter by name
-  { id: 'business', name: 'Business', categoryIds: ['82', '417'] },       // CNBC, Bloomberg — filter by name
-  { id: 'arabic', name: 'Arabic News', categoryIds: ['165'] },            // Al Jazeera 4K, France 24 Arabic
-  { id: 'indian', name: 'South Asian', categoryIds: ['77', '730', '98'] },// NDTV, CNN News 18, Pakistan
+  { id: 'world', name: 'World', categoryIds: ['82', '417'], nameFilter: ['cnn', 'bbc', 'sky news', 'nbc news', 'gb news', 'france 24 english', 'trt world'] },
+  { id: 'business', name: 'Business', categoryIds: ['82', '417'], nameFilter: ['cnbc', 'bloomberg', 'business'] },
+  { id: 'arabic', name: 'Arabic', categoryIds: ['165'] },
+  { id: 'african', name: 'Africa', categoryIds: ['82', '417'], nameFilter: ['arise', 'tvc news', 'channels', 'ait'] },
+  { id: 'asian', name: 'South Asia', categoryIds: ['77', '730', '98'] },
+  { id: 'sports', name: 'Sports News', categoryIds: ['82', '417'], nameFilter: ['sky sports news', 'sport news', 'espn', 'esp news', 'fox sports news'] },
 ];
 
 // ── WorldEX Region Genre Filters ─────────────────────────────────
