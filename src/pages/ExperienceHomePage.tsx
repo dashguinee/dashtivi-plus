@@ -36,6 +36,9 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { isDead } from '@/hooks/useChannelHealth';
 import type { Channel } from '@/types';
 
+// Sports Arena — lazy loaded, only when experience=sports
+const SportsArena = React.lazy(() => import('@/components/sports/SportsArena'));
+
 // ── Experience Configs ──────────────────────────────────────────────
 
 interface ExperienceConfig {
@@ -700,6 +703,15 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
         </div>
       ) : (
         <>
+          {/* ── Sports Arena (fixtures, standings — only for sports experience) ── */}
+          {config.id === 'sports' && !searchQuery && (
+            <React.Suspense fallback={<div className="h-64 animate-pulse rounded-2xl bg-white/[0.02] mx-4 mt-4" />}>
+              <div className="mt-4 mb-6 reveal">
+                <SportsArena />
+              </div>
+            </React.Suspense>
+          )}
+
           {/* ── VEE Curated Row (AI picks for this experience) ───────── */}
           {veeStreams.length > 0 && !searchQuery && (
             <section className="mt-4 mb-6">
