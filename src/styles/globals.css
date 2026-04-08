@@ -673,8 +673,7 @@
     pointer-events: none;
     contain: strict;
     z-index: 0;
-    opacity: 0;
-    transition: opacity 2s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 1;
   }
 
   .ambient-blob {

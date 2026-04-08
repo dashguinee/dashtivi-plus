@@ -441,7 +441,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const hero = getFeaturedHero();
 
   // ── Hero banner scroll-aware fade ─────────────────────────────
-  const [heroBannerOpacity, setHeroBannerOpacity] = useState(0);
+  // heroBannerOpacity removed — scroll fade now via direct DOM (no re-renders)
   const [heroBannerEntered, setHeroBannerEntered] = useState(false);
   const heroBannerRef = useRef<HTMLDivElement>(null);
 
@@ -449,12 +449,11 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
       setHeroBannerEntered(true);
-      setHeroBannerOpacity(1);
     });
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  // Exit: fade out + drift up as user scrolls past the banner
+  // Exit: fade out as user scrolls past the banner — no React setState, direct DOM
   useEffect(() => {
     const onScroll = () => {
       const el = heroBannerRef.current;
@@ -462,9 +461,8 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       const rect = el.getBoundingClientRect();
       const totalH = el.offsetHeight;
       if (totalH === 0) return;
-      // Once the banner starts leaving the viewport, fade it out
       const visible = Math.max(0, Math.min(1, rect.bottom / totalH));
-      setHeroBannerOpacity(visible);
+      el.style.opacity = String(visible);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -792,12 +790,9 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           height: '18vh',
           minHeight: '120px',
           maxHeight: '180px',
-          opacity: heroBannerEntered ? heroBannerOpacity : 0,
-          transform: heroBannerEntered
-            ? `translateY(${(1 - heroBannerOpacity) * -6}px)`
-            : 'translateY(4px)',
+          opacity: heroBannerEntered ? 1 : 0,
+          transform: heroBannerEntered ? 'translateY(0)' : 'translateY(4px)',
           transition: 'opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1)',
-          willChange: 'opacity, transform',
         }}
       >
         <AuroraHero gradient={hero.gradient} timeSlot={

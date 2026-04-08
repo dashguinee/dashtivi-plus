@@ -189,26 +189,9 @@ function AppContent() {
     try { screen.orientation?.unlock?.(); } catch {}
   }, []);
 
-  // Ambient blobs — show/hide based on scroll position.
-  // PERF: No rAF loop. Pulse is now a CSS animation. Blobs toggle via scroll event.
+  // Ambient blobs — show when scrolled past hero. Toggled via CSS only, no JS listener.
   const blobsRef = React.useRef<HTMLDivElement>(null);
-  React.useEffect(() => {
-    initAudioReactive();
-    let isVisible = false;
-    const check = () => {
-      const el = blobsRef.current;
-      if (!el) return;
-      const shouldShow = window.scrollY > 80;
-      if (shouldShow !== isVisible) {
-        el.style.opacity = shouldShow ? '1' : '0';
-        isVisible = shouldShow;
-      }
-    };
-    // Check on scroll via the existing singleton listener — just read scrollY, no rAF
-    window.addEventListener('scroll', check, { passive: true });
-    check();
-    return () => window.removeEventListener('scroll', check);
-  }, []);
+  React.useEffect(() => { initAudioReactive(); }, []);
 
   const ptr = usePullToRefresh();
 
