@@ -26,42 +26,41 @@ export const Navbar: React.FC = () => {
   const [sidebarHover, setSidebarHover] = useState(false);
   const [navGlow, setNavGlow] = useState(false);
 
-  // Idle reveal: after 5s no scroll → peek at 70% → then fade out after 3s more
-  const [navPhase, setNavPhase] = useState<'visible' | 'hidden' | 'peek'>('visible');
+  // Navbar: visible by default. Hides on scroll/touch. Returns after 2s idle.
+  // Touch again → hides. Simple two-state: show or hide.
+  const [navShow, setNavShow] = useState(true);
   const idleTimer = useRef<ReturnType<typeof setTimeout>>();
-  const peekTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  // Route change → fully visible
-  useEffect(() => {
-    setNavPhase('visible');
-    return () => { clearTimeout(idleTimer.current); clearTimeout(peekTimer.current); };
-  }, [location.pathname]);
+  // Route change → visible
+  useEffect(() => { setNavShow(true); }, [location.pathname]);
 
   useEffect(() => {
-    const onScroll = () => {
-      // Scrolling → hide
-      if (window.scrollY > 120) {
-        setNavPhase('hidden');
-      } else {
-        setNavPhase('visible');
-      }
-      // Reset idle timer
+    const startIdle = () => {
       clearTimeout(idleTimer.current);
-      clearTimeout(peekTimer.current);
-      idleTimer.current = setTimeout(() => {
-        // 5s idle → peek at 70%
-        setNavPhase('peek');
-        peekTimer.current = setTimeout(() => {
-          // 3s more → fade out
-          if (window.scrollY > 120) setNavPhase('hidden');
-        }, 3000);
-      }, 5000);
+      idleTimer.current = setTimeout(() => setNavShow(true), 2000);
     };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => { window.removeEventListener('scroll', onScroll); clearTimeout(idleTimer.current); clearTimeout(peekTimer.current); };
-  }, []);
 
-  const navOpacity = navPhase === 'visible' ? 1 : navPhase === 'peek' ? 0.7 : 0;
+    const onTouch = () => {
+      if (window.scrollY > 100) setNavShow(false);
+      startIdle();
+    };
+
+    // At top → always show, no timer needed
+    const onScroll = () => {
+      if (window.scrollY < 100) { setNavShow(true); return; }
+      setNavShow(false);
+      startIdle();
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('touchstart', onTouch, { passive: true });
+    startIdle();
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('touchstart', onTouch);
+      clearTimeout(idleTimer.current);
+    };
+  }, []);
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -84,10 +83,8 @@ export const Navbar: React.FC = () => {
       {/* MOBILE BOTTOM NAV — OG dasuperhub style */}
       <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 pointer-events-none safe-bottom"
         style={{
-          opacity: navOpacity,
-          transition: navPhase === 'hidden'
-            ? 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)'
-            : 'opacity 0.4s ease-out',
+          opacity: navShow ? 1 : 0,
+          transition: 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
         <div
