@@ -5,6 +5,7 @@ import { t, useLanguage } from '@/i18n';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { safeImageUrl, type XtreamCredentials } from '@/lib/xtream';
 import { click as hapticClick } from '@/lib/haptics';
+import { muteAmbient, unmuteAmbient } from '@/lib/ambient-audio';
 
 const TMDB_GENRES: Record<number, string> = {
   12: 'Adventure', 14: 'Fantasy', 16: 'Animation', 18: 'Drama',
@@ -62,8 +63,12 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   const [vodCast, setVodCast] = useState<string | null>(null);
   const [vodLoading, setVodLoading] = useState(type === 'movie');
 
-  // Haptic on mount — the "sheet open" feel
-  useEffect(() => { hapticClick(); }, []);
+  // Haptic on mount + mute ambient so trailer doesn't overlap
+  useEffect(() => {
+    hapticClick();
+    muteAmbient();
+    return () => { unmuteAmbient(); };
+  }, []);
 
   useEffect(() => {
     if (type !== 'movie' || !credentials) { setVodLoading(false); return; }

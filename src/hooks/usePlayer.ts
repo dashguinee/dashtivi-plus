@@ -73,17 +73,22 @@ export function usePlayer() {
       const video = videoRef.current;
       const isSwitch = !!video && !!video.src && !video.paused;
 
+      // Generation guard — increment early so rapid switches abort the fade-out
+      const gen = ++playGeneration.current;
+
       // Smooth fade-out (250ms — 5 steps, ease-out curve)
       if (isSwitch && video) {
         const startVol = video.volume;
         for (let i = 1; i <= 5; i++) {
+          if (gen !== playGeneration.current) break; // rapid switch — abort fade
           const t = i / 5;
-          video.volume = Math.max(0, startVol * (1 - t * t)); // ease-out: fast start, gentle zero
+          video.volume = Math.max(0, startVol * (1 - t * t));
           await new Promise(r => setTimeout(r, 50));
         }
         video.volume = 0;
         video.pause();
       }
+      if (gen !== playGeneration.current) return; // superseded — bail entirely
 
       // Stop event handlers so old stream doesn't trigger state changes
       if (video) {
@@ -143,8 +148,8 @@ export function usePlayer() {
         let retryCount = 0;
         let connectionResolved = false;
         let connectionTimeout: ReturnType<typeof setTimeout> | undefined;
-        // Generation guard — if playChannel is called again, stale handlers bail out
-        const generation = ++playGeneration.current;
+        // Generation guard — reuse gen from outer scope (incremented before fade-out)
+        const generation = gen;
         const isStale = () => generation !== playGeneration.current;
 
         // Mute before any source change to prevent audio leak between channels
@@ -541,6 +546,7 @@ export function usePlayer() {
     if (!video) return;
     video.volume = vol;
     video.muted = vol === 0;
+    userMutedRef.current = vol === 0;
     setState((prev) => ({ ...prev, volume: vol, isMuted: vol === 0 }));
   }, []);
 
@@ -586,13 +592,17 @@ export function usePlayer() {
     const isRemux = src.includes('/vod?');
     if (isRemux) {
       // Remux streams can't seek via currentTime — restart FFmpeg with &start= offset
-      // time is absolute position in the movie; strip any existing start param
       const base = src.replace(/&start=\d+/, '');
       const seekUrl = base + '&start=' + Math.floor(time);
       setState((prev) => ({ ...prev, isLoading: true, currentTime: time }));
+      // Mute before source swap to prevent audio pop
+      const prevVol = video.volume;
+      video.volume = 0;
       video.pause();
       video.src = seekUrl;
       video.play().catch(() => {});
+      // Restore volume on play
+      video.addEventListener('playing', () => { video.volume = prevVol; }, { once: true });
     } else {
       video.currentTime = time;
       setState((prev) => ({ ...prev, currentTime: time }));

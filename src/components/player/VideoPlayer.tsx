@@ -175,9 +175,9 @@ export const VideoPlayer: React.FC<Props> = ({
       cinemaMinTimeRef.current = false;
       cinemaAbortedRef.current = false;
       setShowCinemaIntro(true);
-      // Bug 3 fix: mute via onToggleMute to sync both DOM and React state
+      // Mute during cinema intro — directly, without touching userMutedRef
       if (videoRef.current && !state.isMuted) {
-        onToggleMute();
+        videoRef.current.muted = true;
         cinemaMutedByUsRef.current = true;
       }
       cinemaMinTimerRef.current = setTimeout(() => { cinemaMinTimeRef.current = true; }, 2500);
@@ -214,7 +214,7 @@ export const VideoPlayer: React.FC<Props> = ({
       // Verify video has actually decoded frames (readyState >= HAVE_CURRENT_DATA)
       if (video && video.readyState >= 2) {
         if (cinemaMutedByUsRef.current) {
-          if (video.muted) onToggleMute();
+          video.muted = false;
           cinemaMutedByUsRef.current = false;
         }
         cinemaAbortedRef.current = true;
@@ -242,7 +242,7 @@ export const VideoPlayer: React.FC<Props> = ({
       if (video && video.readyState >= 2) {
         // Unmute if cinema intro owned the mute
         if (cinemaMutedByUsRef.current) {
-          if (video.muted) onToggleMute();
+          video.muted = false;
           cinemaMutedByUsRef.current = false;
         }
         setPostCinemaBlackout(false);
