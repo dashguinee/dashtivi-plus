@@ -52,12 +52,30 @@ export const Navbar: React.FC = () => {
     return location.pathname.startsWith(path);
   };
 
+  const navRef = useRef<HTMLDivElement>(null);
+
   const handleTap = useCallback((path: string) => {
+    // Trigger CSS glow pulse — no React state, pure GPU
+    const el = navRef.current;
+    if (el) {
+      el.classList.remove('nav-pulse');
+      void el.offsetWidth; // force reflow to restart animation
+      el.classList.add('nav-pulse');
+    }
     startTransition(() => { navigate(path); });
   }, [navigate, startTransition]);
 
   return (
     <>
+      {/* Nav pulse animation — CSS only, no React re-render */}
+      <style>{`
+        @keyframes nav-glow {
+          0% { border-color: rgba(157,78,221,0.35); box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 20px rgba(157,78,221,0.15); }
+          100% { border-color: rgba(157,78,221,0.12); box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 30px rgba(157,78,221,0.05); }
+        }
+        .nav-pulse { animation: nav-glow 1.2s cubic-bezier(0.16,1,0.3,1) forwards; }
+      `}</style>
+
       {/* MOBILE BOTTOM NAV — OG dasuperhub style */}
       <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 pointer-events-none safe-bottom"
         style={{
@@ -69,6 +87,7 @@ export const Navbar: React.FC = () => {
         }}
       >
         <div
+          ref={navRef}
           className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto"
           style={{
             background: 'rgba(10, 10, 15, 0.55)',
