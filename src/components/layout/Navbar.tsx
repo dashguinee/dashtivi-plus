@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Tv, Clapperboard, PlayCircle, Users } from 'lucide-react';
 import { useLanguage } from '@/i18n';
@@ -26,42 +26,6 @@ export const Navbar: React.FC = () => {
   const [sidebarHover, setSidebarHover] = useState(false);
   const [navGlow, setNavGlow] = useState(false);
 
-  // Navbar: visible by default. Hides on scroll/touch. Returns after 2s idle.
-  // Touch again → hides. Simple two-state: show or hide.
-  const [navShow, setNavShow] = useState(true);
-  const idleTimer = useRef<ReturnType<typeof setTimeout>>();
-
-  // Route change → visible
-  useEffect(() => { setNavShow(true); }, [location.pathname]);
-
-  useEffect(() => {
-    const startIdle = () => {
-      clearTimeout(idleTimer.current);
-      idleTimer.current = setTimeout(() => setNavShow(true), 2000);
-    };
-
-    const onTouch = () => {
-      if (window.scrollY > 100) setNavShow(false);
-      startIdle();
-    };
-
-    // At top → always show, no timer needed
-    const onScroll = () => {
-      if (window.scrollY < 100) { setNavShow(true); return; }
-      setNavShow(false);
-      startIdle();
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('touchstart', onTouch, { passive: true });
-    startIdle();
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('touchstart', onTouch);
-      clearTimeout(idleTimer.current);
-    };
-  }, []);
-
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
@@ -82,10 +46,7 @@ export const Navbar: React.FC = () => {
     <>
       {/* MOBILE BOTTOM NAV — OG dasuperhub style */}
       <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 pointer-events-none safe-bottom"
-        style={{
-          opacity: navShow ? 1 : 0,
-          transition: 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
+        style={{ transform: 'translateZ(0)' }}
       >
         <div
           className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto transition-[background-color,border-color,box-shadow] duration-500"

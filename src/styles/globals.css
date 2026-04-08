@@ -1056,8 +1056,11 @@
 }
 
 /* ═══ SCROLL FOCUS — cards respond to their position in the scroll row ═══ */
-/* Scroll focus disabled — 200+ IntersectionObserver callbacks per scroll
-   for a 12% opacity difference was the #1 scroll performance killer. */
+/* Scroll focus — cards respond to position in scroll row.
+   CSS-only now (observer removed for perf). Applied via data attributes. */
+.scroll-focus-card[data-focus="center"] { opacity: 1; }
+.scroll-focus-card[data-focus="near"] { opacity: 0.95; }
+.scroll-focus-card[data-focus="far"] { opacity: 0.88; }
 
 /* ═══ BRAND ATMOSPHERE — GPU-composited fixed overlay ═══ */
 .brand-atmosphere {
@@ -1141,6 +1144,13 @@
     0 2px 8px rgba(0,0,0,0.4),
     0 0 0 0.5px rgba(255,255,255,0.05),
     0 0 calc(var(--pulse) * 16px) rgba(157,78,221, calc(var(--pulse) * 0.14));
+}
+
+/* Smooth glow transition on cards — slow enough to feel like breathing */
+[data-goggle] .card-surface,
+[data-goggle] .card-hero,
+[data-goggle] .card-glass {
+  transition: box-shadow 0.3s linear;
 }
 
 @media (prefers-reduced-motion: reduce) {
