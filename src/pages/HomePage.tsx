@@ -1276,10 +1276,10 @@ function VeeLiveRow({
           <button
             key={stream.stream_id}
             onClick={() => onPlayLive(stream, aliveStreams)}
-            className="flex-shrink-0 group"
+            className="flex-shrink-0 group card-press active:scale-[0.96]"
             style={{ width: i === 0 ? 145 : 120, ...cardScaleStyle(i), ...(i < 12 ? { animation: `vee-card-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) ${i * 120}ms both` } : {}) }}
           >
-            <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 transition-shadow duration-300 group-hover:shadow-lg group-hover:shadow-primary/8 flex items-center justify-center"
+            <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 flex items-center justify-center"
               style={{ background: 'rgba(255,255,255,0.03)' }}>
               <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" />
               <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-black/50 rounded text-[8px] font-semibold"
