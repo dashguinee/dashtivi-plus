@@ -779,7 +779,6 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   // ── Scroll reveal ──────────────────────────────────────────────
   const scrollRef = useScrollReveal([loading, rows, smartRows, fixturesHex]);
-  useScrollFocus();
   useGoggleFocus(scrollRef);
 
   // ── Render ──────────────────────────────────────────────────────
