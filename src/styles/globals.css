@@ -29,21 +29,11 @@
   }
 
   ::-webkit-scrollbar {
-    width: 4px;
-    height: 3px;
+    display: none;
   }
 
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: rgba(157, 78, 221, 0.10);
-    border-radius: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba(157, 78, 221, 0.20);
+  * {
+    scrollbar-width: none;
   }
 }
 
