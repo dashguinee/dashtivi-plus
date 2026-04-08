@@ -239,7 +239,7 @@ export function usePlayer() {
               if (fallback) {
                 triedFallback = true;
                 retryCount = 0;
-                console.log('[PLAYER] Direct proxy failed, trying FFmpeg remux fallback');
+                console.debug('[PLAYER] Direct proxy failed, trying FFmpeg remux fallback');
                 setState((prev) => ({ ...prev, error: null, isLoading: true }));
                 url = fallback;
                 video.src = fallback;
@@ -462,13 +462,16 @@ export function usePlayer() {
         }
 
         // VOD time tracking — skip for live (infinite duration, no seek bar)
+        // For remux streams with &start=N, video.currentTime starts at 0 but real position = start + currentTime
+        const startMatch = url.match(/[&?]start=(\d+)/);
+        const remuxOffset = startMatch ? parseInt(startMatch[1]) : 0;
         let lastTimeUpdate = 0;
         video.ontimeupdate = () => {
           if (isLive) return;
           const now = Date.now();
           if (now - lastTimeUpdate < 1000) return; // throttle to 1/sec
           lastTimeUpdate = now;
-          setState((prev) => ({ ...prev, currentTime: video.currentTime }));
+          setState((prev) => ({ ...prev, currentTime: video.currentTime + remuxOffset }));
         };
         // Duration: multiple sources, bulletproof chain
         let durationLocked = false;
@@ -579,8 +582,21 @@ export function usePlayer() {
   const seek = useCallback((time: number) => {
     const video = videoRef.current;
     if (!video) return;
-    video.currentTime = time;
-    setState((prev) => ({ ...prev, currentTime: time }));
+    const src = video.src || '';
+    const isRemux = src.includes('/vod?');
+    if (isRemux) {
+      // Remux streams can't seek via currentTime — restart FFmpeg with &start= offset
+      // time is absolute position in the movie; strip any existing start param
+      const base = src.replace(/&start=\d+/, '');
+      const seekUrl = base + '&start=' + Math.floor(time);
+      setState((prev) => ({ ...prev, isLoading: true, currentTime: time }));
+      video.pause();
+      video.src = seekUrl;
+      video.play().catch(() => {});
+    } else {
+      video.currentTime = time;
+      setState((prev) => ({ ...prev, currentTime: time }));
+    }
   }, []);
 
   const stop = useCallback(() => {
