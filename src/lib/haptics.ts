@@ -1,41 +1,75 @@
 /**
  * DashTivi+ Haptic System — Maybach Edition
  *
- * Design: You should barely know it's there. When you feel it,
- * it confirms what your eyes already saw — never announces itself.
+ * Progressive enhancement:
+ *   Chrome Android 120+ → VibrationActuator (amplitude control 0.0-1.0)
+ *   Other Android       → navigator.vibrate (binary on/off)
+ *   iOS/Desktop         → silent no-op
  *
- * Like a Maybach on cobblestone: the road exists, but the cabin
- * absorbs it into something that feels intentional, not accidental.
+ * With VibrationActuator we get REAL intensity control:
+ *   scroll tick = 0.05 magnitude (ghost-level)
+ *   tap = 0.12
+ *   click = 0.20
+ *   confirm = two pulses at 0.08 and 0.15
  *
- * Rules:
- *   - Fast flings = soft rhythm every 3rd card (not silence, not noisy)
- *   - Slow browse = whisper tick per card (you're looking, we confirm)
- *   - Actions = single precise pulse, never a pattern
- *   - Nothing fires twice for the same gesture
- *
- * Silent no-op on iOS/desktop.
+ * Fallback keeps the proven Maybach patterns.
  */
 
 const V = typeof navigator !== 'undefined' && 'vibrate' in navigator;
 
+// VibrationActuator — Chrome Android 120+ amplitude control
+const actuator: any = typeof navigator !== 'undefined' && (navigator as any).vibrationActuator || null;
+const hasActuator = !!actuator?.playEffect;
+
+function pulse(duration: number, strong: number, weak: number) {
+  if (hasActuator) {
+    actuator.playEffect('dual-rumble', { duration, strongMagnitude: strong, weakMagnitude: weak }).catch(() => {});
+  } else if (V) {
+    navigator.vibrate(duration);
+  }
+}
+
 // ── Interaction vocabulary ───────────────────────────────────────
 
-/** Tap — nav press, tab switch, pill selection. Crisp 3ms */
-export function tap() { if (V) navigator.vibrate(3); }
+/** Tap — nav press, tab switch. */
+export function tap() { pulse(4, 0.12, 0.06); }
 
-/** Click — modal open, detail sheet, play. Firm 6ms */
-export function click() { if (V) navigator.vibrate(6); }
+/** Click — modal open, detail sheet, play. */
+export function click() { pulse(8, 0.20, 0.10); }
 
-/** Confirm — success, refresh done. Soft double-knock */
-export function confirm() { if (V) navigator.vibrate([4, 60, 6]); }
+/** Confirm — success, refresh done. */
+export function confirm() {
+  if (hasActuator) {
+    actuator.playEffect('dual-rumble', { duration: 5, strongMagnitude: 0.08, weakMagnitude: 0.04 }).catch(() => {});
+    setTimeout(() => actuator.playEffect('dual-rumble', { duration: 7, strongMagnitude: 0.15, weakMagnitude: 0.08 }).catch(() => {}), 65);
+  } else if (V) {
+    navigator.vibrate([4, 60, 6]);
+  }
+}
 
-/** Heavy — error, destructive. Sharp but brief */
-export function heavy() { if (V) navigator.vibrate([6, 30, 6]); }
+/** Heavy — error, destructive. */
+export function heavy() {
+  if (hasActuator) {
+    actuator.playEffect('dual-rumble', { duration: 8, strongMagnitude: 0.25, weakMagnitude: 0.12 }).catch(() => {});
+    setTimeout(() => actuator.playEffect('dual-rumble', { duration: 8, strongMagnitude: 0.25, weakMagnitude: 0.12 }).catch(() => {}), 40);
+  } else if (V) {
+    navigator.vibrate([6, 30, 6]);
+  }
+}
 
 // ── Scroll haptics — velocity-aware ──────────────────────────────
 
+// Scroll tick — ultra-quiet with actuator, 1ms binary without
+function scrollTick(intensity: number) {
+  if (hasActuator) {
+    actuator.playEffect('dual-rumble', { duration: 3, strongMagnitude: intensity, weakMagnitude: intensity * 0.5 }).catch(() => {});
+  } else if (V) {
+    navigator.vibrate(1);
+  }
+}
+
 export function initScrollHaptics() {
-  if (!V) return;
+  if (!V && !hasActuator) return;
 
   const tracked = new WeakSet<Element>();
 
@@ -71,12 +105,12 @@ export function initScrollHaptics() {
       if (!moved) return;
 
       if (velocity > 1.5) {
-        // Fling — soft pulse every 3rd card, not silence
+        // Fling — soft pulse every 3rd card
         flingCount++;
-        if (flingCount % 3 === 0) navigator.vibrate(1);
+        if (flingCount % 3 === 0) scrollTick(0.03);
       } else {
         // Browse — whisper per card
-        navigator.vibrate(1);
+        scrollTick(0.05);
         flingCount = 0;
       }
     }, { passive: true });
