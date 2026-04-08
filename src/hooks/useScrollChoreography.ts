@@ -24,7 +24,6 @@ interface ChromeState {
 let _state: ChromeState = { headerVisible: true, navVisible: true };
 let _listeners: Array<() => void> = [];
 let _lastY = 0;
-let _ticking = false;
 let _installed = false;
 
 function notify() {
@@ -32,39 +31,26 @@ function notify() {
 }
 
 function onScroll() {
-  if (_ticking) return;
-  _ticking = true;
-  requestAnimationFrame(() => {
-    const y = window.scrollY;
-    const delta = y - _lastY;
-    _lastY = y;
-    _ticking = false;
+  const y = window.scrollY;
+  const delta = y - _lastY;
+  _lastY = y;
 
-    let next: ChromeState;
+  let next: ChromeState;
 
-    // Top of page — everything visible
-    if (y < 80) {
-      next = { headerVisible: true, navVisible: true };
-    }
-    // Scrolling down — user is diving in
-    else if (delta > 8 && y > 200) {
-      next = { headerVisible: false, navVisible: false };
-    }
-    // Scrolling up — user wants controls
-    else if (delta < -4) {
-      next = { headerVisible: true, navVisible: true };
-    }
-    // No significant scroll — keep state
-    else {
-      return;
-    }
+  if (y < 80) {
+    next = { headerVisible: true, navVisible: true };
+  } else if (delta > 3 && y > 150) {
+    next = { headerVisible: false, navVisible: false };
+  } else if (delta < -2) {
+    next = { headerVisible: true, navVisible: true };
+  } else {
+    return;
+  }
 
-    // Only notify if state actually changed
-    if (next.headerVisible !== _state.headerVisible || next.navVisible !== _state.navVisible) {
-      _state = next;
-      notify();
-    }
-  });
+  if (next.headerVisible !== _state.headerVisible || next.navVisible !== _state.navVisible) {
+    _state = next;
+    notify();
+  }
 }
 
 function install() {
