@@ -199,10 +199,8 @@ export const VideoPlayer: React.FC<Props> = ({
       cinemaAbortedRef.current = true;
       clearTimeout(cinemaMinTimerRef.current);
       clearTimeout(cinemaMaxTimerRef.current);
-      // Only unmute if cinema intro owned the mute — don't force unmute on channel switch
-      if (cinemaMutedByUsRef.current && videoRef.current) {
-        videoRef.current.muted = false;
-      }
+      // Ensure unmute on cleanup — direct DOM as fallback safety
+      if (videoRef.current) videoRef.current.muted = false;
       cinemaMutedByUsRef.current = false;
     };
   }, [state.channel, state.isLoading]);
@@ -334,7 +332,7 @@ export const VideoPlayer: React.FC<Props> = ({
     const video = videoRef.current;
     if (!video || getStreamQuality() === 'eco') return;
 
-    const isLive = state.channel?.url?.includes('/live?') || state.channel?.url?.includes('.m3u8') || state.channel?.category === 'live';
+    const isLive = state.channel?.url?.includes('/live?');
     if (!isLive) return; // Only for live TV
 
     const onWaiting = () => {

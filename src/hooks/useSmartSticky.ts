@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 /**
  * Smart sticky — hides after sustained scroll, reappears on idle or scroll up.
- * Uses scroll position thresholds instead of getComputedStyle (avoids layout thrash).
+ * Debounced to prevent oscillation near thresholds.
  */
 export function useSmartSticky() {
   const [stickyHidden, setStickyHidden] = useState(false);
@@ -24,31 +24,35 @@ export function useSmartSticky() {
         lastY.current = y;
         ticking.current = false;
 
-        // Header hides around y=56 (3.5rem) — use scroll position, not getComputedStyle
-        setHeaderVisible(y < 56);
+        // Header visibility detection
+        const header = document.querySelector('header');
+        if (header) {
+          const t = getComputedStyle(header).transform;
+          setHeaderVisible(t === 'none' || t === 'matrix(1, 0, 0, 1, 0, 0)');
+        }
 
         clearTimeout(idleTimer.current);
 
-        if (delta > 3 && y > 200) {
-          // Scrolling down — start counting
+        if (delta > 5 && y > 300) {
+          // Scrolling down
           if (!downSince.current) downSince.current = Date.now();
-          if (Date.now() - downSince.current > 1800 && !pendingHide.current) {
+          if (Date.now() - downSince.current > 2500 && !pendingHide.current) {
             pendingHide.current = true;
             setStickyHidden(true);
           }
-        } else if (delta < -3) {
+        } else if (delta < -5) {
           // Scrolling up — show immediately
           downSince.current = null;
           pendingHide.current = false;
           setStickyHidden(false);
         }
 
-        // After 2s idle, peek back
+        // After 2.5s idle, peek back (only if hidden)
         idleTimer.current = setTimeout(() => {
           downSince.current = null;
           pendingHide.current = false;
           setStickyHidden(false);
-        }, 2000);
+        }, 2500);
       });
     };
 
@@ -77,10 +81,7 @@ export function useSmartSticky() {
     stickyStyle: {
       transform: stickyHidden ? 'translateY(-100%)' : 'translateY(0)',
       opacity: stickyHidden ? 0 : 1,
-      // Hide: slow drift up. Reappear: gentle fade back in
-      transition: stickyHidden
-        ? 'transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease-out, top 0.7s cubic-bezier(0.16, 1, 0.3, 1)'
-        : 'transform 0.9s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), top 0.9s cubic-bezier(0.16, 1, 0.3, 1)',
+      transition: 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), top 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
       willChange: 'transform, opacity',
     } as React.CSSProperties,
   };

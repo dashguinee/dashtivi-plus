@@ -38,7 +38,6 @@ export function usePlayer() {
   const abortRef = useRef<AbortController | null>(null);
   const fadeInRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const playGeneration = useRef(0); // Guards against stale handlers from rapid channel switches
-  const userMutedRef = useRef(false); // Tracks explicit user mute — respected across channel switches
 
   const cleanup = useCallback(() => {
     disconnectBoost();
@@ -146,10 +145,6 @@ export function usePlayer() {
         // Generation guard — if playChannel is called again, stale handlers bail out
         const generation = ++playGeneration.current;
         const isStale = () => generation !== playGeneration.current;
-
-        // Mute before any source change to prevent audio leak between channels
-        video.muted = true;
-        video.volume = 0;
 
         if (isHlsUrl) {
           // Clear old stream right before HLS attach (HLS needs clean element)
@@ -300,14 +295,8 @@ export function usePlayer() {
           // Connect audio presence EQ (warmth, body, clarity — always on)
           connectBoost(video);
           setState((prev) => ({ ...prev, isPlaying: true, isLoading: false, error: null }));
-          // Unmute now that new source is playing (was muted during source switch to prevent audio leak)
-          // Respect user's explicit mute preference
-          if (!userMutedRef.current) {
-            video.muted = false;
-            setState((prev) => ({ ...prev, isMuted: false }));
-          }
           // Smooth fade-in: 12 steps × 40ms = 480ms
-          const targetVol = userMutedRef.current ? 0 : 1;
+          const targetVol = video.muted ? 0 : 1;
           if (targetVol > 0 && video.volume < targetVol) {
             if (fadeInRef.current) clearInterval(fadeInRef.current);
             video.volume = 0; // Ensure clean start from silence
@@ -529,7 +518,6 @@ export function usePlayer() {
     const video = videoRef.current;
     if (!video) return;
     video.muted = !video.muted;
-    userMutedRef.current = video.muted;
     setState((prev) => ({ ...prev, isMuted: video.muted }));
   }, []);
 

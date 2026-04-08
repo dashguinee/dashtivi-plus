@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo, useDeferredValue, startTransition } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Play, ChevronRight, Search, X, Trophy, Baby, Sparkles, Radio, Film, Music, Globe, Heart, Home, MapPin, Sun, Star, Moon, Flag } from 'lucide-react';
 import { t, useLanguage } from '@/i18n';
@@ -461,8 +461,6 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
   const [activeSubTab, setActiveSubTab] = useState('all');
   const [freeUrlMap, setFreeUrlMap] = useState<Record<number, string>>({});
   const [searchQuery, setSearchQuery] = useState('');
-  // PERF: defer the search value so typing stays responsive (INP)
-  const deferredSearchQuery = useDeferredValue(searchQuery);
   const [searchActive, setSearchActive] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const GRID_PAGE_SIZE = 60;
@@ -594,9 +592,9 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
     }
   }
 
-  // Search filter — uses deferred value so input stays responsive
-  const searchFiltered = deferredSearchQuery.trim()
-    ? filtered.filter(s => s.name.toLowerCase().includes(deferredSearchQuery.toLowerCase()))
+  // Search filter
+  const searchFiltered = searchQuery.trim()
+    ? filtered.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
     : filtered;
 
   // VEE-curated top picks (from engine — already ordered by platform intelligence)
@@ -765,7 +763,7 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
               </h2>
               <span className="text-[11px] text-white/25">{deduped.length} channels</span>
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3 cv-auto-grid">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
               {deduped.slice(0, gridVisibleCount).map((stream, i) => (
                 <button
                   key={stream.stream_id}
@@ -796,7 +794,7 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
             {deduped.length > gridVisibleCount && (
               <div className="flex flex-col items-center gap-1 mt-4 mb-4">
                 <button
-                  onClick={() => startTransition(() => setGridVisibleCount(prev => prev + GRID_PAGE_SIZE))}
+                  onClick={() => setGridVisibleCount(prev => prev + GRID_PAGE_SIZE)}
                   className="group w-full relative overflow-hidden rounded-2xl py-3.5 transition-all duration-300 hover:scale-[1.005] active:scale-[0.995]"
                   style={{
                     background: 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(157,78,221,0.02) 100%)',

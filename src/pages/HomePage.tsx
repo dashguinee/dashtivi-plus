@@ -51,7 +51,6 @@ import { SkeletonRow } from '@/components/ui/LoadingSpinner';
 import { setAmbientSpeed } from '@/lib/ambient-audio';
 import type { Channel, WatchHistoryEntry } from '@/types';
 import { HexCard } from '@/components/ui/HexCard';
-import { AuroraHero } from '@/components/ui/AuroraHero';
 import { NeonGate, RowCountBadge, cardScaleStyle } from '@/components/ui/NeonGate';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { useScrollFocus } from '@/hooks/useScrollFocus';
@@ -126,14 +125,6 @@ const HERO_CTA_MAP: Record<string, TranslationKey> = {
   'Explore': 'heroCTAExplore',
   'Watch Now': 'heroCTAWatchNow',
   'Dive In': 'heroCTADiveIn',
-};
-
-const NAV_PILL_STYLE = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' } as const;
-const NAV_PILL_ICONS: Record<string, React.ReactNode> = {
-  sports: <Trophy className="w-3 h-3" />,
-  news: <Radio className="w-3 h-3" />,
-  africa: <Globe className="w-3 h-3" />,
-  faith: <Heart className="w-3 h-3" />,
 };
 
 const PILL_NAME_MAP: Record<string, TranslationKey> = {
@@ -779,35 +770,32 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   // ── Scroll reveal ──────────────────────────────────────────────
   const scrollRef = useScrollReveal([loading, rows, smartRows, fixturesHex]);
+  useScrollFocus();
   useGoggleFocus(scrollRef);
 
   // ── Render ──────────────────────────────────────────────────────
 
   return (
     <div ref={scrollRef} className="pt-16 pb-32">
-      {/* ── Aurora Hero (time-aware) — living ambient backdrop ── */}
+      {/* ── Ambient Hero (time-aware) — compact gradient backdrop ── */}
       <div
         ref={heroBannerRef}
         className="relative mb-3 overflow-hidden"
         style={{
-          height: '18vh',
-          minHeight: '120px',
-          maxHeight: '180px',
+          height: '14vh',
+          minHeight: '100px',
+          maxHeight: '150px',
           opacity: heroBannerEntered ? heroBannerOpacity : 0,
           transform: heroBannerEntered
             ? `translateY(${(1 - heroBannerOpacity) * -6}px)`
             : 'translateY(4px)',
-          transition: 'opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1)',
+          transition: 'opacity 0.8s ease-out, transform 0.8s ease-out',
           willChange: 'opacity, transform',
         }}
       >
-        <AuroraHero gradient={hero.gradient} timeSlot={
-          hero.title === 'Good Morning' ? 'morning' :
-          hero.title === 'Afternoon Escape' ? 'afternoon' :
-          hero.title === 'Prime Time' ? 'evening' : 'night'
-        } />
-        <div className="relative z-10 flex flex-col justify-end h-full px-5 pb-5">
-          <p className="text-[11px] text-white/20 font-medium tracking-[3px] uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+        <div className={`absolute inset-0 bg-gradient-to-br ${hero.gradient}`} style={{ opacity: 0.6 }} />
+        <div className="relative z-10 flex flex-col justify-end h-full px-5 pb-4">
+          <p className="text-[11px] text-white/25 font-medium tracking-[2px] uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             {HERO_TITLE_MAP[hero.title] ? t(lang, HERO_TITLE_MAP[hero.title]) : hero.title}
           </p>
         </div>
@@ -817,13 +805,22 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       <div data-goggle className="px-4 mb-5 reveal">
         <div className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth-x pb-1">
           {COLLECTION_CARDS.map((card) => {
-            const icon = NAV_PILL_ICONS[card.id];
+            const IconMap: Record<string, React.ReactNode> = {
+              sports: <Trophy className="w-3 h-3" />,
+              news: <Radio className="w-3 h-3" />,
+              africa: <Globe className="w-3 h-3" />,
+              faith: <Heart className="w-3 h-3" />,
+            };
+            const icon = IconMap[card.id];
             return (
               <button
                 key={card.id}
                 onClick={() => navigate(card.navigateTo)}
                 className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-[7px] rounded-full card-press hover:scale-[1.02] active:scale-[0.97]"
-                style={NAV_PILL_STYLE}
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                }}
               >
                 {icon && <span className="text-white/40">{icon}</span>}
                 <span className="text-[11px] font-medium text-white/50 whitespace-nowrap">{PILL_NAME_MAP[card.name] ? t(lang, PILL_NAME_MAP[card.name]) : card.name}</span>

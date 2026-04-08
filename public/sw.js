@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tivi-cache-v1775645042788';
+const CACHE_NAME = 'tivi-cache-v1775645343534';
 
 // --- INSTALL ---
 self.addEventListener('install', () => {
@@ -10,24 +10,20 @@ self.addEventListener('install', () => {
 self.addEventListener('activate', (event) => {
   console.log('[SW] Activating ' + CACHE_NAME);
   event.waitUntil(
-    Promise.all([
-      // Enable navigation preload if supported — fetches page in parallel with SW boot
-      self.registration.navigationPreload && self.registration.navigationPreload.enable(),
-      caches.keys().then((keys) => {
-        const old = keys.filter((k) => k !== CACHE_NAME);
-        if (old.length) {
-          console.log('[SW] Purging old caches:', old.join(', '));
-          return Promise.all(old.map((k) => caches.delete(k))).then(() => {
-            // Only signal update when replacing an old version, not on first install
-            self.clients.matchAll({ type: 'window' }).then((tabs) => {
-              console.log('[SW] Signaling ' + tabs.length + ' tab(s) to reload');
-              tabs.forEach((tab) => tab.postMessage({ type: 'SW_UPDATED' }));
-            });
+    caches.keys().then((keys) => {
+      const old = keys.filter((k) => k !== CACHE_NAME);
+      if (old.length) {
+        console.log('[SW] Purging old caches:', old.join(', '));
+        return Promise.all(old.map((k) => caches.delete(k))).then(() => {
+          // Only signal update when replacing an old version, not on first install
+          self.clients.matchAll({ type: 'window' }).then((tabs) => {
+            console.log('[SW] Signaling ' + tabs.length + ' tab(s) to reload');
+            tabs.forEach((tab) => tab.postMessage({ type: 'SW_UPDATED' }));
           });
-        }
-        console.log('[SW] Fresh install — no update signal');
-      }),
-    ])
+        });
+      }
+      console.log('[SW] Fresh install — no update signal');
+    })
   );
   self.clients.claim();
 });
@@ -108,24 +104,14 @@ self.addEventListener('fetch', (event) => {
   }
 
   try {
-    // --- HTML / NAVIGATION: use preloaded response if available, else network-first ---
+    // --- HTML / NAVIGATION: network-first with cache fallback ---
     if (request.mode === 'navigate') {
       event.respondWith(
-        (async () => {
-          try {
-            // Use navigation preload response if available (fetched in parallel with SW boot)
-            const preloaded = event.preloadResponse && await event.preloadResponse;
-            if (preloaded) {
-              const clone = preloaded.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-              return preloaded;
-            }
-            return await networkFirstThenCache(request);
-          } catch (e) {
-            const cached = await caches.match('/index.html');
-            return cached || new Response('Offline', { status: 503 });
-          }
-        })()
+        networkFirstThenCache(request).catch(
+          () => caches.match('/index.html').then(
+            (r) => r || new Response('Offline', { status: 503 })
+          )
+        )
       );
       return;
     }
