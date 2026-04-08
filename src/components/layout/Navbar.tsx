@@ -47,12 +47,7 @@ export const Navbar: React.FC = () => {
     return location.pathname.startsWith(path);
   };
 
-  const haptic = () => {
-    if (navigator.vibrate) navigator.vibrate(3);
-  };
-
   const handleTap = useCallback((path: string) => {
-    tick();
     navigate(path);
     setNavGlow(true);
     setTimeout(() => setNavGlow(false), 2000);
@@ -91,16 +86,18 @@ export const Navbar: React.FC = () => {
             return (
               <button
                 key={item.path}
+                onPointerDown={() => tick()}
                 onClick={() => handleTap(item.path)}
-                className="relative flex flex-col items-center justify-center flex-1 h-full transition-colors"
+                className="relative flex flex-col items-center justify-center flex-1 h-full"
               >
                 {/* Icon — lifts up when active */}
                 <div
-                  className="relative transition-[transform,color,filter] duration-300"
+                  className="relative"
                   style={{
                     transform: active ? 'translateY(-2px) scale(1.12)' : 'scale(1)',
                     color: active ? '#C77DFF' : 'rgba(255,255,255,0.35)',
                     filter: active ? 'drop-shadow(0 0 8px rgba(157, 78, 221, 0.5))' : 'none',
+                    transition: 'transform 0.15s ease-out, color 0.1s, filter 0.15s',
                   }}
                 >
                   <Icon
@@ -123,13 +120,14 @@ export const Navbar: React.FC = () => {
 
                 {/* Label — fades in when active */}
                 <span
-                  className="text-[10px] font-medium tracking-wide transition-[color,opacity,margin] duration-300"
+                  className="text-[10px] font-medium tracking-wide"
                   style={{
                     color: active ? '#C77DFF' : 'rgba(255,255,255,0.35)',
                     opacity: active ? 1 : 0,
                     marginTop: active ? 3 : 0,
                     height: active ? 'auto' : 0,
                     overflow: 'hidden',
+                    transition: 'opacity 0.1s, margin 0.15s ease-out, color 0.1s',
                   }}
                 >
                   {t(item.labelKey)}
