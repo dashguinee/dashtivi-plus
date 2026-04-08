@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useTransition } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Tv, Clapperboard, PlayCircle, Users } from 'lucide-react';
 import { useLanguage } from '@/i18n';
@@ -26,7 +26,6 @@ export const Navbar: React.FC = () => {
   const location = useLocation();
   const sidebarHoverRef = useRef(false);
   const [sidebarHover, setSidebarHoverState] = React.useState(false);
-  const [, startTransition] = useTransition();
 
   // ── Nav visibility: 3-tier fade ──
   // Scrolling → 30%  |  Idle 2s → 100%  |  Idle 5s more → 15% ghost
@@ -82,8 +81,8 @@ export const Navbar: React.FC = () => {
     ghostTimer.current = setTimeout(() => {
       if (window.scrollY > 80) { fadeRef.current = 'ghost'; setNavOpacity('ghost'); }
     }, 7000);
-    startTransition(() => { navigate(path); });
-  }, [navigate, startTransition]);
+    navigate(path);
+  }, [navigate]);
 
   return (
     <>
@@ -127,7 +126,9 @@ export const Navbar: React.FC = () => {
               : navGlow === 'soft'
                 ? '0 0 20px rgba(157, 78, 221, 0.18), 0 0 40px rgba(157, 78, 221, 0.06)'
                 : '0 4px 24px rgba(0,0,0,0.5), 0 0 30px rgba(157,78,221,0.05)',
-            transition: 'background 0.6s ease-out, border-color 0.6s ease-out, box-shadow 0.6s ease-out',
+            transition: navGlow
+              ? 'background 0.08s ease-out, border-color 0.08s ease-out, box-shadow 0.08s ease-out'
+              : 'background 1.2s cubic-bezier(0.16,1,0.3,1), border-color 1.2s cubic-bezier(0.16,1,0.3,1), box-shadow 1.2s cubic-bezier(0.16,1,0.3,1)',
           }}
         >
           {NAV_ITEMS.map((item) => {
