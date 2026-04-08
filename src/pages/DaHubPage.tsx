@@ -664,7 +664,7 @@ export const DaHubPage: React.FC = () => {
           <Zap className="w-4 h-4 text-[#c9f03c]/50" />
           <h3 className="text-sm font-semibold text-white/60 tracking-wide">DASH Ecosystem</h3>
         </div>
-        <p className="text-[10px] text-white/20 px-1 mb-4 ml-6">Originals</p>
+        <p className="text-[10px] font-semibold px-1 mb-4 ml-6" style={{ color: 'rgba(218,165,32,0.50)' }}>Originals</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {ECOSYSTEM.map((product) => {
             const Icon = product.icon;
