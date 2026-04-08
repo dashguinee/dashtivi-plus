@@ -49,6 +49,7 @@ const DaHubPage = lazyRetry(() => import('@/pages/DaHubPage').then((m) => ({ def
 const WelcomePage = lazyRetry(() => import('@/pages/WelcomePage').then((m) => ({ default: m.WelcomePage })));
 const PlatformsPage = lazyRetry(() => import('@/pages/PlatformsPage').then((m) => ({ default: m.PlatformsPage })));
 const ExperienceHomePage = lazyRetry(() => import('@/pages/ExperienceHomePage').then((m) => ({ default: m.ExperienceHomePage })));
+const TestChannelsPage = lazyRetry(() => import('@/pages/TestChannelsPage'));
 
 // Build-time version stamp — compared against remote version.json
 const APP_VERSION = __APP_VERSION__;
@@ -280,6 +281,7 @@ function AppContent() {
                   <Route path="/french" element={<ErrorBoundary><FrenchPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/hub" element={<ErrorBoundary><DaHubPage /></ErrorBoundary>} />
                   <Route path="/originals" element={<ErrorBoundary><PlatformsPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
+                  <Route path="/test" element={<ErrorBoundary><TestChannelsPage onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </Suspense>

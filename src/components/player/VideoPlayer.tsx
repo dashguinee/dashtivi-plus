@@ -334,7 +334,7 @@ export const VideoPlayer: React.FC<Props> = ({
     const video = videoRef.current;
     if (!video || getStreamQuality() === 'eco') return;
 
-    const isLive = state.channel?.url?.includes('/live?');
+    const isLive = state.channel?.url?.includes('/live?') || state.channel?.url?.includes('.m3u8') || state.channel?.category === 'live';
     if (!isLive) return; // Only for live TV
 
     const onWaiting = () => {
