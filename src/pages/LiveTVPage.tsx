@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo, startTransition } from 'react';
 import { Play, Search, X, ChevronRight, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { NeonGate, cardScaleStyle } from '@/components/ui/NeonGate';
@@ -132,8 +132,12 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const isSearching = debouncedQuery.trim().length > 0 || searchCategory !== null;
 
   // ── Debounce search ───────────────────────────────────────────
+  // PERF: wrap in startTransition so React deprioritizes the search render,
+  // keeping the input responsive (INP optimization)
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    const timer = setTimeout(() => {
+      startTransition(() => setDebouncedQuery(searchQuery));
+    }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -782,7 +786,7 @@ function ExperienceShowcase({
   if (alive.length === 0) return null;
 
   return (
-    <div className="mx-4 mb-8 rounded-2xl overflow-hidden relative" style={SHOWCASE_CARD_BG_STYLE}>
+    <div className="mx-4 mb-8 rounded-2xl overflow-hidden relative cv-auto-section" style={SHOWCASE_CARD_BG_STYLE}>
       {/* Gradient backdrop */}
       <div className={`absolute inset-0 bg-gradient-to-r ${config.gradient} pointer-events-none`} />
 
@@ -941,7 +945,7 @@ const ThemeRow = React.memo(function ThemeRow({
   const navigate = useNavigate();
 
   return (
-    <div className="mb-10">
+    <div className="mb-10 cv-auto-row">
       {/* Theme header */}
       <div className="flex items-center gap-2.5 px-4 mb-3">
         <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${theme.gradient} flex items-center justify-center`}>
@@ -1176,7 +1180,7 @@ function SearchGrid({ streams, credentials, onPlay, freeUrlMap }: {
 
   return (
     <div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4" style={{ contain: 'content' }}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4 cv-auto-grid" style={{ contain: 'content' }}>
         {alive.slice(0, limit).map((stream) => (
           <button
             key={stream.stream_id}
@@ -1199,7 +1203,7 @@ function SearchGrid({ streams, credentials, onPlay, freeUrlMap }: {
         <div className="flex flex-col items-center gap-2 py-4">
           <p className="text-[11px] text-white/30">{Math.min(limit, alive.length)} of {alive.length}</p>
           <button
-            onClick={() => setLimit(l => l + 60)}
+            onClick={() => startTransition(() => setLimit(l => l + 60))}
             className="px-5 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors"
           >
             Show more
@@ -1356,7 +1360,7 @@ function StreamMoreSection({
       <p className="text-[10px] text-white/15 mb-3 font-mono">{filtered.length} channels</p>
 
       {/* Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2" style={{ contain: 'content' }}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 cv-auto-grid" style={{ contain: 'content' }}>
         {filtered.slice(0, visibleCount).map((stream) => {
           const isFree = isFreeChannel(stream.stream_id);
           return (
@@ -1392,7 +1396,7 @@ function StreamMoreSection({
       {/* Load more */}
       {filtered.length > visibleCount && (
         <button
-          onClick={() => setVisibleCount(prev => prev + PAGE_SIZE)}
+          onClick={() => startTransition(() => setVisibleCount(prev => prev + PAGE_SIZE))}
           className="w-full mt-4 py-3 rounded-xl text-[11px] font-medium tracking-wider uppercase transition-all hover:scale-[1.005] active:scale-[0.995]"
           style={LOAD_MORE_BTN_STYLE}
         >

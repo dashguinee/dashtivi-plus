@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo, startTransition } from 'react';
 import { Play, X, Download, Search, SlidersHorizontal, Star } from 'lucide-react';
 import type { XtreamCredentials, SeriesItem, SeriesInfo, Episode } from '@/lib/xtream';
 import { getSeries, getSeriesInfo, buildSeriesUrl, buildVodFallbackUrl, getTmdbMap, getSeriesByCategory, seriesDbToItem, searchSeries } from '@/lib/xtream';
@@ -182,8 +182,11 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   useEffect(() => { getTmdbMap().then(m => m && setTmdbMap(m.TMDB_MAP)); }, []);
 
+  // PERF: startTransition keeps input responsive during heavy search rendering (INP)
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    const timer = setTimeout(() => {
+      startTransition(() => setDebouncedQuery(searchQuery));
+    }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -766,7 +769,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         )
       ) : (
         <>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5" style={{ contain: 'content' }}>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5 cv-auto-grid" style={{ contain: 'content' }}>
             {filteredAndSorted.slice(0, displayLimit).map(series => (
               <PosterCard
                 key={series.series_id}
@@ -783,7 +786,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           {filteredAndSorted.length > displayLimit && (
             <div className="flex flex-col items-center gap-1 mt-4 mb-4 pb-8">
               <button
-                onClick={() => setDisplayLimit(l => l + PAGE_SIZE)}
+                onClick={() => startTransition(() => setDisplayLimit(l => l + PAGE_SIZE))}
                 className="group w-full relative overflow-hidden rounded-2xl py-3.5 transition-all duration-300 hover:scale-[1.005] active:scale-[0.995]"
                 style={SHOW_MORE_BTN_STYLE}
               >

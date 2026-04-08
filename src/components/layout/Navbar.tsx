@@ -46,6 +46,7 @@ export const Navbar: React.FC = () => {
     <>
       {/* MOBILE BOTTOM NAV — OG dasuperhub style */}
       <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 pointer-events-none safe-bottom"
+        style={{ transform: 'translateZ(0)' }}
       >
         <div
           className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto transition-[background-color,border-color,box-shadow] duration-500"

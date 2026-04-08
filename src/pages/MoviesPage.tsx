@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo, startTransition } from 'react';
 import { Download, Search, X, SlidersHorizontal, Moon, TrendingUp, Coffee, Rabbit, Heart, Users, Zap, Brain, Play, Plus, Star } from 'lucide-react';
 import { getActiveMomentPacks, getMomentPackResults } from '@/lib/moment-packs';
 import type { MomentPack } from '@/lib/moment-packs';
@@ -179,8 +179,11 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   useEffect(() => { getTmdbMap().then(m => m && setTmdbMap(m.TMDB_MAP)); }, []);
 
+  // PERF: startTransition keeps input responsive during heavy search rendering (INP)
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    const timer = setTimeout(() => {
+      startTransition(() => setDebouncedQuery(searchQuery));
+    }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -714,7 +717,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         )
       ) : (
         <>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5" style={{ contain: 'content' }}>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5 cv-auto-grid" style={{ contain: 'content' }}>
             {(isSearching ? filteredAndSorted : filteredAndSorted.slice(0, displayLimit)).map(movie => (
               <div key={movie.stream_id} className="relative group/card">
                 <PosterCard title={movie.name} poster={movie.stream_icon} rating={movie.rating}
@@ -742,7 +745,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           {!isSearching && filteredAndSorted.length > displayLimit && (
             <div className="flex flex-col items-center gap-1 pb-8 mt-4 mb-4">
               <button
-                onClick={() => setDisplayLimit(prev => prev + PAGE_SIZE)}
+                onClick={() => startTransition(() => setDisplayLimit(prev => prev + PAGE_SIZE))}
                 className="group w-full relative overflow-hidden rounded-2xl py-3.5 transition-all duration-300 hover:scale-[1.005] active:scale-[0.995]"
                 style={SHOW_MORE_BTN_STYLE}
               >
