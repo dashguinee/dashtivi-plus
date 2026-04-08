@@ -67,13 +67,21 @@ export const Navbar: React.FC = () => {
 
   return (
     <>
-      {/* Nav pulse animation — CSS only, no React re-render */}
+      {/* Nav pulse — full background + border + shadow, CSS-only */}
       <style>{`
         @keyframes nav-glow {
-          0% { border-color: rgba(157,78,221,0.35); box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 20px rgba(157,78,221,0.15); }
-          100% { border-color: rgba(157,78,221,0.12); box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 30px rgba(157,78,221,0.05); }
+          0% {
+            background: linear-gradient(135deg, rgba(157,78,221,0.10) 0%, rgba(10,10,15,0.60) 50%, rgba(157,78,221,0.06) 100%);
+            border-color: rgba(157,78,221,0.40);
+            box-shadow: 0 0 24px rgba(157,78,221,0.25), 0 0 50px rgba(157,78,221,0.10), inset 0 1px 0 rgba(255,255,255,0.06);
+          }
+          100% {
+            background: rgba(10,10,15,0.55);
+            border-color: rgba(157,78,221,0.12);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 30px rgba(157,78,221,0.05);
+          }
         }
-        .nav-pulse { animation: nav-glow 1.2s cubic-bezier(0.16,1,0.3,1) forwards; }
+        .nav-pulse { animation: nav-glow 1.8s cubic-bezier(0.16,1,0.3,1) forwards; }
       `}</style>
 
       {/* MOBILE BOTTOM NAV — OG dasuperhub style */}

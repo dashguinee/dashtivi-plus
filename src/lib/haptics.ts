@@ -49,30 +49,21 @@ export function initScrollHaptics() {
     tracked.add(el);
 
     const htmlEl = el as HTMLElement;
-
-    // Measure card width once on first scroll, cache it
     let cardW = 0;
-    function measureCard() {
-      if (cardW > 0) return cardW;
-      const first = htmlEl.firstElementChild as HTMLElement | null;
-      if (!first) return 130;
-      // Card width + gap (getComputedStyle for exact gap)
-      const gap = parseFloat(getComputedStyle(htmlEl).gap || '12');
-      cardW = first.offsetWidth + gap;
-      return cardW;
-    }
-
     let lastSlot = -1;
 
     el.addEventListener('scroll', () => {
-      const w = measureCard();
-      const slot = Math.floor(htmlEl.scrollLeft / w);
+      // Lazy measure — cache after first read
+      if (!cardW) {
+        const first = htmlEl.firstElementChild as HTMLElement | null;
+        if (!first) return;
+        cardW = first.offsetWidth + 12; // card + gap (avoid getComputedStyle)
+      }
 
+      // Round = fires at card midpoint (feels instant vs floor which waits till end)
+      const slot = Math.round(htmlEl.scrollLeft / cardW);
       if (slot !== lastSlot) {
-        // Only fire after initial read (not on mount)
-        if (lastSlot !== -1) {
-          navigator.vibrate(1);
-        }
+        if (lastSlot !== -1) navigator.vibrate(1);
         lastSlot = slot;
       }
     }, { passive: true });
