@@ -1,43 +1,46 @@
 /**
- * DashTivi+ Haptic System — Luxury PWA Haptics
+ * DashTivi+ Haptic System — Maybach Edition
  *
- * Design philosophy: Every interaction has ONE precise response.
- * Like a Swiss watch — you feel the mechanism, not the motor.
+ * Design: You should barely know it's there. When you feel it,
+ * it confirms what your eyes already saw — never announces itself.
  *
- * Haptic vocabulary:
- *   tick     (1ms)  — carousel card crossing, subtle selection change
- *   tap      (4ms)  — button press, nav item, tab switch
- *   click    (8ms)  — modal open, sheet snap, meaningful action
- *   confirm  (pattern) — success, completion, pull-to-refresh done
- *   heavy    (pattern) — error, destructive action
+ * Like a Maybach on cobblestone: the road exists, but the cabin
+ * absorbs it into something that feels intentional, not accidental.
  *
- * Silent no-op on iOS/desktop (Vibration API not supported).
+ * Rules:
+ *   - Fast flings = silence (you're traveling, no bumps)
+ *   - Slow browse = whisper tick per card (you're looking, we confirm)
+ *   - Actions = single precise pulse, never a pattern
+ *   - Nothing fires twice for the same gesture
+ *
+ * Silent no-op on iOS/desktop.
  */
 
 const V = typeof navigator !== 'undefined' && 'vibrate' in navigator;
 
-// ── Interaction primitives ───────────────────────────────────────
+// ── Interaction vocabulary ───────────────────────────────────────
 
-/** Whisper — carousel card boundary, barely perceptible */
+/** Whisper — carousel card crossing during slow browse. 1ms, barely there */
 export function tick() { if (V) navigator.vibrate(1); }
 
-/** Tap — nav press, tab switch, toggle. Crisp, immediate */
-export function tap() { if (V) navigator.vibrate(4); }
+/** Tap — nav press, tab switch, pill selection. Crisp 3ms */
+export function tap() { if (V) navigator.vibrate(3); }
 
-/** Click — modal open, detail sheet, play button. Medium weight */
-export function click() { if (V) navigator.vibrate(8); }
+/** Click — modal open, detail sheet, play. Firm 6ms */
+export function click() { if (V) navigator.vibrate(6); }
 
-/** Confirm — success, refresh complete. Warm double-pulse */
-export function confirm() { if (V) navigator.vibrate([6, 50, 8]); }
+/** Confirm — success, refresh done. Soft double-knock */
+export function confirm() { if (V) navigator.vibrate([4, 60, 6]); }
 
-/** Heavy — error, destructive. Sharp triple-knock */
-export function heavy() { if (V) navigator.vibrate([8, 30, 8, 30, 8]); }
+/** Heavy — error, destructive. Sharp but brief */
+export function heavy() { if (V) navigator.vibrate([6, 30, 6]); }
 
-// ── Carousel scroll haptics ──────────────────────────────────────
+// ── Scroll haptics — velocity-aware ──────────────────────────────
 //
-// Precisely ONE tick per card crossing. Not on every scroll pixel.
-// Measures actual card width from DOM, fires when the leading edge
-// crosses a card boundary. No settle buzz — just the crossing.
+// The key insight: fast flings should feel SMOOTH (no haptics),
+// slow browsing should feel PRECISE (one tick per card).
+// This mimics how luxury suspension absorbs speed bumps at high
+// velocity but lets you feel the driveway texture at walking pace.
 
 export function initScrollHaptics() {
   if (!V) return;
@@ -51,16 +54,28 @@ export function initScrollHaptics() {
     const htmlEl = el as HTMLElement;
     let cardW = 0;
     let lastSlot = -1;
+    let lastScrollLeft = 0;
+    let lastScrollTime = 0;
 
     el.addEventListener('scroll', () => {
-      // Lazy measure — cache after first read
+      // Lazy measure card width
       if (!cardW) {
         const first = htmlEl.firstElementChild as HTMLElement | null;
         if (!first) return;
-        cardW = first.offsetWidth + 12; // card + gap (avoid getComputedStyle)
+        cardW = first.offsetWidth + 12;
       }
 
-      // Round = fires at card midpoint (feels instant vs floor which waits till end)
+      const now = performance.now();
+      const dx = Math.abs(htmlEl.scrollLeft - lastScrollLeft);
+      const dt = now - lastScrollTime;
+      lastScrollLeft = htmlEl.scrollLeft;
+      lastScrollTime = now;
+
+      // Velocity px/ms — above 1.5 = fling, silence
+      // Below 1.5 = browsing, feel the cards
+      const velocity = dt > 0 ? dx / dt : 0;
+      if (velocity > 1.5) { lastSlot = Math.round(htmlEl.scrollLeft / cardW); return; }
+
       const slot = Math.round(htmlEl.scrollLeft / cardW);
       if (slot !== lastSlot) {
         if (lastSlot !== -1) navigator.vibrate(1);
@@ -69,10 +84,8 @@ export function initScrollHaptics() {
     }, { passive: true });
   }
 
-  // Attach to all horizontal scrollers
   document.querySelectorAll('.scrollbar-hide').forEach(attach);
 
-  // Watch for dynamically added containers (lazy pages, VEE rows)
   new MutationObserver((mutations) => {
     for (const m of mutations) {
       for (const node of m.addedNodes) {

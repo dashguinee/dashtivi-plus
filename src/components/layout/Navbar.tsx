@@ -64,17 +64,29 @@ export const Navbar: React.FC = () => {
   };
 
   const navRef = useRef<HTMLDivElement>(null);
+  const [navGlow, setNavGlow] = React.useState(false);
+  const glowTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  // Home & Hub get the full immersive glow, others get a subtle CSS pulse
+  const GLOW_TABS = new Set(['/', '/hub']);
 
   const handleTap = useCallback((path: string) => {
-    // Wake nav from ghost + glow pulse
+    // Wake from ghost
     clearTimeout(ghostTimer.current);
     if (fadeRef.current !== 'full') { fadeRef.current = 'full'; setNavOpacity('full'); }
-    const el = navRef.current;
-    if (el) {
-      el.classList.remove('nav-pulse');
-      void el.offsetWidth;
-      el.classList.add('nav-pulse');
+
+    if (GLOW_TABS.has(path)) {
+      // Full glow for Home & Hub
+      clearTimeout(glowTimer.current);
+      setNavGlow(true);
+      glowTimer.current = setTimeout(() => setNavGlow(false), 2000);
+    } else {
+      // Subtle CSS pulse for Live/Movies/Series
+      setNavGlow(false);
+      const el = navRef.current;
+      if (el) { el.classList.remove('nav-pulse'); void el.offsetWidth; el.classList.add('nav-pulse'); }
     }
+
     // Re-arm ghost timer
     ghostTimer.current = setTimeout(() => {
       if (window.scrollY > 80) { fadeRef.current = 'ghost'; setNavOpacity('ghost'); }
@@ -84,24 +96,16 @@ export const Navbar: React.FC = () => {
 
   return (
     <>
-      {/* Nav pulse — full background + border + shadow, CSS-only */}
+      {/* Subtle pulse for content tabs (Live/Movies/Series) */}
       <style>{`
-        @keyframes nav-glow {
-          0% {
-            background: linear-gradient(135deg, rgba(157,78,221,0.10) 0%, rgba(10,10,15,0.60) 50%, rgba(157,78,221,0.06) 100%);
-            border-color: rgba(157,78,221,0.40);
-            box-shadow: 0 0 24px rgba(157,78,221,0.25), 0 0 50px rgba(157,78,221,0.10), inset 0 1px 0 rgba(255,255,255,0.06);
-          }
-          100% {
-            background: rgba(10,10,15,0.55);
-            border-color: rgba(157,78,221,0.12);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 30px rgba(157,78,221,0.05);
-          }
+        @keyframes nav-pulse-subtle {
+          0% { border-color: rgba(157,78,221,0.25); box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 16px rgba(157,78,221,0.10); }
+          100% { border-color: rgba(157,78,221,0.12); box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 30px rgba(157,78,221,0.05); }
         }
-        .nav-pulse { animation: nav-glow 1.8s cubic-bezier(0.16,1,0.3,1) forwards; }
+        .nav-pulse { animation: nav-pulse-subtle 1s cubic-bezier(0.16,1,0.3,1) forwards; }
       `}</style>
 
-      {/* MOBILE BOTTOM NAV — OG dasuperhub style */}
+      {/* MOBILE BOTTOM NAV */}
       <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 pointer-events-none safe-bottom"
         style={{
           transform: 'translateZ(0)',
@@ -117,9 +121,16 @@ export const Navbar: React.FC = () => {
           ref={navRef}
           className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto"
           style={{
-            background: 'rgba(10, 10, 15, 0.55)',
-            border: '1px solid rgba(157, 78, 221, 0.12)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.5), 0 0 30px rgba(157,78,221,0.05)',
+            background: navGlow
+              ? 'linear-gradient(135deg, rgba(157,78,221,0.12) 0%, rgba(10,10,15,0.65) 50%, rgba(157,78,221,0.08) 100%)'
+              : 'rgba(10, 10, 15, 0.55)',
+            border: navGlow
+              ? '1px solid rgba(157, 78, 221, 0.5)'
+              : '1px solid rgba(157, 78, 221, 0.12)',
+            boxShadow: navGlow
+              ? '0 0 30px rgba(157, 78, 221, 0.4), 0 0 60px rgba(157, 78, 221, 0.15), inset 0 1px 0 rgba(255,255,255,0.08)'
+              : '0 4px 24px rgba(0,0,0,0.5), 0 0 30px rgba(157,78,221,0.05)',
+            transition: 'background 0.6s ease-out, border-color 0.6s ease-out, box-shadow 0.6s ease-out',
           }}
         >
           {NAV_ITEMS.map((item) => {
