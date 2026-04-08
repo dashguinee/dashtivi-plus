@@ -13,6 +13,7 @@ import {
 import type { LiveTheme, SportType } from '@/lib/collections';
 import { getSmartThemeOrder, recordThemeWatch } from '@/lib/intelligence';
 import { useSmartSticky } from '@/hooks/useSmartSticky';
+import { tick } from '@/lib/haptics';
 
 // Map theme IDs to their child experience sub-tabs
 const THEME_SUBTYPES: Record<string, SportType[]> = {
@@ -824,7 +825,7 @@ function ExperienceShowcase({
             {subtypes.slice(0, 8).map(sub => (
               <button
                 key={sub.id}
-                onClick={() => setActiveSubTab(sub.id === activeSubTab ? 'all' : sub.id)}
+                onClick={() => { tick(); setActiveSubTab(sub.id === activeSubTab ? 'all' : sub.id); }}
                 className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors duration-200 ${
                   sub.id === activeSubTab
                     ? 'text-white'

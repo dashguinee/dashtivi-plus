@@ -4,6 +4,7 @@ import { CosmicClose } from './CosmicClose';
 import { t, useLanguage } from '@/i18n';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { safeImageUrl, type XtreamCredentials } from '@/lib/xtream';
+import { click as hapticClick } from '@/lib/haptics';
 
 const TMDB_GENRES: Record<number, string> = {
   12: 'Adventure', 14: 'Fantasy', 16: 'Animation', 18: 'Drama',
@@ -82,6 +83,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
 
   // ── Scroll lock + keyboard + mute background player ──────────
   useEffect(() => {
+    hapticClick(); // medium haptic on modal open
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';

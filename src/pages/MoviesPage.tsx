@@ -4,6 +4,7 @@ import { getActiveMomentPacks, getMomentPackResults } from '@/lib/moment-packs';
 import type { MomentPack } from '@/lib/moment-packs';
 import type { XtreamCredentials, VodStream } from '@/lib/xtream';
 import { getVodStreams, buildVodUrl, buildVodFallbackUrl, getTmdbMap, getVodByCategory, vodDbToStream, searchVod } from '@/lib/xtream';
+import { tick } from '@/lib/haptics';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { TMDB_GENRES } from '@/lib/tmdb-map.generated';
 import { PosterCard } from '@/components/ui/PosterCard';
@@ -441,6 +442,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // ── Handlers ─────────────────────────────────────────────────
 
   const handleParentChange = useCallback((id: string) => {
+    tick();
     setActiveParent(id);
     setSearchQuery('');
     setDebouncedQuery('');

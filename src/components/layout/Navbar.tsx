@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Tv, Clapperboard, PlayCircle, Users } from 'lucide-react';
 import { useLanguage } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
+import { tick } from '@/lib/haptics';
 
 interface NavItem {
   path: string;
@@ -31,12 +32,8 @@ export const Navbar: React.FC = () => {
     return location.pathname.startsWith(path);
   };
 
-  const haptic = () => {
-    if (navigator.vibrate) navigator.vibrate(3);
-  };
-
   const handleTap = useCallback((path: string) => {
-    haptic();
+    tick();
     navigate(path);
     setNavGlow(true);
     setTimeout(() => setNavGlow(false), 2000);

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef, useMemo, startTransiti
 import { Play, X, Download, Search, SlidersHorizontal, Star } from 'lucide-react';
 import type { XtreamCredentials, SeriesItem, SeriesInfo, Episode } from '@/lib/xtream';
 import { getSeries, getSeriesInfo, buildSeriesUrl, buildVodFallbackUrl, getTmdbMap, getSeriesByCategory, seriesDbToItem, searchSeries } from '@/lib/xtream';
+import { tick, click as hapticClick } from '@/lib/haptics';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { TMDB_GENRES } from '@/lib/tmdb-map.generated';
 import { PosterCard } from '@/components/ui/PosterCard';
@@ -443,6 +444,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   const handleSelectSeries = useCallback(
     async (series: SeriesItem) => {
+      hapticClick();
       setSelectedSeries(series);
       setLoadingInfo(true);
       setSeriesInfo(null);
@@ -502,6 +504,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // ── Handlers ─────────────────────────────────────────────────
 
   const handleParentChange = useCallback((id: string) => {
+    tick();
     setActiveParent(id);
     setSearchQuery('');
     setDebouncedQuery('');

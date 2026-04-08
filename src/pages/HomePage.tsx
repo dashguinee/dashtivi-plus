@@ -779,6 +779,16 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const scrollRef = useScrollReveal([loading, rows, smartRows, fixturesHex]);
   useGoggleFocus(scrollRef);
 
+  // ── Haptic snap — light tick when horizontal rows snap ────────
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const rows = container.querySelectorAll('.scroll-smooth-x');
+    const handler = () => { import('@/lib/haptics').then(h => h.snap()); };
+    rows.forEach(r => r.addEventListener('scrollend', handler, { passive: true }));
+    return () => rows.forEach(r => r.removeEventListener('scrollend', handler));
+  }, [loading, rows]);
+
   // ── Render ──────────────────────────────────────────────────────
 
   return (
