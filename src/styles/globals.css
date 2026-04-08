@@ -1142,18 +1142,17 @@
 
 :root { --pulse: 0.3; }
 
-/* Base state: slightly dimmed, but clearly visible and interactive */
+/* Base state: near-full presence — subtle depth, no scroll cost */
 [data-goggle] {
-  opacity: 0.92;
-  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0.95;
 }
 
-/* Dim zone: entering viewport — nearly full presence */
+/* Dim zone: entering viewport */
 [data-goggle-zone="dim"] {
-  opacity: 0.96;
+  opacity: 0.97;
 }
 
-/* Lit zone: sweet spot — full presence, alive with the music */
+/* Lit zone: sweet spot — full presence */
 [data-goggle-zone="lit"] {
   opacity: 1;
 }
