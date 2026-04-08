@@ -1,28 +1,38 @@
 /**
- * DashTivi+ Haptic System — Ghost Mode
+ * DashTivi+ Haptic System — Maybach Edition
  *
- * 70% reduced from previous. The motor barely wakes up.
- * You feel it the way you feel silk — you know it's there
- * but you'd never call it "vibration."
+ * Design: You should barely know it's there. When you feel it,
+ * it confirms what your eyes already saw — never announces itself.
+ *
+ * Like a Maybach on cobblestone: the road exists, but the cabin
+ * absorbs it into something that feels intentional, not accidental.
+ *
+ * Rules:
+ *   - Fast flings = soft rhythm every 3rd card (not silence, not noisy)
+ *   - Slow browse = whisper tick per card (you're looking, we confirm)
+ *   - Actions = single precise pulse, never a pattern
+ *   - Nothing fires twice for the same gesture
  *
  * Silent no-op on iOS/desktop.
  */
 
 const V = typeof navigator !== 'undefined' && 'vibrate' in navigator;
 
-/** Tap — nav, tab switch. Single 1ms, nothing more */
-export function tap() { if (V) navigator.vibrate(1); }
+// ── Interaction vocabulary ───────────────────────────────────────
 
-/** Click — modal open, sheet. Spread micro-flutter */
-export function click() { if (V) navigator.vibrate([1, 3, 1]); }
+/** Tap — nav press, tab switch, pill selection. Crisp 3ms */
+export function tap() { if (V) navigator.vibrate(3); }
 
-/** Confirm — success. Two ghosts separated by silence */
-export function confirm() { if (V) navigator.vibrate([1, 80, 1, 2, 1]); }
+/** Click — modal open, detail sheet, play. Firm 6ms */
+export function click() { if (V) navigator.vibrate(6); }
 
-/** Heavy — error. Just enough to notice */
-export function heavy() { if (V) navigator.vibrate([1, 2, 1, 40, 1, 2, 1]); }
+/** Confirm — success, refresh done. Soft double-knock */
+export function confirm() { if (V) navigator.vibrate([4, 60, 6]); }
 
-// ── Scroll haptics ───────────────────────────────────────────────
+/** Heavy — error, destructive. Sharp but brief */
+export function heavy() { if (V) navigator.vibrate([6, 30, 6]); }
+
+// ── Scroll haptics — velocity-aware ──────────────────────────────
 
 export function initScrollHaptics() {
   if (!V) return;
@@ -37,7 +47,7 @@ export function initScrollHaptics() {
     let cardW = 0;
     let lastSlot = -1;
     let lastScrollLeft = 0;
-    let lastTime = 0;
+    let lastScrollTime = 0;
     let flingCount = 0;
 
     el.addEventListener('scroll', () => {
@@ -49,32 +59,25 @@ export function initScrollHaptics() {
 
       const now = performance.now();
       const dx = Math.abs(htmlEl.scrollLeft - lastScrollLeft);
-      const dt = now - lastTime;
+      const dt = now - lastScrollTime;
       lastScrollLeft = htmlEl.scrollLeft;
-      lastTime = now;
+      lastScrollTime = now;
 
+      const velocity = dt > 0 ? dx / dt : 0;
       const slot = Math.round(htmlEl.scrollLeft / cardW);
       if (slot === lastSlot) return;
       const moved = lastSlot !== -1;
       lastSlot = slot;
       if (!moved) return;
 
-      const vel = dt > 0 ? dx / dt : 0;
-
-      if (vel < 1.0) {
-        // Browse — single 1ms ghost per card
-        navigator.vibrate(1);
-        flingCount = 0;
-      } else if (vel < 2.5) {
-        // Cruise — same ghost, every card
-        navigator.vibrate(1);
-        flingCount = 0;
-      } else {
-        // Fling — every 2nd card, still just 1ms
+      if (velocity > 1.5) {
+        // Fling — soft pulse every 3rd card, not silence
         flingCount++;
-        if (flingCount % 2 === 0) {
-          navigator.vibrate(1);
-        }
+        if (flingCount % 3 === 0) navigator.vibrate(1);
+      } else {
+        // Browse — whisper per card
+        navigator.vibrate(1);
+        flingCount = 0;
       }
     }, { passive: true });
   }
