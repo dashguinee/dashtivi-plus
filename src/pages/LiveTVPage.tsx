@@ -437,18 +437,22 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
     <div className="pt-16 pb-32 min-h-screen">
       {/* ── Search bar — frosted glass, smart sticky ── */}
       <div
-        className="sticky z-20 py-4"
+        className="sticky z-20"
         style={{
           top: headerVisible ? '3.5rem' : '0px',
-          background: headerVisible ? 'rgba(10,10,10,0.92)' : 'rgba(0,0,0,0.35)',
-          backdropFilter: 'blur(28px)',
-          WebkitBackdropFilter: 'blur(28px)',
-          borderBottom: headerVisible ? '1px solid rgba(255,255,255,0.05)' : '1px solid transparent',
-          padding: headerVisible ? '1rem 1rem' : '0.75rem 1.5rem',
-          opacity: stickyHidden ? 0.07 : 1,
-          transform: stickyHidden ? 'translateY(0)' : 'translateY(0)',
-          transition: 'top 0.5s ease-out, background 0.6s ease-out, border-color 0.6s ease-out, padding 0.5s ease-out, opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+          background: 'rgba(10,10,10,0.88)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.04)',
+          padding: headerVisible ? '0.875rem 1rem' : '0.625rem 1rem',
+          opacity: stickyHidden ? 0 : 1,
+          transform: stickyHidden ? 'translateY(-6px)' : 'translateY(0)',
+          // Hide: quick fade out. Reappear: gentle ease back
+          transition: stickyHidden
+            ? 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease-out, top 0.5s ease-out, padding 0.4s ease-out'
+            : 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), top 0.8s cubic-bezier(0.16, 1, 0.3, 1), padding 0.6s ease-out',
           pointerEvents: stickyHidden ? 'none' : 'auto',
+          willChange: 'transform, opacity',
         }}
       >
         <div className="relative">

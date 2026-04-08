@@ -51,6 +51,7 @@ import { SkeletonRow } from '@/components/ui/LoadingSpinner';
 import { setAmbientSpeed } from '@/lib/ambient-audio';
 import type { Channel, WatchHistoryEntry } from '@/types';
 import { HexCard } from '@/components/ui/HexCard';
+import { AuroraHero } from '@/components/ui/AuroraHero';
 import { NeonGate, RowCountBadge, cardScaleStyle } from '@/components/ui/NeonGate';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { useScrollFocus } from '@/hooks/useScrollFocus';
@@ -777,25 +778,29 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   return (
     <div ref={scrollRef} className="pt-16 pb-32">
-      {/* ── Ambient Hero (time-aware) — compact gradient backdrop ── */}
+      {/* ── Aurora Hero (time-aware) — living ambient backdrop ── */}
       <div
         ref={heroBannerRef}
         className="relative mb-3 overflow-hidden"
         style={{
-          height: '14vh',
-          minHeight: '100px',
-          maxHeight: '150px',
+          height: '18vh',
+          minHeight: '120px',
+          maxHeight: '180px',
           opacity: heroBannerEntered ? heroBannerOpacity : 0,
           transform: heroBannerEntered
             ? `translateY(${(1 - heroBannerOpacity) * -6}px)`
             : 'translateY(4px)',
-          transition: 'opacity 0.8s ease-out, transform 0.8s ease-out',
+          transition: 'opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1)',
           willChange: 'opacity, transform',
         }}
       >
-        <div className={`absolute inset-0 bg-gradient-to-br ${hero.gradient}`} style={{ opacity: 0.6 }} />
-        <div className="relative z-10 flex flex-col justify-end h-full px-5 pb-4">
-          <p className="text-[11px] text-white/25 font-medium tracking-[2px] uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+        <AuroraHero gradient={hero.gradient} timeSlot={
+          hero.title === 'Good Morning' ? 'morning' :
+          hero.title === 'Afternoon Escape' ? 'afternoon' :
+          hero.title === 'Prime Time' ? 'evening' : 'night'
+        } />
+        <div className="relative z-10 flex flex-col justify-end h-full px-5 pb-5">
+          <p className="text-[11px] text-white/20 font-medium tracking-[3px] uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             {HERO_TITLE_MAP[hero.title] ? t(lang, HERO_TITLE_MAP[hero.title]) : hero.title}
           </p>
         </div>
