@@ -1,60 +1,67 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 /**
- * Smart sticky — hides after sustained scroll, reappears on idle or scroll up.
- * Uses scroll position thresholds instead of getComputedStyle (avoids layout thrash).
+ * Smart sticky — confident, decisive search bar behavior.
+ *
+ * SCROLL DOWN past 120px → hides after 600ms sustained (not hesitant)
+ * SCROLL UP any amount    → snaps back immediately
+ * IDLE 2.5s               → slides back in
+ * TOP of page             → always visible
+ *
+ * Transitions:
+ *   Hide: 0.35s slide up — quick, deliberate
+ *   Show: 0.4s slide down — slightly slower, graceful landing
  */
 export function useSmartSticky() {
   const [stickyHidden, setStickyHidden] = useState(false);
   const [headerVisible, setHeaderVisible] = useState(true);
   const lastY = useRef(0);
-  const downSince = useRef<number | null>(null);
+  const downStart = useRef<number | null>(null);
   const idleTimer = useRef<ReturnType<typeof setTimeout>>();
-  const ticking = useRef(false);
-  const pendingHide = useRef(false);
+  const rafId = useRef(0);
 
   useEffect(() => {
     const onScroll = () => {
-      if (ticking.current) return;
-      ticking.current = true;
-
-      requestAnimationFrame(() => {
+      cancelAnimationFrame(rafId.current);
+      rafId.current = requestAnimationFrame(() => {
         const y = window.scrollY;
         const delta = y - lastY.current;
         lastY.current = y;
-        ticking.current = false;
 
-        // Header hides around y=56 (3.5rem) — use scroll position, not getComputedStyle
         setHeaderVisible(y < 56);
-
         clearTimeout(idleTimer.current);
 
-        if (delta > 3 && y > 200) {
-          // Scrolling down — start counting
-          if (!downSince.current) downSince.current = Date.now();
-          if (Date.now() - downSince.current > 1800 && !pendingHide.current) {
-            pendingHide.current = true;
+        if (y < 120) {
+          // Near top — always show
+          downStart.current = null;
+          setStickyHidden(false);
+          return;
+        }
+
+        if (delta > 5) {
+          // Scrolling down — hide after 600ms sustained
+          if (!downStart.current) downStart.current = Date.now();
+          if (Date.now() - downStart.current > 600) {
             setStickyHidden(true);
           }
-        } else if (delta < -3) {
-          // Scrolling up — show immediately
-          downSince.current = null;
-          pendingHide.current = false;
+        } else if (delta < -8) {
+          // Scrolling up decisively — snap back
+          downStart.current = null;
           setStickyHidden(false);
         }
 
-        // After 2s idle, peek back
+        // Idle 2.5s → slide back in
         idleTimer.current = setTimeout(() => {
-          downSince.current = null;
-          pendingHide.current = false;
+          downStart.current = null;
           setStickyHidden(false);
-        }, 2000);
+        }, 2500);
       });
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(rafId.current);
       clearTimeout(idleTimer.current);
     };
   }, []);
@@ -62,8 +69,7 @@ export function useSmartSticky() {
   const reset = useCallback(() => {
     setStickyHidden(false);
     setHeaderVisible(true);
-    downSince.current = null;
-    pendingHide.current = false;
+    downStart.current = null;
     lastY.current = 0;
   }, []);
 
@@ -77,10 +83,9 @@ export function useSmartSticky() {
     stickyStyle: {
       transform: stickyHidden ? 'translateY(-100%)' : 'translateY(0)',
       opacity: stickyHidden ? 0 : 1,
-      // Hide: slow drift up. Reappear: gentle fade back in
       transition: stickyHidden
-        ? 'transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease-out, top 0.7s cubic-bezier(0.16, 1, 0.3, 1)'
-        : 'transform 0.9s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), top 0.9s cubic-bezier(0.16, 1, 0.3, 1)',
+        ? 'transform 0.35s cubic-bezier(0.4, 0, 1, 1), opacity 0.25s ease-out, top 0.35s cubic-bezier(0.4, 0, 1, 1)'
+        : 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), top 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
       willChange: 'transform, opacity',
     } as React.CSSProperties,
   };

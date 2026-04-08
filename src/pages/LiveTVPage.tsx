@@ -445,9 +445,11 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
           WebkitBackdropFilter: 'blur(28px)',
           borderBottom: headerVisible ? '1px solid rgba(255,255,255,0.05)' : '1px solid transparent',
           padding: headerVisible ? '1rem 1rem' : '0.75rem 1.5rem',
-          opacity: stickyHidden ? 0.07 : 1,
-          transform: stickyHidden ? 'translateY(0)' : 'translateY(0)',
-          transition: 'top 0.5s ease-out, background 0.6s ease-out, border-color 0.6s ease-out, padding 0.5s ease-out, opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+          opacity: stickyHidden ? 0 : 1,
+          transform: stickyHidden ? 'translateY(-100%)' : 'translateY(0)',
+          transition: stickyHidden
+            ? 'transform 0.35s cubic-bezier(0.4,0,1,1), opacity 0.25s ease-out, top 0.35s cubic-bezier(0.4,0,1,1), background 0.3s, padding 0.3s'
+            : 'transform 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.3s cubic-bezier(0.16,1,0.3,1), top 0.4s cubic-bezier(0.16,1,0.3,1), background 0.3s, padding 0.3s',
           pointerEvents: stickyHidden ? 'none' : 'auto',
         }}
       >
