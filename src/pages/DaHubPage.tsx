@@ -103,6 +103,10 @@ export const DaHubPage: React.FC = () => {
         .dahub-stagger-2 { animation: dahub-slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both; }
         .dahub-stagger-3 { animation: dahub-slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
         .dahub-stagger-4 { animation: dahub-slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.28s both; }
+        @keyframes dahub-beam {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
       `}</style>
 
       {/* ── Section A: Social Header ─────────────────────────────── */}
@@ -590,6 +594,67 @@ export const DaHubPage: React.FC = () => {
               <Sparkles className="w-3.5 h-3.5 text-violet-400/40" />
             </a>
           </div>
+        </div>
+      </div>
+
+      {/* ── Section C2: Originals — Streaming Access ────────────── */}
+      <div className="px-4 mt-8 dahub-stagger-3">
+        <div className="flex items-baseline gap-2.5 mb-1 px-1">
+          <h3 className="text-[18px] font-black text-white/90 tracking-tight">Originals</h3>
+          <div className="w-1.5 h-1.5 rounded-full bg-primary" style={{ boxShadow: '0 0 6px rgba(157,78,221,0.4)' }} />
+        </div>
+        <p className="text-[11px] text-white/25 px-1 mb-3">Premium streaming — activé en 5 minutes</p>
+
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-3">
+          {[
+            { id: 'netflix', name: 'Netflix', sub: 'Films & séries illimité', color: '#E50914', colorEnd: '#831010', logo: '/logos/netflix-3d.png', price: '49,000', url: 'https://dasuperhub.com/#/netflix-guinee' },
+            { id: 'prime', name: 'Prime Video', sub: 'Amazon Originals + Sport', color: '#00A8E1', colorEnd: '#005F8A', logo: '/logos/prime-3d.webp', price: '49,000', url: 'https://dasuperhub.com/#/amazon-prime-guinee' },
+            { id: 'spotify', name: 'Spotify', sub: 'Musique sans limites', color: '#1DB954', colorEnd: '#0D7A2F', logo: '/logos/spotify.svg', price: '49,000', url: 'https://dasuperhub.com/#/spotify-guinee' },
+          ].map((svc, i) => (
+            <button
+              key={svc.id}
+              onClick={() => window.open(svc.url, '_blank')}
+              className="flex-shrink-0 relative group rounded-2xl overflow-hidden text-left"
+              style={{
+                width: 200,
+                boxShadow: `0 4px 20px ${svc.color}12, 0 0 0 1px ${svc.color}18`,
+                animation: `dahub-slide-up 0.8s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms both`,
+              }}
+            >
+              {/* Brand gradient fill */}
+              <div className="absolute inset-0 rounded-2xl" style={{ background: `linear-gradient(160deg, ${svc.color}22 0%, ${svc.colorEnd}15 35%, rgba(10,10,15,0.97) 70%)` }} />
+              {/* Beam sweep */}
+              <div
+                className="absolute inset-0 rounded-2xl pointer-events-none"
+                style={{
+                  padding: 1,
+                  background: `linear-gradient(90deg, transparent 0%, ${svc.color}20 30%, ${svc.color}50 50%, ${svc.color}20 70%, transparent 100%)`,
+                  backgroundSize: '200% 100%',
+                  animation: 'dahub-beam 5s ease-in-out infinite alternate',
+                  WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                  WebkitMaskComposite: 'xor',
+                  maskComposite: 'exclude' as any,
+                }}
+              />
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 px-4 pt-4 pb-2">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${svc.color}20`, boxShadow: `0 0 16px ${svc.color}25` }}>
+                    <img src={svc.logo} alt={svc.name} className="h-6 w-auto" loading="lazy" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[14px] font-bold text-white/95 tracking-tight">{svc.name}</span>
+                    <span className="block text-[9px] font-medium mt-0.5" style={{ color: `${svc.color}80` }}>{svc.sub}</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-white/15 group-hover:text-white/40 transition-colors" />
+                </div>
+                <div className="px-4 pb-3 flex items-baseline gap-1">
+                  <span className="text-[16px] font-extrabold text-white/85">{svc.price}</span>
+                  <span className="text-[9px] text-white/30 font-medium">GNF/mois</span>
+                </div>
+                <div className="h-[1.5px] w-full" style={{ background: `linear-gradient(90deg, transparent 10%, ${svc.color}35 50%, transparent 90%)` }} />
+              </div>
+            </button>
+          ))}
         </div>
       </div>
 
