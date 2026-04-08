@@ -609,7 +609,7 @@ export const DaHubPage: React.FC = () => {
           {[
             { id: 'netflix', name: 'Netflix', sub: 'Films & séries illimité', color: '#E50914', colorEnd: '#831010', logo: '/logos/netflix-3d.png', price: '49,000', url: 'https://dasuperhub.com/#/netflix-guinee' },
             { id: 'prime', name: 'Prime Video', sub: 'Amazon Originals + Sport', color: '#00A8E1', colorEnd: '#005F8A', logo: '/logos/prime-3d.webp', price: '49,000', url: 'https://dasuperhub.com/#/amazon-prime-guinee' },
-            { id: 'spotify', name: 'Spotify', sub: 'Musique sans limites', color: '#1DB954', colorEnd: '#0D7A2F', logo: '/logos/spotify.svg', price: '49,000', url: 'https://dasuperhub.com/#/spotify-guinee' },
+            { id: 'spotify', name: 'Spotify', sub: 'Musique sans limites', color: '#1DB954', colorEnd: '#0D7A2F', logo: '/logos/spotify-3d.webp', price: '49,000', url: 'https://dasuperhub.com/#/spotify-guinee' },
           ].map((svc, i) => (
             <button
               key={svc.id}
@@ -638,8 +638,8 @@ export const DaHubPage: React.FC = () => {
               />
               <div className="relative z-10">
                 <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${svc.color}20`, boxShadow: `0 0 16px ${svc.color}25` }}>
-                    <img src={svc.logo} alt={svc.name} className="h-6 w-auto" loading="lazy" />
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${svc.color}20`, boxShadow: `0 0 16px ${svc.color}25` }}>
+                    <img src={svc.logo} alt={svc.name} className="h-8 w-auto" loading="lazy" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <span className="text-[14px] font-bold text-white/95 tracking-tight">{svc.name}</span>
