@@ -1,40 +1,29 @@
 /**
- * DashTivi+ Haptic System — Rolls Royce Edition
+ * DashTivi+ Haptic System
  *
- * Three speed tiers, like a luxury drivetrain:
- *
- *   BROWSING (slow):  Feel every card. Precise. 1ms per card.
- *                     Like walking through a gallery — each piece announces itself.
- *
- *   CRUISING (medium): Smooth rhythm. 2ms per card.
- *                      Like highway driving — you feel the road, not the bumps.
- *
- *   FLYING (fast):    Immersive pulse. 3ms every 2nd card.
- *                     Like a jet on takeoff — a deep, spaced rhythm that
- *                     says "you're moving fast and everything is under control."
- *
- * Actions: substantial but never sharp. Each one is a single confident pulse.
+ * Everything soft, spread, inner. Not taps — hums.
+ * A single 1ms vibrate feels like a "click". But [1,1,1] at the
+ * same total energy feels like a "hum" because the motor never
+ * fully engages — it flutters instead of striking.
  *
  * Silent no-op on iOS/desktop.
  */
 
 const V = typeof navigator !== 'undefined' && 'vibrate' in navigator;
 
-// ── Actions ──────────────────────────────────────────────────────
+/** Tap — nav, tab switch. Soft flutter, not a click */
+export function tap() { if (V) navigator.vibrate([2, 1, 2]); }
 
-/** Tap — nav press, tab switch, pill select. Confident 4ms */
-export function tap() { if (V) navigator.vibrate(4); }
+/** Click — modal open, sheet. Slightly wider flutter */
+export function click() { if (V) navigator.vibrate([2, 2, 3]); }
 
-/** Click — modal open, sheet snap, play button. Firm 8ms */
-export function click() { if (V) navigator.vibrate(8); }
+/** Confirm — success. Breathing double-hum */
+export function confirm() { if (V) navigator.vibrate([2, 1, 2, 60, 2, 1, 3]); }
 
-/** Confirm — success, refresh complete. Warm double-knock with breathing room */
-export function confirm() { if (V) navigator.vibrate([5, 50, 8]); }
+/** Heavy — error. Firm but still spread */
+export function heavy() { if (V) navigator.vibrate([3, 2, 3, 30, 3, 2, 3]); }
 
-/** Heavy — error, destructive. Two firm knocks */
-export function heavy() { if (V) navigator.vibrate([8, 25, 8]); }
-
-// ── Scroll haptics — 3 velocity tiers ────────────────────────────
+// ── Scroll haptics ───────────────────────────────────────────────
 
 export function initScrollHaptics() {
   if (!V) return;
@@ -50,11 +39,9 @@ export function initScrollHaptics() {
     let lastSlot = -1;
     let lastScrollLeft = 0;
     let lastTime = 0;
-    // For fast fling: only vibrate every Nth card
-    let flingSkip = 0;
+    let flingCount = 0;
 
     el.addEventListener('scroll', () => {
-      // Lazy measure
       if (!cardW) {
         const first = htmlEl.firstElementChild as HTMLElement | null;
         if (!first) return;
@@ -73,22 +60,21 @@ export function initScrollHaptics() {
       lastSlot = slot;
       if (!moved) return;
 
-      // Velocity: px/ms
       const vel = dt > 0 ? dx / dt : 0;
 
       if (vel < 1.0) {
-        // BROWSING — precise, feel every card
-        navigator.vibrate(1);
-        flingSkip = 0;
+        // Browse — soft flutter per card
+        navigator.vibrate([1, 1, 1]);
+        flingCount = 0;
       } else if (vel < 2.5) {
-        // CRUISING — smooth rhythm, every card but slightly firmer
-        navigator.vibrate(2);
-        flingSkip = 0;
+        // Cruise — quieter flutter per card
+        navigator.vibrate([1, 2, 1]);
+        flingCount = 0;
       } else {
-        // FLYING — immersive pulse every 2nd card, deeper vibration
-        flingSkip++;
-        if (flingSkip % 2 === 0) {
-          navigator.vibrate(3);
+        // Fling — every 2nd card, wider spread
+        flingCount++;
+        if (flingCount % 2 === 0) {
+          navigator.vibrate([1, 1, 2, 1, 1]);
         }
       }
     }, { passive: true });
