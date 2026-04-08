@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Tv, Clapperboard, PlayCircle, Users } from 'lucide-react';
 import { useLanguage } from '@/i18n';
@@ -26,6 +26,43 @@ export const Navbar: React.FC = () => {
   const [sidebarHover, setSidebarHover] = useState(false);
   const [navGlow, setNavGlow] = useState(false);
 
+  // Idle reveal: after 5s no scroll → peek at 70% → then fade out after 3s more
+  const [navPhase, setNavPhase] = useState<'visible' | 'hidden' | 'peek'>('visible');
+  const idleTimer = useRef<ReturnType<typeof setTimeout>>();
+  const peekTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  // Route change → fully visible
+  useEffect(() => {
+    setNavPhase('visible');
+    return () => { clearTimeout(idleTimer.current); clearTimeout(peekTimer.current); };
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      // Scrolling → hide
+      if (window.scrollY > 120) {
+        setNavPhase('hidden');
+      } else {
+        setNavPhase('visible');
+      }
+      // Reset idle timer
+      clearTimeout(idleTimer.current);
+      clearTimeout(peekTimer.current);
+      idleTimer.current = setTimeout(() => {
+        // 5s idle → peek at 70%
+        setNavPhase('peek');
+        peekTimer.current = setTimeout(() => {
+          // 3s more → fade out
+          if (window.scrollY > 120) setNavPhase('hidden');
+        }, 3000);
+      }, 5000);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => { window.removeEventListener('scroll', onScroll); clearTimeout(idleTimer.current); clearTimeout(peekTimer.current); };
+  }, []);
+
+  const navOpacity = navPhase === 'visible' ? 1 : navPhase === 'peek' ? 0.7 : 0;
+
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
@@ -46,7 +83,12 @@ export const Navbar: React.FC = () => {
     <>
       {/* MOBILE BOTTOM NAV — OG dasuperhub style */}
       <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 pointer-events-none safe-bottom"
-        style={{ transform: 'translateZ(0)' }}
+        style={{
+          opacity: navOpacity,
+          transition: navPhase === 'hidden'
+            ? 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)'
+            : 'opacity 0.4s ease-out',
+        }}
       >
         <div
           className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto transition-[background-color,border-color,box-shadow] duration-500"

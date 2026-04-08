@@ -893,17 +893,16 @@
   }
 
   /* --- Controlled horizontal scroll — snap gives tactile landing --- */
-  /* All children in scroll rows: let vertical scroll pass through */
+  /* All children in scroll rows: vertical scroll always passes through */
   .scroll-smooth-x > * {
-    touch-action: manipulation;
+    touch-action: pan-y;
   }
 
   .scroll-smooth-x {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
     scroll-snap-type: x proximity;
-    /* GPU layer for smooth touch scroll compositing */
-    transform: translateZ(0);
+    touch-action: pan-x pan-y;
   }
 
   .scroll-smooth-x > * {
