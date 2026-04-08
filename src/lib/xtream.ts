@@ -346,6 +346,15 @@ async function enrichIcons(streams: LiveStream[]): Promise<LiveStream[]> {
   for (const s of streams) {
     // Parse metadata from raw name before cleaning
     const meta = parseChannelMeta(s.name);
+    if (channelMetaCache.size >= CHANNEL_META_MAX) {
+      // Evict oldest 25% — Map iteration order is insertion order
+      const evictCount = Math.floor(CHANNEL_META_MAX / 4);
+      let i = 0;
+      for (const key of channelMetaCache.keys()) {
+        if (i++ >= evictCount) break;
+        channelMetaCache.delete(key);
+      }
+    }
     channelMetaCache.set(s.stream_id, meta);
     s.name = meta.name;
     // Hidden/relocated filtering now handled by database (is_hidden, curator experiences)
@@ -504,7 +513,15 @@ function getHealthCache(): Record<string, HealthEntry> {
 }
 
 function setHealthCache(cache: Record<string, HealthEntry>) {
-  try { localStorage.setItem(HEALTH_KEY, JSON.stringify(cache)); } catch {}
+  try {
+    // Cap at 5000 entries to prevent localStorage bloat
+    const entries = Object.entries(cache);
+    if (entries.length > 5000) {
+      entries.sort((a, b) => a[1].ts - b[1].ts);
+      cache = Object.fromEntries(entries.slice(entries.length - 5000));
+    }
+    localStorage.setItem(HEALTH_KEY, JSON.stringify(cache));
+  } catch {}
 }
 
 function markChannelHealth(streamId: number, status: ChannelHealth, size?: number) {
@@ -956,7 +973,9 @@ export function getCuratorExperience(experienceId: string): CuratorChannel[] | n
 }
 
 // Channel metadata cache — populated during curatorToLiveStreams, queried by UI
+// Capped at 15K entries to prevent unbounded growth
 const channelMetaCache = new Map<number, ChannelMeta>();
+const CHANNEL_META_MAX = 15_000;
 
 export function getChannelMeta(streamId: number): ChannelMeta | undefined {
   return channelMetaCache.get(streamId);

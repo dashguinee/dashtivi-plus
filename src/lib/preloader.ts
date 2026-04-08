@@ -40,10 +40,20 @@ export function startPreload() {
 
   const loads: Promise<unknown>[] = [];
 
-  // 1. Import HomePage chunk (~200ms)
+  // 1. Import HomePage chunk (~200ms) + prefetch ExperienceHomePage for fast navigation
   loads.push(
     import('@/pages/HomePage').catch(() => {}),
   );
+  // Non-blocking: prefetch secondary page chunks so route transitions feel instant
+  const prefetchPages = () => {
+    import('@/pages/ExperienceHomePage').catch(() => {});
+    import('@/pages/LiveTVPage').catch(() => {});
+  };
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(prefetchPages, { timeout: 4000 });
+  } else {
+    setTimeout(prefetchPages, 2000);
+  }
 
   // 2. Prefetch + parse curator + VEE data DURING splash
   loads.push(

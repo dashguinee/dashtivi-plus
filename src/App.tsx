@@ -8,7 +8,7 @@ import { AccessCodeLogin } from '@/components/ui/AccessCodeLogin';
 import { VideoPlayer } from '@/components/player/VideoPlayer';
 import { StreamLimitOverlay } from '@/components/player/StreamLimitOverlay';
 import { MiniPlayer } from '@/components/player/MiniPlayer';
-import { FullPageLoader } from '@/components/ui/LoadingSpinner';
+import { FullPageLoader, SkeletonRow } from '@/components/ui/LoadingSpinner';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
 import { usePlayer } from '@/hooks/usePlayer';
@@ -271,7 +271,8 @@ function AppContent() {
         <Navbar />
         <main className="pb-20 lg:pb-0 lg:pl-[72px] safe-bottom-content">
           <ErrorBoundary>
-            <Suspense fallback={<div className="pt-20 px-4 space-y-6 animate-pulse"><div className="h-[22vh] rounded-2xl bg-white/[0.02]" /><div className="flex gap-2">{[1,2,3,4].map(i=><div key={i} className="h-8 w-16 rounded-full bg-white/[0.03]" />)}</div><div className="space-y-4">{[1,2,3].map(i=><div key={i} className="h-32 rounded-xl bg-white/[0.02]" />)}</div></div>}>
+            <Suspense fallback={<div className="pt-20 page-enter"><div className="h-[18vh] min-h-[120px] max-h-[180px] rounded-2xl mx-4 mb-3" style={{ background: 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(10,10,18,0.8) 100%)' }} /><div className="flex gap-2 px-4 mb-4">{[1,2,3,4].map(i=><div key={i} className="h-8 w-16 rounded-full" style={{ background: 'rgba(157,78,221,0.06)' }} />)}</div><SkeletonRow /><SkeletonRow /><SkeletonRow /></div>}>
+              <PageTransition>
                 <Routes>
                   <Route path="/" element={<ErrorBoundary><HomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/live/:experienceId" element={<ErrorBoundary><ExperienceHomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
@@ -284,6 +285,7 @@ function AppContent() {
                   <Route path="/test" element={<ErrorBoundary><TestChannelsPage onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
+              </PageTransition>
             </Suspense>
           </ErrorBoundary>
         </main>
