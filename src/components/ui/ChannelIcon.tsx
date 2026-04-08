@@ -418,6 +418,26 @@ const LOGO_MAP: Record<string, string> = {
   'cgtn french': `${TV_LOGO_BASE}/international/cgtn-french-int.png`,
   'cgtn arabic': `${TV_LOGO_BASE}/international/cgtn-arabic-int.png`,
   'kbs world': `${TV_LOGO_BASE}/international/kbs-world-int.png`,
+  // ── US Sports / Entertainment (additional) ──────────────────────────
+  'nba network': `${TV_LOGO_BASE}/united-states/nba-tv-us.png`,
+  'ufc fight pass': `${TV_LOGO_BASE}/united-states/ufc-fight-pass-us.png`,
+  'tsn': `${TV_LOGO_BASE}/canada/tsn-ca.png`,
+  'sec network': `${TV_LOGO_BASE}/united-states/sec-network-us.png`,
+  'yes network': `${TV_LOGO_BASE}/united-states/yes-network-us.png`,
+  'destination america': `${TV_LOGO_BASE}/united-states/destination-america-us.png`,
+  'diy network': `${TV_LOGO_BASE}/united-states/diy-network-us.png`,
+  'hallmark channel': `${TV_LOGO_BASE}/united-states/hallmark-channel-us.png`,
+  'hallmark movies': `${TV_LOGO_BASE}/united-states/hallmark-movies-and-mysteries-us.png`,
+  'stv': `${TV_LOGO_BASE}/united-kingdom/stv-uk.png`,
+  'watch': `${TV_LOGO_BASE}/united-kingdom/w-uk.png`,
+  'sixx': `${TV_LOGO_BASE}/germany/sixx-de.png`,
+  '13th street': `${TV_LOGO_BASE}/germany/13th-street-de.png`,
+  'rtl crime': `${TV_LOGO_BASE}/germany/rtl-crime-de.png`,
+  'hum masala': `${TV_LOGO_BASE}/pakistan/hum-masala-pk.png`,
+  'hum tv': `${TV_LOGO_BASE}/pakistan/hum-tv-pk.png`,
+  'al hurra': `${TV_LOGO_BASE}/international/alhurra-int.png`,
+  'spotv': `${TV_LOGO_BASE}/international/spotv-int.png`,
+  'mlb': `${TV_LOGO_BASE}/united-states/mlb-network-us.png`,
 };
 
 function findLogoUrl(channelName: string): string | null {

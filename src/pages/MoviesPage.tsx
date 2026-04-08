@@ -589,31 +589,31 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
       {/* ── Trending row ── */}
       {!isSearching && !loading && activeGenre === 0 && trendingMovies.length >= 5 && (
-        <div className="px-4 pt-6 pb-3">
-          <h2 className="text-sm font-semibold text-white/80 mb-3 flex items-center gap-2">
+        <section className="px-4 pt-6 pb-3 row-tier-hero reveal">
+          <h2 className="text-[19px] font-black text-white/90 mb-3 flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
             {t(lang, 'trendingNow')}
             <RowCountBadge count={trendingMovies.length} label="movies" />
           </h2>
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 items-end">
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 items-end">
             {trendingMovies.map((m, i) => (
-              <div key={m.stream_id} className="flex-shrink-0 w-[120px]" style={cardScaleStyle(i)}>
+              <div key={m.stream_id} className="flex-shrink-0 w-[140px]" style={{ animation: i < 12 ? `vee-card-in 0.9s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms both` : undefined }}>
                 <PosterCard title={m.name} poster={m.stream_icon} rating={m.rating}
                   tmdbData={tmdbMap[`m:${m.stream_id}`]} onClick={() => setDetailMovie(m)} />
               </div>
             ))}
             <NeonGate navigateTo="/movies" />
           </div>
-        </div>
+        </section>
       )}
 
       {/* ── Moment pack rows ── */}
       {!isSearching && activeGenre === 0 && momentRows.length > 0 && (
-        <div className="space-y-7 py-5 mb-6">
-          {momentRows.map(({ pack, items }) => (
-            <section key={pack.id}>
+        <div className="py-5">
+          {momentRows.map(({ pack, items }, rowIdx) => (
+            <section key={pack.id} className={`${rowIdx === 0 ? 'row-tier-featured' : 'row-tier-standard'} reveal`}>
               <div className="px-4 mb-2">
-                <h3 className="text-[15px] font-semibold text-white/50 flex items-center gap-1.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                <h3 className={`${rowIdx === 0 ? 'text-[17px]' : 'text-[15px]'} font-semibold text-white/50 flex items-center gap-1.5`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                   <span className="text-white/30">{MOMENT_ICON_MAP[pack.icon]}</span>
                   {t(lang, pack.nameKey as TranslationKey)}
                   <RowCountBadge count={items.length} label="movies" />
@@ -621,7 +621,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               </div>
               <div className="flex gap-3.5 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-2 items-end">
                 {items.map((m, i) => (
-                  <div key={m.stream_id} className="flex-shrink-0 w-[108px]" style={cardScaleStyle(i)}>
+                  <div key={m.stream_id} className="flex-shrink-0 w-[108px]" style={{ animation: i < 12 ? `vee-card-in 0.9s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms both` : undefined }}>
                     <PosterCard title={m.name} poster={m.stream_icon} rating={m.rating}
                       tmdbData={tmdbMap[`m:${m.stream_id}`]} onClick={() => setDetailMovie(m)} />
                   </div>
@@ -635,21 +635,19 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
       {/* ── VEE Intelligence rows — with breathing hierarchy ── */}
       {!isSearching && !loading && activeGenre === 0 && veeCollectionRows.length > 0 && (
-        <div className="py-5 mb-4">
+        <div className="py-5">
           {veeCollectionRows.map(({ collection, items }, rowIndex) => {
-            // Row breathing: first row = Top 10 (140px), second = 120px, rest = 108px
-            const isFirstRow = rowIndex === 0;
-            const isSecondRow = rowIndex === 1;
-            const cardWidth = isFirstRow ? 140 : isSecondRow ? 120 : 108;
+            const tierClass = rowIndex === 0 ? 'row-tier-hero' : rowIndex <= 2 ? 'row-tier-featured' : 'row-tier-standard';
+            const cardWidth = rowIndex === 0 ? 140 : rowIndex <= 2 ? 120 : 108;
             return (
               <React.Fragment key={collection.id}>
-                <div className="mb-8">
+                <section className={`${tierClass} reveal`}>
                   <VeeCollectionRow
                     name={collection.name}
                     tagline=""
-                    items={isFirstRow ? items.slice(0, 10) : items}
+                    items={rowIndex === 0 ? items.slice(0, 10) : items}
                     tmdbMap={tmdbMap}
-                    isTop10={isFirstRow}
+                    isTop10={rowIndex === 0}
                     cardWidth={cardWidth}
                     navigateTo="/movies"
                     countLabel="movies"
@@ -658,7 +656,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                       if (movie) setDetailMovie(movie);
                     }}
                   />
-                </div>
+                </section>
               </React.Fragment>
             );
           })}

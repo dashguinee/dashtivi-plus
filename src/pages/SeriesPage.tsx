@@ -645,38 +645,38 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
       {/* ── Trending row ── */}
       {!isSearching && !loading && activeGenre === 0 && trendingSeries.length >= 5 && (
-        <div className="px-4 pt-6 pb-3">
-          <h2 className="text-sm font-semibold text-white/80 mb-3 flex items-center gap-2">
+        <section className="px-4 pt-6 pb-3 row-tier-hero reveal">
+          <h2 className="text-[19px] font-black text-white/90 mb-3 flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
             {t(lang, 'trendingRightNow')}
             <RowCountBadge count={trendingSeries.length} label="series" />
           </h2>
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 items-end">
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 items-end">
             {trendingSeries.map((s, i) => (
-              <div key={s.series_id} className="flex-shrink-0 w-[120px]" style={cardScaleStyle(i)}>
+              <div key={s.series_id} className="flex-shrink-0 w-[140px]" style={{ animation: i < 12 ? `vee-card-in 0.9s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms both` : undefined }}>
                 <PosterCard title={s.name} poster={s.cover} rating={s.rating}
                   tmdbData={tmdbMap[`s:${s.series_id}`]} onClick={() => setDetailSeries(s)} />
               </div>
             ))}
             <NeonGate navigateTo="/series" />
           </div>
-        </div>
+        </section>
       )}
 
       {/* ── Mood rows ── */}
       {!isSearching && activeGenre === 0 && moodRows.length > 0 && (
-        <div className="space-y-8 py-5 mb-6">
-          {moodRows.map(row => (
-            <section key={row.id}>
+        <div className="py-5">
+          {moodRows.map((row, rowIdx) => (
+            <section key={row.id} className={`${rowIdx === 0 ? 'row-tier-featured' : 'row-tier-standard'} reveal`}>
               <div className="px-4 mb-2">
-                <h3 className="text-[15px] font-semibold text-white/50 flex items-center gap-1.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                <h3 className={`${rowIdx === 0 ? 'text-[17px]' : 'text-[15px]'} font-semibold text-white/50 flex items-center gap-1.5`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                   {MOOD_NAME_MAP[row.name] ? t(lang, MOOD_NAME_MAP[row.name]) : row.name}
                   <RowCountBadge count={row.items.length} label="series" />
                 </h3>
               </div>
               <div className="flex gap-3.5 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-2 items-end">
                 {row.items.map((s, i) => (
-                  <div key={s.series_id} className="flex-shrink-0 w-[108px]" style={cardScaleStyle(i)}>
+                  <div key={s.series_id} className="flex-shrink-0 w-[108px]" style={{ animation: i < 12 ? `vee-card-in 0.9s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms both` : undefined }}>
                     <PosterCard title={s.name} poster={s.cover} rating={s.rating}
                       tmdbData={tmdbMap[`s:${s.series_id}`]} onClick={() => setDetailSeries(s)} />
                   </div>
@@ -690,20 +690,18 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
       {/* ── VEE Intelligence rows — with breathing hierarchy ── */}
       {!isSearching && !loading && activeGenre === 0 && veeCollectionRows.length > 0 && (
-        <div className="py-5 mb-4">
+        <div className="py-5">
           {veeCollectionRows.map(({ collection, items }, rowIndex) => {
-            // Row breathing: first row = Top 10 (140px), second = 120px, rest = 108px
-            const isFirstRow = rowIndex === 0;
-            const isSecondRow = rowIndex === 1;
-            const cardWidth = isFirstRow ? 140 : isSecondRow ? 120 : 108;
+            const tierClass = rowIndex === 0 ? 'row-tier-hero' : rowIndex <= 2 ? 'row-tier-featured' : 'row-tier-standard';
+            const cardWidth = rowIndex === 0 ? 140 : rowIndex <= 2 ? 120 : 108;
 
             return (
-              <div key={collection.id} className="mb-8">
+              <section key={collection.id} className={`${tierClass} reveal`}>
                 <VeeCollectionRow
                   name={collection.name}
-                  items={isFirstRow ? items.slice(0, 10) : items}
+                  items={rowIndex === 0 ? items.slice(0, 10) : items}
                   tmdbMap={tmdbMap}
-                  isTop10={isFirstRow}
+                  isTop10={rowIndex === 0}
                   cardWidth={cardWidth}
                   navigateTo="/series"
                   countLabel="series"
@@ -712,7 +710,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                     if (series) setDetailSeries(series);
                   }}
                 />
-              </div>
+              </section>
             );
           })}
         </div>
