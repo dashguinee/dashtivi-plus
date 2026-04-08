@@ -41,24 +41,27 @@ export function useScrollReveal(deps: unknown[] = []) {
     );
 
     // Immediate: reveal anything already in viewport, observe the rest
+    // PERF FIX: batch all layout reads first, then writes — avoids layout thrashing
     const timer = setTimeout(() => {
       const reveals = container.querySelectorAll('.reveal, .stagger-card');
-      let delayIndex = 0;
+      const vh = window.innerHeight;
 
+      // Phase 1: READ — batch all getBoundingClientRect calls
+      const inViewportFlags: boolean[] = [];
       reveals.forEach(el => {
-        const rect = el.getBoundingClientRect();
-        const inViewport = rect.top < window.innerHeight;
+        inViewportFlags.push(el.getBoundingClientRect().top < vh);
+      });
 
-        if (inViewport) {
-          // Already visible — cascade with tiny delays
+      // Phase 2: WRITE — apply classes and attributes without triggering layout
+      let delayIndex = 0;
+      reveals.forEach((el, i) => {
+        if (inViewportFlags[i]) {
           if (delayIndex < 5 && el.classList.contains('reveal')) {
             el.setAttribute('data-reveal-delay', String(delayIndex + 1));
             delayIndex++;
           }
-          // Reveal immediately (with cascade delay if set)
           el.classList.add('visible');
         } else {
-          // Below fold — observe for scroll
           observer.observe(el);
         }
       });

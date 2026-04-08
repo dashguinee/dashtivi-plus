@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Play, Search, X, ChevronRight, LayoutGrid, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart, ArrowRight } from 'lucide-react';
+import { Play, Search, X, ChevronRight, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { NeonGate, cardScaleStyle } from '@/components/ui/NeonGate';
 import { t, useLanguage } from '@/i18n';
@@ -8,9 +8,9 @@ import { getLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, i
 import {
   LIVETV_THEMES, SPORT_TYPES, ENTERTAINMENT_TYPES, KIDS_TYPES,
   CINEMA_TYPES, MUSIC_TYPES, DISCOVERY_TYPES, FAITH_TYPES, PREMIUM4K_TYPES,
-  NEWS_TYPES, BROWSE_EXPERIENCES, DEAD_CATEGORY_IDS,
+  NEWS_TYPES,
 } from '@/lib/collections';
-import type { LiveTheme, SportType, BrowseExperience } from '@/lib/collections';
+import type { LiveTheme, SportType } from '@/lib/collections';
 import { getSmartThemeOrder, recordThemeWatch } from '@/lib/intelligence';
 import { useSmartSticky } from '@/hooks/useSmartSticky';
 
@@ -110,11 +110,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   // ── Browse state (experience-based, not raw categories) ────────
   const [showBrowse, setShowBrowse] = useState(false);
-  const [activeExperience, setActiveExperience] = useState<string>(BROWSE_EXPERIENCES[0].id);
-  const [browseStreams, setBrowseStreams] = useState<LiveStream[]>([]);
-  const [browseLoading, setBrowseLoading] = useState(false);
-  const [browseError, setBrowseError] = useState(false);
-  const [browseRetryKey, setBrowseRetryKey] = useState(0);
+  // Browse state removed — replaced by StreamMoreSection
 
   const isSearching = debouncedQuery.trim().length > 0 || searchCategory !== null;
 
@@ -409,50 +405,6 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
     return () => { mounted = false; };
   }, [credentials]);
 
-  // ── Load browse streams for active experience ──────────────────
-  useEffect(() => {
-    if (!showBrowse || !activeExperience) return;
-    let mounted = true;
-    async function load() {
-      setBrowseLoading(true);
-      setBrowseError(false);
-      try {
-        // CURATOR PATH — use database-curated channels when available
-        if (hasCuratorData()) {
-          const curatorChannels = getCuratorExperience(activeExperience);
-          if (curatorChannels) {
-            if (mounted) setBrowseStreams(curatorToLiveStreams(curatorChannels));
-            if (mounted) setBrowseLoading(false);
-            return;
-          }
-        }
-        // FALLBACK — category-based loading from Xtream API
-        const exp = BROWSE_EXPERIENCES.find(e => e.id === activeExperience);
-        if (!exp) { if (mounted) setBrowseLoading(false); return; }
-        const promises = exp.categoryIds
-          .filter(id => !DEAD_CATEGORY_IDS.has(id))
-          .map(id => getLiveStreams(credentials, id).catch(() => [] as LiveStream[]));
-        const results = await Promise.all(promises);
-        if (!mounted) return;
-        // Dedup by stream_id, gems first
-        const seen = new Set<number>();
-        const all: LiveStream[] = [];
-        for (const batch of results) {
-          for (const s of batch) {
-            if (!seen.has(s.stream_id)) { seen.add(s.stream_id); all.push(s); }
-          }
-        }
-        setBrowseStreams(sortGemsFirst(all));
-      } catch {
-        if (mounted) { setBrowseStreams([]); setBrowseError(true); }
-      } finally {
-        if (mounted) setBrowseLoading(false);
-      }
-    }
-    load();
-    return () => { mounted = false; };
-  }, [showBrowse, activeExperience, credentials, browseRetryKey]);
-
   // ── Play handler with playlist context ────────────────────────
   const handlePlayFromList = useCallback(
     (stream: LiveStream, allStreams: LiveStream[]) => {
@@ -617,7 +569,31 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             </div>
           )}
 
-          {/* ── Browse All Categories ─────────────────────────── */}
+          {/* ── WorldEX Portal ──────────────────────────────── */}
+          <div className="mx-4 mt-6 mb-2">
+            <button
+              onClick={() => navigate('/french')}
+              className="w-full rounded-2xl overflow-hidden relative group active:scale-[0.98] transition-transform duration-200"
+              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-900/30 via-violet-900/15 to-transparent pointer-events-none" />
+              <div className="relative p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
+                    style={{ background: 'linear-gradient(135deg, #D97706, #7C3AED)', boxShadow: '0 0 16px rgba(217,119,6,0.2)' }}>
+                    <Globe className="w-5 h-5" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-sm font-black text-white tracking-tight">WorldEX</h3>
+                    <p className="text-[10px] text-white/25">11 regions — Africa, Arabic, Europe, Asia & more</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors" />
+              </div>
+            </button>
+          </div>
+
+          {/* ── Stream More — full channel universe ────────────── */}
           <div className="px-4 mt-4">
             <button
               onClick={() => setShowBrowse(!showBrowse)}
@@ -628,59 +604,18 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <LayoutGrid className="w-4 h-4" />
-                <span className="text-sm font-medium">{t(lang, 'browseAllCategories')}</span>
+                <Radio className="w-4 h-4" />
+                <div className="text-left">
+                  <span className="text-sm font-medium">Stream More</span>
+                  <span className="text-[10px] text-white/20 ml-2">Free + Premium</span>
+                </div>
               </div>
               <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${showBrowse ? 'rotate-90' : ''}`} />
             </button>
           </div>
 
           {showBrowse && (
-            <div className="mt-4">
-              {/* Experience pills */}
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-3">
-                {BROWSE_EXPERIENCES.map((exp) => (
-                  <CategoryPill
-                    key={exp.id}
-                    label={exp.name}
-                    active={activeExperience === exp.id}
-                    onClick={() => setActiveExperience(exp.id)}
-                  />
-                ))}
-              </div>
-
-              {/* Browse grid */}
-              {browseLoading ? (
-                <div className="flex items-center justify-center py-24">
-                  <LoadingSpinner size="md" text={t(lang, 'loading')} />
-                </div>
-              ) : browseError ? (
-                <div className="flex flex-col items-center justify-center py-24 gap-3">
-                  <p className="text-text-muted text-sm">{t(lang, 'unableToLoad')}</p>
-                  <button
-                    onClick={() => { setBrowseError(false); setBrowseRetryKey(k => k + 1); }}
-                    className="group px-5 py-2.5 rounded-xl text-[12px] font-medium tracking-wide transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(157,78,221,0.15) 0%, rgba(157,78,221,0.06) 100%)',
-                      border: '1px solid rgba(157,78,221,0.25)',
-                      color: 'rgba(157,78,221,0.85)',
-                    }}
-                  >
-                    {t(lang, 'retry')}
-                  </button>
-                </div>
-              ) : browseStreams.length === 0 ? (
-                <div className="flex items-center justify-center py-24 text-text-muted text-sm">
-                  {t(lang, 'noChannelsInCategory')}
-                </div>
-              ) : (
-                <BrowseGrid
-                  streams={browseStreams}
-                  credentials={credentials}
-                  onPlay={handlePlayFromList}
-                />
-              )}
-            </div>
+            <StreamMoreSection credentials={credentials} onPlay={handlePlayFromList} freeUrlMap={freeUrlMap} setFreeUrlMap={setFreeUrlMap} />
           )}
         </>
       )}
@@ -1085,154 +1020,6 @@ const QUALITY_COLORS: Record<string, string> = {
   'UHD': 'bg-purple-500/20 text-purple-400',
 };
 
-function BrowseGrid({
-  streams,
-  credentials,
-  onPlay,
-}: {
-  streams: LiveStream[];
-  credentials: XtreamCredentials;
-  onPlay: (stream: LiveStream, allStreams: LiveStream[]) => void;
-}) {
-  const { lang } = useLanguage();
-  const [selectedGroup, setSelectedGroup] = useState<GroupedChannel | null>(null);
-  const [, setProbeVersion] = useState(0);
-  const BROWSE_PAGE_SIZE = 60;
-  const [browseVisibleCount, setBrowseVisibleCount] = useState(BROWSE_PAGE_SIZE);
-
-  // Reset visible count when streams change (new experience selected)
-  useEffect(() => { setBrowseVisibleCount(BROWSE_PAGE_SIZE); }, [streams]);
-
-  // Background probe (throttled to every 30 min)
-  useEffect(() => {
-    if (streams.length === 0) return;
-    const PROBE_INTERVAL_MS = 30 * 60 * 1000;
-    const lastProbe = Number(localStorage.getItem('tivi_last_probe') || '0');
-    if (Date.now() - lastProbe < PROBE_INTERVAL_MS) return;
-    localStorage.setItem('tivi_last_probe', String(Date.now()));
-    probeChannels(credentials, streams.map(s => s.stream_id)).then((results) => {
-      if (Object.keys(results).length > 0) setProbeVersion(v => v + 1);
-    });
-  }, [streams, credentials]);
-
-  const alive = streams.filter(s => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id));
-  const sorted = sortGemsFirst(alive);
-  const grouped = groupChannelsByQuality(sorted);
-
-  const playVariant = (streamId: number, name: string, icon: string) => {
-    setSelectedGroup(null);
-    const stream = streams.find(s => s.stream_id === streamId);
-    if (stream) onPlay(stream, sorted);
-  };
-
-  const handleTap = (group: GroupedChannel) => {
-    if (group.variants.length === 1) {
-      const v = group.variants[0];
-      playVariant(v.streamId, v.name, v.icon);
-    } else {
-      setSelectedGroup(group);
-    }
-  };
-
-  return (
-    <>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
-        {grouped.slice(0, browseVisibleCount).map((group) => (
-          <button
-            key={group.name}
-            onClick={() => handleTap(group)}
-            className="group relative bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col items-center gap-2 hover:bg-white/10 hover:border-primary/30 transition-colors duration-300"
-          >
-            <ChannelIcon src={group.icon} name={group.name} size="md" />
-            <p className="text-xs text-text-secondary text-center truncate w-full group-hover:text-white transition-colors">
-              {group.name}
-            </p>
-            {group.variants.length > 1 ? (
-              <div className="flex gap-1">
-                {group.variants.map((v) => (
-                  <span key={v.quality} className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${QUALITY_COLORS[v.quality] || QUALITY_COLORS.HD}`}>
-                    {v.quality}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${QUALITY_COLORS[group.bestQuality] || QUALITY_COLORS.HD}`}>
-                {group.bestQuality}
-              </span>
-            )}
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="w-10 h-10 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center shadow-lg shadow-primary/30">
-                <Play className="w-5 h-5 text-white ml-0.5" />
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      {grouped.length > browseVisibleCount && (
-        <div className="flex flex-col items-center gap-1 px-4 mt-2 mb-4">
-          <button
-            onClick={() => setBrowseVisibleCount(prev => prev + BROWSE_PAGE_SIZE)}
-            className="group w-full relative overflow-hidden rounded-2xl py-3.5 transition-all duration-300 hover:scale-[1.005] active:scale-[0.995]"
-            style={{
-              background: 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(157,78,221,0.02) 100%)',
-              border: '1px solid rgba(157,78,221,0.1)',
-            }}
-          >
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-              style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.04) 50%, transparent 100%)' }}
-            />
-            <div className="relative flex flex-col items-center justify-center gap-1">
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-medium tracking-[0.15em] uppercase" style={{ color: 'rgba(157,78,221,0.55)' }}>
-                  {t(lang, 'showMore') || 'Discover more'}
-                </span>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="group-hover:translate-y-0.5 transition-transform duration-300">
-                  <path d="M6 2v8M2 6l4 4 4-4" stroke="rgba(157,78,221,0.4)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>
-                {browseVisibleCount} / {grouped.length}
-              </span>
-            </div>
-          </button>
-        </div>
-      )}
-
-      {/* Quality picker modal */}
-      {selectedGroup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setSelectedGroup(null)}>
-          <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-5 max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-4">
-              <ChannelIcon src={selectedGroup.icon} name={selectedGroup.name} size="md" />
-              <div>
-                <h3 className="font-semibold text-white">{selectedGroup.name}</h3>
-                <p className="text-xs text-white/40">{t(lang, 'selectQuality')}</p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              {selectedGroup.variants
-                .sort((a, b) => (QUALITY_COLORS[b.quality] ? 1 : 0) - (QUALITY_COLORS[a.quality] ? 1 : 0))
-                .map((v) => (
-                <button
-                  key={v.streamId}
-                  onClick={() => playVariant(v.streamId, v.name, v.icon)}
-                  className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/30 transition-colors"
-                >
-                  <span className="text-sm text-white">{v.quality}</span>
-                  <span className={`text-xs font-bold px-2 py-1 rounded ${QUALITY_COLORS[v.quality] || QUALITY_COLORS.HD}`}>
-                    {v.quality === 'UHD' ? 'Best' : v.quality === '4K' ? 'High' : v.quality === 'HD' ? 'Standard' : v.quality}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
 // ── Experience display names for search filter chips ────────────────
 
 const EXP_DISPLAY_NAMES: Record<string, string> = {
@@ -1403,19 +1190,205 @@ function SearchGrid({ streams, credentials, onPlay, freeUrlMap }: {
   );
 }
 
-// ── Category Pill ─────────────────────────────────────────────────
+// ── Stream More — unified free + Xtream channel grid ─────────────
 
-function CategoryPill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+function StreamMoreSection({
+  credentials,
+  onPlay,
+  freeUrlMap: parentFreeUrlMap,
+  setFreeUrlMap: setParentFreeUrlMap,
+}: {
+  credentials: XtreamCredentials;
+  onPlay: (stream: LiveStream, allStreams: LiveStream[]) => void;
+  freeUrlMap: Record<number, string>;
+  setFreeUrlMap: React.Dispatch<React.SetStateAction<Record<number, string>>>;
+}) {
+  const [freeChannels, setFreeChannels] = useState<FreeChannel[]>([]);
+  const [search, setSearch] = useState('');
+  const [filterSource, setFilterSource] = useState<'all' | 'free' | 'premium'>('all');
+  const [filterExp, setFilterExp] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const PAGE_SIZE = 60;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  // Load free channels on mount — update parent URL map so play handler works
+  useEffect(() => {
+    getFreeChannels().then(chs => {
+      setFreeChannels(chs);
+      const urlMap = buildFreeUrlMap(chs);
+      setParentFreeUrlMap(prev => ({ ...prev, ...urlMap }));
+      setLoading(false);
+    });
+  }, [setParentFreeUrlMap]);
+
+  // Get all curator channels (Xtream) flattened
+  const allXtream = React.useMemo(() => {
+    if (!hasCuratorData()) return [];
+    const seen = new Set<number>();
+    const all: LiveStream[] = [];
+    for (const expId of ['sports', 'entertainment', 'news', 'kids', 'movies', 'music', 'documentary', 'faith',
+                          'africa', 'americas', 'arabic', 'europe', 'french', 'pakistan', 'south_asian']) {
+      const ch = getCuratorExperience(expId);
+      if (!ch) continue;
+      for (const c of curatorToLiveStreams(ch)) {
+        if (!seen.has(c.stream_id)) { seen.add(c.stream_id); all.push(c); }
+      }
+    }
+    return all;
+  }, [loading]); // re-compute once free channels load (curator is already cached)
+
+  // Merge free as LiveStream
+  const allFree = React.useMemo(() =>
+    freeChannels.map(freeToLiveStream)
+  , [freeChannels]);
+
+  // Experience options from free channels
+  const experienceOptions = React.useMemo(() => {
+    const set = new Set(freeChannels.map(c => c.experience));
+    return ['all', ...Array.from(set).sort()];
+  }, [freeChannels]);
+
+  // Combined + filtered
+  const filtered = React.useMemo(() => {
+    let pool: LiveStream[] = [];
+    if (filterSource === 'free') pool = allFree;
+    else if (filterSource === 'premium') pool = allXtream;
+    else pool = [...allXtream, ...allFree];
+
+    // Experience filter (only applies to free channels)
+    if (filterExp !== 'all') {
+      const matchingFreeIds = new Set(
+        freeChannels.filter(c => c.experience === filterExp).map(c => freeToLiveStream(c).stream_id)
+      );
+      pool = pool.filter(s => !isFreeChannel(s.stream_id) || matchingFreeIds.has(s.stream_id));
+    }
+
+    // Search
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      pool = pool.filter(s => s.name.toLowerCase().includes(q));
+    }
+
+    return pool;
+  }, [allXtream, allFree, freeChannels, filterSource, filterExp, search]);
+
+  // Reset pagination on filter change
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [filterSource, filterExp, search]);
+
+  const handlePlay = React.useCallback((stream: LiveStream) => {
+    onPlay(stream, filtered);
+  }, [onPlay, filtered]);
+
+  if (loading) {
+    return <div className="flex items-center justify-center py-16"><LoadingSpinner size="md" text="Loading channels..." /></div>;
+  }
+
   return (
-    <button
-      onClick={onClick}
-      className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-300 ${
-        active
-          ? 'bg-primary text-white shadow-lg shadow-primary/20'
-          : 'bg-white/5 text-text-secondary hover:bg-white/10 hover:text-white border border-white/10'
-      }`}
-    >
-      {label}
-    </button>
+    <div className="mt-4 px-4">
+      {/* Search */}
+      <div className="relative mb-3">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+        <input
+          type="text"
+          placeholder="Search all channels..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-white/20 outline-none"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+        />
+      </div>
+
+      {/* Source pills */}
+      <div className="flex gap-2 mb-2 overflow-x-auto scrollbar-hide pb-1">
+        {(['all', 'premium', 'free'] as const).map(src => (
+          <button key={src} onClick={() => setFilterSource(src)}
+            className="shrink-0 px-3 py-1 rounded-full text-[11px] font-medium transition-all"
+            style={{
+              background: filterSource === src ? 'rgba(201,240,60,0.15)' : 'rgba(255,255,255,0.04)',
+              color: filterSource === src ? 'rgba(201,240,60,0.9)' : 'rgba(255,255,255,0.3)',
+              border: `1px solid ${filterSource === src ? 'rgba(201,240,60,0.2)' : 'rgba(255,255,255,0.06)'}`,
+            }}
+          >
+            {src === 'all' ? `All (${allXtream.length + allFree.length})` : src === 'premium' ? `Premium (${allXtream.length})` : `Free (${allFree.length})`}
+          </button>
+        ))}
+      </div>
+
+      {/* Experience pills (when free or all selected) */}
+      {filterSource !== 'premium' && (
+        <div className="flex gap-2 mb-3 overflow-x-auto scrollbar-hide pb-1">
+          {experienceOptions.map(exp => (
+            <button key={exp} onClick={() => setFilterExp(exp)}
+              className="shrink-0 px-3 py-1 rounded-full text-[11px] font-medium transition-all"
+              style={{
+                background: filterExp === exp ? 'rgba(157,78,221,0.15)' : 'rgba(255,255,255,0.04)',
+                color: filterExp === exp ? 'rgba(157,78,221,0.9)' : 'rgba(255,255,255,0.3)',
+                border: `1px solid ${filterExp === exp ? 'rgba(157,78,221,0.2)' : 'rgba(255,255,255,0.06)'}`,
+              }}
+            >
+              {exp}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Count */}
+      <p className="text-[10px] text-white/15 mb-3 font-mono">{filtered.length} channels</p>
+
+      {/* Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+        {filtered.slice(0, visibleCount).map((stream) => {
+          const isFree = isFreeChannel(stream.stream_id);
+          return (
+            <button
+              key={stream.stream_id}
+              onClick={() => handlePlay(stream)}
+              className="group relative rounded-xl overflow-hidden text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.97]"
+              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+            >
+              <div className="p-2.5 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/5 shrink-0">
+                  <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] text-white/60 font-medium truncate leading-tight">{stream.name}</p>
+                  <span className="text-[8px] px-1.5 py-0.5 rounded-full font-mono mt-0.5 inline-block"
+                    style={{
+                      background: isFree ? 'rgba(201,240,60,0.08)' : 'rgba(157,78,221,0.08)',
+                      color: isFree ? 'rgba(201,240,60,0.5)' : 'rgba(157,78,221,0.5)',
+                    }}>
+                    {isFree ? 'free' : 'premium'}
+                  </span>
+                </div>
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-xl">
+                <Play className="w-5 h-5 text-white" fill="white" />
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Load more */}
+      {filtered.length > visibleCount && (
+        <button
+          onClick={() => setVisibleCount(prev => prev + PAGE_SIZE)}
+          className="w-full mt-4 py-3 rounded-xl text-[11px] font-medium tracking-wider uppercase transition-all hover:scale-[1.005] active:scale-[0.995]"
+          style={{
+            background: 'rgba(157,78,221,0.06)',
+            border: '1px solid rgba(157,78,221,0.1)',
+            color: 'rgba(157,78,221,0.5)',
+          }}
+        >
+          Load more ({visibleCount} / {filtered.length})
+        </button>
+      )}
+
+      {filtered.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-white/20 text-sm">No channels match</p>
+        </div>
+      )}
+    </div>
   );
 }

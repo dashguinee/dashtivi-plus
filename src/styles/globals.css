@@ -1463,4 +1463,45 @@
 
   /* Disable ambient canvas */
   .cosmic-bg canvas { display: none; }
+
+  /* Disable aurora */
+  .aurora-beam-1, .aurora-beam-2, .aurora-beam-3, .aurora-orb { animation: none !important; }
 }
+
+/* ── Aurora Hero Animations ──────────────────────────────────────── */
+
+@keyframes aurora-sweep-1 {
+  0% { transform: translateX(-10%) rotate(0deg); }
+  50% { transform: translateX(10%) rotate(2deg); }
+  100% { transform: translateX(-10%) rotate(0deg); }
+}
+
+@keyframes aurora-sweep-2 {
+  0% { transform: translateX(8%) rotate(0deg); }
+  50% { transform: translateX(-12%) rotate(-1.5deg); }
+  100% { transform: translateX(8%) rotate(0deg); }
+}
+
+@keyframes aurora-drift {
+  0% { transform: translateY(0%) scale(1); }
+  50% { transform: translateY(8%) scale(1.05); }
+  100% { transform: translateY(0%) scale(1); }
+}
+
+@keyframes aurora-breathe {
+  0% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.6; }
+}
+
+@keyframes aurora-shimmer {
+  0% { transform: scaleX(0.3); opacity: 0; }
+  50% { transform: scaleX(1); opacity: 0.5; }
+  100% { transform: scaleX(0.3); opacity: 0; }
+}
+
+.aurora-beam-1 { animation: aurora-sweep-1 12s cubic-bezier(0.37, 0, 0.63, 1) infinite; }
+.aurora-beam-2 { animation: aurora-sweep-2 16s cubic-bezier(0.37, 0, 0.63, 1) infinite; }
+.aurora-beam-3 { animation: aurora-drift 20s cubic-bezier(0.37, 0, 0.63, 1) infinite; }
+.aurora-orb { animation: aurora-breathe 8s cubic-bezier(0.37, 0, 0.63, 1) infinite; }
+.aurora-shimmer { animation: aurora-shimmer 6s cubic-bezier(0.37, 0, 0.63, 1) infinite; }
