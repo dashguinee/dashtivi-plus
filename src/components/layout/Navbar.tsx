@@ -28,23 +28,34 @@ export const Navbar: React.FC = () => {
   const [sidebarHover, setSidebarHoverState] = React.useState(false);
   const [, startTransition] = useTransition();
 
-  // ── Nav visibility: always visible, dims while actively scrolling ──
-  const scrollActiveRef = useRef(false);
-  const [scrollActive, setScrollActive] = React.useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  // ── Nav visibility: 3-tier fade ──
+  // Scrolling → 30%  |  Idle 2s → 100%  |  Idle 5s more → 15% ghost
+  const fadeRef = useRef<'full' | 'dim' | 'ghost'>('full');
+  const [navOpacity, setNavOpacity] = React.useState<'full' | 'dim' | 'ghost'>('full');
+  const dimTimer = useRef<ReturnType<typeof setTimeout>>();
+  const ghostTimer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     const onScroll = () => {
+      clearTimeout(dimTimer.current);
+      clearTimeout(ghostTimer.current);
       if (window.scrollY < 80) {
-        if (scrollActiveRef.current) { scrollActiveRef.current = false; setScrollActive(false); }
+        if (fadeRef.current !== 'full') { fadeRef.current = 'full'; setNavOpacity('full'); }
         return;
       }
-      if (!scrollActiveRef.current) { scrollActiveRef.current = true; setScrollActive(true); }
-      clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => { scrollActiveRef.current = false; setScrollActive(false); }, 2000);
+      // Scrolling → dim
+      if (fadeRef.current !== 'dim') { fadeRef.current = 'dim'; setNavOpacity('dim'); }
+      // Idle 2s → full
+      dimTimer.current = setTimeout(() => {
+        fadeRef.current = 'full'; setNavOpacity('full');
+        // Idle 5s more → ghost
+        ghostTimer.current = setTimeout(() => {
+          if (window.scrollY > 80) { fadeRef.current = 'ghost'; setNavOpacity('ghost'); }
+        }, 5000);
+      }, 2000);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => { window.removeEventListener('scroll', onScroll); clearTimeout(timerRef.current); };
+    return () => { window.removeEventListener('scroll', onScroll); clearTimeout(dimTimer.current); clearTimeout(ghostTimer.current); };
   }, []);
 
   const isActive = (path: string) => {
@@ -55,13 +66,19 @@ export const Navbar: React.FC = () => {
   const navRef = useRef<HTMLDivElement>(null);
 
   const handleTap = useCallback((path: string) => {
-    // Trigger CSS glow pulse — no React state, pure GPU
+    // Wake nav from ghost + glow pulse
+    clearTimeout(ghostTimer.current);
+    if (fadeRef.current !== 'full') { fadeRef.current = 'full'; setNavOpacity('full'); }
     const el = navRef.current;
     if (el) {
       el.classList.remove('nav-pulse');
-      void el.offsetWidth; // force reflow to restart animation
+      void el.offsetWidth;
       el.classList.add('nav-pulse');
     }
+    // Re-arm ghost timer
+    ghostTimer.current = setTimeout(() => {
+      if (window.scrollY > 80) { fadeRef.current = 'ghost'; setNavOpacity('ghost'); }
+    }, 7000);
     startTransition(() => { navigate(path); });
   }, [navigate, startTransition]);
 
@@ -88,10 +105,12 @@ export const Navbar: React.FC = () => {
       <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 pointer-events-none safe-bottom"
         style={{
           transform: 'translateZ(0)',
-          opacity: scrollActive ? 0.3 : 1,
-          transition: scrollActive
+          opacity: navOpacity === 'dim' ? 0.3 : navOpacity === 'ghost' ? 0.12 : 1,
+          transition: navOpacity === 'dim'
             ? 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)'
-            : 'opacity 0.4s ease-out',
+            : navOpacity === 'ghost'
+              ? 'opacity 2s cubic-bezier(0.16, 1, 0.3, 1)'
+              : 'opacity 0.4s ease-out',
         }}
       >
         <div
