@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useTransition } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Tv, Clapperboard, PlayCircle, Users } from 'lucide-react';
 import { useLanguage } from '@/i18n';
@@ -24,19 +24,24 @@ export const Navbar: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarHover, setSidebarHover] = useState(false);
-  const [navGlow, setNavGlow] = useState(false);
+  const sidebarHoverRef = useRef(false);
+  const [sidebarHover, setSidebarHoverState] = React.useState(false);
+  const [, startTransition] = useTransition();
 
   // ── Nav visibility: always visible, dims while actively scrolling ──
-  const [scrollActive, setScrollActive] = useState(false);
+  const scrollActiveRef = useRef(false);
+  const [scrollActive, setScrollActive] = React.useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     const onScroll = () => {
-      if (window.scrollY < 80) { setScrollActive(false); return; }
-      setScrollActive(true);
+      if (window.scrollY < 80) {
+        if (scrollActiveRef.current) { scrollActiveRef.current = false; setScrollActive(false); }
+        return;
+      }
+      if (!scrollActiveRef.current) { scrollActiveRef.current = true; setScrollActive(true); }
       clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => setScrollActive(false), 2000);
+      timerRef.current = setTimeout(() => { scrollActiveRef.current = false; setScrollActive(false); }, 2000);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => { window.removeEventListener('scroll', onScroll); clearTimeout(timerRef.current); };
@@ -48,10 +53,8 @@ export const Navbar: React.FC = () => {
   };
 
   const handleTap = useCallback((path: string) => {
-    navigate(path);
-    setNavGlow(true);
-    setTimeout(() => setNavGlow(false), 2000);
-  }, [navigate]);
+    startTransition(() => { navigate(path); });
+  }, [navigate, startTransition]);
 
   return (
     <>
@@ -66,17 +69,11 @@ export const Navbar: React.FC = () => {
         }}
       >
         <div
-          className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto transition-[background-color,border-color,box-shadow] duration-500"
+          className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto"
           style={{
-            background: navGlow
-              ? 'linear-gradient(135deg, rgba(157,78,221,0.12) 0%, rgba(10,10,15,0.65) 50%, rgba(157,78,221,0.08) 100%)'
-              : 'rgba(10, 10, 15, 0.55)',
-            border: navGlow
-              ? '1px solid rgba(157, 78, 221, 0.5)'
-              : '1px solid rgba(157, 78, 221, 0.12)',
-            boxShadow: navGlow
-              ? '0 0 30px rgba(157, 78, 221, 0.4), 0 0 60px rgba(157, 78, 221, 0.15), inset 0 1px 0 rgba(255,255,255,0.08)'
-              : '0 4px 24px rgba(0,0,0,0.5), 0 0 30px rgba(157,78,221,0.05)',
+            background: 'rgba(10, 10, 15, 0.55)',
+            border: '1px solid rgba(157, 78, 221, 0.12)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.5), 0 0 30px rgba(157,78,221,0.05)',
           }}
         >
           {NAV_ITEMS.map((item) => {
@@ -136,9 +133,9 @@ export const Navbar: React.FC = () => {
                 {/* Bottom dot indicator */}
                 {active && (
                   <div
-                    className="absolute bottom-1.5 w-5 h-[2px] rounded-full transition-[background-color,box-shadow] duration-300"
+                    className="absolute bottom-1.5 w-5 h-[2px] rounded-full"
                     style={{
-                      background: navGlow ? '#a855f7' : '#9D4EDD',
+                      background: '#9D4EDD',
                       boxShadow: '0 0 6px rgba(157, 78, 221, 0.5)',
                     }}
                   />
@@ -159,8 +156,8 @@ export const Navbar: React.FC = () => {
           WebkitBackdropFilter: 'blur(16px) saturate(150%)',
           borderRight: '1px solid rgba(157, 78, 221, 0.1)',
         }}
-        onMouseEnter={() => setSidebarHover(true)}
-        onMouseLeave={() => setSidebarHover(false)}
+        onMouseEnter={() => { sidebarHoverRef.current = true; setSidebarHoverState(true); }}
+        onMouseLeave={() => { sidebarHoverRef.current = false; setSidebarHoverState(false); }}
       >
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-5 h-16 border-b border-white/[0.06] flex-shrink-0">

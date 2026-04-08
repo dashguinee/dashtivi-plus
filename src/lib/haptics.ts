@@ -75,18 +75,18 @@ export function initScrollHaptics() {
       const slot = Math.floor(htmlEl.scrollLeft / cardW);
       const now = Date.now();
 
-      // Card boundary crossing — ultra-subtle detent
-      if (slot !== lastSlot && lastSlot !== -1 && now - lastTickAt > 150) {
+      // Card boundary — barely-there whisper, 250ms cooldown
+      if (slot !== lastSlot && lastSlot !== -1 && now - lastTickAt > 250) {
         navigator.vibrate(1);
         lastTickAt = now;
       }
       lastSlot = slot;
 
-      // Settle — soft click when scroll stops
+      // Settle — gentle land when momentum dies
       clearTimeout(settleTimer);
       settleTimer = setTimeout(() => {
-        navigator.vibrate(3);
-      }, 100);
+        navigator.vibrate(2);
+      }, 150);
     }, { passive: true });
   }
 
