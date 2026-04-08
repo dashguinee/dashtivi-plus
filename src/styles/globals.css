@@ -1056,11 +1056,19 @@
 }
 
 /* ═══ SCROLL FOCUS — cards respond to their position in the scroll row ═══ */
-/* Scroll focus — cards respond to position in scroll row.
-   CSS-only now (observer removed for perf). Applied via data attributes. */
+/* Scroll focus — cards respond to position in scroll row */
+.scroll-focus-card {
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  contain: layout style;
+}
+
 .scroll-focus-card[data-focus="center"] { opacity: 1; }
 .scroll-focus-card[data-focus="near"] { opacity: 0.95; }
 .scroll-focus-card[data-focus="far"] { opacity: 0.88; }
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-focus-card { transition: none; opacity: 1 !important; }
+}
 
 /* ═══ BRAND ATMOSPHERE — GPU-composited fixed overlay ═══ */
 .brand-atmosphere {
