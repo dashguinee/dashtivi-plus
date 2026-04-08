@@ -597,13 +597,13 @@ export const DaHubPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Section C2: Originals — Streaming Access ────────────── */}
+      {/* ── Section C2: Access — DASH Lifestyle+ ────────────────── */}
       <div className="px-4 mt-8 dahub-stagger-3">
         <div className="flex items-baseline gap-2.5 mb-1 px-1">
-          <h3 className="text-[18px] font-black text-white/90 tracking-tight">Originals</h3>
-          <div className="w-1.5 h-1.5 rounded-full bg-primary" style={{ boxShadow: '0 0 6px rgba(157,78,221,0.4)' }} />
+          <h3 className="text-[18px] font-black text-white/90 tracking-tight">Access</h3>
+          <div className="w-1.5 h-1.5 rounded-full bg-[#c9f03c]" style={{ boxShadow: '0 0 6px rgba(201,240,60,0.4)' }} />
         </div>
-        <p className="text-[11px] text-white/25 px-1 mb-3">Premium streaming — activé en 5 minutes</p>
+        <p className="text-[11px] text-white/25 px-1 mb-3">DASH Lifestyle+ — premium streaming, one tap</p>
 
         <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-3">
           {[
@@ -660,10 +660,11 @@ export const DaHubPage: React.FC = () => {
 
       {/* ── Section D: DASH Ecosystem ────────────────────────────── */}
       <div className="px-4 mt-8 dahub-stagger-4">
-        <div className="flex items-center gap-2 mb-4 px-1">
+        <div className="flex items-center gap-2 mb-1 px-1">
           <Zap className="w-4 h-4 text-[#c9f03c]/50" />
           <h3 className="text-sm font-semibold text-white/60 tracking-wide">DASH Ecosystem</h3>
         </div>
+        <p className="text-[10px] text-white/20 px-1 mb-4 ml-6">Originals</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {ECOSYSTEM.map((product) => {
             const Icon = product.icon;
