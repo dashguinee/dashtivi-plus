@@ -19,7 +19,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/hub', labelKey: 'navHub', icon: Users },
 ];
 
-export const Navbar: React.FC<{ hidden?: boolean }> = ({ hidden = false }) => {
+export const Navbar: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,13 +46,7 @@ export const Navbar: React.FC<{ hidden?: boolean }> = ({ hidden = false }) => {
     <>
       {/* MOBILE BOTTOM NAV — OG dasuperhub style */}
       <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 pointer-events-none safe-bottom"
-        style={{
-          transform: hidden ? 'translateY(20px)' : 'translateY(0)',
-          opacity: hidden ? 0 : 1,
-          transition: hidden
-            ? 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
-            : 'transform 0.3s ease-out, opacity 0.2s ease-out',
-        }}
+        style={{ transform: 'translateZ(0)' }}
       >
         <div
           className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto transition-[background-color,border-color,box-shadow] duration-500"

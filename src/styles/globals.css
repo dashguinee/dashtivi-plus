@@ -673,12 +673,14 @@
     pointer-events: none;
     contain: strict;
     z-index: 0;
-    opacity: 1;
+    opacity: 0;
+    transition: opacity 2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .ambient-blob {
     position: absolute;
     filter: blur(40px);
+    will-change: transform;
   }
 
   /* Purple — center, largest, slowest morph */
@@ -1086,7 +1088,7 @@
   pointer-events: none;
   /* Luminance band breathes with --pulse (set by ambient audio rAF loop).
      Opacity modulates 0.7→1.0 at ~72 BPM — the app literally breathes. */
-  opacity: 0.85;
+  opacity: calc(0.7 + var(--pulse) * 0.6);
   background:
     /* Luminance sweet spot — wide bright band across center */
     radial-gradient(
@@ -1104,6 +1106,8 @@
       rgba(0,0,0,0.12) 86%,
       rgba(0,0,0,0.22) 100%
     );
+  will-change: opacity;
+  transform: translateZ(0);
   contain: strict;
 }
 
@@ -1114,14 +1118,34 @@
 
 :root { --pulse: 0.3; }
 
-/* Goggle zones disabled — observer cost exceeded visual benefit.
-   All sections render at full opacity. */
+/* Base state: dimmed, waiting to be revealed */
 [data-goggle] {
+  opacity: 0.88;
+}
+
+/* Dim zone: entering viewport — waking up */
+[data-goggle-zone="dim"] {
+  opacity: 0.94;
+}
+
+/* Lit zone: sweet spot — full presence */
+[data-goggle-zone="lit"] {
   opacity: 1;
+}
+
+/* Card glow in lit zone — breathes with --pulse */
+[data-goggle-zone="lit"] .card-surface,
+[data-goggle-zone="lit"] .card-hero,
+[data-goggle-zone="lit"] .card-glass {
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.4),
+    0 0 0 0.5px rgba(255,255,255,0.05),
+    0 0 calc(var(--pulse) * 16px) rgba(157,78,221, calc(var(--pulse) * 0.14));
 }
 
 @media (prefers-reduced-motion: reduce) {
   .goggle-lens { display: none; }
+  [data-goggle] { opacity: 1 !important; }
 }
 
 .safe-bottom-content {
