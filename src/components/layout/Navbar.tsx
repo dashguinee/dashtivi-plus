@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Tv, Clapperboard, PlayCircle, Users } from 'lucide-react';
 import { useLanguage } from '@/i18n';
@@ -19,60 +19,12 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/hub', labelKey: 'navHub', icon: Users },
 ];
 
-export const Navbar: React.FC = () => {
+export const Navbar: React.FC<{ hidden?: boolean }> = ({ hidden = false }) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarHover, setSidebarHover] = useState(false);
   const [navGlow, setNavGlow] = useState(false);
-
-  // Navbar stays visible at top + on page switch, fades when user scrolls into content
-  const [navVisible, setNavVisible] = useState(true);
-  const scrollTimer = useRef<ReturnType<typeof setTimeout>>();
-  const lastPath = useRef(location.pathname);
-
-  // Page switch → force visible
-  useEffect(() => {
-    if (location.pathname !== lastPath.current) {
-      lastPath.current = location.pathname;
-      setNavVisible(true);
-    }
-  }, [location.pathname]);
-
-  // Scroll → fade after sustained downward scroll, reappear at top or on scroll up
-  useEffect(() => {
-    let lastY = 0;
-    let downDistance = 0;
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        const y = window.scrollY;
-        const delta = y - lastY;
-        lastY = y;
-        ticking = false;
-        // At top — always show
-        if (y < 100) { setNavVisible(true); downDistance = 0; return; }
-        if (delta > 2) {
-          downDistance += delta;
-          // Fade after ~250px of sustained scrolling down
-          if (downDistance > 250) setNavVisible(false);
-        } else if (delta < -3) {
-          // Scroll up — show
-          downDistance = 0;
-          setNavVisible(true);
-          // Auto-hide again after 3s idle
-          clearTimeout(scrollTimer.current);
-          scrollTimer.current = setTimeout(() => {
-            if (window.scrollY > 100) setNavVisible(false);
-          }, 3000);
-        }
-      });
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => { window.removeEventListener('scroll', onScroll); clearTimeout(scrollTimer.current); };
-  }, []);
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -95,9 +47,11 @@ export const Navbar: React.FC = () => {
       {/* MOBILE BOTTOM NAV — OG dasuperhub style */}
       <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 pointer-events-none safe-bottom"
         style={{
-          transform: 'translateZ(0)',
-          opacity: navVisible ? 1 : 0,
-          transition: 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+          transform: hidden ? 'translateY(20px)' : 'translateY(0)',
+          opacity: hidden ? 0 : 1,
+          transition: hidden
+            ? 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+            : 'transform 0.3s ease-out, opacity 0.2s ease-out',
         }}
       >
         <div
