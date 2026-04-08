@@ -55,7 +55,7 @@ import { AuroraHero } from '@/components/ui/AuroraHero';
 import { NeonGate, RowCountBadge, cardScaleStyle } from '@/components/ui/NeonGate';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { useScrollFocus } from '@/hooks/useScrollFocus';
-import { useGoggleFocus } from '@/hooks/useGoggleFocus';
+// useGoggleFocus removed — 2 IntersectionObservers + MutationObserver for 3% opacity diff wasn't worth the scroll cost
 
 // Pre-computed sort order — O(1) lookup instead of findIndex per row
 const ORDER_MAP: Record<string, number> = {};
@@ -779,8 +779,6 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   // ── Scroll reveal ──────────────────────────────────────────────
   const scrollRef = useScrollReveal([loading, rows, smartRows, fixturesHex]);
-  useScrollFocus();
-  useGoggleFocus(scrollRef);
 
   // ── Render ──────────────────────────────────────────────────────
 

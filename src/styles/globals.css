@@ -1055,33 +1055,8 @@
 }
 
 /* ═══ SCROLL FOCUS — cards respond to their position in the scroll row ═══ */
-/* Cards closest to center brighten + get a soft purple contour. Edges dim. */
-/* Applied via JS on scroll containers with data-focus-lens attribute. */
-
-/* PERF FIX: replaced filter: brightness() with opacity — brightness filter triggers
-   expensive GPU recompositing on every card during scroll. Opacity is composited
-   natively by the GPU with zero overhead. Added contain for layout isolation. */
-.scroll-focus-card {
-  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  contain: layout style;
-}
-
-/* Active/focused state — set via JS based on scroll position */
-.scroll-focus-card[data-focus="center"] {
-  opacity: 1;
-}
-
-.scroll-focus-card[data-focus="near"] {
-  opacity: 0.95;
-}
-
-.scroll-focus-card[data-focus="far"] {
-  opacity: 0.88;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .scroll-focus-card { transition: none; opacity: 1 !important; }
-}
+/* Scroll focus disabled — 200+ IntersectionObserver callbacks per scroll
+   for a 12% opacity difference was the #1 scroll performance killer. */
 
 /* ═══ BRAND ATMOSPHERE — GPU-composited fixed overlay ═══ */
 .brand-atmosphere {
@@ -1112,7 +1087,7 @@
   pointer-events: none;
   /* Luminance band breathes with --pulse (set by ambient audio rAF loop).
      Opacity modulates 0.7→1.0 at ~72 BPM — the app literally breathes. */
-  opacity: calc(0.7 + var(--pulse) * 0.6);
+  opacity: 0.85;
   background:
     /* Luminance sweet spot — wide bright band across center */
     radial-gradient(
@@ -1130,8 +1105,6 @@
       rgba(0,0,0,0.12) 86%,
       rgba(0,0,0,0.22) 100%
     );
-  will-change: opacity;
-  transform: translateZ(0);
   contain: strict;
 }
 
@@ -1142,42 +1115,14 @@
 
 :root { --pulse: 0.3; }
 
-/* Base state: near-full presence — subtle depth, no scroll cost */
+/* Goggle zones disabled — observer cost exceeded visual benefit.
+   All sections render at full opacity. */
 [data-goggle] {
-  opacity: 0.95;
-}
-
-/* Dim zone: entering viewport */
-[data-goggle-zone="dim"] {
-  opacity: 0.97;
-}
-
-/* Lit zone: sweet spot — full presence */
-[data-goggle-zone="lit"] {
   opacity: 1;
-}
-
-/* Card beam — in the lit zone, cards breathe with ambient pulse.
-   --pulse is set by the existing rAF loop in App.tsx (0.1→0.5 range, ~72 BPM). */
-[data-goggle-zone="lit"] .card-surface,
-[data-goggle-zone="lit"] .card-hero,
-[data-goggle-zone="lit"] .card-glass {
-  box-shadow:
-    0 2px 8px rgba(0,0,0,0.4),
-    0 0 0 0.5px rgba(255,255,255,0.05),
-    0 0 calc(var(--pulse) * 16px) rgba(157,78,221, calc(var(--pulse) * 0.14));
-}
-
-/* Smooth glow transition on cards — slow enough to feel like breathing */
-[data-goggle] .card-surface,
-[data-goggle] .card-hero,
-[data-goggle] .card-glass {
-  transition: box-shadow 0.3s linear;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .goggle-lens { display: none; }
-  [data-goggle] { opacity: 1 !important; transition: none !important; }
 }
 
 .safe-bottom-content {

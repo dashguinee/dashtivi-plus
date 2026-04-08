@@ -189,39 +189,25 @@ function AppContent() {
     try { screen.orientation?.unlock?.(); } catch {}
   }, []);
 
-  // Ambient blobs — organic morphing glow + audio-reactive scale
-  // PERF FIX: throttled rAF loop — only runs when scrolled past threshold (blobs visible).
-  // When hidden (opacity 0), loop yields to save GPU frames.
+  // Ambient blobs — show/hide based on scroll position.
+  // PERF: No rAF loop. Pulse is now a CSS animation. Blobs toggle via scroll event.
   const blobsRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     initAudioReactive();
-    let running = true;
     let isVisible = false;
-    const animate = () => {
-      if (!running) return;
-      if (document.hidden) { requestAnimationFrame(animate); return; }
+    const check = () => {
       const el = blobsRef.current;
-      if (el) {
-        const shouldShow = window.scrollY > 80;
-        if (shouldShow && !isVisible) {
-          el.style.opacity = '1';
-          isVisible = true;
-        } else if (!shouldShow && isVisible) {
-          el.style.opacity = '0';
-          isVisible = false;
-        }
-        // Audio pulse — drives blob scale + goggle lens breathing
-        const pulse = getAmbientPulse();
-        if (isVisible) {
-          el.style.transform = `translateX(-50%) scale(${1.0 + pulse * 0.03})`;
-        }
-        // Broadcast pulse as CSS variable — goggle lens + card glow breathe with music
-        document.documentElement.style.setProperty('--pulse', pulse.toFixed(3));
+      if (!el) return;
+      const shouldShow = window.scrollY > 80;
+      if (shouldShow !== isVisible) {
+        el.style.opacity = shouldShow ? '1' : '0';
+        isVisible = shouldShow;
       }
-      requestAnimationFrame(animate);
     };
-    requestAnimationFrame(animate);
-    return () => { running = false; };
+    // Check on scroll via the existing singleton listener — just read scrollY, no rAF
+    window.addEventListener('scroll', check, { passive: true });
+    check();
+    return () => window.removeEventListener('scroll', check);
   }, []);
 
   const ptr = usePullToRefresh();
