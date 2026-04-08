@@ -1091,7 +1091,11 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
           {/* ── VEE Hot — AI trending channels ─────────────────── */}
           {veeHotRow && veeHotRow.channels.length > 0 && (
-            <div data-goggle className="row-tier-standard">
+            <div data-goggle className="row-tier-featured relative">
+              {/* Tempered light beam — warm stage glow from behind */}
+              <div className="absolute inset-0 -top-8 -bottom-4 pointer-events-none" style={{
+                background: 'radial-gradient(ellipse 70% 50% at 30% 40%, rgba(249,115,22,0.06) 0%, transparent 70%), radial-gradient(ellipse 50% 60% at 70% 50%, rgba(249,115,22,0.04) 0%, transparent 60%)',
+              }} />
               <VeeLiveRow
                 playlist={veeHotRow}
                 label="VEE Hot"
@@ -1103,7 +1107,11 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
           {/* ── VEE Explore — diversity pick ─────────────────────── */}
           {veeExploreRow && veeExploreRow.channels.length > 0 && (
-            <div data-goggle className="row-tier-standard">
+            <div data-goggle className="row-tier-featured relative">
+              {/* Tempered light beam — cool discovery glow from behind */}
+              <div className="absolute inset-0 -top-8 -bottom-4 pointer-events-none" style={{
+                background: 'radial-gradient(ellipse 60% 50% at 50% 45%, rgba(59,130,246,0.05) 0%, transparent 65%), radial-gradient(ellipse 40% 60% at 25% 50%, rgba(99,102,241,0.04) 0%, transparent 55%)',
+              }} />
               <VeeLiveRow
                 playlist={veeExploreRow}
                 label="VEE Explore"
