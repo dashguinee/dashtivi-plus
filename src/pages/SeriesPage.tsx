@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo, startTransition } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { Play, X, Download, Search, SlidersHorizontal, Star } from 'lucide-react';
 import type { XtreamCredentials, SeriesItem, SeriesInfo, Episode } from '@/lib/xtream';
 import { getSeries, getSeriesInfo, buildSeriesUrl, buildVodFallbackUrl, getTmdbMap, getSeriesByCategory, seriesDbToItem, searchSeries } from '@/lib/xtream';
@@ -50,27 +50,6 @@ const TAB_NAME_MAP: Record<string, TranslationKey> = {
   'Korean': 'tabKorean',
   'Anime': 'tabAnime',
 };
-
-// ── Static styles (extracted to avoid re-creation on every render) ──
-
-const HERO_HEIGHT_STYLE = { height: 'clamp(180px, 40vh, 280px)' } as const;
-const HERO_BACKDROP_STYLE = { backgroundAttachment: 'scroll' as const, transform: 'scale(1.05)' };
-const HERO_PLAY_BTN_STYLE = { background: 'linear-gradient(135deg, #9D4EDD, #7B2FBE)' } as const;
-const FALLBACK_TITLE_STYLE = { fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.02em' } as const;
-const FALLBACK_ACCENT_STYLE = { background: 'linear-gradient(90deg, rgba(99,102,241,0.5) 0%, rgba(99,102,241,0.15) 60%, transparent 100%)' } as const;
-const MOOD_FONT_STYLE = { fontFamily: "'Space Grotesk', sans-serif" } as const;
-const RETRY_BTN_STYLE = {
-  background: 'linear-gradient(135deg, rgba(157,78,221,0.15) 0%, rgba(157,78,221,0.06) 100%)',
-  border: '1px solid rgba(157,78,221,0.25)',
-  color: 'rgba(157,78,221,0.85)',
-} as const;
-const SHOW_MORE_BTN_STYLE = {
-  background: 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(157,78,221,0.02) 100%)',
-  border: '1px solid rgba(157,78,221,0.1)',
-} as const;
-const SHOW_MORE_HOVER_STYLE = { background: 'linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.04) 50%, transparent 100%)' } as const;
-const SHOW_MORE_TEXT_STYLE = { color: 'rgba(157,78,221,0.55)' } as const;
-const SHOW_MORE_COUNT_STYLE = { color: 'rgba(255,255,255,0.25)' } as const;
 
 // ── Scoring ──────────────────────────────────────────────────────
 
@@ -183,11 +162,8 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   useEffect(() => { getTmdbMap().then(m => m && setTmdbMap(m.TMDB_MAP)); }, []);
 
-  // PERF: startTransition keeps input responsive during heavy search rendering (INP)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      startTransition(() => setDebouncedQuery(searchQuery));
-    }, 300);
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -275,7 +251,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           const filtered = seriesList.filter(s => s.name.toLowerCase().includes(q));
           if (mounted) { setSearchResults(filtered.slice(0, LIMIT)); setSearchTruncated(filtered.length > LIMIT); }
         } else {
-          // Supabase search — scoped to current category, falls back to global
+          // Supabase search — scoped to current category
           const catIds = currentSubtab.categoryIds;
           const sbResults = await searchSeries(q, LIMIT, catIds.length > 0 ? catIds : undefined);
           if (sbResults.length > 0) {
@@ -518,13 +494,14 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     <div className="pt-16 pb-32">
       {/* ── Hero Billboard ── */}
       {heroSeries ? (
-        <div className="relative overflow-hidden" style={HERO_HEIGHT_STYLE}>
+        <div className="relative overflow-hidden" style={{ height: 'clamp(180px, 40vh, 280px)' }}>
           {/* Backdrop image */}
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
               backgroundImage: `url(https://image.tmdb.org/t/p/w1280${heroSeries.tmdb.p})`,
-              ...HERO_BACKDROP_STYLE,
+              backgroundAttachment: 'scroll',
+              transform: 'scale(1.05)',
             }}
           />
           {/* Gradient overlays */}
@@ -553,7 +530,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               <button
                 onClick={() => setDetailSeries(heroSeries.series)}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white"
-                style={HERO_PLAY_BTN_STYLE}
+                style={{ background: 'linear-gradient(135deg, #9D4EDD, #7B2FBE)' }}
               >
                 <Play className="w-4 h-4 fill-white" />
                 Play
@@ -563,8 +540,8 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         </div>
       ) : (
         <div className="pt-16 pb-5 px-5">
-          <h1 className="text-[22px] font-semibold text-white/85 tracking-tight" style={FALLBACK_TITLE_STYLE}>Series</h1>
-          <div className="w-16 h-[2px] rounded-full mt-2" style={FALLBACK_ACCENT_STYLE} />
+          <h1 className="text-[22px] font-semibold text-white/85 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.02em' }}>Series</h1>
+          <div className="w-16 h-[2px] rounded-full mt-2" style={{ background: 'linear-gradient(90deg, rgba(99,102,241,0.5) 0%, rgba(99,102,241,0.15) 60%, transparent 100%)' }} />
         </div>
       )}
 
@@ -692,7 +669,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           {moodRows.map(row => (
             <section key={row.id}>
               <div className="px-4 mb-2">
-                <h3 className="text-[15px] font-semibold text-white/50 flex items-center gap-1.5" style={MOOD_FONT_STYLE}>
+                <h3 className="text-[15px] font-semibold text-white/50 flex items-center gap-1.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                   {MOOD_NAME_MAP[row.name] ? t(lang, MOOD_NAME_MAP[row.name]) : row.name}
                   <RowCountBadge count={row.items.length} label="series" />
                 </h3>
@@ -761,7 +738,11 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           <p className="text-text-muted text-sm">{t(lang, 'unableToLoadRetry')}</p>
           <button onClick={() => { setSeriesError(false); setLoading(true); setRetryKey(k => k + 1); }}
             className="group px-5 py-2.5 rounded-xl text-[12px] font-medium tracking-wide transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-            style={RETRY_BTN_STYLE}>{t(lang, 'retry')}</button>
+            style={{
+              background: 'linear-gradient(135deg, rgba(157,78,221,0.15) 0%, rgba(157,78,221,0.06) 100%)',
+              border: '1px solid rgba(157,78,221,0.25)',
+              color: 'rgba(157,78,221,0.85)',
+            }}>{t(lang, 'retry')}</button>
         </div>
       ) : filteredAndSorted.length === 0 ? (
         isSearching || activeGenre !== 0 ? (
@@ -773,7 +754,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         )
       ) : (
         <>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5 cv-auto-grid" style={{ contain: 'content' }}>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5">
             {filteredAndSorted.slice(0, displayLimit).map(series => (
               <PosterCard
                 key={series.series_id}
@@ -790,23 +771,26 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           {filteredAndSorted.length > displayLimit && (
             <div className="flex flex-col items-center gap-1 mt-4 mb-4 pb-8">
               <button
-                onClick={() => startTransition(() => setDisplayLimit(l => l + PAGE_SIZE))}
+                onClick={() => setDisplayLimit(l => l + PAGE_SIZE)}
                 className="group w-full relative overflow-hidden rounded-2xl py-3.5 transition-all duration-300 hover:scale-[1.005] active:scale-[0.995]"
-                style={SHOW_MORE_BTN_STYLE}
+                style={{
+                  background: 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(157,78,221,0.02) 100%)',
+                  border: '1px solid rgba(157,78,221,0.1)',
+                }}
               >
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={SHOW_MORE_HOVER_STYLE}
+                  style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.04) 50%, transparent 100%)' }}
                 />
                 <div className="relative flex flex-col items-center justify-center gap-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-medium tracking-[0.15em] uppercase" style={SHOW_MORE_TEXT_STYLE}>
+                    <span className="text-[11px] font-medium tracking-[0.15em] uppercase" style={{ color: 'rgba(157,78,221,0.55)' }}>
                       {t(lang, 'showMore')}
                     </span>
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="group-hover:translate-y-0.5 transition-transform duration-300">
                       <path d="M6 2v8M2 6l4 4 4-4" stroke="rgba(157,78,221,0.4)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
-                  <span className="text-[9px] font-mono" style={SHOW_MORE_COUNT_STYLE}>
+                  <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>
                     {filteredAndSorted.length - displayLimit} {t(lang, 'remaining')}
                   </span>
                 </div>
