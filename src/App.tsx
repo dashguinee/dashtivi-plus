@@ -23,6 +23,7 @@ import { muteAmbient, unmuteAmbient, startAmbient, isAmbientEnabled, getAmbientP
 import { LanguageProvider } from '@/i18n';
 import type { Channel } from '@/types';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { useScrollAmbient } from '@/hooks/useScrollAmbient';
 
 // Start preloading immediately on script load — before React even mounts
 startPreload();
@@ -226,6 +227,7 @@ function AppContent() {
   }, []);
 
   const ptr = usePullToRefresh();
+  useScrollAmbient();
 
   if (!credentials) return null;
 
@@ -266,6 +268,12 @@ function AppContent() {
           </div>
           <div className="brand-atmosphere" />
           <div className="goggle-lens" />
+          {/* Scroll ambient — radial glow that follows scroll position */}
+          <div id="scroll-ambient" className="fixed inset-0 pointer-events-none z-[1]" style={{
+            background: 'radial-gradient(ellipse 60% 35% at 50% var(--ambient-y, 30%), rgba(157,78,221,0.04) 0%, transparent 70%)',
+            transition: 'none',
+            willChange: 'background',
+          }} />
         </>
       )}
       <div className="relative z-10">
