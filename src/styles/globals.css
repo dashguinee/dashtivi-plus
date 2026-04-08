@@ -893,6 +893,11 @@
   }
 
   /* --- Controlled horizontal scroll — snap gives tactile landing --- */
+  /* All children in scroll rows: let vertical scroll pass through */
+  .scroll-smooth-x > * {
+    touch-action: manipulation;
+  }
+
   .scroll-smooth-x {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
@@ -1166,7 +1171,7 @@
     0 2px 8px rgba(0,0,0,0.4),
     0 0 1px rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.04);
-  transform: translateZ(0);
+  touch-action: manipulation;
 }
 
 /* Only apply hover transitions on devices with pointer (not touch scrolling) */
@@ -1185,8 +1190,10 @@
   }
 }
 
-.card-surface:active {
-  transform: scale(0.97) translateZ(0);
+@media (hover: hover) {
+  .card-surface:active {
+    transform: scale(0.97);
+  }
 }
 
 /* Hero card — first in row, elevated treatment */
@@ -1197,6 +1204,7 @@
     0 0 1px rgba(255,255,255,0.08),
     0 0 20px rgba(157,78,221,0.04);
   border: 1px solid rgba(255,255,255,0.06);
+  touch-action: manipulation;
 }
 
 /* Glass showcase — premium treatment for ExperienceShowcase */
