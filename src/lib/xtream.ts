@@ -313,7 +313,7 @@ function getLogoMap(): Promise<Record<string, string>> {
 /** TMDB metadata — loaded as JSON via fetch (doesn't block main thread) */
 import type { TmdbEntry } from './tmdb-map.generated';
 import { TMDB_GENRES } from './tmdb-map.generated';
-import { consumePrefetchedCurator, consumePrefetchedVee } from './preloader';
+import { consumePrefetchedCurator, consumePrefetchedVee, consumePrefetchedChannels, consumePrefetchedVerified } from './preloader';
 
 type TmdbMapData = { TMDB_MAP: Record<string, TmdbEntry>; TMDB_GENRES: Record<number, string> };
 let tmdbMapCache: TmdbMapData | null = null;
@@ -788,10 +788,12 @@ export async function fetchVerifiedData(): Promise<VerifiedData | null> {
 
   verifiedPromise = (async () => {
     try {
-      const res = await fetch(`${PROXY}/verified.json`, { signal: AbortSignal.timeout(5000) });
-      if (!res.ok) return null;
-      const data = await res.json() as VerifiedData;
-      if (!data.verified_set?.length) return null;
+      // Use prefetched data from preloader if available
+      const cached = consumePrefetchedVerified();
+      const data: VerifiedData | null = cached
+        ? cached as VerifiedData
+        : await fetch(`${PROXY}/verified.json`, { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null);
+      if (!data?.verified_set?.length) return null;
       verifiedFetchedAt = Date.now();
       return data;
     } catch { return null; }
@@ -1127,9 +1129,11 @@ export async function fetchVpsHealth(): Promise<VpsHealthData> {
     } catch {}
 
     try {
-      const res = await fetch(`${PROXY}/channels.json`, { signal: AbortSignal.timeout(5000) });
-      if (!res.ok) throw new Error('Health fetch failed');
-      const data = await res.json() as VpsHealthData;
+      // Use prefetched data from preloader if available
+      const cached = consumePrefetchedChannels();
+      const data: VpsHealthData = cached
+        ? cached as VpsHealthData
+        : await fetch(`${PROXY}/channels.json`, { signal: AbortSignal.timeout(5000) }).then(r => { if (!r.ok) throw new Error('Health fetch failed'); return r.json(); });
       vpsHealthData = data;
       vpsHealthFetchedAt = Date.now();
       try {

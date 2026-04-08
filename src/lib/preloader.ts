@@ -36,6 +36,8 @@ export function onPreloadProgress(fn: (p: number) => void): () => void {
 // Parsed JSON data — consumed once, then cleared
 let _prefetchedCurator: unknown | null = null;
 let _prefetchedVee: unknown | null = null;
+let _prefetchedChannels: unknown | null = null;
+let _prefetchedVerified: unknown | null = null;
 
 /** Consume prefetched curator data (returns null if not available or already consumed) */
 export function consumePrefetchedCurator(): unknown | null {
@@ -48,6 +50,20 @@ export function consumePrefetchedCurator(): unknown | null {
 export function consumePrefetchedVee(): unknown | null {
   const data = _prefetchedVee;
   _prefetchedVee = null;
+  return data;
+}
+
+/** Consume prefetched channels (VPS health) data */
+export function consumePrefetchedChannels(): unknown | null {
+  const data = _prefetchedChannels;
+  _prefetchedChannels = null;
+  return data;
+}
+
+/** Consume prefetched verified data */
+export function consumePrefetchedVerified(): unknown | null {
+  const data = _prefetchedVerified;
+  _prefetchedVerified = null;
   return data;
 }
 
@@ -94,12 +110,20 @@ export function startPreload() {
       .finally(stepDone),
   );
 
-  // 3. Warm HTTP cache for health + probe data (non-critical)
+  // 3. Prefetch + parse health + verified data (consumed by xtream.ts)
   loads.push(
-    fetch(`${PROXY}/channels.json`, { signal: AbortSignal.timeout(5000) }).catch(() => {}).finally(stepDone),
+    fetch(`${PROXY}/channels.json`, { signal: AbortSignal.timeout(5000) })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) _prefetchedChannels = data; })
+      .catch(() => {})
+      .finally(stepDone),
   );
   loads.push(
-    fetch(`${PROXY}/verified.json`, { signal: AbortSignal.timeout(5000) }).catch(() => {}).finally(stepDone),
+    fetch(`${PROXY}/verified.json`, { signal: AbortSignal.timeout(5000) })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) _prefetchedVerified = data; })
+      .catch(() => {})
+      .finally(stepDone),
   );
 
   // Signal ready when chunk + data are loaded (or timeout)
