@@ -53,12 +53,10 @@ export function useScrollReveal(deps: unknown[] = []) {
       });
 
       // Phase 2: WRITE — apply classes and attributes without triggering layout
-      // Assign cascading delays to first 8 reveal sections in viewport
-      // Section 1 appears instantly, each subsequent section fades in ~1s apart
       let delayIndex = 0;
       reveals.forEach((el, i) => {
         if (inViewportFlags[i]) {
-          if (delayIndex < 8 && el.classList.contains('reveal')) {
+          if (delayIndex < 5 && el.classList.contains('reveal')) {
             el.setAttribute('data-reveal-delay', String(delayIndex + 1));
             delayIndex++;
           }

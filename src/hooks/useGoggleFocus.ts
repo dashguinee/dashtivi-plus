@@ -80,15 +80,24 @@ export function useGoggleFocus(scrollRef: React.RefObject<HTMLElement | null>) {
       });
     };
 
-    // Initial observe + re-observe after content loads (no MutationObserver — too expensive)
+    // Initial + re-observe when new sections load (lazy content)
     const timer = setTimeout(observe, 300);
-    const timer2 = setTimeout(observe, 2000); // catch lazy-loaded content
+    const mutationObserver = new MutationObserver(() => {
+      // Only re-observe if new data-goggle elements appeared
+      const current = el.querySelectorAll('[data-goggle]').length;
+      if (current !== observedCount) {
+        observedCount = current;
+        observe();
+      }
+    });
+    let observedCount = 0;
+    mutationObserver.observe(el, { childList: true, subtree: true });
 
     return () => {
       clearTimeout(timer);
-      clearTimeout(timer2);
       litObserver.disconnect();
       visibleObserver.disconnect();
+      mutationObserver.disconnect();
     };
   }, [scrollRef]);
 }

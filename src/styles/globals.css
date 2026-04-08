@@ -759,33 +759,30 @@
      on scroll. Scale + opacity alone give the same materializing depth feel. */
   .reveal {
     opacity: 0;
-    transform: scale(0.997);
-    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: scale(0.995);
+    transition: opacity 2.2s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 2.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .reveal.visible {
     opacity: 0.999;
     transform: scale(1);
+    will-change: auto;
   }
 
-  /* --- Cascading reveal delays — alive but never blocking --- */
-  /* Total cascade: 1.5s. Each section ~200ms apart. Content is touchable within 2s. */
-  .reveal[data-reveal-delay="1"] { transition-delay: 0ms; }
-  .reveal[data-reveal-delay="2"] { transition-delay: 150ms; }
+  /* --- Cascading reveal delays — slow guided entrance --- */
+  .reveal[data-reveal-delay="1"] { transition-delay: 100ms; }
+  .reveal[data-reveal-delay="2"] { transition-delay: 200ms; }
   .reveal[data-reveal-delay="3"] { transition-delay: 350ms; }
-  .reveal[data-reveal-delay="4"] { transition-delay: 550ms; }
-  .reveal[data-reveal-delay="5"] { transition-delay: 750ms; }
-  .reveal[data-reveal-delay="6"] { transition-delay: 1000ms; }
-  .reveal[data-reveal-delay="7"] { transition-delay: 1250ms; }
-  .reveal[data-reveal-delay="8"] { transition-delay: 1500ms; }
+  .reveal[data-reveal-delay="4"] { transition-delay: 500ms; }
+  .reveal[data-reveal-delay="5"] { transition-delay: 650ms; }
 
   /* --- Staggered card entrance --- */
   .stagger-card {
     opacity: 0;
-    transform: scale(0.99);
-    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: scale(0.985);
+    transition: opacity 1.6s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 1.6s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .stagger-card.visible {
@@ -893,11 +890,11 @@
   }
 
   /* --- Controlled horizontal scroll — snap gives tactile landing --- */
-
   .scroll-smooth-x {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
     scroll-snap-type: x proximity;
+    /* GPU layer for smooth touch scroll compositing */
     transform: translateZ(0);
   }
 
@@ -1056,15 +1053,29 @@
 }
 
 /* ═══ SCROLL FOCUS — cards respond to their position in the scroll row ═══ */
-/* Scroll focus — cards respond to position in scroll row */
+/* Cards closest to center brighten + get a soft purple contour. Edges dim. */
+/* Applied via JS on scroll containers with data-focus-lens attribute. */
+
+/* PERF FIX: replaced filter: brightness() with opacity — brightness filter triggers
+   expensive GPU recompositing on every card during scroll. Opacity is composited
+   natively by the GPU with zero overhead. Added contain for layout isolation. */
 .scroll-focus-card {
   transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   contain: layout style;
 }
 
-.scroll-focus-card[data-focus="center"] { opacity: 1; }
-.scroll-focus-card[data-focus="near"] { opacity: 0.95; }
-.scroll-focus-card[data-focus="far"] { opacity: 0.88; }
+/* Active/focused state — set via JS based on scroll position */
+.scroll-focus-card[data-focus="center"] {
+  opacity: 1;
+}
+
+.scroll-focus-card[data-focus="near"] {
+  opacity: 0.95;
+}
+
+.scroll-focus-card[data-focus="far"] {
+  opacity: 0.88;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .scroll-focus-card { transition: none; opacity: 1 !important; }
@@ -1131,20 +1142,22 @@
 
 /* Base state: dimmed, waiting to be revealed */
 [data-goggle] {
-  opacity: 0.88;
+  opacity: 0.86;
+  transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Dim zone: entering viewport — waking up */
 [data-goggle-zone="dim"] {
-  opacity: 0.94;
+  opacity: 0.93;
 }
 
-/* Lit zone: sweet spot — full presence */
+/* Lit zone: sweet spot — full presence, alive with the music */
 [data-goggle-zone="lit"] {
   opacity: 1;
 }
 
-/* Card glow in lit zone — breathes with --pulse */
+/* Card beam — in the lit zone, cards breathe with ambient pulse.
+   --pulse is set by the existing rAF loop in App.tsx (0.1→0.5 range, ~72 BPM). */
 [data-goggle-zone="lit"] .card-surface,
 [data-goggle-zone="lit"] .card-hero,
 [data-goggle-zone="lit"] .card-glass {
@@ -1163,7 +1176,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .goggle-lens { display: none; }
-  [data-goggle] { opacity: 1 !important; }
+  [data-goggle] { opacity: 1 !important; transition: none !important; }
 }
 
 .safe-bottom-content {
@@ -1240,22 +1253,21 @@
 /* ═══ ROW HIERARCHY — visual importance tiers for content rows ═══ */
 /* Hero tier: first/most important row — largest cards, generous breathing */
 .row-tier-hero {
-  margin-bottom: 3.5rem;
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
-}
-
-/* Featured tier: rows 1-2 — medium-large cards, comfortable breathing */
-.row-tier-featured {
-  margin-bottom: 2.75rem;
+  margin-bottom: 2.5rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
 
-/* Standard tier: rows 3+ — compact cards, tighter rhythm */
-.row-tier-standard {
+/* Featured tier: rows 1-2 — medium-large cards, comfortable breathing */
+.row-tier-featured {
   margin-bottom: 2rem;
   padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+/* Standard tier: rows 3+ — compact cards, tighter rhythm */
+.row-tier-standard {
+  margin-bottom: 1.5rem;
 }
 
 /* ═══ CARD SIZE TIERS — height hierarchy for horizontal scroll rows ═══ */
@@ -1468,9 +1480,9 @@
 /* ── Accessibility: Reduced Motion ───────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
-    animation-duration: 1ms !important;
+    animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 1ms !important;
+    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
 

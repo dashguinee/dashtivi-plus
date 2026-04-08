@@ -441,7 +441,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const hero = getFeaturedHero();
 
   // ── Hero banner scroll-aware fade ─────────────────────────────
-  // heroBannerOpacity removed — scroll fade now via direct DOM (no re-renders)
+  const [heroBannerOpacity, setHeroBannerOpacity] = useState(0);
   const [heroBannerEntered, setHeroBannerEntered] = useState(false);
   const heroBannerRef = useRef<HTMLDivElement>(null);
 
@@ -449,11 +449,12 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
       setHeroBannerEntered(true);
+      setHeroBannerOpacity(1);
     });
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  // Exit: fade out as user scrolls past the banner — no React setState, direct DOM
+  // Exit: fade out + drift up as user scrolls past the banner
   useEffect(() => {
     const onScroll = () => {
       const el = heroBannerRef.current;
@@ -461,8 +462,9 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       const rect = el.getBoundingClientRect();
       const totalH = el.offsetHeight;
       if (totalH === 0) return;
+      // Once the banner starts leaving the viewport, fade it out
       const visible = Math.max(0, Math.min(1, rect.bottom / totalH));
-      el.style.opacity = String(visible);
+      setHeroBannerOpacity(visible);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
@@ -777,17 +779,8 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   // ── Scroll reveal ──────────────────────────────────────────────
   const scrollRef = useScrollReveal([loading, rows, smartRows, fixturesHex]);
+  useScrollFocus();
   useGoggleFocus(scrollRef);
-
-  // ── Haptic snap — light tick when horizontal rows snap ────────
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-    const rows = container.querySelectorAll('.scroll-smooth-x');
-    const handler = () => { import('@/lib/haptics').then(h => h.snap()); };
-    rows.forEach(r => r.addEventListener('scrollend', handler, { passive: true }));
-    return () => rows.forEach(r => r.removeEventListener('scrollend', handler));
-  }, [loading, rows]);
 
   // ── Render ──────────────────────────────────────────────────────
 
@@ -801,9 +794,12 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           height: '18vh',
           minHeight: '120px',
           maxHeight: '180px',
-          opacity: heroBannerEntered ? 1 : 0,
-          transform: heroBannerEntered ? 'translateY(0)' : 'translateY(4px)',
+          opacity: heroBannerEntered ? heroBannerOpacity : 0,
+          transform: heroBannerEntered
+            ? `translateY(${(1 - heroBannerOpacity) * -6}px)`
+            : 'translateY(4px)',
           transition: 'opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1)',
+          willChange: 'opacity, transform',
         }}
       >
         <AuroraHero gradient={hero.gradient} timeSlot={
@@ -1164,7 +1160,6 @@ function SectionHeader({
   onNavigate,
   itemCount,
   countLabel,
-  tier,
 }: {
   emoji: string;
   title: string;
@@ -1175,7 +1170,6 @@ function SectionHeader({
   onNavigate?: (path: string) => void;
   itemCount?: number;
   countLabel?: string;
-  tier?: 'hero' | 'featured' | 'standard';
 }) {
   const { lang } = useLanguage();
   // Translate collection name if a mapping exists
@@ -1201,7 +1195,7 @@ function SectionHeader({
             }}
           />
           <h2
-            className={`font-black tracking-tight text-white ${tier === 'hero' ? 'text-[22px]' : tier === 'featured' ? 'text-[19px]' : 'text-[17px]'}`}
+            className="text-[20px] font-black tracking-tight text-white"
             style={{ textShadow: '0 0 40px rgba(157,78,221,0.08)' }}
           >
             {translatedTitle}
@@ -1348,7 +1342,6 @@ function CollectionRow({
           onNavigate={onNavigate}
           itemCount={aliveStreams.length}
           countLabel="channels"
-          tier={tier}
         />
         <div data-focus-lens className={`flex ${cardGap} overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3 items-end`}>
           {aliveStreams.map((stream, i) => (
@@ -1383,11 +1376,11 @@ function CollectionRow({
         <SectionHeader
           emoji={collection.emoji}
           title={collection.name}
+
           seeAllTo={collection.navigateTo}
           onNavigate={onNavigate}
           itemCount={row.vodStreams.length}
           countLabel="movies"
-          tier="hero"
         />
         <div data-focus-lens className="flex gap-4 overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3 items-end">
           {row.vodStreams.map((movie, i) => {
@@ -1417,11 +1410,11 @@ function CollectionRow({
         <SectionHeader
           emoji={collection.emoji}
           title={collection.name}
+
           seeAllTo={collection.navigateTo}
           onNavigate={onNavigate}
           itemCount={row.vodStreams.length}
           countLabel="movies"
-          tier={tier}
         />
         <div data-focus-lens className={`flex ${cardGap} overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3 items-end`}>
           {row.vodStreams.map((movie, i) => {
@@ -1451,11 +1444,11 @@ function CollectionRow({
         <SectionHeader
           emoji={collection.emoji}
           title={collection.name}
+
           seeAllTo={collection.navigateTo}
           onNavigate={onNavigate}
           itemCount={row.seriesItems.length}
           countLabel="series"
-          tier={tier}
         />
         <div data-focus-lens className={`flex ${cardGap} overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3 items-end`}>
           {row.seriesItems.map((series, i) => (

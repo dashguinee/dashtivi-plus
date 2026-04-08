@@ -188,31 +188,35 @@ function AppContent() {
   }, []);
 
   // Ambient blobs — organic morphing glow + audio-reactive scale
-  // Throttled: runs every 3rd frame (~20fps) to save GPU while keeping the feel alive
+  // PERF FIX: throttled rAF loop — only runs when scrolled past threshold (blobs visible).
+  // When hidden (opacity 0), loop yields to save GPU frames.
   const blobsRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     initAudioReactive();
     let running = true;
     let isVisible = false;
-    let frameCount = 0;
     const animate = () => {
       if (!running) return;
-      requestAnimationFrame(animate);
-      if (document.hidden) return;
-      frameCount++;
-      if (frameCount % 3 !== 0) return; // skip 2 of every 3 frames
+      if (document.hidden) { requestAnimationFrame(animate); return; }
       const el = blobsRef.current;
-      if (!el) return;
-      const shouldShow = window.scrollY > 80;
-      if (shouldShow !== isVisible) {
-        el.style.opacity = shouldShow ? '1' : '0';
-        isVisible = shouldShow;
+      if (el) {
+        const shouldShow = window.scrollY > 80;
+        if (shouldShow && !isVisible) {
+          el.style.opacity = '1';
+          isVisible = true;
+        } else if (!shouldShow && isVisible) {
+          el.style.opacity = '0';
+          isVisible = false;
+        }
+        // Audio pulse — drives blob scale + goggle lens breathing
+        const pulse = getAmbientPulse();
+        if (isVisible) {
+          el.style.transform = `translateX(-50%) scale(${1.0 + pulse * 0.03})`;
+        }
+        // Broadcast pulse as CSS variable — goggle lens + card glow breathe with music
+        document.documentElement.style.setProperty('--pulse', pulse.toFixed(3));
       }
-      const pulse = getAmbientPulse();
-      if (isVisible) {
-        el.style.transform = `translateX(-50%) scale(${1.0 + pulse * 0.03})`;
-      }
-      document.documentElement.style.setProperty('--pulse', pulse.toFixed(3));
+      requestAnimationFrame(animate);
     };
     requestAnimationFrame(animate);
     return () => { running = false; };
