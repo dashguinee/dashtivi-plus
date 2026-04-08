@@ -128,6 +128,14 @@ const HERO_CTA_MAP: Record<string, TranslationKey> = {
   'Dive In': 'heroCTADiveIn',
 };
 
+const NAV_PILL_STYLE = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' } as const;
+const NAV_PILL_ICONS: Record<string, React.ReactNode> = {
+  sports: <Trophy className="w-3 h-3" />,
+  news: <Radio className="w-3 h-3" />,
+  africa: <Globe className="w-3 h-3" />,
+  faith: <Heart className="w-3 h-3" />,
+};
+
 const PILL_NAME_MAP: Record<string, TranslationKey> = {
   'Sports': 'sports',
   'News': 'news',
@@ -810,22 +818,13 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       <div data-goggle className="px-4 mb-5 reveal">
         <div className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth-x pb-1">
           {COLLECTION_CARDS.map((card) => {
-            const IconMap: Record<string, React.ReactNode> = {
-              sports: <Trophy className="w-3 h-3" />,
-              news: <Radio className="w-3 h-3" />,
-              africa: <Globe className="w-3 h-3" />,
-              faith: <Heart className="w-3 h-3" />,
-            };
-            const icon = IconMap[card.id];
+            const icon = NAV_PILL_ICONS[card.id];
             return (
               <button
                 key={card.id}
                 onClick={() => navigate(card.navigateTo)}
                 className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-[7px] rounded-full card-press hover:scale-[1.02] active:scale-[0.97]"
-                style={{
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                }}
+                style={NAV_PILL_STYLE}
               >
                 {icon && <span className="text-white/40">{icon}</span>}
                 <span className="text-[11px] font-medium text-white/50 whitespace-nowrap">{PILL_NAME_MAP[card.name] ? t(lang, PILL_NAME_MAP[card.name]) : card.name}</span>

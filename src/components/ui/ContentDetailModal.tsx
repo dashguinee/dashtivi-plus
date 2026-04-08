@@ -34,6 +34,8 @@ function parseTitle(raw: string): { clean: string; year: string | null } {
   return { clean: raw, year: null };
 }
 
+const PLAY_BTN_STYLE = { background: 'linear-gradient(135deg, rgba(157,78,221,0.9), rgba(124,58,237,0.9))' } as const;
+
 function formatRuntime(minutes: number): string {
   if (minutes <= 0) return '';
   const h = Math.floor(minutes / 60);
@@ -206,7 +208,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
       <button
         onClick={() => onPlay(knownDurationSeconds)}
         className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-bold text-white text-base shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all active:scale-[0.98]"
-        style={{ background: 'linear-gradient(135deg, rgba(157,78,221,0.9), rgba(124,58,237,0.9))' }}
+        style={PLAY_BTN_STYLE}
       >
         <Play className="w-5 h-5 fill-white" />{t(lang, 'playNow')}
       </button>
@@ -247,9 +249,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
           <div
             className="relative min-h-[50vh] rounded-t-3xl"
             style={{
-              background: 'linear-gradient(to bottom, rgba(10,10,15,0.92) 0%, rgba(10,10,15,0.98) 15%, #0a0a0f 30%)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
+              background: 'linear-gradient(to bottom, rgba(10,10,15,0.97) 0%, #0a0a0f 20%)',
               animation: 'slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
             }}
           >
@@ -296,9 +296,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
         <div
           className="relative min-h-[60vh] rounded-t-3xl"
           style={{
-            background: 'linear-gradient(to bottom, rgba(10,10,15,0.95) 0%, #0a0a0f 25%)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
+            background: 'linear-gradient(to bottom, rgba(10,10,15,0.97) 0%, #0a0a0f 20%)',
             animation: 'slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
           }}
         >

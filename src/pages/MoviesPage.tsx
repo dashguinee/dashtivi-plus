@@ -53,6 +53,27 @@ const TAB_NAME_MAP: Record<string, TranslationKey> = {
   'International': 'tabInternational',
 };
 
+// ── Static styles (extracted to avoid re-creation on every render) ──
+
+const HERO_HEIGHT_STYLE = { height: 'clamp(140px, 25vh, 280px)' } as const;
+const HERO_BACKDROP_STYLE = { backgroundAttachment: 'scroll' as const, transform: 'scale(1.05)' };
+const HERO_PLAY_BTN_STYLE = { background: 'linear-gradient(135deg, #9D4EDD, #7B2FBE)' } as const;
+const FALLBACK_TITLE_STYLE = { fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.02em' } as const;
+const FALLBACK_ACCENT_STYLE = { background: 'linear-gradient(90deg, rgba(245,158,11,0.5) 0%, rgba(245,158,11,0.15) 60%, transparent 100%)' } as const;
+const MOMENT_FONT_STYLE = { fontFamily: "'Space Grotesk', sans-serif" } as const;
+const RETRY_BTN_STYLE = {
+  background: 'linear-gradient(135deg, rgba(157,78,221,0.15) 0%, rgba(157,78,221,0.06) 100%)',
+  border: '1px solid rgba(157,78,221,0.25)',
+  color: 'rgba(157,78,221,0.85)',
+} as const;
+const SHOW_MORE_BTN_STYLE = {
+  background: 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(157,78,221,0.02) 100%)',
+  border: '1px solid rgba(157,78,221,0.1)',
+} as const;
+const SHOW_MORE_HOVER_STYLE = { background: 'linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.04) 50%, transparent 100%)' } as const;
+const SHOW_MORE_TEXT_STYLE = { color: 'rgba(157,78,221,0.55)' } as const;
+const SHOW_MORE_COUNT_STYLE = { color: 'rgba(255,255,255,0.25)' } as const;
+
 // ── Scoring ──────────────────────────────────────────────────────
 
 function getTrendingScore(movie: VodStream, tmdbMap: Record<string, TmdbEntry>): number {
@@ -429,14 +450,13 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     <div className="pt-16 pb-32">
       {/* ── Hero Billboard ── */}
       {heroMovie ? (
-        <div className="relative overflow-hidden" style={{ height: 'clamp(140px, 25vh, 280px)' }}>
+        <div className="relative overflow-hidden" style={HERO_HEIGHT_STYLE}>
           {/* Backdrop image */}
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
               backgroundImage: `url(https://image.tmdb.org/t/p/w1280${heroMovie.tmdb.p})`,
-              backgroundAttachment: 'scroll',
-              transform: 'scale(1.05)',
+              ...HERO_BACKDROP_STYLE,
             }}
           />
           {/* Gradient overlays */}
@@ -465,7 +485,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               <button
                 onClick={() => setDetailMovie(heroMovie.movie)}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white"
-                style={{ background: 'linear-gradient(135deg, #9D4EDD, #7B2FBE)' }}
+                style={HERO_PLAY_BTN_STYLE}
               >
                 <Play className="w-4 h-4 fill-white" />
                 Play
@@ -481,8 +501,8 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         </div>
       ) : (
         <div className="pt-16 pb-5 px-5">
-          <h1 className="text-[22px] font-semibold text-white/85 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.02em' }}>Cinema</h1>
-          <div className="w-16 h-[2px] rounded-full mt-2" style={{ background: 'linear-gradient(90deg, rgba(245,158,11,0.5) 0%, rgba(245,158,11,0.15) 60%, transparent 100%)' }} />
+          <h1 className="text-[22px] font-semibold text-white/85 tracking-tight" style={FALLBACK_TITLE_STYLE}>Cinema</h1>
+          <div className="w-16 h-[2px] rounded-full mt-2" style={FALLBACK_ACCENT_STYLE} />
         </div>
       )}
 
@@ -610,7 +630,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           {momentRows.map(({ pack, items }) => (
             <section key={pack.id}>
               <div className="px-4 mb-2">
-                <h3 className="text-[15px] font-semibold text-white/50 flex items-center gap-1.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                <h3 className="text-[15px] font-semibold text-white/50 flex items-center gap-1.5" style={MOMENT_FONT_STYLE}>
                   <span className="text-white/30">{MOMENT_ICON_MAP[pack.icon]}</span>
                   {t(lang, pack.nameKey as TranslationKey)}
                   <RowCountBadge count={items.length} label="movies" />
@@ -682,11 +702,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           <p className="text-text-muted text-sm">{t(lang, 'unableToLoadRetry')}</p>
           <button onClick={() => { setMoviesError(false); setLoading(true); setRetryKey(k => k + 1); }}
             className="group px-5 py-2.5 rounded-xl text-[12px] font-medium tracking-wide transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-            style={{
-              background: 'linear-gradient(135deg, rgba(157,78,221,0.15) 0%, rgba(157,78,221,0.06) 100%)',
-              border: '1px solid rgba(157,78,221,0.25)',
-              color: 'rgba(157,78,221,0.85)',
-            }}>{t(lang, 'retry')}</button>
+            style={RETRY_BTN_STYLE}>{t(lang, 'retry')}</button>
         </div>
       ) : filteredAndSorted.length === 0 ? (
         isSearching || activeGenre !== 0 ? (
@@ -698,7 +714,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         )
       ) : (
         <>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5" style={{ contain: 'content' }}>
             {(isSearching ? filteredAndSorted : filteredAndSorted.slice(0, displayLimit)).map(movie => (
               <div key={movie.stream_id} className="relative group/card">
                 <PosterCard title={movie.name} poster={movie.stream_icon} rating={movie.rating}
@@ -728,24 +744,21 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               <button
                 onClick={() => setDisplayLimit(prev => prev + PAGE_SIZE)}
                 className="group w-full relative overflow-hidden rounded-2xl py-3.5 transition-all duration-300 hover:scale-[1.005] active:scale-[0.995]"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(157,78,221,0.02) 100%)',
-                  border: '1px solid rgba(157,78,221,0.1)',
-                }}
+                style={SHOW_MORE_BTN_STYLE}
               >
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.04) 50%, transparent 100%)' }}
+                  style={SHOW_MORE_HOVER_STYLE}
                 />
                 <div className="relative flex flex-col items-center justify-center gap-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-medium tracking-[0.15em] uppercase" style={{ color: 'rgba(157,78,221,0.55)' }}>
+                    <span className="text-[11px] font-medium tracking-[0.15em] uppercase" style={SHOW_MORE_TEXT_STYLE}>
                       {t(lang, 'showMore')}
                     </span>
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="group-hover:translate-y-0.5 transition-transform duration-300">
                       <path d="M6 2v8M2 6l4 4 4-4" stroke="rgba(157,78,221,0.4)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
-                  <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                  <span className="text-[9px] font-mono" style={SHOW_MORE_COUNT_STYLE}>
                     {t(lang, 'showing')} {Math.min(displayLimit, filteredAndSorted.length).toLocaleString()} {t(lang, 'of')} {filteredAndSorted.length.toLocaleString()}
                   </span>
                 </div>

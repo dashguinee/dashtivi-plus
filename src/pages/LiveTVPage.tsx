@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { Play, Search, X, ChevronRight, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { NeonGate, cardScaleStyle } from '@/components/ui/NeonGate';
 import { t, useLanguage } from '@/i18n';
-import type { XtreamCredentials, LiveStream, GroupedChannel, FreeChannel } from '@/lib/xtream';
-import { getLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getExperienceIds, getExperienceCategoryIds, fetchCuratorData, getCuratorExperience, curatorToLiveStreams, hasCuratorData, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
+import type { XtreamCredentials, LiveStream, FreeChannel } from '@/lib/xtream';
+import { getLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getExperienceIds, getExperienceCategoryIds, fetchCuratorData, getCuratorExperience, curatorToLiveStreams, hasCuratorData, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
 import {
   LIVETV_THEMES, SPORT_TYPES, ENTERTAINMENT_TYPES, KIDS_TYPES,
   CINEMA_TYPES, MUSIC_TYPES, DISCOVERY_TYPES, FAITH_TYPES, PREMIUM4K_TYPES,
@@ -73,6 +73,23 @@ const SEARCH_CATEGORY_OPTIONS = [
   { id: 'documentary',   label: 'Discovery',     emoji: '\uD83C\uDF0D' },
   { id: 'faith',         label: 'Faith',         emoji: '\u2728' },
 ] as const;
+
+// ── Static styles (extracted to avoid re-creation on every render) ──
+
+const STICKY_BORDER_STYLE = '1px solid rgba(255,255,255,0.04)';
+const SEARCH_INPUT_BG_STYLE = { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' } as const;
+const SEARCH_NEON_GRADIENT_STYLE = {
+  backgroundImage: 'linear-gradient(135deg, rgba(201,240,60,0.03) 0%, transparent 40%, transparent 60%, rgba(201,240,60,0.02) 100%)',
+} as const;
+const WORLDEX_CARD_STYLE = { background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' } as const;
+const WORLDEX_ICON_STYLE = { background: 'linear-gradient(135deg, #D97706, #7C3AED)', boxShadow: '0 0 16px rgba(217,119,6,0.2)' } as const;
+const SHOWCASE_CARD_BG_STYLE = { background: 'rgba(255,255,255,0.02)' } as const;
+const STREAM_MORE_CARD_STYLE = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' } as const;
+const LOAD_MORE_BTN_STYLE = {
+  background: 'rgba(157,78,221,0.06)',
+  border: '1px solid rgba(157,78,221,0.1)',
+  color: 'rgba(157,78,221,0.5)',
+} as const;
 
 interface Props {
   credentials: XtreamCredentials;
@@ -190,7 +207,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
         // Merge: curator + free (no duplicates)
         const freeIds = new Set(freeAsLive.map(s => s.stream_id));
         const merged = [...curatorResults.filter(s => !freeIds.has(s.stream_id)), ...freeAsLive];
-        console.info('[SEARCH] q="%s" cat=%s -> %d results (curator:%d free:%d)', q || '(none)', searchCategory || 'all', merged.length, curatorResults.length, freeAsLive.length);
+        if (import.meta.env.DEV) console.info('[SEARCH] q="%s" cat=%s -> %d results (curator:%d free:%d)', q || '(none)', searchCategory || 'all', merged.length, curatorResults.length, freeAsLive.length);
         if (mounted) {
           setSearchResults(sortGemsFirst(merged));
           setSearchExpMap(expMap);
@@ -233,7 +250,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
           for (const theme of LIVETV_THEMES) {
             const classifiedExp = THEME_TO_CLASSIFIED[theme.id];
             if (!classifiedExp) {
-              console.warn('[LIVE] Theme "%s" has no THEME_TO_CLASSIFIED mapping', theme.id);
+              if (import.meta.env.DEV) console.warn('[LIVE] Theme "%s" has no THEME_TO_CLASSIFIED mapping', theme.id);
             }
             const curatorChannels = classifiedExp ? getCuratorExperience(classifiedExp) : null;
 
@@ -242,7 +259,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
               streams = curatorToLiveStreams(curatorChannels);
               // verbose: '[LIVE] Theme curator channels'
             } else {
-              console.warn('[LIVE] Theme %s: curator returned %s for "%s"', theme.id, curatorChannels === null ? 'null' : '0 channels', classifiedExp);
+              if (import.meta.env.DEV) console.warn('[LIVE] Theme %s: curator returned %s for "%s"', theme.id, curatorChannels === null ? 'null' : '0 channels', classifiedExp);
             }
 
             // Merge free channels
@@ -261,7 +278,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
           // Summary — always log so Dash can see in devtools
           const total = Object.values(map).reduce((s, arr) => s + arr.length, 0);
           const empty = Object.entries(map).filter(([, v]) => v.length === 0).map(([k]) => k);
-          console.info('[LIVE] Loaded %d streams across %d themes%s', total, Object.keys(map).length, empty.length ? ' | EMPTY: ' + empty.join(', ') : '');
+          if (import.meta.env.DEV) console.info('[LIVE] Loaded %d streams across %d themes%s', total, Object.keys(map).length, empty.length ? ' | EMPTY: ' + empty.join(', ') : '');
 
           if (!mounted) return;
           setThemeStreams(map);
@@ -440,14 +457,11 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
         className="sticky z-20"
         style={{
           top: headerVisible ? '3.5rem' : '0px',
-          background: 'rgba(10,10,10,0.88)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255,255,255,0.04)',
+          background: 'rgba(10,10,10,0.95)',
+          borderBottom: STICKY_BORDER_STYLE,
           padding: headerVisible ? '0.875rem 1rem' : '0.625rem 1rem',
           opacity: stickyHidden ? 0 : 1,
           transform: stickyHidden ? 'translateY(-6px)' : 'translateY(0)',
-          // Hide: quick fade out. Reappear: gentle ease back
           transition: stickyHidden
             ? 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease-out, top 0.5s ease-out, padding 0.4s ease-out'
             : 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), top 0.8s cubic-bezier(0.16, 1, 0.3, 1), padding 0.6s ease-out',
@@ -468,9 +482,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 ? 'bg-white/5 border border-white/10 focus:border-primary/50 focus:bg-white/[0.07]'
                 : 'bg-white/[0.06] border border-white/[0.08] shadow-[0_0_15px_rgba(201,240,60,0.04)] focus:border-primary/30 focus:bg-white/[0.08]'
             }`}
-            style={!headerVisible ? {
-              backgroundImage: 'linear-gradient(135deg, rgba(201,240,60,0.03) 0%, transparent 40%, transparent 60%, rgba(201,240,60,0.02) 100%)',
-            } : undefined}
+            style={!headerVisible ? SEARCH_NEON_GRADIENT_STYLE : undefined}
           />
           {(searchQuery || searchCategory) && (
             <button
@@ -541,7 +553,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             </div>
           ) : (
             <div className="pt-4">
-              {smartThemeOrder.map((theme, idx) => {
+              {smartThemeOrder.map((theme) => {
                 // Skip ThemeRow if this theme has a showcase card (no double headers)
                 const hasShowcase = !!SHOWCASE_CONFIG[theme.id];
                 return (
@@ -578,13 +590,13 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             <button
               onClick={() => navigate('/french')}
               className="w-full rounded-2xl overflow-hidden relative group active:scale-[0.98] transition-transform duration-200"
-              style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+              style={WORLDEX_CARD_STYLE}
             >
               <div className="absolute inset-0 bg-gradient-to-r from-amber-900/30 via-violet-900/15 to-transparent pointer-events-none" />
               <div className="relative p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
-                    style={{ background: 'linear-gradient(135deg, #D97706, #7C3AED)', boxShadow: '0 0 16px rgba(217,119,6,0.2)' }}>
+                    style={WORLDEX_ICON_STYLE}>
                     <Globe className="w-5 h-5" />
                   </div>
                   <div className="text-left">
@@ -750,23 +762,27 @@ function ExperienceShowcase({
   const [activeSubTab, setActiveSubTab] = useState<string>('all');
   if (!config) return null;
 
-  const alive = streams.filter(s => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id));
+  const alive = useMemo(() =>
+    streams.filter(s => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id)),
+    [streams]
+  );
 
-  // Filter by subtab if active
-  let filtered = alive;
-  if (activeSubTab !== 'all' && subtypes) {
-    const sub = subtypes.find(s => s.id === activeSubTab);
-    if (sub) {
-      const catSet = new Set(sub.categoryIds);
-      filtered = alive.filter(s => isFreeChannel(s.stream_id) || catSet.has(String(s.category_id)));
+  const filtered = useMemo(() => {
+    if (activeSubTab !== 'all' && subtypes) {
+      const sub = subtypes.find(s => s.id === activeSubTab);
+      if (sub) {
+        const catSet = new Set(sub.categoryIds);
+        return alive.filter(s => isFreeChannel(s.stream_id) || catSet.has(String(s.category_id)));
+      }
     }
-  }
+    return alive;
+  }, [alive, activeSubTab, subtypes]);
 
-  const top = sortGemsFirst(filtered).slice(0, 8);
+  const top = useMemo(() => sortGemsFirst(filtered).slice(0, 8), [filtered]);
   if (alive.length === 0) return null;
 
   return (
-    <div className="mx-4 mb-8 rounded-2xl overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.02)' }}>
+    <div className="mx-4 mb-8 rounded-2xl overflow-hidden relative" style={SHOWCASE_CARD_BG_STYLE}>
       {/* Gradient backdrop */}
       <div className={`absolute inset-0 bg-gradient-to-r ${config.gradient} pointer-events-none`} />
 
@@ -828,7 +844,7 @@ function ExperienceShowcase({
               style={{ width: i === 0 ? 150 : 125, ...cardScaleStyle(i), ...(i < 8 ? { animation: `vee-card-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${i * 90}ms both` } : {}) }}
             >
               <div
-                className="relative aspect-[16/10] rounded-xl overflow-hidden transition-all duration-300 group-hover:ring-1 flex items-center justify-center card-glass"
+                className="relative aspect-[16/10] rounded-xl overflow-hidden transition-[transform,box-shadow,ring-color] duration-300 group-hover:ring-1 flex items-center justify-center card-glass"
                 style={{
                   boxShadow: i === 0 ? `0 0 16px ${config.accentGlow}` : undefined,
                   ['--tw-ring-color' as string]: config.accentColor,
@@ -886,33 +902,38 @@ const ThemeRow = React.memo(function ThemeRow({
   const [expanded, setExpanded] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<string>('all');
 
-  const alive = streams.filter((s) => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id));
-  if (alive.length === 0) return null;
+  const alive = useMemo(() =>
+    streams.filter((s) => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id)),
+    [streams]
+  );
 
   // Get sub-tabs for this theme (if any)
   const subtypes = THEME_SUBTYPES[theme.id] || [];
 
-  // Apply sub-tab filter
-  let filtered = alive;
-  if (subtypes.length > 0 && activeSubTab !== 'all') {
-    const subtype = subtypes.find(t => t.id === activeSubTab);
-    if (subtype) {
-      const catSet = new Set(subtype.categoryIds);
-      filtered = alive.filter(s => catSet.has(String(s.category_id)));
+  // Apply sub-tab filter + quality grouping + sort
+  const sorted = useMemo(() => {
+    let pool = alive;
+    if (subtypes.length > 0 && activeSubTab !== 'all') {
+      const subtype = subtypes.find(t => t.id === activeSubTab);
+      if (subtype) {
+        const catSet = new Set(subtype.categoryIds);
+        pool = alive.filter(s => catSet.has(String(s.category_id)));
+      }
     }
-  }
+    // Group quality variants (beIN 1 4K + HD + SD -> one card showing best)
+    const grouped = groupChannelsByQuality(pool);
+    const deduped = grouped.map(g => {
+      const best = g.variants.reduce((a, b) => {
+        const order: Record<string, number> = { '4k': 4, 'fhd': 3, 'hd': 2, 'sd': 1, 'unknown': 0 };
+        return (order[b.quality] || 0) > (order[a.quality] || 0) ? b : a;
+      });
+      return pool.find(s => s.stream_id === best.streamId) || pool[0];
+    }).filter(Boolean);
+    return sortGemsFirst(deduped);
+  }, [alive, activeSubTab, subtypes]);
 
-  // Group quality variants (beIN 1 4K + HD + SD → one card showing best)
-  const grouped = groupChannelsByQuality(filtered);
-  // Convert back to LiveStream using best quality variant
-  const deduped = grouped.map(g => {
-    const best = g.variants.reduce((a, b) => {
-      const order: Record<string, number> = { '4k': 4, 'fhd': 3, 'hd': 2, 'sd': 1, 'unknown': 0 };
-      return (order[b.quality] || 0) > (order[a.quality] || 0) ? b : a;
-    });
-    return filtered.find(s => s.stream_id === best.streamId) || filtered[0];
-  }).filter(Boolean);
-  const sorted = sortGemsFirst(deduped);
+  if (alive.length === 0) return null;
+
   const displayed = expanded ? sorted : sorted.slice(0, 25);
 
   // Experience page route (if one exists)
@@ -995,7 +1016,7 @@ const ThemeRow = React.memo(function ThemeRow({
           >
             <div className={`relative rounded-xl flex items-center justify-center overflow-hidden
                             group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/10 group-hover:scale-[1.03]
-                            active:scale-95 transition-all duration-300 ${i === 0 ? 'w-[140px] h-[90px] card-hero' : 'w-[110px] h-[72px] card-surface'}`}>
+                            active:scale-95 transition-[transform,box-shadow,border-color] duration-300 ${i === 0 ? 'w-[140px] h-[90px] card-hero' : 'w-[110px] h-[72px] card-surface'}`}>
               <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" />
               <ChannelBadge streamId={stream.stream_id} compact />
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-xl">
@@ -1015,14 +1036,6 @@ const ThemeRow = React.memo(function ThemeRow({
 });
 
 // ── Browse Grid (with quality grouping + probing) ─────────────────
-
-const QUALITY_COLORS: Record<string, string> = {
-  'SD': 'bg-white/10 text-white/40',
-  'HD': 'bg-blue-500/20 text-blue-400',
-  'FHD': 'bg-violet-500/20 text-violet-400',
-  '4K': 'bg-amber-500/20 text-amber-400',
-  'UHD': 'bg-purple-500/20 text-purple-400',
-};
 
 // ── Experience display names for search filter chips ────────────────
 
@@ -1135,7 +1148,10 @@ function SearchGrid({ streams, credentials, onPlay, freeUrlMap }: {
   freeUrlMap: Record<number, string>;
 }) {
   const [limit, setLimit] = useState(60);
-  const alive = streams.filter(s => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id));
+  const alive = useMemo(() =>
+    streams.filter(s => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id)),
+    [streams]
+  );
 
   const handlePlay = useCallback(
     (stream: LiveStream) => {
@@ -1160,7 +1176,7 @@ function SearchGrid({ streams, credentials, onPlay, freeUrlMap }: {
 
   return (
     <div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4" style={{ contain: 'content' }}>
         {alive.slice(0, limit).map((stream) => (
           <button
             key={stream.stream_id}
@@ -1298,7 +1314,7 @@ function StreamMoreSection({
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-white/20 outline-none"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+          style={SEARCH_INPUT_BG_STYLE}
         />
       </div>
 
@@ -1340,15 +1356,15 @@ function StreamMoreSection({
       <p className="text-[10px] text-white/15 mb-3 font-mono">{filtered.length} channels</p>
 
       {/* Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2" style={{ contain: 'content' }}>
         {filtered.slice(0, visibleCount).map((stream) => {
           const isFree = isFreeChannel(stream.stream_id);
           return (
             <button
               key={stream.stream_id}
               onClick={() => handlePlay(stream)}
-              className="group relative rounded-xl overflow-hidden text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.97]"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+              className="group relative rounded-xl overflow-hidden text-left transition-[transform,opacity] duration-300 hover:scale-[1.02] active:scale-[0.97]"
+              style={STREAM_MORE_CARD_STYLE}
             >
               <div className="p-2.5 flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/5 shrink-0">
@@ -1378,11 +1394,7 @@ function StreamMoreSection({
         <button
           onClick={() => setVisibleCount(prev => prev + PAGE_SIZE)}
           className="w-full mt-4 py-3 rounded-xl text-[11px] font-medium tracking-wider uppercase transition-all hover:scale-[1.005] active:scale-[0.995]"
-          style={{
-            background: 'rgba(157,78,221,0.06)',
-            border: '1px solid rgba(157,78,221,0.1)',
-            color: 'rgba(157,78,221,0.5)',
-          }}
+          style={LOAD_MORE_BTN_STYLE}
         >
           Load more ({visibleCount} / {filtered.length})
         </button>
