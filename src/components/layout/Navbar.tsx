@@ -67,25 +67,15 @@ export const Navbar: React.FC = () => {
   const [navGlow, setNavGlow] = React.useState(false);
   const glowTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  // Home & Hub get the full immersive glow, others get a subtle CSS pulse
-  const GLOW_TABS = new Set(['/', '/hub']);
-
   const handleTap = useCallback((path: string) => {
     // Wake from ghost
     clearTimeout(ghostTimer.current);
     if (fadeRef.current !== 'full') { fadeRef.current = 'full'; setNavOpacity('full'); }
 
-    if (GLOW_TABS.has(path)) {
-      // Full glow for Home & Hub
-      clearTimeout(glowTimer.current);
-      setNavGlow(true);
-      glowTimer.current = setTimeout(() => setNavGlow(false), 2000);
-    } else {
-      // Subtle CSS pulse for Live/Movies/Series
-      setNavGlow(false);
-      const el = navRef.current;
-      if (el) { el.classList.remove('nav-pulse'); void el.offsetWidth; el.classList.add('nav-pulse'); }
-    }
+    // Every tab gets the glow — consistent, always
+    clearTimeout(glowTimer.current);
+    setNavGlow(true);
+    glowTimer.current = setTimeout(() => setNavGlow(false), 2000);
 
     // Re-arm ghost timer
     ghostTimer.current = setTimeout(() => {
