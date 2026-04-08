@@ -1355,11 +1355,11 @@ async function sbRpc<T>(fn: string, body: Record<string, unknown> = {}): Promise
 }
 
 /** Fetch VOD by category from Supabase (replaces Xtream get_vod_streams) */
-export async function getVodByCategory(catId: string, limit = 100): Promise<VodDbItem[]> {
+export async function getVodByCategory(catId: string, limit = 500, offset = 0): Promise<VodDbItem[]> {
   if (!SB_ANON) return [];
   try {
     const res = await fetch(
-      `${SB_URL}/rest/v1/tivi_vod?category_id=eq.${catId}&is_active=eq.true&is_hidden=eq.false&select=vod_id,name,poster,quality,rating,year,genre,tmdb_id,is_gem,container_extension,added_ts&order=is_gem.desc,rating.desc.nullslast,added_ts.desc.nullslast&limit=${limit}`,
+      `${SB_URL}/rest/v1/tivi_vod?category_id=eq.${catId}&is_active=eq.true&is_hidden=eq.false&select=vod_id,name,poster,quality,rating,year,genre,tmdb_id,is_gem,container_extension,added_ts&order=is_gem.desc,rating.desc.nullslast,added_ts.desc.nullslast&limit=${limit}&offset=${offset}`,
       { headers: { 'apikey': SB_ANON, 'Authorization': `Bearer ${SB_ANON}` }, signal: AbortSignal.timeout(8000) }
     );
     if (!res.ok) return [];
@@ -1374,11 +1374,11 @@ export async function getVodByCategory(catId: string, limit = 100): Promise<VodD
 }
 
 /** Fetch series by category from Supabase */
-export async function getSeriesByCategory(catId: string, limit = 100): Promise<SeriesDbItem[]> {
+export async function getSeriesByCategory(catId: string, limit = 500, offset = 0): Promise<SeriesDbItem[]> {
   if (!SB_ANON) return [];
   try {
     const res = await fetch(
-      `${SB_URL}/rest/v1/tivi_series?category_id=eq.${catId}&is_active=eq.true&is_hidden=eq.false&select=series_id,name,cover,genre,rating,tmdb_id,is_gem,season_count,episode_count&order=is_gem.desc,rating.desc.nullslast,last_modified_ts.desc.nullslast&limit=${limit}`,
+      `${SB_URL}/rest/v1/tivi_series?category_id=eq.${catId}&is_active=eq.true&is_hidden=eq.false&select=series_id,name,cover,genre,rating,tmdb_id,is_gem,season_count,episode_count&order=is_gem.desc,rating.desc.nullslast,last_modified_ts.desc.nullslast&limit=${limit}&offset=${offset}`,
       { headers: { 'apikey': SB_ANON, 'Authorization': `Bearer ${SB_ANON}` }, signal: AbortSignal.timeout(8000) }
     );
     if (!res.ok) return [];
@@ -1391,14 +1391,52 @@ export async function getSeriesByCategory(catId: string, limit = 100): Promise<S
   } catch { return []; }
 }
 
-/** Search VOD from Supabase */
-export async function searchVod(query: string, maxResults = 30): Promise<VodDbItem[]> {
+/** Search VOD from Supabase — optionally scoped to category IDs */
+export async function searchVod(query: string, maxResults = 30, categoryIds?: string[]): Promise<VodDbItem[]> {
+  // If category IDs provided, use REST API with category filter for scoped search
+  if (categoryIds?.length && SB_ANON) {
+    try {
+      const catFilter = categoryIds.length === 1
+        ? `category_id=eq.${categoryIds[0]}`
+        : `category_id=in.(${categoryIds.join(',')})`;
+      const res = await fetch(
+        `${SB_URL}/rest/v1/tivi_vod?${catFilter}&is_active=eq.true&is_hidden=eq.false&name=ilike.*${encodeURIComponent(query)}*&select=vod_id,name,poster,quality,rating,year,genre,tmdb_id,is_gem,container_extension,added_ts&order=rating.desc.nullslast,name&limit=${maxResults}`,
+        { headers: { 'apikey': SB_ANON, 'Authorization': `Bearer ${SB_ANON}` }, signal: AbortSignal.timeout(8000) }
+      );
+      if (!res.ok) return [];
+      const rows = await res.json();
+      return rows.map((r: Record<string, unknown>) => ({
+        id: r.vod_id, name: r.name, poster: r.poster || '', quality: r.quality || 'SD',
+        rating: Number(r.rating) || 0, year: r.year as number | null, genre: (r.genre as string) || '',
+        tmdb_id: r.tmdb_id as number | null, gem: !!r.is_gem, ext: (r.container_extension as string) || 'mp4',
+        duration: null, added: Number(r.added_ts) || 0,
+      })) as VodDbItem[];
+    } catch { /* fall through to global search */ }
+  }
   const data = await sbRpc<VodDbItem[]>('search_vod', { query, max_results: maxResults });
   return data || [];
 }
 
-/** Search series from Supabase */
-export async function searchSeries(query: string, maxResults = 30): Promise<SeriesDbItem[]> {
+/** Search series from Supabase — optionally scoped to category IDs */
+export async function searchSeries(query: string, maxResults = 30, categoryIds?: string[]): Promise<SeriesDbItem[]> {
+  if (categoryIds?.length && SB_ANON) {
+    try {
+      const catFilter = categoryIds.length === 1
+        ? `category_id=eq.${categoryIds[0]}`
+        : `category_id=in.(${categoryIds.join(',')})`;
+      const res = await fetch(
+        `${SB_URL}/rest/v1/tivi_series?${catFilter}&is_active=eq.true&is_hidden=eq.false&name=ilike.*${encodeURIComponent(query)}*&select=series_id,name,cover,genre,rating,tmdb_id,is_gem,season_count,episode_count&order=rating.desc.nullslast,name&limit=${maxResults}`,
+        { headers: { 'apikey': SB_ANON, 'Authorization': `Bearer ${SB_ANON}` }, signal: AbortSignal.timeout(8000) }
+      );
+      if (!res.ok) return [];
+      const rows = await res.json();
+      return rows.map((r: Record<string, unknown>) => ({
+        id: r.series_id, name: r.name, cover: r.cover || '', genre: (r.genre as string) || '',
+        rating: Number(r.rating) || 0, tmdb_id: r.tmdb_id as number | null, gem: !!r.is_gem,
+        seasons: r.season_count as number | null, episodes: r.episode_count as number | null,
+      })) as SeriesDbItem[];
+    } catch { /* fall through to global search */ }
+  }
   const data = await sbRpc<SeriesDbItem[]>('search_series', { query, max_results: maxResults });
   return data || [];
 }

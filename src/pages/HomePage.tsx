@@ -1160,6 +1160,7 @@ function SectionHeader({
   onNavigate,
   itemCount,
   countLabel,
+  tier,
 }: {
   emoji: string;
   title: string;
@@ -1170,6 +1171,7 @@ function SectionHeader({
   onNavigate?: (path: string) => void;
   itemCount?: number;
   countLabel?: string;
+  tier?: 'hero' | 'featured' | 'standard';
 }) {
   const { lang } = useLanguage();
   // Translate collection name if a mapping exists
@@ -1195,7 +1197,7 @@ function SectionHeader({
             }}
           />
           <h2
-            className="text-[20px] font-black tracking-tight text-white"
+            className={`font-black tracking-tight text-white ${tier === 'hero' ? 'text-[22px]' : tier === 'featured' ? 'text-[19px]' : 'text-[17px]'}`}
             style={{ textShadow: '0 0 40px rgba(157,78,221,0.08)' }}
           >
             {translatedTitle}
@@ -1342,6 +1344,7 @@ function CollectionRow({
           onNavigate={onNavigate}
           itemCount={aliveStreams.length}
           countLabel="channels"
+          tier={tier}
         />
         <div data-focus-lens className={`flex ${cardGap} overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3 items-end`}>
           {aliveStreams.map((stream, i) => (
@@ -1376,11 +1379,11 @@ function CollectionRow({
         <SectionHeader
           emoji={collection.emoji}
           title={collection.name}
-
           seeAllTo={collection.navigateTo}
           onNavigate={onNavigate}
           itemCount={row.vodStreams.length}
           countLabel="movies"
+          tier="hero"
         />
         <div data-focus-lens className="flex gap-4 overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3 items-end">
           {row.vodStreams.map((movie, i) => {
@@ -1410,11 +1413,11 @@ function CollectionRow({
         <SectionHeader
           emoji={collection.emoji}
           title={collection.name}
-
           seeAllTo={collection.navigateTo}
           onNavigate={onNavigate}
           itemCount={row.vodStreams.length}
           countLabel="movies"
+          tier={tier}
         />
         <div data-focus-lens className={`flex ${cardGap} overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3 items-end`}>
           {row.vodStreams.map((movie, i) => {
@@ -1444,11 +1447,11 @@ function CollectionRow({
         <SectionHeader
           emoji={collection.emoji}
           title={collection.name}
-
           seeAllTo={collection.navigateTo}
           onNavigate={onNavigate}
           itemCount={row.seriesItems.length}
           countLabel="series"
+          tier={tier}
         />
         <div data-focus-lens className={`flex ${cardGap} overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3 items-end`}>
           {row.seriesItems.map((series, i) => (

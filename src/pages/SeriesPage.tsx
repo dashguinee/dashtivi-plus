@@ -274,8 +274,9 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           const filtered = seriesList.filter(s => s.name.toLowerCase().includes(q));
           if (mounted) { setSearchResults(filtered.slice(0, LIMIT)); setSearchTruncated(filtered.length > LIMIT); }
         } else {
-          // Supabase search first — instant across 15K series
-          const sbResults = await searchSeries(q, LIMIT);
+          // Supabase search — scoped to current category, falls back to global
+          const catIds = currentSubtab.categoryIds;
+          const sbResults = await searchSeries(q, LIMIT, catIds.length > 0 ? catIds : undefined);
           if (sbResults.length > 0) {
             if (mounted) { setSearchResults(sbResults.map(seriesDbToItem).slice(0, LIMIT)); setSearchTruncated(sbResults.length >= LIMIT); }
             if (mounted) setSearchLoading(false);
@@ -300,7 +301,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     }
     search();
     return () => { mounted = false; };
-  }, [debouncedQuery, credentials, seriesList, currentParent]);
+  }, [debouncedQuery, credentials, seriesList, currentParent, currentSubtab]);
 
   // ── Genre filter + Sort (the smart layer) ────────────────────
 

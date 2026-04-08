@@ -271,8 +271,9 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           const filtered = movies.filter(m => m.name.toLowerCase().includes(q));
           if (mounted) { setSearchResults(filtered.slice(0, LIMIT)); setSearchTruncated(filtered.length > LIMIT); }
         } else {
-          // Supabase search first — instant across 60K movies
-          const sbResults = await searchVod(q, LIMIT);
+          // Supabase search — scoped to current category, falls back to global
+          const catIds = currentSubtab.categoryIds;
+          const sbResults = await searchVod(q, LIMIT, catIds.length > 0 ? catIds : undefined);
           if (sbResults.length > 0) {
             if (mounted) { setSearchResults(sbResults.map(vodDbToStream).slice(0, LIMIT)); setSearchTruncated(sbResults.length >= LIMIT); }
             if (mounted) setSearchLoading(false);
@@ -297,7 +298,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     }
     search();
     return () => { mounted = false; };
-  }, [debouncedQuery, credentials, movies, currentParent]);
+  }, [debouncedQuery, credentials, movies, currentParent, currentSubtab]);
 
   // ── Genre filter + Sort (the smart layer) ────────────────────
 

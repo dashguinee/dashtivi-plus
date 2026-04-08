@@ -63,7 +63,7 @@ export function initAmbient(): void {
 
   let fadeOutStarted = false;
   audio.addEventListener('timeupdate', () => {
-    if (!audio || !isEnabled || fadeOutStarted) return;
+    if (!audio || !isEnabled || isMutedForStream || fadeOutStarted) return;
     const remaining = audio.duration - audio.currentTime;
     if (remaining > 0 && remaining < 3 && audio.duration > 10) {
       fadeOutStarted = true;
@@ -144,16 +144,23 @@ export function setAmbientSpeed(speed: number): void {
 export function muteAmbient(): void {
   if (!audio) return;
   isMutedForStream = true;
-  // Kill any active fade-in — prevents interval from bumping volume back up
+  // Kill ALL active intervals — prevents any fade/transition from bumping volume back up
   if (activeFadeInterval) { clearInterval(activeFadeInterval); activeFadeInterval = null; }
   if (transitionInterval) { clearInterval(transitionInterval); transitionInterval = null; }
+  // Force immediate silence — no fade, no delay
   audio.volume = 0;
   audio.pause();
+  // Reset source to kill any pending play() promises or ended callbacks
+  audio.removeAttribute('src');
+  audio.load();
 }
 
 export function unmuteAmbient(): void {
   if (!audio || !isEnabled) return;
   isMutedForStream = false;
+  // Reload track since muteAmbient clears the source
+  audio.src = HOME_ROTATION[rotationIndex];
+  audio.volume = 0;
   audio.play().then(() => {
     if (audio && !isMutedForStream) fadeVolume(0, VOLUME, 2000);
   }).catch(() => {});
@@ -166,7 +173,7 @@ export function setAmbientExperience(experience: string): void {
 
   const originalVolume = audio.volume;
   fadeVolume(originalVolume, 0, 3000, () => {
-    if (!audio) return;
+    if (!audio || isMutedForStream) return;
     audio.src = trackUrl;
     audio.volume = 0;
     audio.play().catch(() => {});
