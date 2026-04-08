@@ -38,3 +38,68 @@ export function snap() {
   lastSnap = now;
   navigator.vibrate(4);
 }
+
+/**
+ * Global scroll haptics — finessed, tasteful feedback.
+ *
+ * Philosophy: feel like detents on a premium dial, not a buzzy motor.
+ * - Carousel scroll: gentle 1ms tick only when a NEW card snaps into the leading edge
+ * - Scroll settle: soft 3ms when momentum stops (the "click into place" feel)
+ * - Throttled to prevent motor saturation — max 1 tick per 150ms
+ *
+ * Attaches to .scrollbar-hide containers (all horizontal rows).
+ * MutationObserver catches dynamically added containers.
+ */
+export function initScrollHaptics() {
+  if (!HAS_VIBRATE) return;
+
+  const tracked = new WeakSet<Element>();
+
+  function attach(el: Element) {
+    if (tracked.has(el)) return;
+    tracked.add(el);
+
+    const htmlEl = el as HTMLElement;
+    // Detect card width from first child
+    const getCardWidth = () => {
+      const first = htmlEl.firstElementChild as HTMLElement | null;
+      return first ? first.offsetWidth + 12 : 130; // width + gap estimate
+    };
+
+    let lastSlot = -1;
+    let lastTickAt = 0;
+    let settleTimer: ReturnType<typeof setTimeout> | undefined;
+
+    el.addEventListener('scroll', () => {
+      const cardW = getCardWidth();
+      const slot = Math.floor(htmlEl.scrollLeft / cardW);
+      const now = Date.now();
+
+      // Card boundary crossing — ultra-subtle detent
+      if (slot !== lastSlot && lastSlot !== -1 && now - lastTickAt > 150) {
+        navigator.vibrate(1);
+        lastTickAt = now;
+      }
+      lastSlot = slot;
+
+      // Settle — soft click when scroll stops
+      clearTimeout(settleTimer);
+      settleTimer = setTimeout(() => {
+        navigator.vibrate(3);
+      }, 100);
+    }, { passive: true });
+  }
+
+  // Attach to existing + watch for new containers
+  document.querySelectorAll('.scrollbar-hide').forEach(attach);
+  const observer = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      for (const node of m.addedNodes) {
+        if (!(node instanceof Element)) continue;
+        if (node.classList?.contains('scrollbar-hide')) attach(node);
+        node.querySelectorAll?.('.scrollbar-hide').forEach(attach);
+      }
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+}

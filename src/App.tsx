@@ -17,6 +17,7 @@ import { useWatchHistory } from '@/hooks/useWatchHistory';
 import { getItem, setItem } from '@/lib/storage';
 import { setCurrentChannel } from '@/lib/playlist';
 import { startPreload, preloadApiData } from '@/lib/preloader';
+import { initScrollHaptics } from '@/lib/haptics';
 import { playDashCinemaSound } from '@/lib/cinema-sound';
 import { muteAmbient, unmuteAmbient, startAmbient, isAmbientEnabled, getAmbientPulse, initAudioReactive } from '@/lib/ambient-audio';
 import { LanguageProvider } from '@/i18n';
@@ -25,6 +26,8 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 
 // Start preloading immediately on script load — before React even mounts
 startPreload();
+// Global scroll haptics — micro-ticks on card boundaries in all carousels
+initScrollHaptics();
 
 // Lazy load with auto-reload on stale chunk (handles deploy cache mismatch)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
