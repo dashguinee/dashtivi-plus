@@ -34,8 +34,6 @@ function parseTitle(raw: string): { clean: string; year: string | null } {
   return { clean: raw, year: null };
 }
 
-const PLAY_BTN_STYLE = { background: 'linear-gradient(135deg, rgba(157,78,221,0.9), rgba(124,58,237,0.9))' } as const;
-
 function formatRuntime(minutes: number): string {
   if (minutes <= 0) return '';
   const h = Math.floor(minutes / 60);
@@ -208,7 +206,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
       <button
         onClick={() => onPlay(knownDurationSeconds)}
         className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-bold text-white text-base shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all active:scale-[0.98]"
-        style={PLAY_BTN_STYLE}
+        style={{ background: 'linear-gradient(135deg, rgba(157,78,221,0.9), rgba(124,58,237,0.9))' }}
       >
         <Play className="w-5 h-5 fill-white" />{t(lang, 'playNow')}
       </button>
@@ -216,13 +214,13 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   );
 
   // ══════════════════════════════════════════════════════════════
-  // TRAILER MODE — fullscreen immersive with scrollable overlay
+  // TRAILER MODE — fullscreen immersive (only when real video plays)
   // ══════════════════════════════════════════════════════════════
   if (showTrailer) {
     return (
-      <div className="fixed inset-0 z-[9998] bg-black" style={{ animation: 'fade-in 0.3s ease-out both' }}>
-        {/* Fixed backdrop — poster + trailer */}
-        <div className="fixed inset-0">
+      <div className="fixed inset-0 z-[9998] bg-black" onClick={() => {}}>
+        {/* Ambient trailer */}
+        <div className="absolute inset-0">
           {backdropUrl && <img src={backdropUrl} alt={cleanTitle} className="absolute inset-0 w-full h-full object-cover" />}
           <iframe
             ref={iframeRef}
@@ -233,33 +231,20 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
             allow="autoplay; encrypted-media"
             frameBorder="0"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/10 pointer-events-none" />
+        </div>
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-black/50" />
         </div>
 
-        <div className="fixed top-4 right-4 z-50">
+        <div className="absolute top-4 right-4 z-50">
           <CosmicClose onClick={onClose} />
         </div>
 
-        {/* Scrollable content — slides up over the poster */}
-        <div className="relative z-20 h-full overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}>
-          {/* Spacer — pushes content below the visible poster area */}
-          <div style={{ height: '55vh', minHeight: '280px' }} />
-
-          {/* Content sheet — scrolls up over the poster */}
-          <div
-            className="relative min-h-[50vh] rounded-t-3xl"
-            style={{
-              background: 'linear-gradient(to bottom, rgba(10,10,15,0.97) 0%, #0a0a0f 20%)',
-              animation: 'slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
-            }}
-          >
-            {/* Pull indicator */}
-            <div className="flex justify-center pt-3 pb-4">
-              <div className="w-10 h-1 rounded-full bg-white/15" />
-            </div>
-            <div className="px-5 pb-10">
-              {detailContent}
-            </div>
+        {/* Details at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 z-20" onClick={(e) => e.stopPropagation()}>
+          <div className="px-5 pb-8 pt-16" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 60%, transparent 100%)' }}>
+            {detailContent}
           </div>
         </div>
       </div>
@@ -267,45 +252,39 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   }
 
   // ══════════════════════════════════════════════════════════════
-  // CARD MODE — bottom sheet with poster backdrop
+  // CARD MODE — elegant bottom sheet (default for most movies)
   // ══════════════════════════════════════════════════════════════
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/90"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/90 backdrop-blur-sm"
       style={{ animation: 'fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both' }}
       onClick={onClose}
     >
-      {/* Fixed poster backdrop */}
-      {backdropUrl && (
-        <div className="fixed inset-0 z-0">
-          <img src={backdropUrl} alt={cleanTitle} className="absolute inset-0 w-full h-full object-cover" style={{ opacity: 0.4 }} />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/30" />
+      <div
+        className="w-full max-w-2xl max-h-[92vh] bg-[#0a0a0f] rounded-t-2xl sm:rounded-2xl overflow-hidden overflow-y-auto border border-white/8"
+        style={{ animation: 'slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close */}
+        <div className="absolute top-3 right-3 z-20">
+          <CosmicClose onClick={onClose} />
         </div>
-      )}
 
-      <div className="fixed top-3 right-3 z-50">
-        <CosmicClose onClick={onClose} />
-      </div>
+        {/* Media area — poster with trailer overlay if available */}
+        <div className="relative w-full pb-[56%] rounded-xl overflow-hidden bg-black">
+          {backdropUrl ? (
+            <img src={backdropUrl} alt={cleanTitle} className="absolute inset-0 w-full h-full object-cover" />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/15 to-black flex items-center justify-center">
+              <Play className="w-16 h-16 text-white/10" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-transparent to-transparent pointer-events-none" />
+        </div>
 
-      {/* Scrollable content overlay */}
-      <div className="relative z-10 h-full overflow-y-auto overscroll-contain" onClick={(e) => e.stopPropagation()}>
-        {/* Spacer for poster visibility */}
-        <div style={{ height: '42vh', minHeight: '220px' }} onClick={onClose} />
-
-        {/* Content sheet */}
-        <div
-          className="relative min-h-[60vh] rounded-t-3xl"
-          style={{
-            background: 'linear-gradient(to bottom, rgba(10,10,15,0.97) 0%, #0a0a0f 20%)',
-            animation: 'slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
-          }}
-        >
-          <div className="flex justify-center pt-3 pb-4">
-            <div className="w-10 h-1 rounded-full bg-white/15" />
-          </div>
-          <div className="px-5 pb-8">
-            {detailContent}
-          </div>
+        {/* Content */}
+        <div className="px-5 pb-6 -mt-4 relative z-10">
+          {detailContent}
         </div>
       </div>
     </div>
