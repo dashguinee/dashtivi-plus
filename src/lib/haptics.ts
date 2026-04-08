@@ -1,57 +1,46 @@
 /**
- * Haptics — Android-native feel for PWA interactions.
- * Maps to HapticFeedbackConstants equivalents via Web Vibration API.
- * Silent no-op on iOS/desktop (API not supported, fails gracefully).
- */
-
-const HAS_VIBRATE = typeof navigator !== 'undefined' && 'vibrate' in navigator;
-
-/** Light tick — nav taps, scroll snap, toggle, selection */
-export function tick() {
-  if (HAS_VIBRATE) navigator.vibrate(5);
-}
-
-/** Medium click — modal open, sheet snap, long-press trigger */
-export function click() {
-  if (HAS_VIBRATE) navigator.vibrate(12);
-}
-
-/** Heavy — destructive confirm, error */
-export function heavy() {
-  if (HAS_VIBRATE) navigator.vibrate([10, 30, 10, 30, 10]);
-}
-
-/** Success — pull-to-refresh confirm, action complete */
-export function confirm() {
-  if (HAS_VIBRATE) navigator.vibrate([10, 40, 15]);
-}
-
-/**
- * Scroll snap haptic — debounced tick for horizontal carousel snap.
- * Call on every scrollend; internal debounce prevents motor saturation.
- */
-let lastSnap = 0;
-export function snap() {
-  if (!HAS_VIBRATE) return;
-  const now = Date.now();
-  if (now - lastSnap < 100) return; // 100ms debounce
-  lastSnap = now;
-  navigator.vibrate(4);
-}
-
-/**
- * Global scroll haptics — finessed, tasteful feedback.
+ * DashTivi+ Haptic System — Luxury PWA Haptics
  *
- * Philosophy: feel like detents on a premium dial, not a buzzy motor.
- * - Carousel scroll: gentle 1ms tick only when a NEW card snaps into the leading edge
- * - Scroll settle: soft 3ms when momentum stops (the "click into place" feel)
- * - Throttled to prevent motor saturation — max 1 tick per 150ms
+ * Design philosophy: Every interaction has ONE precise response.
+ * Like a Swiss watch — you feel the mechanism, not the motor.
  *
- * Attaches to .scrollbar-hide containers (all horizontal rows).
- * MutationObserver catches dynamically added containers.
+ * Haptic vocabulary:
+ *   tick     (1ms)  — carousel card crossing, subtle selection change
+ *   tap      (4ms)  — button press, nav item, tab switch
+ *   click    (8ms)  — modal open, sheet snap, meaningful action
+ *   confirm  (pattern) — success, completion, pull-to-refresh done
+ *   heavy    (pattern) — error, destructive action
+ *
+ * Silent no-op on iOS/desktop (Vibration API not supported).
  */
+
+const V = typeof navigator !== 'undefined' && 'vibrate' in navigator;
+
+// ── Interaction primitives ───────────────────────────────────────
+
+/** Whisper — carousel card boundary, barely perceptible */
+export function tick() { if (V) navigator.vibrate(1); }
+
+/** Tap — nav press, tab switch, toggle. Crisp, immediate */
+export function tap() { if (V) navigator.vibrate(4); }
+
+/** Click — modal open, detail sheet, play button. Medium weight */
+export function click() { if (V) navigator.vibrate(8); }
+
+/** Confirm — success, refresh complete. Warm double-pulse */
+export function confirm() { if (V) navigator.vibrate([6, 50, 8]); }
+
+/** Heavy — error, destructive. Sharp triple-knock */
+export function heavy() { if (V) navigator.vibrate([8, 30, 8, 30, 8]); }
+
+// ── Carousel scroll haptics ──────────────────────────────────────
+//
+// Precisely ONE tick per card crossing. Not on every scroll pixel.
+// Measures actual card width from DOM, fires when the leading edge
+// crosses a card boundary. No settle buzz — just the crossing.
+
 export function initScrollHaptics() {
-  if (!HAS_VIBRATE) return;
+  if (!V) return;
 
   const tracked = new WeakSet<Element>();
 
@@ -60,39 +49,40 @@ export function initScrollHaptics() {
     tracked.add(el);
 
     const htmlEl = el as HTMLElement;
-    // Detect card width from first child
-    const getCardWidth = () => {
+
+    // Measure card width once on first scroll, cache it
+    let cardW = 0;
+    function measureCard() {
+      if (cardW > 0) return cardW;
       const first = htmlEl.firstElementChild as HTMLElement | null;
-      return first ? first.offsetWidth + 12 : 130; // width + gap estimate
-    };
+      if (!first) return 130;
+      // Card width + gap (getComputedStyle for exact gap)
+      const gap = parseFloat(getComputedStyle(htmlEl).gap || '12');
+      cardW = first.offsetWidth + gap;
+      return cardW;
+    }
 
     let lastSlot = -1;
-    let lastTickAt = 0;
-    let settleTimer: ReturnType<typeof setTimeout> | undefined;
 
     el.addEventListener('scroll', () => {
-      const cardW = getCardWidth();
-      const slot = Math.floor(htmlEl.scrollLeft / cardW);
-      const now = Date.now();
+      const w = measureCard();
+      const slot = Math.floor(htmlEl.scrollLeft / w);
 
-      // Card boundary — barely-there whisper, 250ms cooldown
-      if (slot !== lastSlot && lastSlot !== -1 && now - lastTickAt > 250) {
-        navigator.vibrate(1);
-        lastTickAt = now;
+      if (slot !== lastSlot) {
+        // Only fire after initial read (not on mount)
+        if (lastSlot !== -1) {
+          navigator.vibrate(1);
+        }
+        lastSlot = slot;
       }
-      lastSlot = slot;
-
-      // Settle — gentle land when momentum dies
-      clearTimeout(settleTimer);
-      settleTimer = setTimeout(() => {
-        navigator.vibrate(2);
-      }, 150);
     }, { passive: true });
   }
 
-  // Attach to existing + watch for new containers
+  // Attach to all horizontal scrollers
   document.querySelectorAll('.scrollbar-hide').forEach(attach);
-  const observer = new MutationObserver((mutations) => {
+
+  // Watch for dynamically added containers (lazy pages, VEE rows)
+  new MutationObserver((mutations) => {
     for (const m of mutations) {
       for (const node of m.addedNodes) {
         if (!(node instanceof Element)) continue;
@@ -100,6 +90,5 @@ export function initScrollHaptics() {
         node.querySelectorAll?.('.scrollbar-hide').forEach(attach);
       }
     }
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
+  }).observe(document.body, { childList: true, subtree: true });
 }

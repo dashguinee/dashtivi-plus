@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Tv, Clapperboard, PlayCircle, Users } from 'lucide-react';
 import { useLanguage } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
-import { tick } from '@/lib/haptics';
+import { tap } from '@/lib/haptics';
 
 interface NavItem {
   path: string;
@@ -83,7 +83,7 @@ export const Navbar: React.FC = () => {
             return (
               <button
                 key={item.path}
-                onPointerDown={() => tick()}
+                onPointerDown={() => tap()}
                 onClick={() => handleTap(item.path)}
                 className="relative flex flex-col items-center justify-center flex-1 h-full"
               >

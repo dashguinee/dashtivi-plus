@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { tick, confirm as hapticConfirm } from '@/lib/haptics';
+import { tap, confirm as hapticConfirm } from '@/lib/haptics';
 
 const THRESHOLD = 80;   // px of pull before triggering
 const MAX_PULL = 120;   // max visual distance
@@ -26,7 +26,7 @@ export function usePullToRefresh() {
       if (dy > 10) {
         const newY = Math.min(dy * 0.5, MAX_PULL);
         // Tick when crossing the threshold
-        if (newY >= THRESHOLD * 0.5 && pullY < THRESHOLD * 0.5) tick();
+        if (newY >= THRESHOLD * 0.5 && pullY < THRESHOLD * 0.5) tap();
         setPulling(true);
         setPullY(newY);
       }
