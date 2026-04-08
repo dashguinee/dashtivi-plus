@@ -1019,7 +1019,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           {dashOriginalsHex.length > 0 && (
             <section className="reveal">
               <SectionHeader emoji="" title={t(lang, 'dashExclusives')} itemCount={dashOriginalsHex.length} countLabel="movies" seeAllTo="/movies" onNavigate={navigate} />
-              <div data-focus-lens className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3 items-end">
+              <div data-focus-lens data-haptic="lush" className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3 items-end">
                 {dashOriginalsHex.map((m, i) => (
                   <div key={m.stream_id} className="flex-shrink-0 card-surface rounded-xl" style={{ width: i === 0 ? 130 : 110, ...cardScaleStyle(i) }}>
                     <PosterCard
@@ -1271,7 +1271,7 @@ function VeeLiveRow({
           <p className="text-[11px] text-white/25 mt-0.5 pl-3.5">{playlist.tagline}</p>
         )}
       </div>
-      <div data-focus-lens className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3">
+      <div data-focus-lens data-haptic="lush" className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade scroll-smooth-x px-4 pb-3">
         {aliveStreams.map((stream, i) => (
           <button
             key={stream.stream_id}

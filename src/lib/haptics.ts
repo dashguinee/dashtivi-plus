@@ -59,12 +59,19 @@ export function heavy() {
 
 // ── Scroll haptics — velocity-aware ──────────────────────────────
 
-// Scroll tick — ultra-quiet with actuator, 1ms binary without
-function scrollTick(intensity: number) {
+// Two scroll feels:
+//   "crisp" — single 1ms tick, precise, for regular rows
+//   "lush"  — spread flutter [1,2,1], warmer, for VEE/Exclusive/highlight rows
+function scrollTick(style: 'crisp' | 'lush', intensity: number) {
   if (hasActuator) {
-    actuator.playEffect('dual-rumble', { duration: 3, strongMagnitude: intensity, weakMagnitude: intensity * 0.5 }).catch(() => {});
+    const mag = style === 'lush' ? intensity * 1.3 : intensity;
+    actuator.playEffect('dual-rumble', { duration: style === 'lush' ? 5 : 3, strongMagnitude: mag, weakMagnitude: mag * 0.5 }).catch(() => {});
   } else if (V) {
-    navigator.vibrate(1);
+    if (style === 'lush') {
+      navigator.vibrate([1, 2, 1]);
+    } else {
+      navigator.vibrate(1);
+    }
   }
 }
 
@@ -78,6 +85,7 @@ export function initScrollHaptics() {
     tracked.add(el);
 
     const htmlEl = el as HTMLElement;
+    const style: 'crisp' | 'lush' = htmlEl.dataset.haptic === 'lush' ? 'lush' : 'crisp';
     let cardW = 0;
     let lastSlot = -1;
     let lastScrollLeft = 0;
@@ -105,12 +113,10 @@ export function initScrollHaptics() {
       if (!moved) return;
 
       if (velocity > 1.5) {
-        // Fling — soft pulse every 3rd card
         flingCount++;
-        if (flingCount % 3 === 0) scrollTick(0.03);
+        if (flingCount % 3 === 0) scrollTick(style, 0.03);
       } else {
-        // Browse — whisper per card
-        scrollTick(0.05);
+        scrollTick(style, 0.05);
         flingCount = 0;
       }
     }, { passive: true });

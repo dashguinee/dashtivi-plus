@@ -71,6 +71,7 @@ export const VeeCollectionRow: React.FC<VeeCollectionRowProps> = React.memo(({
       <div
         ref={scrollRef}
         className="flex overflow-x-auto scrollbar-hide scroll-fade px-4 pb-2 items-end"
+        data-haptic="lush"
         style={{ gap: isTop10 ? '2px' : '14px' }}
       >
         {items.map((item, idx) => (
