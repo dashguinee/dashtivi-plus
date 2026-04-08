@@ -1,8 +1,46 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Tv, Clapperboard, PlayCircle, Users } from 'lucide-react';
 import { useLanguage } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
+
+/** Scroll-driven fade: visible at top, fades out after a few scrolls, reappears on scroll up */
+function useNavFade() {
+  const [opacity, setOpacity] = useState(1);
+  const lastY = useRef(0);
+  const direction = useRef<'up' | 'down'>('up');
+  const ticking = useRef(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (ticking.current) return;
+      ticking.current = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const delta = y - lastY.current;
+        lastY.current = y;
+        ticking.current = false;
+
+        // At top — always fully visible
+        if (y < 80) { setOpacity(1); direction.current = 'up'; return; }
+
+        if (delta > 2) {
+          direction.current = 'down';
+          // Fade out proportionally — fully gone by 300px of downward scroll
+          setOpacity(prev => Math.max(0, prev - 0.06));
+        } else if (delta < -2) {
+          direction.current = 'up';
+          // Fade back in faster
+          setOpacity(prev => Math.min(1, prev + 0.12));
+        }
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return opacity;
+}
 
 interface NavItem {
   path: string;
@@ -25,6 +63,7 @@ export const Navbar: React.FC = () => {
   const location = useLocation();
   const [sidebarHover, setSidebarHover] = useState(false);
   const [navGlow, setNavGlow] = useState(false);
+  const navOpacity = useNavFade();
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -45,8 +84,13 @@ export const Navbar: React.FC = () => {
   return (
     <>
       {/* MOBILE BOTTOM NAV — OG dasuperhub style */}
-      <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 pointer-events-none safe-bottom"
-        style={{ transform: 'translateZ(0)' }}
+      <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 safe-bottom"
+        style={{
+          transform: 'translateZ(0)',
+          opacity: navOpacity,
+          pointerEvents: navOpacity < 0.1 ? 'none' : 'auto',
+          transition: 'opacity 0.3s ease-out',
+        }}
       >
         <div
           className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto transition-[background-color,border-color,box-shadow] duration-500"
