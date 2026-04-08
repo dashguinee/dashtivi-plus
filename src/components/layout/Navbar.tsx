@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Tv, Clapperboard, PlayCircle, Users } from 'lucide-react';
 import { useLanguage } from '@/i18n';
@@ -27,6 +27,80 @@ export const Navbar: React.FC = () => {
   const [sidebarHover, setSidebarHover] = useState(false);
   const [navGlow, setNavGlow] = useState(false);
 
+  // ── Nav visibility: show on page load, hide on scroll, return after 2s idle ──
+  // No contact after return = stay visible but fade to 70% after 4s
+  const [navState, setNavState] = useState<'show' | 'hide' | 'dim'>('show');
+  const idleRef = useRef<ReturnType<typeof setTimeout>>();
+  const dimRef = useRef<ReturnType<typeof setTimeout>>();
+  const scrolling = useRef(false);
+
+  // Route change → full show
+  useEffect(() => {
+    setNavState('show');
+    clearTimeout(dimRef.current);
+    dimRef.current = setTimeout(() => setNavState('dim'), 4000);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+
+    const onScroll = () => {
+      const y = window.scrollY;
+
+      // At top of page — always show
+      if (y < 80) {
+        setNavState('show');
+        clearTimeout(idleRef.current);
+        clearTimeout(dimRef.current);
+        dimRef.current = setTimeout(() => setNavState('dim'), 4000);
+        scrolling.current = false;
+        return;
+      }
+
+      // Scrolling — hide
+      if (Math.abs(y - lastY) > 3) {
+        scrolling.current = true;
+        setNavState('hide');
+        clearTimeout(idleRef.current);
+        clearTimeout(dimRef.current);
+
+        // After 2s idle → show again
+        idleRef.current = setTimeout(() => {
+          scrolling.current = false;
+          setNavState('show');
+          // After 4s no touch → dim
+          dimRef.current = setTimeout(() => setNavState('dim'), 4000);
+        }, 2000);
+      }
+
+      lastY = y;
+    };
+
+    // Touch resets to show (user is interacting)
+    const onTouch = () => {
+      if (navState === 'dim') {
+        setNavState('show');
+        clearTimeout(dimRef.current);
+        dimRef.current = setTimeout(() => setNavState('dim'), 4000);
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('touchstart', onTouch, { passive: true });
+
+    // Initial dim timer
+    dimRef.current = setTimeout(() => setNavState('dim'), 4000);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('touchstart', onTouch);
+      clearTimeout(idleRef.current);
+      clearTimeout(dimRef.current);
+    };
+  }, []);
+
+  const navOpacity = navState === 'show' ? 1 : navState === 'dim' ? 0.5 : 0;
+
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
@@ -47,7 +121,13 @@ export const Navbar: React.FC = () => {
     <>
       {/* MOBILE BOTTOM NAV — OG dasuperhub style */}
       <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 pointer-events-none safe-bottom"
-        style={{ transform: 'translateZ(0)' }}
+        style={{
+          transform: 'translateZ(0)',
+          opacity: navOpacity,
+          transition: navState === 'hide'
+            ? 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1)'  // smooth exit
+            : 'opacity 0.3s ease-out',                        // quick return
+        }}
       >
         <div
           className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto transition-[background-color,border-color,box-shadow] duration-500"
