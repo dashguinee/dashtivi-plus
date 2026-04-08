@@ -52,14 +52,14 @@ export const Navbar: React.FC = () => {
           className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto transition-[background-color,border-color,box-shadow] duration-500"
           style={{
             background: navGlow
-              ? 'linear-gradient(135deg, rgba(157,78,221,0.12) 0%, rgba(10,10,15,0.65) 50%, rgba(157,78,221,0.08) 100%)'
-              : 'rgba(10, 10, 15, 0.55)',
+              ? 'linear-gradient(135deg, rgba(157,78,221,0.15) 0%, rgba(10,10,15,0.85) 50%, rgba(157,78,221,0.10) 100%)'
+              : 'rgba(10, 10, 15, 0.82)',
             border: navGlow
               ? '1px solid rgba(157, 78, 221, 0.5)'
-              : '1px solid rgba(157, 78, 221, 0.12)',
+              : '1px solid rgba(157, 78, 221, 0.18)',
             boxShadow: navGlow
               ? '0 0 30px rgba(157, 78, 221, 0.4), 0 0 60px rgba(157, 78, 221, 0.15), inset 0 1px 0 rgba(255,255,255,0.08)'
-              : '0 4px 24px rgba(0,0,0,0.5), 0 0 30px rgba(157,78,221,0.05)',
+              : '0 -4px 20px rgba(0,0,0,0.6), 0 0 30px rgba(157,78,221,0.06), inset 0 1px 0 rgba(255,255,255,0.04)',
           }}
         >
           {NAV_ITEMS.map((item) => {

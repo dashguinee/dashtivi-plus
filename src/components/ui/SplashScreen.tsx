@@ -16,11 +16,11 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
     // Remove the HTML pre-splash (it served its purpose — no white flash)
     document.getElementById('pre-splash')?.remove();
 
-    // Phase 1: dark → brand
-    const t1 = setTimeout(() => setPhase('brand'), 500);
+    // Phase 1: dark → brand (quick)
+    const t1 = setTimeout(() => setPhase('brand'), 300);
 
     // Phase 2: wait for assets + minimum brand time (auth has 3s max)
-    const minBrandTime = new Promise<void>(r => setTimeout(r, 2200));
+    const minBrandTime = new Promise<void>(r => setTimeout(r, 1400));
 
     Promise.all([minBrandTime, preloadReady]).then(() => {
       // verbose: '[SPLASH] Assets ready'
@@ -28,8 +28,8 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
       const proceed = () => {
         // verbose: '[SPLASH] Proceeding'
         setPhase('ready');
-        setTimeout(() => setPhase('exit'), 700);
-        setTimeout(() => onComplete(), 2600);
+        setTimeout(() => setPhase('exit'), 400);
+        setTimeout(() => onComplete(), 1200);
       };
       const waitForAuth = () => {
         if (authRef.current || Date.now() - authStart > 3000) {

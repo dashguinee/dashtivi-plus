@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { t, useLanguage } from '@/i18n';
+import { onPreloadProgress, getPreloadProgress } from '@/lib/preloader';
 
 interface Props {
   onLogin: (code: string) => Promise<{ success: boolean; error?: string }>;
@@ -12,6 +13,10 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin }) => {
   const [showCode, setShowCode] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(getPreloadProgress);
+
+  // Subscribe to preload progress updates
+  useEffect(() => onPreloadProgress(setProgress), []);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -120,7 +125,7 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin }) => {
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    {t(lang, 'verifying')}
+                    {progress < 1 ? 'Preparing...' : t(lang, 'verifying')}
                   </span>
                 ) : (
                   t(lang, 'enter')
@@ -129,10 +134,21 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin }) => {
             </form>
           </div>
 
-          {/* Footer */}
-          <div className="mt-6 text-center">
-            <p className="text-white/12 text-[10px] tracking-[3px] uppercase font-light">
-              {t(lang, 'enterCodeFromDash')}
+          {/* Preload progress — the "F1 pit lane" bar */}
+          <div className="mt-6 flex flex-col items-center gap-2">
+            <div className="w-24 h-[2px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              <div
+                className="h-full rounded-full transition-[width] duration-700 ease-out"
+                style={{
+                  width: `${progress * 100}%`,
+                  background: progress >= 1
+                    ? 'rgba(157,78,221,0.5)'
+                    : 'linear-gradient(90deg, rgba(157,78,221,0.3), rgba(199,125,255,0.6))',
+                }}
+              />
+            </div>
+            <p className="text-white/10 text-[9px] tracking-[4px] uppercase font-light">
+              {loading ? t(lang, 'verifying') : progress >= 1 ? t(lang, 'enterCodeFromDash') : 'Loading'}
             </p>
           </div>
         </div>

@@ -760,8 +760,8 @@
   .reveal {
     opacity: 0;
     transform: scale(0.995);
-    transition: opacity 2.2s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 2.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .reveal.visible {
@@ -770,12 +770,16 @@
     will-change: auto;
   }
 
-  /* --- Cascading reveal delays — slow guided entrance --- */
-  .reveal[data-reveal-delay="1"] { transition-delay: 100ms; }
-  .reveal[data-reveal-delay="2"] { transition-delay: 200ms; }
-  .reveal[data-reveal-delay="3"] { transition-delay: 350ms; }
-  .reveal[data-reveal-delay="4"] { transition-delay: 500ms; }
-  .reveal[data-reveal-delay="5"] { transition-delay: 650ms; }
+  /* --- Cascading reveal delays — smooth but responsive --- */
+  /* First section instant, then stagger just enough to feel alive, not blocking */
+  .reveal[data-reveal-delay="1"] { transition-delay: 0ms; }
+  .reveal[data-reveal-delay="2"] { transition-delay: 300ms; }
+  .reveal[data-reveal-delay="3"] { transition-delay: 700ms; }
+  .reveal[data-reveal-delay="4"] { transition-delay: 1100ms; }
+  .reveal[data-reveal-delay="5"] { transition-delay: 1500ms; }
+  .reveal[data-reveal-delay="6"] { transition-delay: 2000ms; }
+  .reveal[data-reveal-delay="7"] { transition-delay: 2500ms; }
+  .reveal[data-reveal-delay="8"] { transition-delay: 3000ms; }
 
   /* --- Staggered card entrance --- */
   .stagger-card {
@@ -1140,15 +1144,15 @@
 
 :root { --pulse: 0.3; }
 
-/* Base state: dimmed, waiting to be revealed */
+/* Base state: slightly dimmed, but clearly visible and interactive */
 [data-goggle] {
-  opacity: 0.86;
-  transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0.92;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Dim zone: entering viewport — waking up */
+/* Dim zone: entering viewport — nearly full presence */
 [data-goggle-zone="dim"] {
-  opacity: 0.93;
+  opacity: 0.96;
 }
 
 /* Lit zone: sweet spot — full presence, alive with the music */
