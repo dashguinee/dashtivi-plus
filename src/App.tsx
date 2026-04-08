@@ -265,10 +265,11 @@ function AppContent() {
           <div className="goggle-lens" />
         </>
       )}
+      {/* Navbar OUTSIDE stacking context — always floats above everything */}
+      <Navbar />
       <div className="relative z-10">
         <ScrollToTop />
         <Header onLogout={logout} />
-        <Navbar />
         <main className="pb-20 lg:pb-0 lg:pl-[72px] safe-bottom-content">
           <ErrorBoundary>
             <Suspense fallback={<div className="pt-20 page-enter"><div className="h-[18vh] min-h-[120px] max-h-[180px] rounded-2xl mx-4 mb-3" style={{ background: 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(10,10,18,0.8) 100%)' }} /><div className="flex gap-2 px-4 mb-4">{[1,2,3,4].map(i=><div key={i} className="h-8 w-16 rounded-full" style={{ background: 'rgba(157,78,221,0.06)' }} />)}</div><SkeletonRow /><SkeletonRow /><SkeletonRow /></div>}>

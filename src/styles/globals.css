@@ -680,7 +680,6 @@
   .ambient-blob {
     position: absolute;
     filter: blur(40px);
-    will-change: transform;
   }
 
   /* Purple — center, largest, slowest morph */
@@ -759,34 +758,34 @@
      on scroll. Scale + opacity alone give the same materializing depth feel. */
   .reveal {
     opacity: 0;
-    transform: scale(0.995);
-    transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: scale(0.997);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    contain: content;
   }
 
   .reveal.visible {
     opacity: 0.999;
     transform: scale(1);
-    will-change: auto;
   }
 
-  /* --- Cascading reveal delays — smooth but responsive --- */
-  /* First section instant, then stagger just enough to feel alive, not blocking */
+  /* --- Cascading reveal delays — alive but never blocking --- */
+  /* Total cascade: 1.5s. Each section ~200ms apart. Content is touchable within 2s. */
   .reveal[data-reveal-delay="1"] { transition-delay: 0ms; }
-  .reveal[data-reveal-delay="2"] { transition-delay: 300ms; }
-  .reveal[data-reveal-delay="3"] { transition-delay: 700ms; }
-  .reveal[data-reveal-delay="4"] { transition-delay: 1100ms; }
-  .reveal[data-reveal-delay="5"] { transition-delay: 1500ms; }
-  .reveal[data-reveal-delay="6"] { transition-delay: 2000ms; }
-  .reveal[data-reveal-delay="7"] { transition-delay: 2500ms; }
-  .reveal[data-reveal-delay="8"] { transition-delay: 3000ms; }
+  .reveal[data-reveal-delay="2"] { transition-delay: 150ms; }
+  .reveal[data-reveal-delay="3"] { transition-delay: 350ms; }
+  .reveal[data-reveal-delay="4"] { transition-delay: 550ms; }
+  .reveal[data-reveal-delay="5"] { transition-delay: 750ms; }
+  .reveal[data-reveal-delay="6"] { transition-delay: 1000ms; }
+  .reveal[data-reveal-delay="7"] { transition-delay: 1250ms; }
+  .reveal[data-reveal-delay="8"] { transition-delay: 1500ms; }
 
   /* --- Staggered card entrance --- */
   .stagger-card {
     opacity: 0;
-    transform: scale(0.985);
-    transition: opacity 1.6s cubic-bezier(0.4, 0, 0.2, 1),
-                transform 1.6s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: scale(0.99);
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .stagger-card.visible {
@@ -1485,9 +1484,9 @@
 /* ── Accessibility: Reduced Motion ───────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
-    animation-duration: 0.01ms !important;
+    animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 1ms !important;
     scroll-behavior: auto !important;
   }
 
