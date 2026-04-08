@@ -64,17 +64,18 @@ export const Navbar: React.FC = () => {
   };
 
   const navRef = useRef<HTMLDivElement>(null);
-  const [navGlow, setNavGlow] = React.useState(false);
+  const [navGlow, setNavGlow] = React.useState<false | 'full' | 'soft'>(false);
   const glowTimer = useRef<ReturnType<typeof setTimeout>>();
+  const FULL_GLOW_TABS = new Set(['/', '/hub']);
 
   const handleTap = useCallback((path: string) => {
     // Wake from ghost
     clearTimeout(ghostTimer.current);
     if (fadeRef.current !== 'full') { fadeRef.current = 'full'; setNavOpacity('full'); }
 
-    // Every tab gets the glow — consistent, always
+    // Home & Hub = full glow, Live/Movies/Series = soft glow
     clearTimeout(glowTimer.current);
-    setNavGlow(true);
+    setNavGlow(FULL_GLOW_TABS.has(path) ? 'full' : 'soft');
     glowTimer.current = setTimeout(() => setNavGlow(false), 2000);
 
     // Re-arm ghost timer
@@ -111,15 +112,21 @@ export const Navbar: React.FC = () => {
           ref={navRef}
           className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto"
           style={{
-            background: navGlow
+            background: navGlow === 'full'
               ? 'linear-gradient(135deg, rgba(157,78,221,0.12) 0%, rgba(10,10,15,0.65) 50%, rgba(157,78,221,0.08) 100%)'
-              : 'rgba(10, 10, 15, 0.55)',
-            border: navGlow
+              : navGlow === 'soft'
+                ? 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(10,10,15,0.58) 50%, rgba(157,78,221,0.04) 100%)'
+                : 'rgba(10, 10, 15, 0.55)',
+            border: navGlow === 'full'
               ? '1px solid rgba(157, 78, 221, 0.5)'
-              : '1px solid rgba(157, 78, 221, 0.12)',
-            boxShadow: navGlow
+              : navGlow === 'soft'
+                ? '1px solid rgba(157, 78, 221, 0.25)'
+                : '1px solid rgba(157, 78, 221, 0.12)',
+            boxShadow: navGlow === 'full'
               ? '0 0 30px rgba(157, 78, 221, 0.4), 0 0 60px rgba(157, 78, 221, 0.15), inset 0 1px 0 rgba(255,255,255,0.08)'
-              : '0 4px 24px rgba(0,0,0,0.5), 0 0 30px rgba(157,78,221,0.05)',
+              : navGlow === 'soft'
+                ? '0 0 20px rgba(157, 78, 221, 0.18), 0 0 40px rgba(157, 78, 221, 0.06)'
+                : '0 4px 24px rgba(0,0,0,0.5), 0 0 30px rgba(157,78,221,0.05)',
             transition: 'background 0.6s ease-out, border-color 0.6s ease-out, box-shadow 0.6s ease-out',
           }}
         >
