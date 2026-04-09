@@ -11,6 +11,9 @@ import MatchDayCards from './MatchDayCards';
 import { StandingsWidget } from './StandingsWidget';
 import { SportsNews } from './SportsNews';
 import { useSportsData } from '@/hooks/useSportsData';
+import { getLeagueChannels } from '@/services/sports-data';
+import type { BroadcastChannel } from '@/services/sports-data';
+import { tap } from '@/lib/haptics';
 
 export const SportsArena: React.FC = () => {
   const { activeLeague, setActiveLeague, fixtures, standings, news, loading, leagues, activeLeagueData } = useSportsData();
@@ -37,6 +40,40 @@ export const SportsArena: React.FC = () => {
           </div>
           <MatchDayCards fixtures={fixtures} isLoading={loading} />
         </div>
+
+        {/* Watch On — channel pills linked to DashTivi streams */}
+        {(() => {
+          const channels = getLeagueChannels(activeLeague);
+          if (!channels.length) return null;
+          return (
+            <div>
+              <div className="flex items-center gap-2 px-4 mb-2">
+                <span className="text-[11px] text-white/20 uppercase tracking-wider font-medium">Watch on</span>
+              </div>
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-2">
+                {channels.map((ch: BroadcastChannel) => (
+                  <button
+                    key={ch.streamId}
+                    onPointerDown={() => tap()}
+                    onClick={() => {
+                      // Dispatch custom event that ExperienceHomePage can catch to play this channel
+                      window.dispatchEvent(new CustomEvent('sports-play-channel', { detail: { streamId: ch.streamId, name: ch.name } }));
+                    }}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold card-press active:scale-[0.96]"
+                    style={{
+                      background: 'rgba(249,115,22,0.08)',
+                      border: '1px solid rgba(249,115,22,0.18)',
+                      color: 'rgba(249,115,22,0.75)',
+                    }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500" style={{ boxShadow: '0 0 4px rgba(34,197,94,0.5)' }} />
+                    {ch.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Standings table */}
         <div className="px-4">

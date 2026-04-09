@@ -575,6 +575,29 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
     [credentials, onPlay, freeUrlMap, allStreams]
   );
 
+  // Listen for sports channel play requests (from SportsArena broadcast pills)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { streamId, name } = (e as CustomEvent).detail;
+      // Find in curator streams first, then build URL directly
+      const stream = allStreams.find(s => s.stream_id === streamId);
+      if (stream) {
+        handlePlay(stream, allStreams);
+      } else {
+        // Channel not in current view but we know the ID — play directly
+        onPlay({
+          id: `live-${streamId}`,
+          name: name || `Channel ${streamId}`,
+          url: buildLiveUrl(credentials, streamId),
+          logo: '',
+          category: 'live',
+        });
+      }
+    };
+    window.addEventListener('sports-play-channel', handler);
+    return () => window.removeEventListener('sports-play-channel', handler);
+  }, [allStreams, handlePlay, onPlay, credentials]);
+
   if (!config) return null;
 
   // Filter by sub-tab

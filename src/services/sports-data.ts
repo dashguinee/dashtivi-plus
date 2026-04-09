@@ -277,6 +277,60 @@ export function getLeagueById(id: string): League | undefined {
 }
 
 // ---------------------------------------------------------------------------
+// League → DashTivi Channel Mapping
+// Which channels broadcast which leagues. Used for "Watch on" pills.
+// Each entry: { name (display), streamIds (DashTivi stream_id for best quality) }
+// ---------------------------------------------------------------------------
+
+export interface BroadcastChannel {
+  name: string;
+  streamId: number;
+}
+
+const LEAGUE_CHANNELS: Record<string, BroadcastChannel[]> = {
+  epl: [
+    { name: 'Sky Sports PL', streamId: 186604 },
+    { name: 'Sky Sports Main', streamId: 581305 },
+    { name: 'beIN Sports 1', streamId: 138713 },
+    { name: 'TNT Sports 1', streamId: 186627 },
+  ],
+  laliga: [
+    { name: 'beIN Sports 1', streamId: 138713 },
+    { name: 'beIN Sports 2', streamId: 652319 },
+  ],
+  ligue1: [
+    { name: 'beIN Sports 1', streamId: 138713 },
+    { name: 'Canal+ Sport', streamId: 652329 },
+  ],
+  ucl: [
+    { name: 'beIN Sports 1', streamId: 138713 },
+    { name: 'beIN Sports 2', streamId: 652319 },
+    { name: 'TNT Sports 1', streamId: 186627 },
+  ],
+  seriea: [
+    { name: 'beIN Sports 1', streamId: 138713 },
+    { name: 'Eleven Sports 1', streamId: 688309 },
+  ],
+  bundesliga: [
+    { name: 'beIN Sports 1', streamId: 138713 },
+    { name: 'Sky Sport BL', streamId: 659431 },
+  ],
+  nba: [
+    { name: 'NBA TV', streamId: 1010 },
+    { name: 'beIN NBA', streamId: 652332 },
+    { name: 'ESPN', streamId: 503 },
+  ],
+  ufc: [
+    { name: 'beIN Sports 1', streamId: 138713 },
+    { name: 'ESPN', streamId: 503 },
+  ],
+};
+
+export function getLeagueChannels(leagueId: string): BroadcastChannel[] {
+  return LEAGUE_CHANNELS[leagueId] || [];
+}
+
+// ---------------------------------------------------------------------------
 // fetchNews
 // ---------------------------------------------------------------------------
 
