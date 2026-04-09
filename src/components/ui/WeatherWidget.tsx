@@ -169,31 +169,31 @@ export const WeatherWidget: React.FC = React.memo(() => {
       }}
     >
       <div
-        className="relative overflow-hidden rounded-xl px-3 py-2"
+        className="relative overflow-hidden rounded-lg px-2.5 py-1.5"
         style={{
-          minWidth: 120,
-          minHeight: 44,
+          minWidth: 100,
+          minHeight: 36,
           background: 'rgba(255,255,255,0.02)',
           backdropFilter: 'blur(8px)',
           WebkitBackdropFilter: 'blur(8px)',
           border: '1px solid rgba(255,255,255,0.03)',
-          textShadow: '0 1px 3px rgba(0,0,0,0.3)',
+          textShadow: '0 1px 2px rgba(0,0,0,0.2)',
         }}
       >
         {/* Mode 0: Current weather + time */}
         <div style={{
           opacity: displayMode === 0 ? 1 : 0,
           transform: displayMode === 0 ? 'translateY(0)' : 'translateY(-8px)',
-          transition: 'opacity 1.2s cubic-bezier(0.16,1,0.3,1), transform 1.2s cubic-bezier(0.16,1,0.3,1)',
+          transition: 'opacity 1.8s cubic-bezier(0.16,1,0.3,1), transform 1.8s cubic-bezier(0.16,1,0.3,1)',
           position: displayMode === 0 ? 'relative' : 'absolute', top: 0, left: 0,
         }}>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-[22px]">{getIcon(data.code)}</span>
-            <span className="text-[18px] font-bold text-white/90 font-mono">{data.temp}°</span>
+            <span className="text-[16px]">{getIcon(data.code)}</span>
+            <span className="text-[14px] font-bold text-white/90 font-mono">{data.temp}°</span>
           </div>
           <div className="flex items-baseline gap-1.5 mt-0.5">
-            <span className="text-[10px] text-white/40 font-medium">{timeStr}</span>
-            {data.city && <span className="text-[9px] text-white/25">{data.city}</span>}
+            <span className="text-[8px] text-white/35 font-medium">{timeStr}</span>
+            {data.city && <span className="text-[7px] text-white/20">{data.city}</span>}
           </div>
         </div>
 
@@ -201,15 +201,15 @@ export const WeatherWidget: React.FC = React.memo(() => {
         <div style={{
           opacity: displayMode === 1 ? 1 : 0,
           transform: displayMode === 1 ? 'translateY(0)' : 'translateY(8px)',
-          transition: 'opacity 1.2s cubic-bezier(0.16,1,0.3,1), transform 1.2s cubic-bezier(0.16,1,0.3,1)',
+          transition: 'opacity 1.8s cubic-bezier(0.16,1,0.3,1), transform 1.8s cubic-bezier(0.16,1,0.3,1)',
           position: displayMode === 1 ? 'relative' : 'absolute', top: 0, left: 0,
         }}>
           <div className="flex gap-2.5">
             {data.forecast.map((f, i) => (
               <div key={i} className="flex flex-col items-center gap-0.5">
-                <span className="text-[10px]">{getIcon(f.code)}</span>
-                <span className="text-[9px] font-mono text-white/60">{f.temp}°</span>
-                <span className="text-[8px] text-white/25">{f.hour}</span>
+                <span className="text-[8px]">{getIcon(f.code)}</span>
+                <span className="text-[7px] font-mono text-white/50">{f.temp}°</span>
+                <span className="text-[6px] text-white/20">{f.hour}</span>
               </div>
             ))}
           </div>
@@ -220,14 +220,14 @@ export const WeatherWidget: React.FC = React.memo(() => {
           <div style={{
             opacity: displayMode === 2 ? 1 : 0,
             transform: displayMode === 2 ? 'translateY(0)' : 'translateY(8px)',
-            transition: 'opacity 1.2s cubic-bezier(0.16,1,0.3,1), transform 1.2s cubic-bezier(0.16,1,0.3,1)',
+            transition: 'opacity 1.8s cubic-bezier(0.16,1,0.3,1), transform 1.8s cubic-bezier(0.16,1,0.3,1)',
             position: displayMode === 2 ? 'relative' : 'absolute', top: 0, left: 0,
           }}>
             <div className="flex items-baseline gap-1.5">
               <span className="text-[22px]">{getIcon(africanWeather.code)}</span>
               <span className="text-[18px] font-bold text-white/90 font-mono">{africanWeather.temp}°</span>
             </div>
-            <span className="text-[10px] text-white/30 font-medium">{africanWeather.city}</span>
+            <span className="text-[8px] text-white/25 font-medium">{africanWeather.city}</span>
           </div>
         )}
       </div>
