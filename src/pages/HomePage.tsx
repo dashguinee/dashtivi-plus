@@ -52,6 +52,7 @@ import { setAmbientSpeed } from '@/lib/ambient-audio';
 import type { Channel, WatchHistoryEntry } from '@/types';
 import { HexCard } from '@/components/ui/HexCard';
 import { AuroraHero } from '@/components/ui/AuroraHero';
+import { WeatherWidget } from '@/components/ui/WeatherWidget';
 import { NeonGate, RowCountBadge, cardScaleStyle } from '@/components/ui/NeonGate';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { useScrollFocus } from '@/hooks/useScrollFocus';
@@ -778,6 +779,9 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   return (
     <div ref={scrollRef} className="pt-16 pb-32">
+      {/* Ambient weather widget — faded, alternates current/forecast */}
+      <WeatherWidget />
+
       {/* ── Aurora Hero (time-aware) — living ambient backdrop ── */}
       <div
         ref={heroBannerRef}
