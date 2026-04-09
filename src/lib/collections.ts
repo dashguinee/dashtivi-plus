@@ -503,12 +503,12 @@ export const CINEMA_TYPES: SportType[] = [
 export const MUSIC_TYPES: SportType[] = [
   { id: 'all', name: 'All Vibes', categoryIds: ['416', '341', '555', '270', '287'] },
   { id: 'afro', name: 'Afro Beats', categoryIds: ['555', '416'] },   // Trace Muzika (555) + MTV (416, includes MTV Base)
-  { id: 'gospel', name: 'Gospel & Praise', categoryIds: ['561'] },  // Faith music crossover — essential for SL
+  { id: 'christian', name: 'Christian TV', categoryIds: ['561'] },  // Faith TV crossover — essential for SL
   { id: 'mtv', name: 'MTV World', categoryIds: ['416'] },
   { id: 'bollywood', name: 'Bollywood Beats', categoryIds: ['341', '270'] },
   { id: 'throwback', name: 'Throwback', categoryIds: ['416'] },     // NOW 70s, 80s, 90s
   { id: 'arabic', name: 'Arabic Vibes', categoryIds: ['555'] },
-  { id: 'latin', name: 'Latin Beats', categoryIds: ['287'] },
+  { id: 'punjabi', name: 'Punjabi', categoryIds: ['287'] },
 ];
 
 export const DISCOVERY_TYPES: SportType[] = [
