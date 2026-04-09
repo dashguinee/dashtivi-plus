@@ -330,6 +330,78 @@ export function getLeagueChannels(leagueId: string): BroadcastChannel[] {
   return LEAGUE_CHANNELS[leagueId] || [];
 }
 
+// Replay/rediffusion channels — beIN Xtra shows recent match replays
+export const REPLAY_CHANNELS: BroadcastChannel[] = [
+  { name: 'beIN Xtra 4K', streamId: 652323 },
+  { name: 'beIN Xtra HD', streamId: 652342 },
+  { name: 'beIN Xtra 2', streamId: 652324 },
+  { name: 'beIN Xtra 4', streamId: 652328 },
+];
+
+// ---------------------------------------------------------------------------
+// fetchRecentResults — last 3 days of completed matches
+// ---------------------------------------------------------------------------
+
+const RESULTS_TTL = 30 * 60 * 1000; // 30 min
+
+export async function fetchRecentResults(league: League): Promise<Fixture[]> {
+  const cacheKey = `sports-results-${league.id}`;
+  const cached = getCached<Fixture[]>(cacheKey, RESULTS_TTL);
+  if (cached) return cached;
+
+  try {
+    // Fetch last 3 days
+    const results: Fixture[] = [];
+    const today = new Date();
+    for (let d = 1; d <= 3; d++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - d);
+      const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
+
+      const url = `${ESPN_BASE}/${league.sport}/${league.espnSlug}/scoreboard?dates=${dateStr}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+      if (!res.ok) continue;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data: any = await res.json();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const event of (data?.events ?? [])) {
+        const state = event.status?.type?.state;
+        if (state !== 'post') continue; // Only completed matches
+
+        const competition = event.competitions?.[0];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const competitors: any[] = competition?.competitors ?? [];
+        const home = competitors.find((c: any) => c.homeAway === 'home');
+        const away = competitors.find((c: any) => c.homeAway === 'away');
+
+        results.push({
+          id: String(event.id),
+          date: event.date ?? '',
+          status: 'final',
+          statusDetail: event.status?.type?.shortDetail ?? 'FT',
+          homeTeam: { id: home?.team?.id ?? '', name: home?.team?.displayName ?? 'TBD', shortName: home?.team?.abbreviation ?? '', logo: home?.team?.logo ?? '' },
+          awayTeam: { id: away?.team?.id ?? '', name: away?.team?.displayName ?? 'TBD', shortName: away?.team?.abbreviation ?? '', logo: away?.team?.logo ?? '' },
+          homeScore: home?.score != null ? Number(home.score) : null,
+          awayScore: away?.score != null ? Number(away.score) : null,
+          venue: competition?.venue?.fullName ?? '',
+          broadcast: '',
+          league: { id: league.id, name: league.name },
+        });
+      }
+    }
+
+    // Most recent first
+    results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    setCache(cacheKey, results);
+    return results;
+  } catch (err) {
+    console.warn(`[sports-data] fetchRecentResults failed for ${league.id}:`, err);
+    return [];
+  }
+}
+
 // ---------------------------------------------------------------------------
 // fetchNews
 // ---------------------------------------------------------------------------

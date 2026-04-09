@@ -10,13 +10,14 @@ import LeagueSelector from './LeagueSelector';
 import MatchDayCards from './MatchDayCards';
 import { StandingsWidget } from './StandingsWidget';
 import { SportsNews } from './SportsNews';
+import { RecentMatches } from './RecentMatches';
 import { useSportsData } from '@/hooks/useSportsData';
-import { getLeagueChannels } from '@/services/sports-data';
+import { getLeagueChannels, REPLAY_CHANNELS } from '@/services/sports-data';
 import type { BroadcastChannel } from '@/services/sports-data';
 import { tap } from '@/lib/haptics';
 
 export const SportsArena: React.FC = () => {
-  const { activeLeague, setActiveLeague, fixtures, standings, news, loading, leagues, activeLeagueData } = useSportsData();
+  const { activeLeague, setActiveLeague, fixtures, standings, news, recentResults, loading, leagues, activeLeagueData } = useSportsData();
 
   return (
     <div className="relative">
@@ -40,6 +41,18 @@ export const SportsArena: React.FC = () => {
           </div>
           <MatchDayCards fixtures={fixtures} isLoading={loading} />
         </div>
+
+        {/* Recent Matches — replay rediffusions */}
+        {(recentResults.length > 0 || loading) && (
+          <div>
+            <div className="flex items-center gap-2 px-4 mb-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
+              <h3 className="text-[15px] font-bold text-white/60">Recent Games</h3>
+              <span className="text-[9px] text-white/15 ml-1">tap for replay</span>
+            </div>
+            <RecentMatches results={recentResults} replayChannels={REPLAY_CHANNELS} isLoading={loading} />
+          </div>
+        )}
 
         {/* Watch On — channel pills linked to DashTivi streams */}
         {(() => {

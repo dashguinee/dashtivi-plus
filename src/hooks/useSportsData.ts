@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LEAGUES, fetchFixtures, fetchStandings, fetchNews, getLeagueById } from '@/services/sports-data';
+import { LEAGUES, fetchFixtures, fetchStandings, fetchNews, fetchRecentResults, getLeagueById } from '@/services/sports-data';
 import type { Fixture, Standing, NewsHeadline } from '@/services/sports-data';
 
 export function useSportsData() {
@@ -7,6 +7,7 @@ export function useSportsData() {
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [standings, setStandings] = useState<Standing[]>([]);
   const [news, setNews] = useState<NewsHeadline[]>([]);
+  const [recentResults, setRecentResults] = useState<Fixture[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,12 +20,14 @@ export function useSportsData() {
       fetchFixtures(league),
       fetchStandings(league),
       fetchNews(league),
-    ]).then(([f, s, n]) => {
+      fetchRecentResults(league),
+    ]).then(([f, s, n, r]) => {
       if (cancelled) return;
-      console.debug('[SPORTS] %s — fixtures:%d standings:%d news:%d', league.id, f.length, s.length, n.length);
+      console.debug('[SPORTS] %s — fixtures:%d standings:%d news:%d results:%d', league.id, f.length, s.length, n.length, r.length);
       setFixtures(f);
       setStandings(s);
       setNews(n);
+      setRecentResults(r);
     }).catch((err) => {
       console.warn('[SPORTS] fetch error:', err);
     }).finally(() => {
@@ -40,6 +43,7 @@ export function useSportsData() {
     fixtures,
     standings,
     news,
+    recentResults,
     loading,
     leagues: LEAGUES,
     activeLeagueData: getLeagueById(activeLeague),
