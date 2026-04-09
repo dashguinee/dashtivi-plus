@@ -330,6 +330,24 @@ export function getLeagueChannels(leagueId: string): BroadcastChannel[] {
   return LEAGUE_CHANNELS[leagueId] || [];
 }
 
+// Scorebat widget URLs per league — iframe-embeddable highlight feeds
+const SCOREBAT_SLUGS: Record<string, string> = {
+  epl: 'premier-league',
+  laliga: 'spanish-la-liga',
+  ligue1: 'french-ligue-1',
+  ucl: 'champions-league',
+  seriea: 'serie-a',
+  bundesliga: 'bundesliga',
+  nba: '',
+  ufc: '',
+};
+
+export function getScorebatUrl(leagueId: string): string | null {
+  const slug = SCOREBAT_SLUGS[leagueId];
+  if (!slug) return null;
+  return `https://www.scorebat.com/embed/livescore/${slug}/`;
+}
+
 // Replay/rediffusion channels — beIN Xtra shows recent match replays
 export const REPLAY_CHANNELS: BroadcastChannel[] = [
   { name: 'beIN Xtra 4K', streamId: 652323 },
@@ -375,6 +393,9 @@ export async function fetchRecentResults(league: League): Promise<Fixture[]> {
         const home = competitors.find((c: any) => c.homeAway === 'home');
         const away = competitors.find((c: any) => c.homeAway === 'away');
 
+        // Extract highlights URL from ESPN links
+        const highlightsLink = (event.links || []).find((l: any) => l.text?.toLowerCase().includes('highlight'));
+
         results.push({
           id: String(event.id),
           date: event.date ?? '',
@@ -385,7 +406,7 @@ export async function fetchRecentResults(league: League): Promise<Fixture[]> {
           homeScore: home?.score != null ? Number(home.score) : null,
           awayScore: away?.score != null ? Number(away.score) : null,
           venue: competition?.venue?.fullName ?? '',
-          broadcast: '',
+          broadcast: highlightsLink?.href || '',
           league: { id: league.id, name: league.name },
         });
       }
