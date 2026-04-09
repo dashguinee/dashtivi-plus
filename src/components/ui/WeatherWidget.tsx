@@ -161,13 +161,34 @@ export const WeatherWidget: React.FC = React.memo(() => {
 
   return (
     <div
-      className="fixed bottom-24 right-4 z-[5] pointer-events-none select-none"
+      className="fixed bottom-24 right-4 z-[5] select-none cursor-pointer"
+      onClick={() => setDisplayMode(prev => (prev + 1) % 3)}
       style={{
-        opacity: 0.35,
+        opacity: 0.28,
         transition: 'opacity 0.6s ease',
+        animation: 'weather-drift 30s ease-in-out infinite alternate',
       }}
     >
-      <div className="relative overflow-hidden" style={{ minWidth: 120, minHeight: 44 }}>
+      <style>{`
+        @keyframes weather-drift {
+          0% { transform: translateX(0) translateY(0); }
+          33% { transform: translateX(-3px) translateY(2px); }
+          66% { transform: translateX(2px) translateY(-1px); }
+          100% { transform: translateX(-1px) translateY(1px); }
+        }
+      `}</style>
+      <div
+        className="relative overflow-hidden rounded-xl px-3 py-2"
+        style={{
+          minWidth: 120,
+          minHeight: 44,
+          background: 'rgba(255,255,255,0.02)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          border: '1px solid rgba(255,255,255,0.03)',
+          textShadow: '0 1px 3px rgba(0,0,0,0.3)',
+        }}
+      >
         {/* Mode 0: Current weather + time */}
         <div style={{
           opacity: displayMode === 0 ? 1 : 0,
