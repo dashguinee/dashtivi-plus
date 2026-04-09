@@ -75,13 +75,25 @@ export async function fetchBBCNews(category: 'world' | 'africa' | 'business' | '
   if (cached) return cached;
 
   try {
-    // BBC RSS might be CORS-blocked from browser — proxy through VPS
     const feedUrl = BBC_FEEDS[category];
-    const res = await fetch(`${PROXY}/?url=${encodeURIComponent(feedUrl)}`, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) throw new Error(`BBC ${res.status}`);
-    const xml = await res.text();
-    const items = parseRssItems(xml, `BBC ${category.charAt(0).toUpperCase() + category.slice(1)}`);
-    setCache(cacheKey, items);
+    const sourceName = `BBC ${category.charAt(0).toUpperCase() + category.slice(1)}`;
+
+    // Try direct first (works if BBC allows CORS), fall back to proxy
+    let xml = '';
+    try {
+      const direct = await fetch(feedUrl, { signal: AbortSignal.timeout(5000) });
+      if (direct.ok) xml = await direct.text();
+    } catch { /* CORS blocked — expected */ }
+
+    if (!xml) {
+      const proxied = await fetch(`${PROXY}/?url=${encodeURIComponent(feedUrl)}`, { signal: AbortSignal.timeout(8000) });
+      if (!proxied.ok) throw new Error(`BBC proxy ${proxied.status}`);
+      xml = await proxied.text();
+    }
+
+    const items = parseRssItems(xml, sourceName);
+    console.debug('[news-feed] %s: %d items', sourceName, items.length);
+    if (items.length) setCache(cacheKey, items);
     return items;
   } catch (err) {
     console.warn(`[news-feed] BBC ${category} failed:`, err);
