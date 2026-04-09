@@ -19,8 +19,11 @@ export function useSportsData() {
       fetchStandings(league),
     ]).then(([f, s]) => {
       if (cancelled) return;
+      console.debug('[SPORTS] %s — fixtures:%d standings:%d', league.id, f.length, s.length);
       setFixtures(f);
       setStandings(s);
+    }).catch((err) => {
+      console.warn('[SPORTS] fetch error:', err);
     }).finally(() => {
       if (!cancelled) setLoading(false);
     });

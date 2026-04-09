@@ -705,10 +705,8 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
         <>
           {/* ── Sports Arena (fixtures, standings — only for sports experience) ── */}
           {config.id === 'sports' && !searchQuery && (
-            <React.Suspense fallback={<div className="h-64 animate-pulse rounded-2xl bg-white/[0.02] mx-4 mt-4" />}>
-              <div className="mt-4 mb-6 reveal">
-                <SportsArena />
-              </div>
+            <React.Suspense fallback={<div className="mx-4 mt-4 space-y-3"><div className="h-10 rounded-xl bg-white/[0.03] animate-pulse" /><div className="h-40 rounded-2xl bg-white/[0.02] animate-pulse" /><div className="h-32 rounded-xl bg-white/[0.02] animate-pulse" /></div>}>
+              <SportsArena />
             </React.Suspense>
           )}
 
