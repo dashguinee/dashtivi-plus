@@ -82,8 +82,8 @@ const StatusBadge: React.FC<{ status: Fixture['status']; detail: string; date: s
   }
 
   // scheduled
-  const time = new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  return <span className="text-[10px] text-white/20 font-medium">{time}</span>;
+  const time = new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+  return <span className="text-[10px] text-white/20 font-medium">{time} GMT</span>;
 };
 
 // ---------------------------------------------------------------------------
@@ -173,10 +173,25 @@ const FixtureCard: React.FC<{ fixture: Fixture; index: number }> = ({ fixture, i
           </div>
         </div>
 
-        {/* Bottom — venue */}
-        {fixture.venue && (
-          <p className="text-[9px] text-white/15 text-center truncate">{fixture.venue}</p>
-        )}
+        {/* Bottom — venue + broadcast */}
+        <div className="flex flex-col items-center gap-1.5">
+          {fixture.venue && (
+            <p className="text-[9px] text-white/15 text-center truncate">{fixture.venue}</p>
+          )}
+          {fixture.broadcast && (
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-semibold cursor-pointer"
+              style={{
+                background: 'rgba(249,115,22,0.10)',
+                color: 'rgba(249,115,22,0.70)',
+                border: '1px solid rgba(249,115,22,0.15)',
+              }}
+            >
+              <span className="w-1 h-1 rounded-full bg-orange-500/50" />
+              {fixture.broadcast}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

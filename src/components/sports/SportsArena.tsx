@@ -9,10 +9,11 @@ import React from 'react';
 import LeagueSelector from './LeagueSelector';
 import MatchDayCards from './MatchDayCards';
 import { StandingsWidget } from './StandingsWidget';
+import { SportsNews } from './SportsNews';
 import { useSportsData } from '@/hooks/useSportsData';
 
 export const SportsArena: React.FC = () => {
-  const { activeLeague, setActiveLeague, fixtures, standings, loading, leagues, activeLeagueData } = useSportsData();
+  const { activeLeague, setActiveLeague, fixtures, standings, news, loading, leagues, activeLeagueData } = useSportsData();
 
   return (
     <div className="relative">
@@ -45,6 +46,16 @@ export const SportsArena: React.FC = () => {
             isLoading={loading}
           />
         </div>
+
+        {/* Sports News */}
+        {(news.length > 0 || loading) && (
+          <div>
+            <div className="flex items-center gap-2 px-4 mb-2">
+              <span className="text-[11px] text-white/20 uppercase tracking-wider font-medium">Latest</span>
+            </div>
+            <SportsNews headlines={news} isLoading={loading} />
+          </div>
+        )}
       </div>
     </div>
   );

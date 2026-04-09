@@ -23,6 +23,15 @@ export interface Team {
   logo: string;           // ESPN CDN URL
 }
 
+export interface NewsHeadline {
+  id: string;
+  headline: string;
+  description: string;
+  image: string;
+  published: string;
+  link: string;
+}
+
 export interface Fixture {
   id: string;
   date: string;           // ISO date
@@ -265,4 +274,42 @@ export async function fetchStandings(league: League): Promise<Standing[]> {
 
 export function getLeagueById(id: string): League | undefined {
   return LEAGUES.find((l) => l.id === id);
+}
+
+// ---------------------------------------------------------------------------
+// fetchNews
+// ---------------------------------------------------------------------------
+
+const NEWS_TTL = 30 * 60 * 1000; // 30 min
+
+export async function fetchNews(league: League): Promise<NewsHeadline[]> {
+  const cacheKey = `sports-news-${league.id}`;
+  const cached = getCached<NewsHeadline[]>(cacheKey, NEWS_TTL);
+  if (cached) return cached;
+
+  try {
+    const url = `${ESPN_BASE}/${league.sport}/${league.espnSlug}/news?limit=8`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error(`ESPN news ${res.status}`);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: any = await res.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const articles: any[] = data?.articles ?? [];
+
+    const headlines: NewsHeadline[] = articles.map((a: any) => ({
+      id: String(a.dataSourceIdentifier || a.id || Math.random()),
+      headline: a.headline || '',
+      description: a.description || '',
+      image: a.images?.[0]?.url || '',
+      published: a.published || '',
+      link: a.links?.web?.href || '',
+    }));
+
+    setCache(cacheKey, headlines);
+    return headlines;
+  } catch (err) {
+    console.warn(`[sports-data] fetchNews failed for ${league.id}:`, err);
+    return [];
+  }
 }
