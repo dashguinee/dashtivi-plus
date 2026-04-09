@@ -779,9 +779,6 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   return (
     <div ref={scrollRef} className="pt-16 pb-32">
-      {/* Ambient weather widget — faded, alternates current/forecast */}
-      <WeatherWidget />
-
       {/* ── Aurora Hero (time-aware) — living ambient backdrop ── */}
       <div
         ref={heroBannerRef}
@@ -803,10 +800,17 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           hero.title === 'Afternoon Escape' ? 'afternoon' :
           hero.title === 'Prime Time' ? 'evening' : 'night'
         } />
-        <div className="relative z-10 flex flex-col justify-end h-full px-5 pb-5">
-          <p className="text-[11px] text-white/20 font-medium tracking-[3px] uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            {HERO_TITLE_MAP[hero.title] ? t(lang, HERO_TITLE_MAP[hero.title]) : hero.title}
-          </p>
+        <div className="relative z-10 h-full px-5">
+          {/* Weather — top right, slightly below header */}
+          <div className="flex justify-end pt-2">
+            <WeatherWidget />
+          </div>
+          {/* Greeting — bottom left */}
+          <div className="absolute bottom-5 left-5">
+            <p className="text-[11px] text-white/20 font-medium tracking-[3px] uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              {HERO_TITLE_MAP[hero.title] ? t(lang, HERO_TITLE_MAP[hero.title]) : hero.title}
+            </p>
+          </div>
         </div>
       </div>
 

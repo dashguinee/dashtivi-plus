@@ -161,22 +161,13 @@ export const WeatherWidget: React.FC = React.memo(() => {
 
   return (
     <div
-      className="fixed bottom-24 right-4 z-[5] select-none cursor-pointer"
-      onClick={() => setDisplayMode(prev => (prev + 1) % 3)}
+      className="select-none cursor-pointer"
+      onClick={(e) => { e.stopPropagation(); setDisplayMode(prev => (prev + 1) % 3); }}
       style={{
-        opacity: 0.28,
+        opacity: 0.45,
         transition: 'opacity 0.6s ease',
-        animation: 'weather-drift 30s ease-in-out infinite alternate',
       }}
     >
-      <style>{`
-        @keyframes weather-drift {
-          0% { transform: translateX(0) translateY(0); }
-          33% { transform: translateX(-3px) translateY(2px); }
-          66% { transform: translateX(2px) translateY(-1px); }
-          100% { transform: translateX(-1px) translateY(1px); }
-        }
-      `}</style>
       <div
         className="relative overflow-hidden rounded-xl px-3 py-2"
         style={{
