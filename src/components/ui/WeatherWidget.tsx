@@ -53,11 +53,24 @@ function getCityFromTimezone(): string {
 const CACHE_KEY = 'weather-data';
 const CACHE_TTL = 30 * 60 * 1000; // 30 min
 
+// Rotation: user's city → forecast → African city weather (51% Africa)
+// Freetown (SL) + Conakry (GN) are primary, then Dakar, Abidjan, Monrovia
+const AFRICAN_CITIES = [
+  { name: 'Freetown', lat: 8.484, lon: -13.2299 },
+  { name: 'Conakry', lat: 9.5092, lon: -13.7122 },
+  { name: 'Dakar', lat: 14.6937, lon: -17.4441 },
+  { name: 'Abidjan', lat: 5.3600, lon: -4.0083 },
+  { name: 'Monrovia', lat: 6.3156, lon: -10.8074 },
+];
+
 export const WeatherWidget: React.FC = React.memo(() => {
   const [data, setData] = useState<WeatherData | null>(null);
-  const [showForecast, setShowForecast] = useState(false);
+  // 0=current, 1=forecast, 2=african city
+  const [displayMode, setDisplayMode] = useState(0);
+  const [africanWeather, setAfricanWeather] = useState<{ city: string; temp: number; code: number } | null>(null);
   const [time, setTime] = useState(new Date());
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  const africanIdx = useRef(0);
 
   // Update clock every minute
   useEffect(() => {
@@ -65,10 +78,24 @@ export const WeatherWidget: React.FC = React.memo(() => {
     return () => clearInterval(intervalRef.current);
   }, []);
 
-  // Alternate between current and forecast every 8s
+  // Rotate: current → forecast → african city → current...
   useEffect(() => {
-    if (!data?.forecast.length) return;
-    const timer = setInterval(() => setShowForecast(prev => !prev), 8000);
+    if (!data) return;
+    const timer = setInterval(() => {
+      setDisplayMode(prev => {
+        const next = (prev + 1) % 3;
+        if (next === 2) {
+          // Fetch next African city
+          const city = AFRICAN_CITIES[africanIdx.current % AFRICAN_CITIES.length];
+          africanIdx.current++;
+          fetch(`https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current_weather=true&timezone=auto`, { signal: AbortSignal.timeout(4000) })
+            .then(r => r.json())
+            .then(d => setAfricanWeather({ city: city.name, temp: Math.round(d.current_weather.temperature), code: d.current_weather.weathercode }))
+            .catch(() => {});
+        }
+        return next;
+      });
+    }, 8000);
     return () => clearInterval(timer);
   }, [data]);
 
@@ -116,15 +143,15 @@ export const WeatherWidget: React.FC = React.memo(() => {
         .catch(() => {});
     };
 
-    // Try geolocation, fallback to KL (Dash's default)
+    // Try geolocation, fallback to Conakry (primary market)
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-        () => fetchWeather(3.14, 101.69), // Fallback: Kuala Lumpur
+        () => fetchWeather(9.5092, -13.7122), // Fallback: Conakry, Guinea
         { timeout: 5000, maximumAge: 600000 }
       );
     } else {
-      fetchWeather(3.14, 101.69);
+      fetchWeather(9.5092, -13.7122);
     }
   }, []);
 
@@ -140,19 +167,14 @@ export const WeatherWidget: React.FC = React.memo(() => {
         transition: 'opacity 0.6s ease',
       }}
     >
-      <div
-        className="relative overflow-hidden"
-        style={{ minWidth: 120 }}
-      >
-        {/* Current weather + time */}
-        <div
-          style={{
-            opacity: showForecast ? 0 : 1,
-            transform: showForecast ? 'translateY(-8px)' : 'translateY(0)',
-            transition: 'opacity 1.2s cubic-bezier(0.16,1,0.3,1), transform 1.2s cubic-bezier(0.16,1,0.3,1)',
-            position: showForecast ? 'absolute' : 'relative',
-          }}
-        >
+      <div className="relative overflow-hidden" style={{ minWidth: 120, minHeight: 44 }}>
+        {/* Mode 0: Current weather + time */}
+        <div style={{
+          opacity: displayMode === 0 ? 1 : 0,
+          transform: displayMode === 0 ? 'translateY(0)' : 'translateY(-8px)',
+          transition: 'opacity 1.2s cubic-bezier(0.16,1,0.3,1), transform 1.2s cubic-bezier(0.16,1,0.3,1)',
+          position: displayMode === 0 ? 'relative' : 'absolute', top: 0, left: 0,
+        }}>
           <div className="flex items-baseline gap-1.5">
             <span className="text-[22px]">{getIcon(data.code)}</span>
             <span className="text-[18px] font-bold text-white/90 font-mono">{data.temp}°</span>
@@ -163,16 +185,13 @@ export const WeatherWidget: React.FC = React.memo(() => {
           </div>
         </div>
 
-        {/* 5-hour forecast */}
-        <div
-          style={{
-            opacity: showForecast ? 1 : 0,
-            transform: showForecast ? 'translateY(0)' : 'translateY(8px)',
-            transition: 'opacity 1.2s cubic-bezier(0.16,1,0.3,1), transform 1.2s cubic-bezier(0.16,1,0.3,1)',
-            position: showForecast ? 'relative' : 'absolute',
-            top: 0,
-          }}
-        >
+        {/* Mode 1: 5-hour forecast */}
+        <div style={{
+          opacity: displayMode === 1 ? 1 : 0,
+          transform: displayMode === 1 ? 'translateY(0)' : 'translateY(8px)',
+          transition: 'opacity 1.2s cubic-bezier(0.16,1,0.3,1), transform 1.2s cubic-bezier(0.16,1,0.3,1)',
+          position: displayMode === 1 ? 'relative' : 'absolute', top: 0, left: 0,
+        }}>
           <div className="flex gap-2.5">
             {data.forecast.map((f, i) => (
               <div key={i} className="flex flex-col items-center gap-0.5">
@@ -183,6 +202,22 @@ export const WeatherWidget: React.FC = React.memo(() => {
             ))}
           </div>
         </div>
+
+        {/* Mode 2: African city weather */}
+        {africanWeather && (
+          <div style={{
+            opacity: displayMode === 2 ? 1 : 0,
+            transform: displayMode === 2 ? 'translateY(0)' : 'translateY(8px)',
+            transition: 'opacity 1.2s cubic-bezier(0.16,1,0.3,1), transform 1.2s cubic-bezier(0.16,1,0.3,1)',
+            position: displayMode === 2 ? 'relative' : 'absolute', top: 0, left: 0,
+          }}>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[22px]">{getIcon(africanWeather.code)}</span>
+              <span className="text-[18px] font-bold text-white/90 font-mono">{africanWeather.temp}°</span>
+            </div>
+            <span className="text-[10px] text-white/30 font-medium">{africanWeather.city}</span>
+          </div>
+        )}
       </div>
     </div>
   );
