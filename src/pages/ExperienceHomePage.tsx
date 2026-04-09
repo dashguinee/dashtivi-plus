@@ -38,6 +38,8 @@ import type { Channel } from '@/types';
 
 // Sports Arena — lazy loaded, only when experience=sports
 const SportsArena = React.lazy(() => import('@/components/sports/SportsArena'));
+// News Ticker — lazy loaded, only when experience=news
+const NewsArena = React.lazy(() => import('@/components/ui/NewsArena'));
 
 // ── Experience Configs ──────────────────────────────────────────────
 
@@ -730,6 +732,15 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
           {config.id === 'sports' && !searchQuery && (
             <React.Suspense fallback={<div className="mx-4 mt-4 space-y-3"><div className="h-10 rounded-xl bg-white/[0.03] animate-pulse" /><div className="h-40 rounded-2xl bg-white/[0.02] animate-pulse" /><div className="h-32 rounded-xl bg-white/[0.02] animate-pulse" /></div>}>
               <SportsArena />
+            </React.Suspense>
+          )}
+
+          {/* ── News Arena (BBC headlines — only for news experience) ── */}
+          {config.id === 'news' && !searchQuery && (
+            <React.Suspense fallback={<div className="mx-4 mt-4 space-y-2"><div className="h-8 rounded-lg bg-white/[0.02] animate-pulse" /><div className="h-24 rounded-xl bg-white/[0.02] animate-pulse" /></div>}>
+              <div className="mt-4 mb-6 reveal">
+                <NewsArena />
+              </div>
             </React.Suspense>
           )}
 

@@ -9,7 +9,7 @@ import React from 'react';
 import LeagueSelector from './LeagueSelector';
 import MatchDayCards from './MatchDayCards';
 import { StandingsWidget } from './StandingsWidget';
-import { SportsNews } from './SportsNews';
+import { NewsTicker } from '@/components/ui/NewsTicker';
 import { RecentMatches } from './RecentMatches';
 import { useSportsData } from '@/hooks/useSportsData';
 import { getLeagueChannels, REPLAY_CHANNELS } from '@/services/sports-data';
@@ -97,13 +97,17 @@ export const SportsArena: React.FC = () => {
           />
         </div>
 
-        {/* Sports News */}
+        {/* Sports News — ESPN headlines via unified NewsTicker */}
         {(news.length > 0 || loading) && (
           <div>
             <div className="flex items-center gap-2 px-4 mb-2">
               <span className="text-[11px] text-white/20 uppercase tracking-wider font-medium">Latest</span>
             </div>
-            <SportsNews headlines={news} isLoading={loading} />
+            <NewsTicker
+              items={news.map(n => ({ id: n.id, title: n.headline, description: n.description, image: n.image, published: n.published, link: n.link, source: 'ESPN' }))}
+              isLoading={loading}
+              accent="rgba(249,115,22,0.3)"
+            />
           </div>
         )}
       </div>
