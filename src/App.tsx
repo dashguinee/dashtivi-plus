@@ -25,6 +25,7 @@ import type { Channel } from '@/types';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useScrollAmbient } from '@/hooks/useScrollAmbient';
 import { DynamicIsland } from '@/components/ui/DynamicIsland';
+import { PushBell } from '@/components/ui/PushBell';
 
 // Start preloading immediately on script load — before React even mounts
 startPreload();
@@ -279,9 +280,10 @@ function AppContent() {
       )}
       <div className="relative z-10">
         <ScrollToTop />
-        {/* Cross-app notification pill (broadcasts + targeted pushes from Hub) */}
-        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[9997] pointer-events-auto">
+        {/* Cross-app notification pill + push opt-in */}
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[9997] pointer-events-auto flex items-center gap-2">
           <DynamicIsland appCode="tivi" />
+          <PushBell appCode="tivi" />
         </div>
         <Header onLogout={logout} />
         <Navbar />

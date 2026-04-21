@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tivi-cache-v1775700113697';
+const CACHE_NAME = 'tivi-cache-v1775700398183';
 
 // --- INSTALL ---
 self.addEventListener('install', () => {
@@ -169,4 +169,44 @@ self.addEventListener('fetch', (event) => {
     // Safety net: if anything throws synchronously, let the browser handle it
     console.error('[SW] Fetch handler error:', err);
   }
+});
+
+// --- PUSH NOTIFICATIONS ---
+// Payload shape comes from the `send-push` Supabase Edge Function:
+//   { id, title, body, url, app, tag }
+self.addEventListener('push', (event) => {
+  let data = { title: 'Tivi+', body: 'New notification', url: '/', tag: 'dash-notification' };
+  try {
+    if (event.data) data = { ...data, ...event.data.json() };
+  } catch (err) {
+    console.warn('[SW] Failed to parse push data:', err);
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      tag: data.tag || 'dash-notification',
+      data: data.url || '/',
+      vibrate: [100, 50, 100],
+      renotify: true,
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.focus();
+          if ('navigate' in client) client.navigate(url);
+          return;
+        }
+      }
+      return clients.openWindow(url);
+    })
+  );
 });
