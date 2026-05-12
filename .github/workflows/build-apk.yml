@@ -33,13 +33,13 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Create local.properties
-        run: echo "sdk.dir=${{ runner.temp }}/android-sdk" > local.properties
+        run: echo "sdk.dir=${{ runner.temp }}/android-sdk" > android/local.properties
 
       - name: Build APK
-        run: gradle assembleRelease
+        run: cd android && gradle assembleRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: dashtivi-plus
-          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
