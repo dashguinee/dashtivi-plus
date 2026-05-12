@@ -26,11 +26,11 @@ export function createMpegTsPlayer(
     isLive: true,
   }, {
     enableWorker: true,
-    enableStashBuffer: false,
-    stashInitialSize: 128,
+    enableStashBuffer: true,
+    stashInitialSize: 384,
     liveBufferLatencyChasing: true,
-    liveBufferLatencyMaxLatency: 3.0,
-    liveBufferLatencyMinRemain: 0.5,
+    liveBufferLatencyMaxLatency: 6.0,
+    liveBufferLatencyMinRemain: 1.5,
   });
 
   player.attachMediaElement(videoEl);

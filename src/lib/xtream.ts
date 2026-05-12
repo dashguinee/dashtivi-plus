@@ -1,4 +1,4 @@
-const STREAM_BASE = (import.meta.env.VITE_XTREAM_STREAM || 'http://datahub11.com:80').trim();
+const STREAM_BASE = (import.meta.env.VITE_XTREAM_STREAM || 'http://buxjam.com:8080').trim();
 const PROXY = (import.meta.env.VITE_PROXY_URL || 'https://stream.zionsynapse.online').trim();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 const FETCH_TIMEOUT = 10000; // 10s timeout for API calls
@@ -99,7 +99,7 @@ export function safeImageUrl(url?: string | null): string | null {
   // Fix common URL corruption
   let u = url.replace(/^ttps:/, 'https:').replace(/"$/, '');
   // Replace dead starshare domain
-  u = u.replace('starshare.live:8080', 'datahub11.com:8080');
+  u = u.replace('starshare.live:8080', 'buxjam.com:8080').replace('datahub11.com:8080', 'buxjam.com:8080').replace('datahub11.com:80', 'buxjam.com:8080');
   // Block known junk hosts
   if (u.includes('webhop.live') || u.includes('imdb.com') || u.includes('wikia.nocookie.net') || u.includes('paste.pics') || u.includes('tensports.com.pk') || u.includes('stariptv.fun') || u.includes('starapk1.com') || u.includes('stackpathcdn.com') || u.includes('QuranTVSA')) {
     return null;
@@ -314,6 +314,7 @@ function getLogoMap(): Promise<Record<string, string>> {
 import type { TmdbEntry } from './tmdb-map.generated';
 import { TMDB_GENRES } from './tmdb-map.generated';
 import { consumePrefetchedCurator, consumePrefetchedVee, consumePrefetchedChannels, consumePrefetchedVerified } from './preloader';
+import { isDead } from '@/hooks/useChannelHealth';
 
 type TmdbMapData = { TMDB_MAP: Record<string, TmdbEntry>; TMDB_GENRES: Record<number, string> };
 let tmdbMapCache: TmdbMapData | null = null;
@@ -344,10 +345,8 @@ async function enrichIcons(streams: LiveStream[]): Promise<LiveStream[]> {
   const map = await getLogoMap();
   const result: LiveStream[] = [];
   for (const s of streams) {
-    // Parse metadata from raw name before cleaning
     const meta = parseChannelMeta(s.name);
     if (channelMetaCache.size >= CHANNEL_META_MAX) {
-      // Evict oldest 25% — Map iteration order is insertion order
       const evictCount = Math.floor(CHANNEL_META_MAX / 4);
       let i = 0;
       for (const key of channelMetaCache.keys()) {
@@ -357,11 +356,13 @@ async function enrichIcons(streams: LiveStream[]): Promise<LiveStream[]> {
     }
     channelMetaCache.set(s.stream_id, meta);
     s.name = meta.name;
-    // Hidden/relocated filtering now handled by database (is_hidden, curator experiences)
-    // This fallback path only runs when curator is unavailable
-    if (!s.stream_icon || s.stream_icon.trim() === '') {
+    // Sanitize image URL through VPS proxy (prevents SSL errors on buxjam.com:8080)
+    const sanitized = safeImageUrl(s.stream_icon);
+    if (sanitized) {
+      s.stream_icon = sanitized;
+    } else if (!s.stream_icon || s.stream_icon.trim() === '') {
       const mapped = map[String(s.stream_id)];
-      if (mapped) s.stream_icon = mapped;
+      if (mapped) s.stream_icon = safeImageUrl(mapped) || mapped;
     }
     result.push(s);
   }
@@ -373,11 +374,6 @@ export async function getLiveStreams(c: XtreamCredentials, catId: string): Promi
     `live_streams_${catId}`,
     apiUrl(c, 'get_live_streams', `&category_id=${catId}`)
   );
-  return enrichIcons(streams);
-}
-
-export async function getAllLiveStreams(c: XtreamCredentials): Promise<LiveStream[]> {
-  const streams = await cachedFetch<LiveStream[]>('live_streams_all', apiUrl(c, 'get_live_streams'));
   return enrichIcons(streams);
 }
 
@@ -445,47 +441,60 @@ export async function getSeriesInfo(c: XtreamCredentials, seriesId: number): Pro
 // --- Stream URL Builders ---
 // ALL streams + API go through our VPS proxy (Cloudflare blocks browser→datahub direct)
 
-// Stream quality setting — persisted in localStorage
-const QUALITY_KEY = 'tivi_stream_quality';
-export type StreamQuality = 'hd' | 'eco';
+// ── Flow Quality System ────────────────────────────────────────────────
+// 4 tiers + auto mode. Flow oscillates between tiers based on measured bandwidth.
+// Tier order (best→worst): source > hd720 > eco > low
+// source = passthrough (native quality, zero CPU)
+// hd720  = 720p@2Mbps superfast+film (good 4G/WiFi)
+// eco    = 480p@900kbps (basic 4G)
+// low    = 360p@350kbps (3G)
+const QUALITY_KEY = 'tivi_flow_mode';
 
-export function getStreamQuality(): StreamQuality {
-  const v = localStorage.getItem(QUALITY_KEY);
-  return v === 'eco' ? 'eco' : 'hd'; // Default passthrough — 86% of channels are SD/HD, no transcoding needed
+export type StreamMode = 'auto' | 'source' | 'hd720' | 'eco' | 'low';
+export type FlowTier = 'source' | 'hd720' | 'eco' | 'low';
+
+export const FLOW_TIERS: FlowTier[] = ['source', 'hd720', 'eco', 'low'];
+export const FLOW_LABELS: Record<FlowTier, string> = { source: 'Source', hd720: '720p', eco: '480p', low: '360p' };
+export const FLOW_MIN_BANDWIDTH: Record<FlowTier, number> = { source: 5000000, hd720: 2000000, eco: 800000, low: 300000 };
+
+export function tierUp(t: FlowTier): FlowTier { const i = FLOW_TIERS.indexOf(t); return i > 0 ? FLOW_TIERS[i - 1] : t; }
+export function tierDown(t: FlowTier): FlowTier { const i = FLOW_TIERS.indexOf(t); return i < FLOW_TIERS.length - 1 ? FLOW_TIERS[i + 1] : t; }
+
+export function getStreamQuality(): StreamMode {
+  try { const v = localStorage.getItem(QUALITY_KEY); return (v && ['auto','source','hd720','eco','low'].includes(v)) ? v as StreamMode : 'auto'; }
+  catch { return 'auto'; }
 }
 
-export function setStreamQuality(q: StreamQuality) {
-  localStorage.setItem(QUALITY_KEY, q);
+export function setStreamQuality(q: StreamMode) {
+  try { localStorage.setItem(QUALITY_KEY, q); } catch {}
 }
 
-export function buildLiveUrl(c: XtreamCredentials, streamId: number, quality?: StreamQuality): string {
-  const q = quality || getStreamQuality();
-  // hd = video passthrough (zero CPU, source quality)
-  // eco = 480p re-encode (1.2 Mbps, works on slow connections)
-  return `${PROXY}/live?id=${streamId}&u=${enc(c.username)}&p=${enc(c.password)}${q === 'eco' ? '&q=eco' : ''}`;
+export function buildLiveUrl(c: XtreamCredentials, streamId: number, quality?: FlowTier): string {
+  const q = quality || 'source';
+  return `${PROXY}/live?id=${streamId}&u=${enc(c.username)}&p=${enc(c.password)}${q !== 'source' ? '&q=' + q : ''}`;
 }
 
 export function buildVodUrl(c: XtreamCredentials, streamId: number, ext = 'mp4'): string {
-  const q = getStreamQuality();
-  // mkv, avi, ts containers need FFmpeg remux — browsers can't play them natively
+  const mode = getStreamQuality();
+  const qParam = (mode !== 'auto' && mode !== 'source') ? `&q=${mode}` : '';
   if (ext === 'mkv' || ext === 'avi' || ext === 'ts') {
-    return `${PROXY}/vod?id=${streamId}&u=${enc(c.username)}&p=${enc(c.password)}&ext=${ext}&type=movie${q === 'eco' ? '&q=eco' : ''}`;
+    return `${PROXY}/vod?id=${streamId}&u=${enc(c.username)}&p=${enc(c.password)}&ext=${ext}&type=movie${qParam}`;
   }
   const url = `${STREAM_BASE}/movie/${enc(c.username)}/${enc(c.password)}/${streamId}.${ext}`;
   return `${PROXY}?url=${encodeURIComponent(url)}`;
 }
 
-/** FFmpeg remux fallback — always works regardless of actual container format */
 export function buildVodFallbackUrl(c: XtreamCredentials, streamId: number, ext = 'mp4', type: 'movie' | 'series' = 'movie'): string {
-  const q = getStreamQuality();
-  return `${PROXY}/vod?id=${streamId}&u=${enc(c.username)}&p=${enc(c.password)}&ext=${ext}&type=${type}${q === 'eco' ? '&q=eco' : ''}`;
+  const mode = getStreamQuality();
+  const qParam = (mode !== 'auto' && mode !== 'source') ? `&q=${mode}` : '';
+  return `${PROXY}/vod?id=${streamId}&u=${enc(c.username)}&p=${enc(c.password)}&ext=${ext}&type=${type}${qParam}`;
 }
 
 export function buildSeriesUrl(c: XtreamCredentials, episodeId: number, ext = 'mp4'): string {
-  const q = getStreamQuality();
-  // mkv, avi, ts containers need FFmpeg remux — browsers can't play them natively
+  const mode = getStreamQuality();
+  const qParam = (mode !== 'auto' && mode !== 'source') ? `&q=${mode}` : '';
   if (ext === 'mkv' || ext === 'avi' || ext === 'ts') {
-    return `${PROXY}/vod?id=${episodeId}&u=${enc(c.username)}&p=${enc(c.password)}&ext=${ext}&type=series${q === 'eco' ? '&q=eco' : ''}`;
+    return `${PROXY}/vod?id=${episodeId}&u=${enc(c.username)}&p=${enc(c.password)}&ext=${ext}&type=series${qParam}`;
   }
   const url = `${STREAM_BASE}/series/${enc(c.username)}/${enc(c.password)}/${episodeId}.${ext}`;
   return `${PROXY}?url=${encodeURIComponent(url)}`;
@@ -662,6 +671,21 @@ export function isChannelProbeAlive(streamId: number): boolean {
   const status = getProbeStatus(streamId);
   if (status === null) return true; // unknown = show it
   return status === 'live' || status === 'weak';
+}
+
+/**
+ * Single source of truth for whether a channel should be shown.
+ * Combines all filtering: dynamic health (play failures) + probe data (server verification).
+ * EVERY page must use this — no exceptions.
+ */
+export function isChannelPlayable(streamId: number | string): boolean {
+  const id = typeof streamId === 'string' ? streamId : `live-${streamId}`;
+  const numId = typeof streamId === 'number' ? streamId : parseInt(streamId) || 0;
+  // Dynamic health: user actually tried to play this and it failed
+  if (isDead(id)) return false;
+  // Probe data: server-side verification (ffprobe/HTTP byte test)
+  if (numId > 0 && !isChannelProbeAlive(numId)) return false;
+  return true;
 }
 
 // Active probe sets to prevent duplicate requests
@@ -894,7 +918,9 @@ export async function fetchCuratorData(): Promise<CuratorData | null> {
       if (cached) {
         data = cached as CuratorData;
       } else {
-        const res = await fetch(`${PROXY}/curator.json`, { signal: AbortSignal.timeout(8000) });
+        // VPS proxy is primary (hourly rebuild), Vercel origin is fallback
+        let res = await fetch(`${PROXY}/curator.json`, { signal: AbortSignal.timeout(5000) });
+        if (!res.ok) res = await fetch(`${self.location?.origin || ''}/curator.json`, { signal: AbortSignal.timeout(5000) });
         if (!res.ok) {
           console.error('[CURATOR] Fetch failed: HTTP %d', res.status);
           return null;

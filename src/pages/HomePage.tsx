@@ -19,7 +19,7 @@ import {
   getCuratorExperience,
   curatorToLiveStreams,
   hasCuratorData,
-  isChannelProbeAlive,
+  isChannelPlayable,
   getTmdbMap,
   safeImageUrl,
   sortGemsFirst,
@@ -219,7 +219,7 @@ async function loadLiveCollection(
   for (const r of results) {
     if (r.status === 'fulfilled') all.push(...r.value);
   }
-  const alive = all.filter(s => isChannelProbeAlive(s.stream_id));
+  const alive = all.filter(s => isChannelPlayable(s.stream_id));
   const shuffled = dailyShuffle(alive.length > 0 ? alive : all, collection.id);
   return sortGemsFirst(shuffled).slice(0, collection.limit);
 }
@@ -329,7 +329,7 @@ function DiscoverSports({ credentials, onPlay, navigate, categoryCache }: { cred
         }
         const filtered = all.filter(s => {
           const nl = s.name.toLowerCase();
-          return tab.keywords.some(k => nl.includes(k)) && isChannelProbeAlive(s.stream_id);
+          return tab.keywords.some(k => nl.includes(k)) && isChannelPlayable(s.stream_id);
         });
         setChannels(prev => ({ ...prev, [activeTab]: filtered.slice(0, 15) }));
       });
@@ -709,7 +709,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
         for (const r of results) {
           if (r.status === 'fulfilled') all.push(...(r.value as LiveStream[]));
         }
-        const alive = all.filter(s => isChannelProbeAlive(s.stream_id));
+        const alive = all.filter(s => isChannelPlayable(s.stream_id));
         setFixturesHex(alive.slice(0, 12));
       });
 
@@ -1252,7 +1252,7 @@ function VeeLiveRow({
 }) {
   const { lang } = useLanguage();
   const streams = curatorToLiveStreams(playlist.channels);
-  const aliveStreams = streams.filter(s => isChannelProbeAlive(s.stream_id));
+  const aliveStreams = streams.filter(s => isChannelPlayable(s.stream_id));
   if (aliveStreams.length === 0) return null;
 
   const mode = accent ?? (label === 'VEE Hot' ? 'hot' : label === 'Popular Right Now' ? 'social' : 'explore');
@@ -1348,7 +1348,7 @@ function CollectionRow({
 
   // ── Live channel row — wider landscape cards ────────────────
   if (collection.type === 'live' && row.liveStreams) {
-    const aliveStreams = row.liveStreams.filter(s => isChannelProbeAlive(s.stream_id));
+    const aliveStreams = row.liveStreams.filter(s => isChannelPlayable(s.stream_id));
     if (aliveStreams.length === 0) return null;
     return (
       <section className={`${tierClass} reveal`}>

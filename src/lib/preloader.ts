@@ -72,6 +72,8 @@ export function hasPrefetchedCurator(): boolean { return _prefetchedCurator !== 
 export function hasPrefetchedVee(): boolean { return _prefetchedVee !== null; }
 
 const PROXY = (import.meta.env.VITE_PROXY_URL || 'https://stream.zionsynapse.online').trim();
+// curator.json, vee.json, verified.json live in Vercel public/ — served at origin, not by VPS proxy
+const ORIGIN = typeof window !== 'undefined' ? window.location.origin : '';
 
 export function startPreload() {
   if (preloadStarted) return;
@@ -95,22 +97,24 @@ export function startPreload() {
   }
 
   // 2. Prefetch + parse curator + VEE data DURING splash/login
+  // curator.json: primary from VPS (hourly rebuild), Vercel fallback
   loads.push(
-    fetch(`${PROXY}/curator.json`, { signal: AbortSignal.timeout(8000) })
+    fetch(`${PROXY}/curator.json`, { signal: AbortSignal.timeout(5000) })
       .then(r => r.ok ? r.json() : null)
+      .catch(() => fetch(`${ORIGIN}/curator.json`, { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null))
       .then(data => { if (data) _prefetchedCurator = data; })
       .catch(() => {})
       .finally(stepDone),
   );
   loads.push(
-    fetch(`${PROXY}/vee.json`, { signal: AbortSignal.timeout(5000) })
+    fetch(`${ORIGIN}/vee.json`, { signal: AbortSignal.timeout(5000) })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) _prefetchedVee = data; })
       .catch(() => {})
       .finally(stepDone),
   );
 
-  // 3. Prefetch + parse health + verified data (consumed by xtream.ts)
+  // 3. channels.json is served by VPS proxy (hourly health check) — keep fetching from PROXY
   loads.push(
     fetch(`${PROXY}/channels.json`, { signal: AbortSignal.timeout(5000) })
       .then(r => r.ok ? r.json() : null)
@@ -118,8 +122,9 @@ export function startPreload() {
       .catch(() => {})
       .finally(stepDone),
   );
+  // verified.json is in Vercel public/ — fetch from origin
   loads.push(
-    fetch(`${PROXY}/verified.json`, { signal: AbortSignal.timeout(5000) })
+    fetch(`${ORIGIN}/verified.json`, { signal: AbortSignal.timeout(5000) })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) _prefetchedVerified = data; })
       .catch(() => {})

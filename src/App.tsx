@@ -144,13 +144,16 @@ function PageTransition({ children }: { children: React.ReactNode }) {
   return <div key={pathname} className="page-enter">{children}</div>;
 }
 
-function AppContent() {
+function AppContent({ guestMode, onRequestCode }: { guestMode?: boolean; onRequestCode?: (code: string) => Promise<unknown> }) {
   const { credentials, logout } = useAuth();
   const player = usePlayer();
   const { addToHistory } = useWatchHistory();
   const ambientStartedRef = React.useRef(false);
 
   const [showFullPlayer, setShowFullPlayer] = useState(false);
+  const [showCodeOverlay, setShowCodeOverlay] = useState(false);
+  const [pendingChannel, setPendingChannel] = useState<Channel | null>(null);
+  const [codeInput, setCodeInput] = useState('');
 
   const handleAmbientStart = React.useCallback(() => {
     if (!ambientStartedRef.current && isAmbientEnabled()) {
@@ -161,16 +164,33 @@ function AppContent() {
 
   const handlePlayChannel = useCallback(
     (channel: Channel) => {
+      // Guest mode: gate only actual streams, not trailers/previews
+      if (guestMode && (channel.url?.includes('/live?') || channel.url?.includes('/vod?') || channel.url?.includes('/movie/') || channel.url?.includes('/series/'))) {
+        setPendingChannel(channel);
+        setShowCodeOverlay(true);
+        return;
+      }
       const isVod = channel.category === 'movie' || channel.category === 'series';
       if (isVod) playDashCinemaSound();
       muteAmbient();
-      player.playChannel(channel);
+      player.playChannel(channel).catch(() => {});
       addToHistory(channel);
       setCurrentChannel(channel.id);
       setShowFullPlayer(true);
     },
-    [player, addToHistory]
+    [player, addToHistory, guestMode]
   );
+
+  const handleCodeSubmit = async () => {
+    if (onRequestCode && codeInput.trim()) {
+      const ok = await onRequestCode(codeInput.trim());
+      if (ok) {
+        setShowCodeOverlay(false);
+        if (pendingChannel) handlePlayChannel(pendingChannel);
+      }
+    }
+    setCodeInput('');
+  };
 
   const handleClosePlayer = useCallback(() => {
     // Don't unmute ambient — video still plays in MiniPlayer
@@ -231,7 +251,7 @@ function AppContent() {
   const ptr = usePullToRefresh();
   useScrollAmbient();
 
-  if (!credentials) return null;
+  if (!credentials && !guestMode) return null;
 
   return (
     <div className="min-h-screen bg-bg relative" onClick={handleAmbientStart}>
@@ -282,7 +302,7 @@ function AppContent() {
         <ScrollToTop />
         {/* Cross-app notification pill + push opt-in */}
         <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[9997] pointer-events-auto flex items-center gap-2">
-          <DynamicIsland appCode="tivi" />
+          <DynamicIsland appCode="tivi" guestMode={guestMode} />
           <PushBell appCode="tivi" />
         </div>
         <Header onLogout={logout} />
@@ -309,7 +329,7 @@ function AppContent() {
           <VideoPlayer state={player.state} videoRef={player.videoRef} containerRef={player.containerRef}
             onTogglePlay={player.togglePlay} onToggleMute={player.toggleMute} onVolumeChange={player.setVolume}
             onToggleFullscreen={player.toggleFullscreen} onTogglePiP={player.togglePiP}
-            onQualityChange={(_quality: string, _index: number) => { if (player.state.channel) handlePlayChannel(player.state.channel); }}
+            onQualityChange={player.changeQuality}
             onClose={handleClosePlayer} onRetry={handlePlayChannel} onBack={handleClosePlayer} onSeek={player.seek} />
         )}
         {player.streamLimit && (
@@ -347,22 +367,61 @@ function AppContent() {
           autoPlay
         />
         <UpdateButton />
+
+        {/* Premium gate overlay — guest mode + paid channel */}
+        {showCodeOverlay && (
+          <div className="fixed inset-0 z-[99] flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setShowCodeOverlay(false)}>
+            <div className="mx-4 w-full max-w-sm bg-[#0d0d1a] border border-primary/20 rounded-2xl p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="text-center mb-4">
+                <span className="text-3xl">🔒</span>
+                <h3 className="text-lg font-bold text-white mt-2" style={{ fontFamily: "'Outfit', sans-serif" }}>Premium Channel</h3>
+                <p className="text-xs text-white/40 mt-1">Enter your DASH code to unlock</p>
+              </div>
+              <input
+                type="text"
+                value={codeInput}
+                onChange={e => setCodeInput(e.target.value)}
+                placeholder="DASH-XXXXXX"
+                className="w-full px-4 py-3 rounded-xl text-sm text-white bg-white/5 border border-white/10 focus:border-primary/50 focus:outline-none mb-3 text-center tracking-wider"
+                style={{ fontFamily: "'Space Grotesk', monospace" }}
+                onKeyDown={e => e.key === 'Enter' && handleCodeSubmit()}
+                autoFocus
+              />
+              <button
+                onClick={handleCodeSubmit}
+                className="w-full py-3 rounded-xl text-sm font-bold text-white bg-primary hover:bg-primary-light transition-colors active:scale-95 mb-3"
+              >
+                Unlock
+              </button>
+              <a
+                href="https://wa.me/224611361300?text=Hi%20DASH%2C%20I%20want%20a%20Tivi%2B%20code"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-center text-xs font-medium text-green-400 hover:text-green-300 transition-colors"
+              >
+                Get your code on WhatsApp →
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function AuthedApp({ credentials }: { credentials: { username: string; password: string } | null }) {
+function AuthedApp({ credentials, guestMode, onRequestCode }: { credentials: { username: string; password: string } | null; guestMode?: boolean; onRequestCode?: (code: string) => Promise<unknown> }) {
   useEffect(() => {
     if (credentials) {
       preloadApiData((import.meta.env.VITE_PROXY_URL || 'https://stream.zionsynapse.online').trim(), credentials.username, credentials.password);
     }
   }, [credentials]);
-  return <AppContent />;
+  return <AppContent guestMode={guestMode} onRequestCode={onRequestCode} />;
 }
 
 function AppRouter() {
   const [showSplash, setShowSplash] = useState(() => !getItem<boolean>('splash_seen_plus', false));
+  const [guestMode, setGuestMode] = useState(false);
+  const guestCredentials = { username: 'guest', password: 'guest' };
   const auth = useAuth();
   const location = useLocation();
 
@@ -370,6 +429,12 @@ function AppRouter() {
     setShowSplash(false);
     setItem('splash_seen_plus', true);
     if (isAmbientEnabled()) startAmbient();
+  }, []);
+
+  const handleGuestBrowse = useCallback(() => {
+    setGuestMode(true);
+    setShowSplash(false);
+    setItem('splash_seen_plus', true);
   }, []);
 
   // Always remove pre-splash overlay (it's only needed before React mounts)
@@ -393,7 +458,7 @@ function AppRouter() {
 
   return (
     <>
-      {showSplash && <SplashScreen onComplete={handleSplashComplete} authReady={!auth.isLoading} />}
+      {showSplash && <SplashScreen onComplete={handleSplashComplete} onGuest={handleGuestBrowse} authReady={!auth.isLoading} />}
       {!showSplash && effectiveLoading && (
         <div style={{ position: 'fixed', inset: 0, background: '#060609', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
           <div style={{ textAlign: 'center' }}>
@@ -406,10 +471,10 @@ function AppRouter() {
           <style>{`@keyframes loading-bar { 0%,100% { opacity:0.3; transform:scaleX(0.5) } 50% { opacity:1; transform:scaleX(1.5) } }`}</style>
         </div>
       )}
-      {!showSplash && !effectiveLoading && !auth.isAuthenticated && (
-        <AccessCodeLogin onLogin={async (code) => { if (isAmbientEnabled()) startAmbient(); return auth.login(code); }} />
+      {!showSplash && !effectiveLoading && !auth.isAuthenticated && !guestMode && (
+        <AccessCodeLogin onLogin={async (code) => { if (isAmbientEnabled()) startAmbient(); return auth.login(code); }} onGuest={handleGuestBrowse} />
       )}
-      {auth.isAuthenticated && <AuthedApp credentials={auth.credentials} />}
+      {(auth.isAuthenticated || guestMode) && <AuthedApp credentials={auth.credentials || guestCredentials} guestMode={guestMode} onRequestCode={auth.login} />}
     </>
   );
 }

@@ -5,9 +5,10 @@ import { onPreloadProgress, getPreloadProgress } from '@/lib/preloader';
 
 interface Props {
   onLogin: (code: string) => Promise<{ success: boolean; error?: string }>;
+  onGuest?: () => void;
 }
 
-export const AccessCodeLogin: React.FC<Props> = ({ onLogin }) => {
+export const AccessCodeLogin: React.FC<Props> = ({ onLogin, onGuest }) => {
   const { lang } = useLanguage();
   const [code, setCode] = useState('');
   const [showCode, setShowCode] = useState(false);
@@ -151,6 +152,33 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin }) => {
               {loading ? t(lang, 'verifying') : progress >= 1 ? t(lang, 'enterCodeFromDash') : 'Loading'}
             </p>
           </div>
+
+          {/* Guest mode + WhatsApp */}
+          {onGuest && (
+            <div className="mt-6 flex flex-col items-center gap-3">
+              <button
+                onClick={onGuest}
+                className="px-6 py-2 rounded-xl text-sm font-medium transition-all duration-300 active:scale-95"
+                style={{
+                  background: 'rgba(157,78,221,0.08)',
+                  border: '1px solid rgba(157,78,221,0.2)',
+                  color: 'rgba(199,125,255,0.75)',
+                  fontFamily: "'Outfit', sans-serif",
+                }}
+              >
+                Browse as Guest
+              </button>
+              <a
+                href="https://wa.me/224611361300?text=Hi%20DASH%2C%20I%20want%20a%20Tivi%2B%20code"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] font-medium tracking-wide"
+                style={{ color: 'rgba(255,255,255,0.2)', fontFamily: "'Outfit', sans-serif" }}
+              >
+                Get your code on WhatsApp
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>

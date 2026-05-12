@@ -372,12 +372,13 @@ export const VEE_SERIES_COLLECTIONS: VeeSeriesCollection[] = [
 // ── Parent Tabs ─────────────────────────────────────────────────────
 
 export const SERIES_TABS: SeriesParentTab[] = [
+  // 1. PLATFORM ORIGINALS — strongest anchor, recognized brands
   {
     id: 'platforms',
     name: 'Platform Originals',
     subtabs: [
       { id: 'plt-netflix', name: 'Netflix', categoryIds: ['106', '171'] },
-      { id: 'plt-prime', name: 'Prime', categoryIds: ['108'] },
+      { id: 'plt-prime', name: 'Prime Video', categoryIds: ['108'] },
       { id: 'plt-hbo', name: 'HBO Max', categoryIds: ['188'] },
       { id: 'plt-disney', name: 'Disney+', categoryIds: ['654', '102'] },
       { id: 'plt-apple', name: 'Apple TV+', categoryIds: ['114'] },
@@ -395,50 +396,83 @@ export const SERIES_TABS: SeriesParentTab[] = [
     ],
     searchCategoryIds: ['106', '171', '108', '188', '654', '102', '114', '209', '202', '249', '110', '296', '235'],
   },
+  // 2. HOLLYWOOD TV — Western networks, quality TV
   {
-    id: 'turkish',
-    name: 'Turkish',
+    id: 'western',
+    name: 'Hollywood TV',
     subtabs: [
-      { id: 'tr-all', name: 'All Turkish', categoryIds: ['99'] },
+      { id: 'hw-bbc', name: 'BBC', categoryIds: ['202', '648', '655', '674', '587'] },
+      { id: 'hw-itv', name: 'ITV', categoryIds: ['299', '656', '475'] },
+      { id: 'hw-channel4', name: 'Channel 4', categoryIds: ['298'] },
+      { id: 'hw-nbc', name: 'NBC', categoryIds: ['225'] },
+      { id: 'hw-cbs', name: 'CBS', categoryIds: ['311'] },
+      { id: 'hw-fox', name: 'FOX', categoryIds: ['206'] },
+      { id: 'hw-abc', name: 'ABC US', categoryIds: ['199'] },
+      { id: 'hw-cw', name: 'The CW', categoryIds: ['308'] },
+      { id: 'hw-fx', name: 'FX', categoryIds: ['334'] },
     ],
-    searchCategoryIds: ['99'],
+    searchCategoryIds: ['225', '311', '206', '199', '308', '334', '298', '299'],
   },
+  // 3. BOLLYWOOD & HINDI TV
   {
-    id: 'korean',
-    name: 'Korean',
+    id: 'bollywood',
+    name: 'Hindi & Indian',
     subtabs: [
-      { id: 'kr-multi', name: 'Multi Language', categoryIds: ['267'] },
-      { id: 'kr-jtbc', name: 'JTBC', categoryIds: ['658'] },
-      { id: 'kr-tving', name: 'TVING', categoryIds: ['713'] },
-      { id: 'kr-tvn', name: 'tvN', categoryIds: ['715'] },
+      { id: 'bw-hindi-tv', name: 'Hindi TV', categoryIds: ['161'] },
+      { id: 'bw-indian-ott', name: 'Indian OTT', categoryIds: ['105', '111', '113', '118', '103', '104', '426', '310', '469', '470', '471'] },
     ],
-    searchCategoryIds: ['267', '658', '713', '715'],
+    searchCategoryIds: ['161'],
   },
+  // 4. CRIME & THRILLER
   {
-    id: 'browse',
-    name: 'Browse All',
+    id: 'crime',
+    name: 'Crime & Thriller',
     subtabs: [
-      { id: 'br-crime', name: 'Crime & Thriller', categoryIds: ['241'] },
-      { id: 'br-reality', name: 'Reality TV', categoryIds: ['294', '276'] },
-      { id: 'br-hindi', name: 'Hindi TV', categoryIds: ['161'] },
-      { id: 'br-tamil', name: 'Tamil TV', categoryIds: ['163'] },
-      { id: 'br-kids', name: 'Kids', categoryIds: ['214'] },
-      { id: 'br-islamic', name: 'Islamic', categoryIds: ['144'] },
-      { id: 'br-pakistani', name: 'Pakistani', categoryIds: ['293', '463', '464', '465', '466', '467', '468', '501', '502', '503', '504', '505', '506'] },
-      { id: 'br-australian', name: 'Australian', categoryIds: ['369'] },
-      { id: 'br-sports', name: 'Sports', categoryIds: ['518', '719', '642', '647'] },
-      { id: 'br-music', name: 'Music', categoryIds: ['238'] },
-      { id: 'br-docs', name: 'Documentaries', categoryIds: ['327', '256', '584', '695'] },
-      { id: 'br-indian-ott', name: 'Indian OTT', categoryIds: ['105', '111', '113', '118', '103', '104', '426', '310', '469', '470', '471'] },
-      { id: 'br-fx', name: 'FX', categoryIds: ['334'] },
-      { id: 'br-nbc', name: 'NBC', categoryIds: ['225'] },
-      { id: 'br-cbs', name: 'CBS', categoryIds: ['311'] },
-      { id: 'br-cw', name: 'The CW', categoryIds: ['308'] },
-      { id: 'br-abc', name: 'ABC US', categoryIds: ['199'] },
-      { id: 'br-fox', name: 'FOX', categoryIds: ['206'] },
-      { id: 'br-channel4', name: 'Channel 4', categoryIds: ['298'] },
-      { id: 'br-itv', name: 'ITV', categoryIds: ['299', '656', '475'] },
+      { id: 'cr-all', name: 'All', categoryIds: ['241'] },
+      { id: 'cr-docs', name: 'True Crime Docs', categoryIds: ['327', '256', '584', '695'] },
     ],
-    searchCategoryIds: ['241', '161', '163', '293', '369', '334', '225', '311', '308', '199', '206', '298', '299'],
+    searchCategoryIds: ['241'],
+  },
+  // 5. KIDS & FAMILY
+  {
+    id: 'kids',
+    name: 'Kids & Family',
+    subtabs: [
+      { id: 'kd-all', name: 'All Kids', categoryIds: ['214'] },
+    ],
+    searchCategoryIds: ['214'],
+  },
+  // 6. REALITY & DOCS
+  {
+    id: 'reality',
+    name: 'Reality & Docs',
+    subtabs: [
+      { id: 'rl-reality', name: 'Reality TV', categoryIds: ['294', '276'] },
+      { id: 'rl-sports', name: 'Sports', categoryIds: ['518', '719', '642', '647'] },
+      { id: 'rl-music', name: 'Music', categoryIds: ['238'] },
+    ],
+    searchCategoryIds: ['294', '276'],
+  },
+  // 7. FAITH — Islamic series
+  {
+    id: 'faith',
+    name: 'Faith',
+    subtabs: [
+      { id: 'ft-islamic', name: 'Islamic', categoryIds: ['144'] },
+    ],
+    searchCategoryIds: ['144'],
+  },
+  // 8. WORLD SERIES — regional content as options
+  {
+    id: 'world',
+    name: 'World Series',
+    subtabs: [
+      { id: 'ws-turkish', name: 'Turkish', categoryIds: ['99'] },
+      { id: 'ws-korean', name: 'Korean', categoryIds: ['267', '658', '713', '715'] },
+      { id: 'ws-tamil', name: 'Tamil', categoryIds: ['163'] },
+      { id: 'ws-pakistani', name: 'Pakistani', categoryIds: ['293', '463', '464', '465', '466', '467', '468', '501', '502', '503', '504', '505', '506'] },
+      { id: 'ws-australian', name: 'Australian', categoryIds: ['369'] },
+    ],
+    searchCategoryIds: ['99', '267', '163', '293', '369'],
   },
 ];

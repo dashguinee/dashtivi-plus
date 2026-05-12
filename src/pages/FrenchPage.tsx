@@ -3,12 +3,12 @@ import { Play, Globe, Headphones, ChevronRight } from 'lucide-react';
 import { t, useLanguage } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
 import type { XtreamCredentials, LiveStream, FreeChannel } from '@/lib/xtream';
-import { getLiveStreams, buildLiveUrl, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getFreeChannelsByCulture, freeToLiveStream, buildFreeUrlMap, isFreeChannel, type VpsHealthData } from '@/lib/xtream';
+import { getLiveStreams, buildLiveUrl, fetchVpsHealth, isCategoryDead, probeChannels, isChannelPlayable, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getFreeChannelsByCulture, freeToLiveStream, buildFreeUrlMap, isFreeChannel, type VpsHealthData } from '@/lib/xtream';
 import { REGION_GENRES } from '@/lib/collections';
 import type { RegionGenre } from '@/lib/collections';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { isDead } from '@/hooks/useChannelHealth';
+
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import type { Channel } from '@/types';
 
@@ -294,7 +294,7 @@ export const FrenchPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const handlePlay = useCallback(
     (stream: LiveStream) => {
       // Set playlist from current region's channels for prev/next navigation
-      const regionChannels = displayStreams.filter(s => !isDead(`live-${s.stream_id}`));
+      const regionChannels = displayStreams.filter(s => isChannelPlayable(s.stream_id));
       const playlist = regionChannels.map(s => ({
         id: `live-${s.stream_id}`,
         name: s.name,
@@ -511,7 +511,7 @@ function ChannelGrid({
   }, [streams, credentials]);
 
   const alive = streams.filter(
-    (s) => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id)
+    (s) => isChannelPlayable(s.stream_id)
   );
 
   // Report actual visible channel count to parent

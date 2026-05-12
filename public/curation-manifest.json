@@ -1,0 +1,166 @@
+{
+  "version": "1",
+  "description": "DashTivi+ curation manifest — single source of truth. Every channel maps back to a source.",
+  "sources": {
+    "paid": {
+      "name": "buxjam.com IPTV",
+      "api": "http://buxjam.com:8080/player_api.php",
+      "stream_base": "http://buxjam.com:8080",
+      "proxy": "https://stream.zionsynapse.online",
+      "quality_tiers": ["source", "hd720", "eco", "low"],
+      "note": "All paid channels routed through VPS proxy for quality management"
+    },
+    "free": {
+      "name": "IPTV-org public HLS",
+      "manifest": "/free-channels-curated.json",
+      "note": "Direct HLS playback via hls.js ABR — no VPS load"
+    },
+    "vod": {
+      "name": "buxjam.com VOD catalog",
+      "api": "http://buxjam.com:8080/player_api.php?action=get_vod_streams",
+      "total_items": 61443,
+      "categories": 162
+    },
+    "series": {
+      "name": "buxjam.com Series catalog",
+      "api": "http://buxjam.com:8080/player_api.php?action=get_series"
+    }
+  },
+  "live_themes": {
+    "sports": {
+      "paid_categories": ["85","578","353","483","234","345","427","492","5","6","342","550","138","212","356","156","137","516","139","726","328","190","807","808","542","543"],
+      "name_include": ["sport","football","match","cricket","tennis","rugby","boxing","racing","f1","motogp","mlb","nfl","nba","soccer","epl","ufc","wwe","golf","premier","laliga","bundesliga","serie a","champions","super cup","sky sport","bein sport","supersport","espn","tnt sport","mls","ipl","psl","ppv","boxnation","eurosport","dstv super","premier league","la liga","ligue 1","eredivisie","nrl","afl","formula 1","dazn","pole sport"],
+      "name_exclude": ["movie","film","cinema","drama","series","music","mtv","song","news","documentary","kids","cartoon","god","jesus","quran","islam","christian","church","fashion","cooking","comedy"],
+      "free_experience_tags": ["sports"]
+    },
+    "entertainment": {
+      "paid_categories": ["3","414","2","11","39","247","338","19","24","343","336","344","429","415","337"],
+      "name_exclude": ["sport","football","match","cricket","news","god","jesus","quran","islam","cartoon","kids","disney","nick","movie","cinema","film","gospel","cbeebies"],
+      "free_experience_tags": ["entertainment","african","indian","arabic","french"]
+    },
+    "news": {
+      "paid_categories": ["82","417","165","730","77","98"],
+      "name_include": ["news","cnn","bbc","sky news","al jazeera","ndtv","bloomberg","cnbc","france 24","euronews","reuters","channel news","times now","aaj tak","geo news","ary news","samay"],
+      "free_experience_tags": ["news"]
+    },
+    "kids": {
+      "paid_categories": ["410","32","347","430"],
+      "name_include": ["kids","cartoon","disney","nick","cbeebies","boomerang","cartoonito","baby","child","pbs","dreamworks","discovery kids"],
+      "free_experience_tags": ["kids"]
+    },
+    "movies": {
+      "paid_categories": ["87","275","57","340","339","282","280","413","344","429"],
+      "name_include": ["movie","film","cinema","blockbuster","netflix","prime","hbo","starz","showtime","sky cinema","bein movie","bollywood","nollywood","hollywood","action","4k"],
+      "name_exclude": ["sport","news","documentary","music","kids","gospel","quran","islam"],
+      "free_experience_tags": ["movies"]
+    },
+    "faith": {
+      "paid_categories": ["123","561"],
+      "name_include": ["islam","quran","muslim","christian","church","god","jesus","bible","faith","mecca","medina","prayer","gospel","sunnah","makkah","masjid","muhammad","allah","shia","sunni","ramadan","hajj"],
+      "free_experience_tags": ["faith"]
+    },
+    "music": {
+      "paid_categories": ["416","341","555","270","287"],
+      "name_include": ["music","mtv","song","singer","melody","bollywood","punjabi","arabic","beats","hits","vibes","dance"],
+      "name_exclude": ["movie","sport","news","quran","islam"],
+      "free_experience_tags": ["music"]
+    },
+    "premium4k": {
+      "paid_categories": ["578","85","87","337","340","339","356"],
+      "name_include": ["4k","uhd","ultra hd","2160","fhd"],
+      "note": "Cross-theme: pulls best 4K/UHD from all categories. Falls through to Xtream API for direct category loading.",
+      "free_experience_tags": []
+    }
+  },
+  "vod_tabs": {
+    "hollywood": {
+      "label": "Hollywood",
+      "categories": {
+        "latest": ["749","597"],
+        "2024": ["525"],
+        "2023": ["363"],
+        "4k_ultra": ["122"],
+        "blockbuster": ["34"],
+        "awards": ["240","412"],
+        "horror": ["148"],
+        "romance": ["262"],
+        "docs": ["257"],
+        "classic": ["423","62","128","253"]
+      }
+    },
+    "african_cinema": {
+      "label": "African Cinema",
+      "categories": {
+        "nollywood": ["580"]
+      }
+    },
+    "french_cinema": {
+      "label": "French Cinema",
+      "categories": {
+        "all": ["11"]
+      }
+    },
+    "arabic": {
+      "label": "Arabic",
+      "categories": {
+        "all": ["88"]
+      }
+    },
+    "netflix": {
+      "label": "Netflix",
+      "categories": {
+        "english": ["169"],
+        "hindi": ["168"]
+      }
+    },
+    "bollywood": {
+      "label": "Bollywood",
+      "categories": {
+        "latest": ["766","599"],
+        "2024": ["527"],
+        "4k": ["120"],
+        "classic": ["33"],
+        "comedy": ["252"]
+      }
+    },
+    "collections": {
+      "label": "Collections",
+      "categories": {
+        "marvel": ["147"],
+        "star_wars": ["157"],
+        "bond": ["146"],
+        "harry_potter": ["160"],
+        "fast_furious": ["153"],
+        "jurassic": ["154"],
+        "godfather": ["159"],
+        "terminator": ["216"],
+        "alien": ["219"],
+        "rocky": ["220"],
+        "denzel": ["158"]
+      }
+    },
+    "kids": {
+      "label": "Kids",
+      "categories": {
+        "all": ["69","621"]
+      }
+    },
+    "world_cinema": {
+      "label": "World Cinema",
+      "note": "Regional content organized as options — not primary for West Africa but available",
+      "categories": {
+        "turkish": ["772","609","537","95"],
+        "tamil": ["768","602","530","89"],
+        "telugu": ["770","606","534","92"],
+        "malayalam": ["783","604","91"],
+        "kannada": ["789","608","166"],
+        "bangla": ["100","792","610"],
+        "punjabi": ["27","784","601"],
+        "marathi": ["127"],
+        "gujarati": ["155"],
+        "pakistan": ["37","434","198","150"],
+        "korean": ["267"]
+      }
+    }
+  }
+}

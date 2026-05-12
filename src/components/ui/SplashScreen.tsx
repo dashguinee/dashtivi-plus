@@ -3,10 +3,11 @@ import { preloadReady } from '@/lib/preloader';
 
 interface Props {
   onComplete: () => void;
+  onGuest?: () => void;
   authReady?: boolean;
 }
 
-export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) => {
+export const SplashScreen: React.FC<Props> = ({ onComplete, onGuest, authReady = true }) => {
   const [phase, setPhase] = useState<'dark' | 'brand' | 'ready' | 'exit'>('dark');
   const authRef = useRef(authReady);
   authRef.current = authReady;
@@ -20,7 +21,7 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
     const t1 = setTimeout(() => setPhase('brand'), 500);
 
     // Phase 2: wait for assets + minimum brand time (auth has 3s max)
-    const minBrandTime = new Promise<void>(r => setTimeout(r, 2200));
+    const minBrandTime = new Promise<void>(r => setTimeout(r, 2800));
 
     Promise.all([minBrandTime, preloadReady]).then(() => {
       // verbose: '[SPLASH] Assets ready'
@@ -94,6 +95,37 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
         >
           <div className="h-full w-full bg-primary/40 rounded-full" style={{ animation: 'loading-bar 1.5s ease-in-out infinite' }} />
         </div>
+
+        {/* Guest mode + WhatsApp CTA */}
+        {onGuest && (
+          <div
+            className={`mt-8 flex flex-col items-center gap-3 transition-opacity duration-700 ${
+              phase === 'ready' || phase === 'exit' ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <button
+              onClick={onGuest}
+              className="px-8 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 active:scale-95"
+              style={{
+                background: 'rgba(157,78,221,0.12)',
+                border: '1px solid rgba(157,78,221,0.25)',
+                color: 'rgba(199,125,255,0.9)',
+                fontFamily: "'Outfit', sans-serif",
+              }}
+            >
+              Browse as Guest
+            </button>
+            <a
+              href="https://wa.me/YOUR_NUMBER?text=Hi%20DASH%2C%20I%20want%20a%20Tivi%2B%20code"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] font-medium tracking-wide"
+              style={{ color: 'rgba(255,255,255,0.25)', fontFamily: "'Outfit', sans-serif" }}
+            >
+              Get your code on WhatsApp
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );

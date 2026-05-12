@@ -229,35 +229,6 @@ export function getFeaturedHero(): FeaturedHero {
 
 // ── Movie Featured Categories (reordered for audience) ────────────
 
-export const MOVIE_FEATURED_CATS = [
-  { id: '749', name: 'New 2026' },        // 239 movies
-  { id: '597', name: '2025 Hits' },       // 2,127 movies
-  { id: '525', name: '2024' },            // 2,617 movies
-  { id: '122', name: '4K' },              // 1,058 movies
-  { id: '34', name: 'Blockbuster' },      // 1,002 movies
-  { id: '240', name: 'Award Winners' },   // 142 movies
-  { id: '95', name: 'Turkish' },          // 854 movies
-  { id: '33', name: 'Bollywood' },        // 2,683 movies
-  { id: '69', name: 'Kids' },             // 441 movies
-  { id: '96', name: 'Arabic Sub' },       // 684 movies
-  { id: '148', name: 'Horror' },          // 188 movies
-];
-
-// ── Series Featured Categories ────────────────────────────────────
-
-export const SERIES_FEATURED_CATS = [
-  { id: '106', name: 'Netflix' },         // 2,543 series
-  { id: '108', name: 'Prime Video' },     // 1,580 series
-  { id: '102', name: 'Disney+' },         // 818 series
-  { id: '188', name: 'HBO' },             // 381 series
-  { id: '114', name: 'Apple TV+' },       // 346 series
-  { id: '209', name: 'Hulu' },            // 334 series
-  { id: '202', name: 'BBC' },             // 315 series
-  { id: '249', name: 'Paramount+' },      // 154 series
-  { id: '99', name: 'Turkish' },          // 1,142 series
-  { id: '267', name: 'Korean' },          // 235 series
-];
-
 // ── Live TV Themed Collections ───────────────────────────────────
 
 export interface LiveTheme {
@@ -311,7 +282,7 @@ export const LIVETV_THEMES: LiveTheme[] = [
     id: 'entertainment',
     name: 'Entertainment',
     emoji: '',
-    description: 'Drama · Comedy · Reality · Worldwide',
+    description: 'Drama · Comedy · Reality · Discovery · Worldwide',
     categoryIds: [
       '3',    // UK Entertainment (39ch, 8 gems — Ch4, Ch5, Comedy Central, Sky)
       '414',  // UK General (26ch, 16 gems — BBC One FHD, ITV FHD)
@@ -326,6 +297,8 @@ export const LIVETV_THEMES: LiveTheme[] = [
       '336',  // Africa Canal+ (African Drama subtab)
       '344',  // DSTV Movies (Nollywood subtab)
       '429',  // DSTV Movies Alt (Nollywood subtab)
+      '415',  // UK Documentary (19ch — Discovery FHD, Sky History, NatGeo)
+      '337',  // India Documentary (23ch — Discovery 4K, NatGeo 4K)
     ],
     gradient: 'from-primary/80 to-primary-dark/80',
     glowColor: 'shadow-primary/20',
@@ -379,33 +352,6 @@ export const LIVETV_THEMES: LiveTheme[] = [
     ],
     gradient: 'from-primary-dark/90 to-accent/30',
     glowColor: 'shadow-primary-dark/20',
-  },
-  {
-    id: 'faith',
-    name: 'Faith',
-    emoji: '',
-    description: 'Islamic & Christian channels',
-    categoryIds: [
-      '123',  // Islamic (62ch)
-      '561',  // Christian (16ch)
-    ],
-    gradient: 'from-accent-gold/40 to-primary/30',
-    glowColor: 'shadow-accent-gold/20',
-  },
-  {
-    id: 'music',
-    name: 'Music & Vibes',
-    emoji: '',
-    description: 'MTV, Bollywood Beats, Arabic Vibes',
-    categoryIds: [
-      '416',  // UK Music
-      '341',  // India Music (11ch, 4 gems)
-      '555',  // Arabic Music
-      '270',  // Bollywood Singers 24/7
-      '287',  // Punjabi Singers 24/7
-    ],
-    gradient: 'from-primary to-primary-light/70',
-    glowColor: 'shadow-primary/20',
   },
   {
     id: 'premium4k',
@@ -725,259 +671,3 @@ export const PREMIUM4K_TYPES: SportType[] = [
 // ── Browse Experiences ───────────────────────────────────────────
 // Replaces raw Starshare categories with curated experience groups.
 // Every live category mapped. Dead categories excluded.
-// A category can appear in multiple experiences.
-
-export interface BrowseExperience {
-  id: string;
-  name: string;
-  icon: string;       // Lucide icon name hint for the UI
-  categoryIds: string[];
-}
-
-export const BROWSE_EXPERIENCES: BrowseExperience[] = [
-  // Broadest / strongest first — what most users tap
-  {
-    id: 'uk-usa',
-    name: 'UK & USA',
-    icon: 'tv',
-    categoryIds: [
-      '2',    // USA (93ch — HBO, Starz, Showtime)
-      '3',    // UK Entertainment (39ch — Ch4, Comedy Central, Sky)
-      '414',  // UK General (26ch — BBC One FHD, ITV FHD)
-      '413',  // UK Movies (42ch)
-      '24',   // US 24/7
-      '411',  // HUB Premier (11ch)
-    ],
-  },
-  {
-    id: 'movies-247',
-    name: 'Movies 24/7',
-    icon: 'film',
-    categoryIds: [
-      '275',  // English Movies 24/7
-      '57',   // Netflix Movies 24/7
-      '280',  // Amazon Movies 24/7
-      '413',  // UK Movies (42ch)
-      '274',  // Bollywood Movies/Actors 24/7 (65ch)
-      '282',  // Bollywood Movies 24/7
-      '283',  // Hindi Web Series 24/7 (14ch)
-      '349',  // 24x7 Live (34ch)
-    ],
-  },
-  {
-    id: 'sports-events',
-    name: 'Live Events',
-    icon: 'trophy',
-    categoryIds: [
-      '190',  // PPV Live Match Time (72ch)
-      '807',  // IPL 2026 (9ch)
-      '808',  // PSL 2026 (2ch)
-    ],
-  },
-  // Cultural anchors — Africa & French together for SL/Guinea audience
-  {
-    id: 'africa',
-    name: 'Africa',
-    icon: 'globe',
-    categoryIds: [
-      '336',  // AFRICA CANAL+ (247ch)
-      '343',  // DSTV Entertainment (84ch)
-      '428',  // DSTV Entertainment FHD (72ch)
-      '344',  // DSTV Movies (7ch)
-      '429',  // DSTV Movies FHD (9ch)
-      '347',  // DSTV Kids (13ch)
-      '430',  // DSTV Kids FHD (15ch)
-      '346',  // DSTV News (17ch)
-      '431',  // DSTV News FHD (5ch)
-      '345',  // DSTV Super — SuperSport
-      '427',  // DSTV Super FHD
-    ],
-  },
-  {
-    id: 'french',
-    name: 'French',
-    icon: 'languages',
-    categoryIds: [
-      '11',   // France (162ch — Canal+, TF1, M6)
-      '336',  // AFRICA CANAL+ (247ch — Africa Frenchn)
-    ],
-  },
-  {
-    id: 'arabic',
-    name: 'Arabic & MENA',
-    icon: 'moon',
-    categoryIds: [
-      '86',   // MBC Arabic (53ch)
-      '180',  // Egypt (69ch)
-      '751',  // Iran (97 alive)
-      '129',  // Iraq (63 alive)
-      '13',   // ARABIC (13ch)
-      '549',  // Lebanon (24ch)
-      '554',  // Morocco (19ch)
-      '553',  // Algeria (25ch)
-      '548',  // Syria (24ch)
-      '556',  // UAE (25 alive)
-      '83',   // Qatar (10ch)
-      '227',  // Oman (1ch)
-      '178',  // Kuwait (17ch)
-      '181',  // Saudi Arabia (44ch)
-      '175',  // Shahed Box (34ch)
-      '165',  // Arabic News
-      '156',  // Arabic Sports
-      '555',  // Arabic Music
-      '87',   // beIN Movies
-      '123',  // Islamic
-    ],
-  },
-  // Deep regional — massive catalogs
-  {
-    id: 'south-asian',
-    name: 'South Asia',
-    icon: 'landmark',
-    categoryIds: [
-      '247',  // India Entertainment
-      '338',  // India Entertainment (additional)
-      '340',  // India English Movies (29ch)
-      '339',  // India Hindi Movies (23ch)
-      '337',  // India Documentary (23ch)
-      '356',  // India Sports
-      '341',  // India Music (11ch)
-      '77',   // Indian News (47ch)
-      '18',   // Indian SD (49ch)
-      '728',  // Malayalam Entertainment (33ch)
-      '729',  // Malayalam Movies (65ch)
-      '730',  // Malayalam News (29ch)
-      '732',  // Tamil Entertainment (67ch)
-      '733',  // Tamil Movies (37ch)
-      '731',  // Tamil News (11ch)
-      '72',   // Tamil (6ch)
-      '73',   // Telugu (51ch)
-      '290',  // Telugu Movies 24/7 (28ch)
-      '81',   // Kannada (40ch)
-      '291',  // Kannada Movies 24/7 (31ch)
-      '76',   // Gujarati (20ch)
-      '75',   // Marathi (32ch)
-      '405',  // Oriya (16ch)
-      '140',  // Assam (8ch)
-      '560',  // Bhojpuri (4ch)
-      '19',   // UK Asian (38ch)
-      '194',  // USA Asian (35ch)
-      '9',    // Bangla (88ch)
-      '292',  // Bangla Movies 24/7 (8ch)
-      '42',   // Sri Lanka (36ch)
-      '64',   // Nepal (87ch)
-      '28',   // Afghanistan (17 alive)
-      '727',  // Malayalam News (15 alive)
-    ],
-  },
-  {
-    id: 'pakistan',
-    name: 'Pakistan',
-    icon: 'star',
-    categoryIds: [
-      '4',    // Pakistan (44ch)
-      '98',   // Pakistan News (47ch)
-      '350',  // Pak Drama 24/7 (13ch)
-      '272',  // Pakistani Movies 24/7 (4ch)
-      '7',    // Punjabi (83ch)
-      '285',  // Punjabi Movies 24/7 (9ch)
-      '287',  // Punjabi Singers 24/7
-      '360',  // Pakistani Singers 24/7 (13 alive)
-    ],
-  },
-  {
-    id: 'europe',
-    name: 'Europe',
-    icon: 'map',
-    categoryIds: [
-      '15',   // Germany (277 alive)
-      '25',   // Turkey (263 alive)
-      '20',   // EXYU (240 alive)
-      '71',   // Russian (196 alive)
-      '44',   // Bulgaria (135 alive)
-      '14',   // Italy (45ch)
-      '16',   // Portugal (157ch)
-      '39',   // Poland (192ch)
-      '35',   // Romania (79ch)
-      '29',   // Albania (107 alive)
-      '21',   // Netherlands (68 alive)
-      '774',  // Czech (57 alive)
-      '63',   // Sweden (48 alive)
-      '583',  // Norway (32 alive)
-      '60',   // Austria (30 alive)
-      '579',  // Denmark (27 alive)
-      '582',  // Finland (32ch)
-      '10',   // Greek (11 alive)
-      '132',  // Israel (116ch)
-      '141',  // New Zealand (5ch)
-    ],
-  },
-  {
-    id: 'americas',
-    name: 'Americas',
-    icon: 'globe',
-    categoryIds: [
-      '31',   // Canada (230 alive)
-      '741',  // Canada Live Event (157 alive)
-      '425',  // Caribbean (196 alive)
-      '66',   // Brasil (75 alive)
-    ],
-  },
-  {
-    id: 'asia-pacific',
-    name: 'Asia Pacific',
-    icon: 'compass',
-    categoryIds: [
-      '90',   // Philippines (124ch)
-      '101',  // Indonesia (91 alive)
-      '48',   // Malaysia (200ch)
-      '54',   // Australia (110 alive)
-    ],
-  },
-  {
-    id: 'sports-all',
-    name: 'All Sports',
-    icon: 'trophy',
-    categoryIds: [
-      '85',   // beIN Sports (132ch)
-      '578',  // Real 4K (35ch)
-      '353',  // Sky Sports UK 4K (10ch)
-      '483',  // Sky Sports UK (32ch)
-      '234',  // Football (31ch)
-      '345',  // DStv Super (32ch)
-      '427',  // DStv Super FHD (34ch)
-      '492',  // EPL (31ch)
-      '5',    // Cricket (59ch)
-      '6',    // Sports General
-      '342',  // Tennis/Racing
-      '550',  // Rugby (20ch)
-      '138',  // Boxing
-      '212',  // Fighting
-      '356',  // India Sports
-      '156',  // Arabic Sports
-      '137',  // Fox Australia Sports (8ch)
-      '516',  // NFL
-      '139',  // UK Sports Mix (10ch)
-      '726',  // MLS (49ch)
-      '328',  // MLB (32ch)
-      '190',  // PPV Live Events (72ch)
-      '807',  // IPL 2026 (9ch)
-      '808',  // PSL 2026 (2ch)
-      '542',  // Optus Sports (11 alive)
-      '543',  // Spark Sports (8 alive)
-      '773',  // NBA League Pass (5 alive)
-    ],
-  },
-];
-
-// Dead categories — EMPTY after two-tier verification (2026-03-30).
-// Every category with even 1 verified channel has been removed from this list.
-export const DEAD_CATEGORY_IDS = new Set([
-  '213',  // Premium (2 channels, not useful)
-]);
-
-// ── Premium Gem Channels ─────────────────────────────────────────
-/** Premium channels to always surface first within any category listing.
- *  Stream IDs sourced from the 2026-03-28 channel curation probe. */
-// @deprecated — gems now tracked via is_gem in tivi_channels, built at runtime from curator
-export const GEM_STREAM_IDS = new Set<number>();

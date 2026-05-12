@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { NeonGate, cardScaleStyle } from '@/components/ui/NeonGate';
 import { t, useLanguage } from '@/i18n';
 import type { XtreamCredentials, LiveStream, GroupedChannel, FreeChannel } from '@/lib/xtream';
-import { getLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelProbeAlive, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getExperienceIds, getExperienceCategoryIds, fetchCuratorData, getCuratorExperience, curatorToLiveStreams, hasCuratorData, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
+import { getLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelPlayable, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getExperienceIds, getExperienceCategoryIds, fetchCuratorData, getCuratorExperience, curatorToLiveStreams, hasCuratorData, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
 import {
   LIVETV_THEMES, SPORT_TYPES, ENTERTAINMENT_TYPES, KIDS_TYPES,
   CINEMA_TYPES, MUSIC_TYPES, DISCOVERY_TYPES, FAITH_TYPES, PREMIUM4K_TYPES,
@@ -21,7 +21,6 @@ const THEME_SUBTYPES: Record<string, SportType[]> = {
   'kids': KIDS_TYPES,
   'movies247': CINEMA_TYPES,
   'music': MUSIC_TYPES,
-  'documentary': DISCOVERY_TYPES,
   'faith': FAITH_TYPES,
   'premium4k': PREMIUM4K_TYPES,
   'news': NEWS_TYPES,
@@ -31,7 +30,7 @@ import { setAmbientSpeed, setAmbientExperience } from '@/lib/ambient-audio';
 import { ChannelIcon, ChannelBadge } from '@/components/ui/ChannelIcon';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { isDead } from '@/hooks/useChannelHealth';
+
 import type { Channel } from '@/types';
 
 
@@ -45,8 +44,7 @@ const THEME_TO_CLASSIFIED: Record<string, string> = {
   'movies247': 'movies',
   'faith': 'faith',
   'music': 'music',
-  'documentary': 'documentary',
-  'premium4k': 'sports',  // 4K sports channels
+  // premium4k falls through to Xtream API — uses real 4K category IDs from collections.ts
 };
 
 // Map theme IDs to free channel experience tags
@@ -56,10 +54,9 @@ const THEME_TO_EXPERIENCE: Record<string, string[]> = {
   'entertainment': ['entertainment', 'african', 'indian', 'arabic', 'french'],
   'kids': ['kids'],
   'movies247': ['movies'],
-  'documentary': ['documentary'],
   'music': ['music'],
   'faith': ['faith'],
-  'premium4k': ['sports', 'movies', 'documentary'],
+  'premium4k': ['sports', 'movies'],
 };
 
 // Category filter options for search — maps to curator experience IDs
@@ -70,7 +67,6 @@ const SEARCH_CATEGORY_OPTIONS = [
   { id: 'kids',          label: 'Kids',          emoji: '\uD83E\uDDF8' },
   { id: 'movies',        label: 'Cinema',        emoji: '\uD83C\uDFAC' },
   { id: 'music',         label: 'Music',         emoji: '\uD83C\uDFB5' },
-  { id: 'documentary',   label: 'Discovery',     emoji: '\uD83C\uDF0D' },
   { id: 'faith',         label: 'Faith',         emoji: '\u2728' },
 ] as const;
 
@@ -232,9 +228,6 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
           for (const theme of LIVETV_THEMES) {
             const classifiedExp = THEME_TO_CLASSIFIED[theme.id];
-            if (!classifiedExp) {
-              console.warn('[LIVE] Theme "%s" has no THEME_TO_CLASSIFIED mapping', theme.id);
-            }
             const curatorChannels = classifiedExp ? getCuratorExperience(classifiedExp) : null;
 
             let streams: LiveStream[] = [];
@@ -409,7 +402,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const handlePlayFromList = useCallback(
     (stream: LiveStream, allStreams: LiveStream[]) => {
       const channels = allStreams
-        .filter(s => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id))
+        .filter(s => isChannelPlayable(s.stream_id))
         .map(s => ({
           id: `live-${s.stream_id}`,
           name: s.name,
@@ -683,15 +676,6 @@ const SHOWCASE_CONFIG: Record<string, {
     accentGlow: 'rgba(168,85,247,0.25)',
     icon: <Music className="w-5 h-5" />,
   },
-  documentary: {
-    name: 'Docs & Discovery',
-    tagline: '',
-    route: '/live/documentary',
-    gradient: 'from-blue-900/50 via-blue-900/20 to-transparent',
-    accentColor: '#6366F1',
-    accentGlow: 'rgba(99,102,241,0.25)',
-    icon: <Globe className="w-5 h-5" />,
-  },
   movies: {
     name: 'Cinema',
     tagline: '',
@@ -748,7 +732,7 @@ function ExperienceShowcase({
   const [activeSubTab, setActiveSubTab] = useState<string>('all');
   if (!config) return null;
 
-  const alive = streams.filter(s => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id));
+  const alive = streams.filter(s => isChannelPlayable(s.stream_id));
 
   // Filter by subtab if active
   let filtered = alive;
@@ -884,7 +868,7 @@ const ThemeRow = React.memo(function ThemeRow({
   const [expanded, setExpanded] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<string>('all');
 
-  const alive = streams.filter((s) => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id));
+  const alive = streams.filter((s) => isChannelPlayable(s.stream_id));
   if (alive.length === 0) return null;
 
   // Get sub-tabs for this theme (if any)
@@ -929,7 +913,6 @@ const ThemeRow = React.memo(function ThemeRow({
             kids: <Baby className="w-4 h-4 text-white/80" />,
             movies247: <Film className="w-4 h-4 text-white/80" />,
             music: <Music className="w-4 h-4 text-white/80" />,
-            documentary: <Globe className="w-4 h-4 text-white/80" />,
             premium4k: <Sparkles className="w-4 h-4 text-white/80" />,
             faith: <Heart className="w-4 h-4 text-white/80" />,
           } as Record<string, React.ReactNode>)[theme.id] || <Sparkles className="w-4 h-4 text-white/80" />}
@@ -1032,7 +1015,6 @@ const EXP_DISPLAY_NAMES: Record<string, string> = {
   movies: 'Cinema',
   faith: 'Faith',
   music: 'Music',
-  documentary: 'Discovery',
   premium4k: '4K',
   african: 'Africa',
   indian: 'India',
@@ -1133,7 +1115,7 @@ function SearchGrid({ streams, credentials, onPlay, freeUrlMap }: {
   freeUrlMap: Record<number, string>;
 }) {
   const [limit, setLimit] = useState(60);
-  const alive = streams.filter(s => !isDead(`live-${s.stream_id}`) && isChannelProbeAlive(s.stream_id));
+  const alive = streams.filter(s => isChannelPlayable(s.stream_id));
 
   const handlePlay = useCallback(
     (stream: LiveStream) => {
@@ -1228,7 +1210,7 @@ function StreamMoreSection({
     if (!hasCuratorData()) return [];
     const seen = new Set<number>();
     const all: LiveStream[] = [];
-    for (const expId of ['sports', 'entertainment', 'news', 'kids', 'movies', 'music', 'documentary', 'faith',
+    for (const expId of ['sports', 'entertainment', 'news', 'kids', 'movies', 'music', 'faith',
                           'africa', 'americas', 'arabic', 'europe', 'french', 'pakistan', 'south_asian']) {
       const ch = getCuratorExperience(expId);
       if (!ch) continue;

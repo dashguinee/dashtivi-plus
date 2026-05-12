@@ -9,7 +9,7 @@ import {
   curatorToLiveStreams,
   hasCuratorData,
   buildLiveUrl,
-  isChannelProbeAlive,
+  isChannelPlayable,
   sortGemsFirst,
   fetchVeeData,
   getVeeData,
@@ -33,7 +33,7 @@ import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { setAmbientSpeed, setAmbientExperience } from '@/lib/ambient-audio';
 import { ChannelIcon, ChannelBadge } from '@/components/ui/ChannelIcon';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { isDead } from '@/hooks/useChannelHealth';
+
 import type { Channel } from '@/types';
 
 // Sports Arena — lazy loaded, only when experience=sports
@@ -530,7 +530,7 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
         }
 
         // Filter alive — curator order is pre-sorted (gems + narrative), don't re-sort
-        streams = streams.filter(s => isChannelProbeAlive(s.stream_id));
+        streams = streams.filter(s => isChannelPlayable(s.stream_id));
         if (!curatorResult) {
           streams = sortGemsFirst(streams);
         }
@@ -557,7 +557,7 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
   const handlePlay = useCallback(
     (stream: LiveStream, playlist?: LiveStream[]) => {
       const list = (playlist || allStreams)
-        .filter(s => isChannelProbeAlive(s.stream_id))
+        .filter(s => isChannelPlayable(s.stream_id))
         .map(s => ({
           id: `live-${s.stream_id}`,
           name: s.name,
@@ -629,12 +629,12 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
 
   // VEE-curated top picks (from engine — already ordered by platform intelligence)
   const veeStreams = veeRow
-    ? curatorToLiveStreams(veeRow.channels).filter(s => isChannelProbeAlive(s.stream_id))
+    ? curatorToLiveStreams(veeRow.channels).filter(s => isChannelPlayable(s.stream_id))
     : [];
 
   // Social proof channels (cross-experience trending)
   const socialStreams = veeSocialProof
-    ? curatorToLiveStreams(veeSocialProof.channels).filter(s => isChannelProbeAlive(s.stream_id))
+    ? curatorToLiveStreams(veeSocialProof.channels).filter(s => isChannelPlayable(s.stream_id))
     : [];
 
   // Group quality variants for the main grid (memoized to avoid re-compute on every render)

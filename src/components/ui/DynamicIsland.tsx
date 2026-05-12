@@ -40,6 +40,8 @@ interface DynamicIslandProps {
   appCode?: 'voyo' | 'hub' | 'giraf' | 'tivi' | string;
   /** Current user's dash_id — enables target_user filtering. Optional. */
   dashId?: string | null;
+  /** Guest mode — shows subscribe messaging instead of reply */
+  guestMode?: boolean;
 }
 
 function typeForApp(app: string): Notification['type'] {
@@ -58,7 +60,7 @@ function mapDashNotification(row: DashNotification): Notification {
   };
 }
 
-export const DynamicIsland = ({ appCode = 'tivi', dashId: dashIdProp = null }: DynamicIslandProps = {}) => {
+export const DynamicIsland = ({ appCode = 'tivi', dashId: dashIdProp = null, guestMode = false }: DynamicIslandProps = {}) => {
   // Tivi+'s useAuth exposes access code + tier, not a dash_id — caller
   // should pass dashId explicitly when we wire identity later. Null =
   // broadcast-only view (correct default for the current access-code
@@ -133,35 +135,33 @@ export const DynamicIsland = ({ appCode = 'tivi', dashId: dashIdProp = null }: D
       triggerNewNotification(); // Wave for new notifications
     };
 
-    // Demo: Auto-trigger notifications to show the full flow
+    // Demo: Tivi+ notifications
     const demo1 = setTimeout(() => {
       (window as any).pushNotification({
         id: '1',
-        type: 'music',  // Purple dot
-        title: 'Burna Boy',
-        subtitle: 'Higher just dropped'
+        type: 'music',
+        title: 'Tivi+',
+        subtitle: '4,922 live channels ready'
       });
-    }, 1000);
+    }, 2000);
 
-    // Friend message after 8s (custom blue color)
     const demo2 = setTimeout(() => {
       (window as any).pushNotification({
         id: '2',
-        type: 'message',  // Blue dot
-        title: 'Aziz',
-        subtitle: 'yo come check this out'
+        type: 'message',
+        title: 'Live Now',
+        subtitle: 'Champions League on beIN Sports'
       });
-    }, 8000);
+    }, 10000);
 
-    // System notification after 15s
     const demo3 = setTimeout(() => {
       (window as any).pushNotification({
         id: '3',
-        type: 'system',  // Red dot
-        title: 'VOYO',
-        subtitle: 'notification system ready'
+        type: 'system',
+        title: 'DashTivi+',
+        subtitle: 'StreamFlow optimized for your network'
       });
-    }, 15000);
+    }, 20000);
 
     return () => {
       clearTimeout(demo1);
@@ -169,6 +169,24 @@ export const DynamicIsland = ({ appCode = 'tivi', dashId: dashIdProp = null }: D
       clearTimeout(demo3);
     };
   }, []);
+
+  // Guest mode notifications
+  useEffect(() => {
+    if (!guestMode) return;
+    const t1 = setTimeout(() => {
+      (window as any).pushNotification({
+        id: 'guest-1', type: 'system', title: 'Guest Mode',
+        subtitle: 'You are browsing as a guest'
+      });
+    }, 3000);
+    const t2 = setTimeout(() => {
+      (window as any).pushNotification({
+        id: 'guest-2', type: 'message', title: 'Subscribe',
+        subtitle: 'Unlock premium content'
+      });
+    }, 15000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [guestMode]);
 
   // NEW NOTIFICATION: wave → dark → fade
   const triggerNewNotification = () => {
@@ -759,10 +777,10 @@ export const DynamicIsland = ({ appCode = 'tivi', dashId: dashIdProp = null }: D
                       </div>
                     ) : currentNotification?.type === 'message' ? (
                       <button
-                        className="px-2.5 py-1 rounded-full bg-purple-500/20 text-[10px] font-medium text-purple-700"
-                        onClick={(e) => { e.stopPropagation(); handleReplyMode(); }}
+                        className="px-2.5 py-1 rounded-full bg-green-500/20 text-[10px] font-medium text-green-600"
+                        onClick={(e) => { e.stopPropagation(); guestMode ? window.open('https://wa.me/224611361300?text=Hi%20DASH%2C%20I%20want%20a%20Tivi%2B%20code', '_blank') : handleReplyMode(); }}
                       >
-                        Reply
+                        {guestMode ? 'Go' : 'Reply'}
                       </button>
                     ) : (
                       <button

@@ -32,7 +32,7 @@ interface Props {
   onVolumeChange: (vol: number) => void;
   onToggleFullscreen: () => void;
   onTogglePiP: () => void;
-  onQualityChange: (quality: string, index: number) => void;
+  onQualityChange: () => void;
   onClose: () => void;
   onBack?: () => void;
   onSeek?: (time: number) => void;
@@ -224,30 +224,53 @@ export const PlayerControls: React.FC<Props> = ({
               </span>
             )}
 
-            {/* Flow pill — tap to toggle Flow on/off */}
-            {state.quality && state.quality !== 'Auto' && (
+            {/* Report offline — user flags dead channel, hidden for 6h */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (state.channel?.id) {
+                  import('@/hooks/useChannelHealth').then(({ markDead }) => {
+                    markDead(state.channel!.id, 'user_reported_offline');
+                  });
+                }
+              }}
+              className="w-11 h-11 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+              title="Report offline channel"
+            >
+              <span className="text-base">🚨</span>
+            </button>
+
+            {/* Flow pill — only for VPS-proxied paid channels */}
+            {!isVod && state.channel?.url?.includes('/live?') && (
               <button
                 key={state.quality}
                 onClick={(e) => {
                   e.stopPropagation();
-                  // Toggle: clear per-channel eco memory and force passthrough
-                  const id = state.channel?.url?.match(/id=(\d+)/)?.[1];
-                  if (id) localStorage.removeItem('flow-eco-' + id);
-                  onQualityChange('hd', 0);
+                  onQualityChange();
                 }}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full ml-2 bg-white/[0.03] border transition-colors duration-1000 active:scale-95"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full ml-2 bg-white/[0.03] border transition-all duration-300 active:scale-95"
                 style={{
-                  borderColor: state.quality === '4K' ? 'rgba(245,158,11,0.4)'
-                    : state.quality === '1080p' ? 'rgba(0,212,255,0.3)'
-                    : state.quality === '720p' ? 'rgba(157,78,221,0.25)'
+                  borderColor: state.quality?.startsWith('AUTO') ? 'rgba(157,78,221,0.35)'
+                    : state.quality?.startsWith('Source') ? 'rgba(0,212,255,0.3)'
+                    : state.quality?.startsWith('720p') ? 'rgba(0,212,255,0.2)'
+                    : state.quality?.startsWith('480p') ? 'rgba(16,185,129,0.3)'
+                    : state.quality?.startsWith('360p') ? 'rgba(251,146,60,0.3)'
                     : 'rgba(255,255,255,0.08)',
-                  animation: 'flow-pill-flash 2s ease-out',
                 }}
               >
                 <span className="text-[9px] font-medium text-white/30 tracking-wider">Flow</span>
                 <span className="text-[8px] text-white/15">·</span>
-                <span className="text-[10px] font-semibold text-white/40 tracking-wide">
-                  {state.quality === '4K' ? 'UHD' : state.quality === '1080p' ? 'HD' : state.quality === '480p' ? 'Steady' : state.quality}
+                <span className="text-[10px] font-semibold tracking-wide"
+                  style={{
+                    color: state.quality?.startsWith('AUTO') ? 'rgba(157,78,221,0.8)'
+                      : state.quality?.startsWith('Source') ? 'rgba(0,212,255,0.7)'
+                      : state.quality?.startsWith('720p') ? 'rgba(0,212,255,0.5)'
+                      : state.quality?.startsWith('480p') ? 'rgba(16,185,129,0.7)'
+                      : state.quality?.startsWith('360p') ? 'rgba(251,146,60,0.7)'
+                      : 'rgba(255,255,255,0.4)',
+                  }}
+                >
+                  {state.quality || 'AUTO'}
                 </span>
               </button>
             )}

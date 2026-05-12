@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { PlayerControls } from './PlayerControls';
-import { RefreshCw, AlertTriangle, Waves, ChevronLeft as ChevLeft, ChevronRight as ChevRight, SkipForward, SkipBack } from 'lucide-react';
+import { RefreshCw, AlertTriangle, ChevronLeft as ChevLeft, ChevronRight as ChevRight, SkipForward, SkipBack } from 'lucide-react';
 import { useAdjacentChannels, usePlaylistState, setCurrentChannel } from '@/lib/playlist';
 import { useKeyboard } from '@/hooks/useKeyboard';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { SmartMatch } from './SmartMatch';
 import { EpgWidget } from './EpgWidget';
-import { getStreamQuality, setStreamQuality } from '@/lib/xtream';
 import type { Channel, PlayerState } from '@/types';
 
 function detectVod(state: PlayerState): boolean {
@@ -28,7 +27,7 @@ interface Props {
   onVolumeChange: (vol: number) => void;
   onToggleFullscreen: () => void;
   onTogglePiP: () => void;
-  onQualityChange: (quality: string, index: number) => void;
+  onQualityChange: () => void;
   onClose: () => void;
   onRetry: (channel: Channel) => void;
   onBack?: () => void;
@@ -56,7 +55,6 @@ export const VideoPlayer: React.FC<Props> = ({
   const hideTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const switchCooldownRef = useRef(false); // suppresses controls flash on live channel switch
   const prevChannelIdRef = useRef<string | null>(null);
-  const [showEcoPrompt, setShowEcoPrompt] = useState(false);
   const [seekIndicator, setSeekIndicator] = useState(false);
   const [seekDirection, setSeekDirection] = useState<'forward' | 'backward'>('forward');
 
@@ -137,8 +135,6 @@ export const VideoPlayer: React.FC<Props> = ({
   const [hasSubs, setHasSubs] = useState(false);
   const [subsOn, setSubsOn] = useState(false);
   const [subsUnavailable, setSubsUnavailable] = useState(false);
-  const bufferCountRef = useRef(0);
-  const bufferTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Live TV: suppress controls on channel switch — let stream settle first
   // But keep carousel/recommendations visible for continuous browsing
@@ -329,33 +325,6 @@ export const VideoPlayer: React.FC<Props> = ({
     onShowControls: showControls,
   });
 
-  // Buffering detection — suggest Eco mode after repeated buffering
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || getStreamQuality() === 'eco') return;
-
-    const isLive = state.channel?.url?.includes('/live?') || state.channel?.url?.includes('.m3u8') || state.channel?.category === 'live';
-    if (!isLive) return; // Only for live TV
-
-    const onWaiting = () => {
-      bufferCountRef.current++;
-      if (bufferCountRef.current >= 3 && !showEcoPrompt) {
-        setShowEcoPrompt(true);
-      }
-    };
-
-    // Reset buffer count every 60s
-    bufferTimerRef.current = setInterval(() => {
-      bufferCountRef.current = 0;
-    }, 60000);
-
-    video.addEventListener('waiting', onWaiting);
-    return () => {
-      video.removeEventListener('waiting', onWaiting);
-      if (bufferTimerRef.current) clearInterval(bufferTimerRef.current);
-    };
-  }, [state.channel, videoRef, showEcoPrompt]);
-
   // Load subtitles for MKV VOD content
   useEffect(() => {
     const video = videoRef.current;
@@ -415,18 +384,6 @@ export const VideoPlayer: React.FC<Props> = ({
     video.textTracks[0].mode = newState ? 'showing' : 'hidden';
     setSubsOn(newState);
   }, [subsOn, videoRef]);
-
-  const handleSwitchToEco = useCallback(() => {
-    setStreamQuality('eco');
-    setShowEcoPrompt(false);
-    bufferCountRef.current = 0;
-    // Reconnect immediately with Eco quality
-    if (state.channel) {
-      // Rebuild channel URL with eco quality param
-      const ch = state.channel;
-      onRetry({ ...ch });
-    }
-  }, [state.channel, onRetry]);
 
   // Cleanup timer
   useEffect(() => {
@@ -493,18 +450,19 @@ export const VideoPlayer: React.FC<Props> = ({
         <div className="absolute inset-0 z-40 bg-[#060609]" />
       )}
 
-      {/* Subtle loading — no branding, just a thin beam on translucent overlay */}
-      {state.isLoading && !state.error && !state.isPlaying && !showCinemaIntro && !postCinemaBlackout && (
-        <div className={`absolute inset-0 flex items-center justify-center z-40 transition-opacity duration-500 ${
-          state.channel ? 'bg-black/40' : 'bg-[#060609]'
-        }`}>
-          <div className="w-12 h-[1.5px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)' }}>
-            <div
-              className="h-full rounded-full"
+      {/* Transition loader — thin animated bar on blurred frozen frame during channel switch */}
+      {state.isLoading && !state.error && !showCinemaIntro && !postCinemaBlackout && (
+        <div className="absolute inset-0 z-40">
+          {/* Blur overlay on frozen frame */}
+          <div className="absolute inset-0 bg-black/20 transition-opacity duration-300" 
+               style={{ backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)' }} />
+          {/* Thin pulsing bar at top — YouTube-style, non-intrusive */}
+          <div className="absolute top-0 left-0 right-0 h-[2px] z-50">
+            <div className="h-full animate-pulse"
               style={{
-                width: '40%',
-                background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.4), rgba(157,78,221,0.6), rgba(157,78,221,0.4), transparent)',
-                animation: 'dash-beam 2s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+                background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.7), rgba(157,78,221,0.9), rgba(157,78,221,0.7), transparent)',
+                backgroundSize: '200% 100%',
+                animation: 'dash-beam 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
               }}
             />
           </div>
@@ -539,29 +497,25 @@ export const VideoPlayer: React.FC<Props> = ({
         </div>
       )}
 
-      {/* StreamFlow suggestion — shows after repeated buffering */}
-      {showEcoPrompt && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 animate-slide-up">
-          <div className="flex items-center gap-3 px-4 py-3 bg-black/90 border border-primary/30 rounded-2xl backdrop-blur-sm shadow-lg">
-            <Waves className="w-5 h-5 text-primary-light flex-shrink-0" />
-            <div>
-              <p className="text-sm text-white font-medium">Unstable connection</p>
-              <p className="text-[11px] text-white/50">Switch to StreamFlow for smooth playback</p>
-            </div>
-            <button
-              onClick={handleSwitchToEco}
-              className="px-4 py-1.5 bg-primary rounded-lg text-xs font-bold text-white hover:bg-primary-light transition-colors flex-shrink-0"
-            >
-              Flow
-            </button>
-            <button
-              onClick={() => setShowEcoPrompt(false)}
-              className="text-white/30 hover:text-white/60 text-lg leading-none"
-            >
-              ×
-            </button>
-          </div>
-        </div>
+      {/* Smart Match — quality variants + family channels (live only, hidden for VOD) */}
+      {/* Stays visible during channel switch so user can keep browsing */}
+      {!isVod && (
+        <SmartMatchOverlay
+          channel={state.channel}
+          visible={controlsVisible || switchingChannel}
+          isLive={!!state.channel?.url?.includes('/live?')}
+          onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
+        />
+      )}
+
+      {/* Channel carousel — concave arc conveyor belt (live only, hidden for VOD) */}
+      {/* Stays visible during channel switch so user can keep browsing */}
+      {!isVod && (
+        <ChannelCarousel
+          visible={controlsVisible || switchingChannel}
+          isLive={!!state.channel?.url?.includes('/live?')}
+          onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
+        />
       )}
 
       {/* CC unavailable indicator — shown when subtitle fetch failed for a VOD */}
@@ -612,7 +566,7 @@ export const VideoPlayer: React.FC<Props> = ({
       {!isVod && (
         <SmartMatchOverlay
           channel={state.channel}
-          visible={(controlsVisible || switchingChannel) && !showEcoPrompt}
+          visible={controlsVisible || switchingChannel}
           isLive={!!state.channel?.url?.includes('/live?')}
           onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
         />
@@ -622,7 +576,7 @@ export const VideoPlayer: React.FC<Props> = ({
       {/* Stays visible during channel switch so user can keep browsing */}
       {!isVod && (
         <ChannelCarousel
-          visible={(controlsVisible || switchingChannel) && !showEcoPrompt}
+          visible={controlsVisible || switchingChannel}
           isLive={!!state.channel?.url?.includes('/live?')}
           onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
         />

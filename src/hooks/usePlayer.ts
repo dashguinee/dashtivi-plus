@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { markDead, markAlive } from '@/hooks/useChannelHealth';
-import { onStreamSuccess, onStreamFail, getStreamQuality, setStreamQuality } from '@/lib/xtream';
+import { onStreamSuccess, onStreamFail, getStreamQuality, setStreamQuality, tierUp, tierDown, FLOW_MIN_BANDWIDTH } from '@/lib/xtream';
+import type { FlowTier } from '@/lib/xtream';
 import { createHlsPlayer } from '@/lib/hls';
 import { connectBoost, disconnectBoost } from '@/lib/audio-boost';
 import type { HlsInstance } from '@/lib/hls';
@@ -106,17 +107,20 @@ export function usePlayer() {
       if (destroyRef.current) { destroyRef.current(); destroyRef.current = null; }
       if (fadeInRef.current) { clearInterval(fadeInRef.current); fadeInRef.current = undefined; }
 
-      // Preserve fullscreen + pip + mute state across channel switches
+      // Preserve fullscreen + pip + mute + playing state across channel switches
+      // Keep isPlaying:true so frozen frame stays visible — no blank screen
+      const modeLabel = (m: string) => m === 'auto' ? 'AUTO' : m === 'source' ? 'Source' : m === 'hd720' ? '720p' : m === 'eco' ? '480p' : '360p';
+      const initQuality = modeLabel(getStreamQuality());
       setState((prev) => ({
         channel,
-        isPlaying: false,
+        isPlaying: isSwitch, // Keep playing=true on switch (frozen frame), false on first play
         isMuted: prev.isMuted,
         volume: prev.volume,
         isFullscreen: prev.isFullscreen,
         isPiP: prev.isPiP,
-        quality: 'Auto',
-        qualities: ['Auto'],
-        isLoading: true,
+        quality: initQuality,
+        qualities: ['AUTO', 'Source', '720p', '480p', '360p'],
+        isLoading: true, // Thin bar on blurred frame during switch, full load on first play
         error: null,
         currentTime: 0,
         duration: 0,
@@ -141,8 +145,23 @@ export function usePlayer() {
         const isHlsUrl = url.endsWith('.m3u8') || url.includes('.m3u8?');
 
         if (isLive || isVod) {
-          url = url.replace(/&q=eco/, '');
-          if (getStreamQuality() === 'eco') url += '&q=eco';
+          url = url.replace(/&q=(source|hd720|eco|low)/, '');
+          const mode = getStreamQuality();
+          if (mode === 'auto' && isLive) {
+            // Estimate tier BEFORE src assignment — prevents double-load
+            try {
+              const conn = (navigator as any).connection;
+              if (conn?.downlink) {
+                const bps = conn.downlink * 1000000;
+                if (bps < FLOW_MIN_BANDWIDTH.low) url += '&q=low';
+                else if (bps < FLOW_MIN_BANDWIDTH.eco) url += '&q=eco';
+                else if (bps < FLOW_MIN_BANDWIDTH.hd720) url += '&q=hd720';
+                // else source (no param)
+              }
+            } catch {}
+          } else if (mode !== 'auto' && mode !== 'source') {
+            url += '&q=' + mode;
+          }
         }
 
         let retryCount = 0;
@@ -173,8 +192,7 @@ export function usePlayer() {
             video.onerror = null;
           };
         } else {
-          // Skip pre-flight on channel switch — just set src directly
-          // Pre-flight only on first play (isSwitch=false) to detect stream limits
+          // Channel switch: keep last frame frozen, set new src directly — no blank screen
           let probeStatus = 0;
           if (isLive && !isSwitch) {
             try {
@@ -193,8 +211,6 @@ export function usePlayer() {
           }
           setStreamLimit(null);
           video.volume = 0;
-          video.pause();
-          video.removeAttribute('src');
           video.src = url;
           video.play().catch(() => {});
 
@@ -337,133 +353,135 @@ export function usePlayer() {
           setState((prev) => ({ ...prev, isLoading: true }));
         };
 
-        // ── Flow: passthrough-first adaptive streaming ──
-        // Always start with SOURCE (passthrough) — 86% of channels are SD/HD,
-        // they stream fine without transcoding. Don't penalize good connections.
-        //
-        // On buffer stall: let the browser recover naturally (it has its own buffer).
-        // On SECOND stall within 30s: drop to eco (480p FFmpeg) for this channel.
-        // Remember per-channel: if a channel needed eco, start on eco next time.
-        // After 60s stable on eco: try source again (one attempt only).
-        //
-        // Flow pill reads video.videoHeight for actual resolution display.
+        // ── Flow v3: Multi-tier adaptive streaming ──
+        // 4 tiers: source > hd720 > eco > low
+        // Auto mode: estimate bandwidth → pick tier → oscillate on buffer
+        // Manual modes: user locks to a tier, no auto-switching
         if (isLive) {
-          const sourceUrl = url.replace(/&q=eco/, '');
-          const ecoUrl = sourceUrl + '&q=eco';
+          const streamId = url.match(/id=(\d+)/)?.[1] || '';
+          const userMode = getStreamQuality();
+          const sourceUrl = url.replace(/&q=(source|hd720|eco|low)/, '');
 
-          // Per-channel memory: did this channel need eco before?
-          const channelFlowKey = 'flow-eco-' + (url.match(/id=(\d+)/)?.[1] || '');
-          const needsEco = !!localStorage.getItem(channelFlowKey);
-          let onSource = !needsEco;
-          let stallCount = 0;
-          let firstStallAt = 0;
-          let ecoRecoveryDone = false;
+          if (userMode === 'auto') {
+            let currentTier: FlowTier;
+            let switchCount = 0;
+            const MAX_SWITCHES = 4;
+            let bufferStalls: number[] = [];
+            const STALL_WINDOW = 45000;
+            const STALL_THRESHOLD = 2;
+            let recoveryCheck: ReturnType<typeof setInterval> | null = null;
+            let recoveryStarted = 0;
+            const RECOVERY_DELAY = 90000;
+            // Lock out failed recovery at 120s too
+            let failedRecoveryTier: FlowTier | null = null;
 
-          // Start on eco if channel previously needed it
-          if (needsEco && !url.includes('&q=eco')) {
-            video.src = ecoUrl;
-            video.play().catch(() => {});
-          }
+            const tierUrl = (t: FlowTier) => t === 'source' ? sourceUrl : sourceUrl + '&q=' + t;
 
-          const readResolution = () => {
-            if (!video) return;
-            const h = video.videoHeight;
-            if (h > 0) {
-              const label = h >= 2160 ? '4K' : h >= 1080 ? '1080p' : h >= 720 ? '720p' : h >= 480 ? '480p' : `${h}p`;
-              setState((prev) => prev.quality !== label ? { ...prev, quality: label } : prev);
-            }
-          };
+            // Estimate starting tier from Network Information API
+            const estimateTier = (): FlowTier => {
+              try {
+                const conn = (navigator as any).connection;
+                if (conn?.downlink) {
+                  const bps = conn.downlink * 1000000;
+                  if (bps >= FLOW_MIN_BANDWIDTH.source) return 'source';
+                  if (bps >= FLOW_MIN_BANDWIDTH.hd720) return 'hd720';
+                  if (bps >= FLOW_MIN_BANDWIDTH.eco) return 'eco';
+                  return 'low';
+                }
+              } catch {}
+              return 'eco';
+            };
 
-          const dropToEco = () => {
-            if (!onSource) return;
-            const resolution = video.videoHeight;
-            onSource = false;
-            stallCount = 0;
-            firstStallAt = 0;
-            localStorage.setItem(channelFlowKey, '1');
-            // Mute before quality switch to prevent audio pop
-            const prevVol = video.volume;
-            video.volume = 0;
-            video.pause();
-            video.removeAttribute('src');
-            video.src = ecoUrl;
-            video.play().catch(() => {});
-            // Restore volume after new source loads
-            video.addEventListener('playing', () => { video.volume = prevVol; }, { once: true });
-            // Telemetry — fire and forget
-            const streamId = url.match(/id=(\d+)/)?.[1];
-            if (streamId) {
-              const sbUrl = (import.meta.env.VITE_SUPABASE_URL || 'https://mclbbkmpovnvcfmwsoqt.supabase.co').trim();
-              const sbKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
-              if (sbKey) {
-                fetch(`${sbUrl}/rest/v1/tivi_flow_events`, {
-                  method: 'POST',
-                  headers: { 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-                  body: JSON.stringify({ stream_id: parseInt(streamId), resolution: resolution > 0 ? `${resolution}p` : null, stall_count: 2 }),
-                }).catch(() => {});
+            currentTier = estimateTier();
+
+            // Initial tier already set in URL before src assignment — no double-load
+            setState((prev) => ({ ...prev, qualities: ['AUTO', 'Source', '720p', '480p', '360p'] }));
+
+            const readResolution = () => {
+              if (!video) return;
+              const h = video.videoHeight;
+              if (h > 0) {
+                const res = h >= 2160 ? '4K' : h >= 1080 ? '1080p' : h >= 720 ? '720p' : h >= 480 ? '480p' : h >= 360 ? '360p' : `${h}p`;
+                const mode = getStreamQuality();
+                const prefix = mode === 'auto' ? 'AUTO' : mode === 'source' ? 'Source' : mode === 'hd720' ? '720p' : mode === 'eco' ? '480p' : '360p';
+                setState((prev) => ({ ...prev, quality: prefix + ' · ' + res }));
               }
-            }
-          };
+            };
 
-          const flowCheck = () => {
-            if (!video || video.paused) return;
-            readResolution();
+            const switchTier = (to: FlowTier) => {
+              if (switchCount >= MAX_SWITCHES || to === currentTier || to === failedRecoveryTier) return;
+              currentTier = to;
+              switchCount++;
+              bufferStalls = [];
+              recoveryStarted = 0;
+              video.src = tierUrl(to);
+              video.play().catch(() => {});
+            };
 
-            // On eco: try source recovery once after 60s stable
-            if (!onSource && !ecoRecoveryDone) {
-              if (video.buffered.length > 0) {
-                const ahead = video.buffered.end(video.buffered.length - 1) - video.currentTime;
-                if (ahead >= 8) {
-                  // Been stable long enough — try source one more time
-                  if (!firstStallAt) { firstStallAt = Date.now(); return; }
-                  if (Date.now() - firstStallAt >= 60000) {
-                    ecoRecoveryDone = true;
-                    onSource = true;
-                    stallCount = 0;
-                    firstStallAt = 0;
-                    const vol = video.volume;
-                    video.volume = 0;
-                    video.pause();
-                    video.removeAttribute('src');
-                    video.src = sourceUrl;
-                    video.addEventListener('playing', () => { video.volume = vol; }, { once: true });
-                    video.play().catch(() => {});
-                  }
+            // Buffer stall detection
+            const origWaiting = video.onwaiting;
+            video.onwaiting = () => {
+              if (isStale()) return;
+              if (typeof origWaiting === 'function') origWaiting.call(video, new Event('waiting'));
+              else setState((prev) => ({ ...prev, isLoading: true }));
+
+              const now = Date.now();
+              bufferStalls.push(now);
+              bufferStalls = bufferStalls.filter(t => now - t < STALL_WINDOW);
+
+              if (bufferStalls.length >= STALL_THRESHOLD && switchCount < MAX_SWITCHES) {
+                const lower = tierDown(currentTier);
+                if (lower !== currentTier && lower !== failedRecoveryTier) {
+                  bufferStalls = [];
+                  switchTier(lower);
                 }
               }
-            }
-          };
+            };
 
-          const flowInterval = setInterval(flowCheck, 3000);
-          video.addEventListener('loadeddata', readResolution, { once: true });
+            // Recovery: try higher tier after sustained stability
+            recoveryCheck = setInterval(() => {
+              if (isStale() || switchCount >= MAX_SWITCHES) return;
+              if (!video || video.paused) return;
+              readResolution();
 
-          const origWaiting = video.onwaiting;
-          video.onwaiting = () => {
-            if (isStale()) return; // Guard against stale closures from rapid channel switches
-            if (typeof origWaiting === 'function') origWaiting.call(video, new Event('waiting'));
-            else setState((prev) => ({ ...prev, isLoading: true }));
+              const ahead = video.buffered.length > 0
+                ? video.buffered.end(video.buffered.length - 1) - video.currentTime
+                : 0;
 
-            if (!onSource) return; // already on eco, let browser buffer naturally
+              if (ahead >= 10) {
+                if (!recoveryStarted) { recoveryStarted = Date.now(); return; }
+                if (Date.now() - recoveryStarted >= RECOVERY_DELAY) {
+                  const higher = tierUp(currentTier);
+                  if (higher !== currentTier && higher !== failedRecoveryTier) {
+                    // Try recovery — if it triggers a stall within 30s, lock this tier out
+                    const tryTier = higher;
+                    const stallBefore = bufferStalls.length;
+                    const preRecoveryTier = currentTier;
+                    switchTier(tryTier);
+                    setTimeout(() => {
+                      if (isStale()) return;
+                      if (bufferStalls.length > stallBefore) {
+                        // Recovery failed — drop back and lock
+                        failedRecoveryTier = tryTier;
+                        switchTier(preRecoveryTier);
+                      }
+                    }, 30000);
+                  }
+                  recoveryStarted = 0;
+                }
+              } else {
+                recoveryStarted = 0;
+              }
+            }, 5000);
 
-            stallCount++;
-            if (stallCount === 1) {
-              // First stall: let browser recover, just note the time
-              firstStallAt = Date.now();
-            } else if (stallCount >= 2 && firstStallAt && Date.now() - firstStallAt < 30000) {
-              // Second stall within 30s of first: this channel can't handle source
-              dropToEco();
-            } else {
-              // Second stall but >30s apart: reset, it was a one-off
-              stallCount = 1;
-              firstStallAt = Date.now();
-            }
-          };
+            video.addEventListener('loadeddata', readResolution, { once: true });
 
-          const origDestroy = destroyRef.current;
-          destroyRef.current = () => {
-            clearInterval(flowInterval);
-            if (origDestroy) origDestroy();
-          };
+            const origDestroy = destroyRef.current;
+            destroyRef.current = () => {
+              if (recoveryCheck) clearInterval(recoveryCheck);
+              if (origDestroy) origDestroy();
+            };
+          }
         }
 
         // VOD time tracking — skip for live (infinite duration, no seek bar)
@@ -580,10 +598,16 @@ export function usePlayer() {
     }
   }, []);
 
-  const changeQuality = useCallback((_quality: string, _index: number) => {
-    // Quality switching via HLS.js not currently active — streams play natively
-    // When HLS integration is added, this will call hls.currentLevel = index
-  }, []);
+  const changeQuality = useCallback(() => {
+    const modes: Array<'auto' | 'source' | 'hd720' | 'eco' | 'low'> = ['auto', 'source', 'hd720', 'eco', 'low'];
+    const current = getStreamQuality();
+    const idx = modes.indexOf(current);
+    const next = modes[(idx + 1) % modes.length];
+    setStreamQuality(next);
+    if (state.channel) {
+      playChannel(state.channel);
+    }
+  }, [state.channel, playChannel]);
 
   const seek = useCallback((time: number) => {
     const video = videoRef.current;
@@ -591,18 +615,11 @@ export function usePlayer() {
     const src = video.src || '';
     const isRemux = src.includes('/vod?');
     if (isRemux) {
-      // Remux streams can't seek via currentTime — restart FFmpeg with &start= offset
       const base = src.replace(/&start=\d+/, '');
       const seekUrl = base + '&start=' + Math.floor(time);
-      setState((prev) => ({ ...prev, isLoading: true, currentTime: time }));
-      // Mute before source swap to prevent audio pop
-      const prevVol = video.volume;
-      video.volume = 0;
-      video.pause();
+      setState((prev) => ({ ...prev, currentTime: time }));
       video.src = seekUrl;
       video.play().catch(() => {});
-      // Restore volume on play
-      video.addEventListener('playing', () => { video.volume = prevVol; }, { once: true });
     } else {
       video.currentTime = time;
       setState((prev) => ({ ...prev, currentTime: time }));
