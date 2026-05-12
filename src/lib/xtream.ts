@@ -303,11 +303,15 @@ async function cachedFetch<T>(key: string, url: string): Promise<T> {
 
 // --- Live TV ---
 
-/** Lazy-load logo map to keep main bundle small */
-// Logo map removed — 100% icon coverage in database now.
-// enrichIcons only patches icons for the Xtream fallback path, which rarely fires.
+/** Lazy-load logo map — 345 premium brands mapped */
+let logoMapCache: Record<string, string> | null = null;
+
 function getLogoMap(): Promise<Record<string, string>> {
-  return Promise.resolve({});
+  if (logoMapCache) return Promise.resolve(logoMapCache);
+  return fetch('/logo-map.json')
+    .then(r => r.json())
+    .then(data => { logoMapCache = data as Record<string, string>; return logoMapCache; })
+    .catch(() => ({}));
 }
 
 /** TMDB metadata — loaded as JSON via fetch (doesn't block main thread) */

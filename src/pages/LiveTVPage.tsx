@@ -739,8 +739,19 @@ function ExperienceShowcase({
   if (activeSubTab !== 'all' && subtypes) {
     const sub = subtypes.find(s => s.id === activeSubTab);
     if (sub) {
-      const catSet = new Set(sub.categoryIds);
-      filtered = alive.filter(s => isFreeChannel(s.stream_id) || catSet.has(String(s.category_id)));
+      // Name-based filtering (primary — works with curated channels)
+      if (sub.nameFilter?.length || sub.nameExclude?.length) {
+        filtered = alive.filter(s => {
+          const n = (s.name || '').toLowerCase();
+          if (sub.nameExclude?.length && sub.nameExclude.some(k => n.includes(k.toLowerCase()))) return false;
+          if (sub.nameFilter?.length && !sub.nameFilter.some(k => n.includes(k.toLowerCase()))) return false;
+          return true;
+        });
+      } else if (sub.categoryIds?.length) {
+        // Category-based fallback (Xtream API channels)
+        const catSet = new Set(sub.categoryIds);
+        filtered = alive.filter(s => isFreeChannel(s.stream_id) || catSet.has(String(s.category_id)));
+      }
     }
   }
 
@@ -879,8 +890,17 @@ const ThemeRow = React.memo(function ThemeRow({
   if (subtypes.length > 0 && activeSubTab !== 'all') {
     const subtype = subtypes.find(t => t.id === activeSubTab);
     if (subtype) {
-      const catSet = new Set(subtype.categoryIds);
-      filtered = alive.filter(s => catSet.has(String(s.category_id)));
+      if (subtype.nameFilter?.length || subtype.nameExclude?.length) {
+        filtered = alive.filter(s => {
+          const n = (s.name || '').toLowerCase();
+          if (subtype.nameExclude?.length && subtype.nameExclude.some(k => n.includes(k.toLowerCase()))) return false;
+          if (subtype.nameFilter?.length && !subtype.nameFilter.some(k => n.includes(k.toLowerCase()))) return false;
+          return true;
+        });
+      } else if (subtype.categoryIds?.length) {
+        const catSet = new Set(subtype.categoryIds);
+        filtered = alive.filter(s => catSet.has(String(s.category_id)));
+      }
     }
   }
 
