@@ -1,4 +1,4 @@
-const STREAM_BASE = (import.meta.env.VITE_XTREAM_STREAM || 'http://buxjam.com:8080').trim();
+const STREAM_BASE = (import.meta.env.VITE_XTREAM_STREAM || 'http://fastshare1.com:8080').trim();
 const PROXY = (import.meta.env.VITE_PROXY_URL || 'https://stream.zionsynapse.online').trim();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 const FETCH_TIMEOUT = 10000; // 10s timeout for API calls
@@ -99,7 +99,7 @@ export function safeImageUrl(url?: string | null): string | null {
   // Fix common URL corruption
   let u = url.replace(/^ttps:/, 'https:').replace(/"$/, '');
   // Replace dead starshare domain
-  u = u.replace('starshare.live:8080', 'buxjam.com:8080').replace('datahub11.com:8080', 'buxjam.com:8080').replace('datahub11.com:80', 'buxjam.com:8080');
+  u = u.replace('buxjam.com:8080', 'fastshare1.com:8080').replace('starshare.live:8080', 'fastshare1.com:8080').replace('datahub11.com:8080', 'fastshare1.com:8080').replace('datahub11.com:80', 'fastshare1.com:8080');
   // Block known junk hosts
   if (u.includes('webhop.live') || u.includes('imdb.com') || u.includes('wikia.nocookie.net') || u.includes('paste.pics') || u.includes('tensports.com.pk') || u.includes('stariptv.fun') || u.includes('starapk1.com') || u.includes('stackpathcdn.com') || u.includes('QuranTVSA')) {
     return null;
@@ -679,16 +679,15 @@ export function isChannelProbeAlive(streamId: number): boolean {
 
 /**
  * Single source of truth for whether a channel should be shown.
- * Combines all filtering: dynamic health (play failures) + probe data (server verification).
- * EVERY page must use this — no exceptions.
+ * Only checks dynamic health (actual play failures). Probe data is used as
+ * a supplementary signal (deprioritizes dead channels) but never blocks display.
+ * EVERY page must use this.
  */
 export function isChannelPlayable(streamId: number | string): boolean {
   const id = typeof streamId === 'string' ? streamId : `live-${streamId}`;
-  const numId = typeof streamId === 'number' ? streamId : parseInt(streamId) || 0;
   // Dynamic health: user actually tried to play this and it failed
   if (isDead(id)) return false;
-  // Probe data: server-side verification (ffprobe/HTTP byte test)
-  if (numId > 0 && !isChannelProbeAlive(numId)) return false;
+  // Show everything else — probe data is a signal, not a gate
   return true;
 }
 

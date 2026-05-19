@@ -3,9 +3,9 @@
   "description": "DashTivi+ curation manifest — single source of truth. Every channel maps back to a source.",
   "sources": {
     "paid": {
-      "name": "buxjam.com IPTV",
-      "api": "http://buxjam.com:8080/player_api.php",
-      "stream_base": "http://buxjam.com:8080",
+      "name": "fastshare1.com IPTV",
+      "api": "http://fastshare1.com:8080/player_api.php",
+      "stream_base": "http://fastshare1.com:8080",
       "proxy": "https://stream.zionsynapse.online",
       "quality_tiers": ["source", "hd720", "eco", "low"],
       "note": "All paid channels routed through VPS proxy for quality management"
@@ -16,14 +16,14 @@
       "note": "Direct HLS playback via hls.js ABR — no VPS load"
     },
     "vod": {
-      "name": "buxjam.com VOD catalog",
-      "api": "http://buxjam.com:8080/player_api.php?action=get_vod_streams",
+      "name": "fastshare1.com VOD catalog",
+      "api": "http://fastshare1.com:8080/player_api.php?action=get_vod_streams",
       "total_items": 61443,
       "categories": 162
     },
     "series": {
-      "name": "buxjam.com Series catalog",
-      "api": "http://buxjam.com:8080/player_api.php?action=get_series"
+      "name": "fastshare1.com Series catalog",
+      "api": "http://fastshare1.com:8080/player_api.php?action=get_series"
     }
   },
   "live_themes": {

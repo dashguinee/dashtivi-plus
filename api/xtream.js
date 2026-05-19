@@ -8,7 +8,7 @@
 
 export const config = { runtime: 'edge' };
 
-const XTREAM_HOST = 'https://buxjam.com';
+const XTREAM_HOST = 'https://fastshare1.com';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',

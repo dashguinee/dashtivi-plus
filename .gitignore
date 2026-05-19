@@ -8,3 +8,6 @@ outputs
 *.pem
 *.log
 .DS_Store
+*.bak
+*.bak2
+*.bak3
