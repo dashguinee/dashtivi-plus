@@ -32,14 +32,43 @@ export function usePlayer() {
   });
 
   const [streamLimit, setStreamLimit] = useState<StreamLimitInfo | null>(null);
+  // Frozen-frame snapshot (data URL) captured right before a channel-switch src swap.
+  // Rendered blurred over the <video> to mask the black gap until the new stream paints.
+  // null = no overlay. Cleared in onplaying when the new stream actually renders.
+  const [switchSnapshot, setSwitchSnapshot] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const destroyRef = useRef<(() => void) | null>(null);
   const hlsRef = useRef<HlsInstance | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const fadeInRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const snapshotTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined); // Safety: auto-clears frozen-frame overlay if stream never renders
   const playGeneration = useRef(0); // Guards against stale handlers from rapid channel switches
   const userMutedRef = useRef(false); // Tracks explicit user mute — respected across channel switches
+
+  // Capture the current video frame to a data URL so we can overlay it (blurred)
+  // during the black gap of a channel switch. Returns null on failure (e.g. tainted
+  // canvas from cross-origin video, or no painted frame yet) — caller falls back to
+  // the existing blur-on-loading behavior.
+  const captureFrame = useCallback((video: HTMLVideoElement): string | null => {
+    try {
+      const w = video.videoWidth;
+      const h = video.videoHeight;
+      if (!w || !h || video.readyState < 2) return null;
+      // Cap canvas size — a blurred overlay doesn't need full res, keeps it cheap
+      const scale = Math.min(1, 640 / w);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(w * scale);
+      canvas.height = Math.round(h * scale);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // toDataURL throws on tainted (cross-origin) canvas — caught below
+      return canvas.toDataURL('image/jpeg', 0.6);
+    } catch {
+      return null; // tainted canvas or other failure — fall back to plain blur
+    }
+  }, []);
 
   const cleanup = useCallback(() => {
     disconnectBoost();
@@ -50,6 +79,10 @@ export function usePlayer() {
     if (fadeInRef.current) {
       clearInterval(fadeInRef.current);
       fadeInRef.current = undefined;
+    }
+    if (snapshotTimerRef.current) {
+      clearTimeout(snapshotTimerRef.current);
+      snapshotTimerRef.current = undefined;
     }
     if (hlsRef.current) {
       hlsRef.current.destroy();
@@ -73,6 +106,18 @@ export function usePlayer() {
 
       const video = videoRef.current;
       const isSwitch = !!video && !!video.src && !video.paused;
+
+      // On a channel switch, snapshot the currently-painted frame BEFORE any teardown.
+      // We overlay it (blurred) to mask the black gap until the new stream renders.
+      if (isSwitch && video) {
+        const snap = captureFrame(video);
+        if (snap) {
+          setSwitchSnapshot(snap);
+          // Safety net — never let the overlay linger past 12s if the stream stalls/errors
+          if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
+          snapshotTimerRef.current = setTimeout(() => setSwitchSnapshot(null), 12000);
+        }
+      }
 
       // Generation guard — increment early so rapid switches abort the fade-out
       const gen = ++playGeneration.current;
@@ -181,6 +226,8 @@ export function usePlayer() {
           video.load();
           const hlsInstance = await createHlsPlayer(video, url, undefined, (errMsg) => {
             if (isStale()) return; // Don't update state for superseded streams
+            if (snapshotTimerRef.current) { clearTimeout(snapshotTimerRef.current); snapshotTimerRef.current = undefined; }
+            setSwitchSnapshot(null); // Reveal error UI — don't mask it behind the frozen frame
             markDead(channel.id, errMsg);
             setState((prev) => ({ ...prev, error: 'Stream interrupted — tap Reconnect to resume', isLoading: false }));
           });
@@ -222,7 +269,7 @@ export function usePlayer() {
             }
           }, timeout);
 
-          const maxRetries = isLive ? 5 : 4;
+          const maxRetries = isLive ? 3 : 4;
           let triedFallback = false;
 
           // VOD fallback: parse direct proxy URL → construct /vod? remux URL
@@ -249,11 +296,13 @@ export function usePlayer() {
             if (retryCount < maxRetries) {
               retryCount++;
               setState((prev) => ({ ...prev, error: `Retry ${retryCount}/${maxRetries}`, isPlaying: false }));
+              // Smarter backoff: quicker first retry (1500ms), steady 2000ms after
+              const retryDelay = retryCount === 1 ? 1500 : 2000;
               setTimeout(() => {
                 setState((prev) => ({ ...prev, error: null }));
                 video.src = url;
                 video.play().catch(() => {});
-              }, 2000);
+              }, retryDelay);
             } else if (!triedFallback) {
               // Last chance: try FFmpeg remux for VOD (handles wrong extension, container mismatch)
               const fallback = channel.fallbackUrl || buildFallbackUrl();
@@ -269,12 +318,16 @@ export function usePlayer() {
               }
               // No fallback available — show error
               clearTimeout(connectionTimeout);
+              if (snapshotTimerRef.current) { clearTimeout(snapshotTimerRef.current); snapshotTimerRef.current = undefined; }
+              setSwitchSnapshot(null);
               const idMatch = url.match(/[?&]id=(\d+)/);
               if (idMatch) onStreamFail(parseInt(idMatch[1]));
               markDead(channel.id, 'Stream error');
               setState((prev) => ({ ...prev, error: 'Stream unavailable — tap Reconnect', isLoading: false }));
             } else {
               clearTimeout(connectionTimeout);
+              if (snapshotTimerRef.current) { clearTimeout(snapshotTimerRef.current); snapshotTimerRef.current = undefined; }
+              setSwitchSnapshot(null);
               const idMatch = url.match(/[?&]id=(\d+)/);
               if (idMatch) onStreamFail(parseInt(idMatch[1]));
               markDead(channel.id, 'Stream error');
@@ -315,6 +368,9 @@ export function usePlayer() {
         video.onplaying = () => {
           if (isStale()) return;
           retryCount = 0;
+          // New stream is painting — fade out / remove the frozen-frame overlay
+          if (snapshotTimerRef.current) { clearTimeout(snapshotTimerRef.current); snapshotTimerRef.current = undefined; }
+          setSwitchSnapshot(null);
           markAlive(channel.id);
           const idMatch = url.match(/[?&]id=(\d+)/);
           if (idMatch) onStreamSuccess(parseInt(idMatch[1]));
@@ -365,10 +421,13 @@ export function usePlayer() {
           if (userMode === 'auto') {
             let currentTier: FlowTier;
             let switchCount = 0;
-            const MAX_SWITCHES = 4;
+            // Bound total tier oscillation (was 4 — trimmed to reduce thrash)
+            const MAX_SWITCHES = 3;
             let bufferStalls: number[] = [];
             const STALL_WINDOW = 45000;
-            const STALL_THRESHOLD = 2;
+            // Require 3 stalls (was 2) in-window before dropping a tier — avoids twitchy
+            // downgrades on a single transient buffer hiccup
+            const STALL_THRESHOLD = 3;
             let recoveryCheck: ReturnType<typeof setInterval> | null = null;
             let recoveryStarted = 0;
             const RECOVERY_DELAY = 90000;
@@ -628,6 +687,8 @@ export function usePlayer() {
 
   const stop = useCallback(() => {
     cleanup();
+    if (snapshotTimerRef.current) { clearTimeout(snapshotTimerRef.current); snapshotTimerRef.current = undefined; }
+    setSwitchSnapshot(null);
     const video = videoRef.current;
     if (video) {
       // Don't video.src=''+load() — it invalidates the MediaElementSourceNode.
@@ -684,6 +745,7 @@ export function usePlayer() {
     state,
     videoRef,
     containerRef,
+    switchSnapshot,
     playChannel,
     togglePlay,
     toggleMute,
@@ -695,5 +757,5 @@ export function usePlayer() {
     stop,
     streamLimit,
     dismissStreamLimit,
-  }), [state, playChannel, togglePlay, toggleMute, setVolume, toggleFullscreen, togglePiP, changeQuality, seek, stop, streamLimit, dismissStreamLimit]);
+  }), [state, switchSnapshot, playChannel, togglePlay, toggleMute, setVolume, toggleFullscreen, togglePiP, changeQuality, seek, stop, streamLimit, dismissStreamLimit]);
 }

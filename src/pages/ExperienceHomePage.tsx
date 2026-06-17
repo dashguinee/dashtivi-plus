@@ -36,6 +36,11 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 import type { Channel } from '@/types';
 
+// World Cup detection — Starshare adds live categories/channels named "World Cup",
+// "Coupe du Monde", "Mondial", "FIFA". Match on the (human-readable) channel name.
+const WORLD_CUP_RE = /world\s?cup|coupe\s?du\s?monde|mondial|fifa/i;
+const isWorldCupStream = (s: LiveStream) => WORLD_CUP_RE.test(s.name);
+
 // Sports Arena — lazy loaded, only when experience=sports
 const SportsArena = React.lazy(() => import('@/components/sports/SportsArena'));
 // News Ticker — lazy loaded, only when experience=news
@@ -637,6 +642,23 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
     ? curatorToLiveStreams(veeSocialProof.channels).filter(s => isChannelPlayable(s.stream_id))
     : [];
 
+  // World Cup — featured collection (sports experience only). Deduped by quality so a
+  // featured row doesn't show every HD/4K variant of the same channel.
+  const isSports = config.id === 'sports';
+  const worldCupStreams = useMemo(() => {
+    if (!isSports) return [];
+    const wc = allStreams.filter(s => isWorldCupStream(s) && isChannelPlayable(s.stream_id));
+    if (wc.length === 0) return [];
+    const grouped = groupChannelsByQuality(wc);
+    return grouped.map(g => {
+      const best = g.variants.reduce((a, b) => {
+        const order: Record<string, number> = { '4k': 4, 'fhd': 3, 'hd': 2, 'sd': 1, 'unknown': 0 };
+        return (order[b.quality] || 0) > (order[a.quality] || 0) ? b : a;
+      });
+      return wc.find(s => s.stream_id === best.streamId) || wc[0];
+    }).filter(Boolean);
+  }, [isSports, allStreams]);
+
   // Group quality variants for the main grid (memoized to avoid re-compute on every render)
   const deduped = useMemo(() => {
     const grouped = groupChannelsByQuality(searchFiltered);
@@ -649,6 +671,7 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
     }).filter(Boolean);
     // Gently float English channels toward the front — only within first 15 positions
     // This preserves curator narrative order for the bulk while ensuring EN prominence up top
+    let ordered = streams;
     if (streams.length > 5) {
       const head = streams.slice(0, 15);
       const tail = streams.slice(15);
@@ -657,10 +680,18 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
         const bEn = getChannelMeta(b.stream_id)?.isEnglish ? 1 : 0;
         return bEn - aEn; // English first, stable within group
       });
-      return [...head, ...tail];
+      ordered = [...head, ...tail];
     }
-    return streams;
-  }, [searchFiltered]);
+    // Pin World Cup channels to the very front of the sports grid (featured first)
+    if (isSports) {
+      const wc = ordered.filter(isWorldCupStream);
+      if (wc.length > 0) {
+        const rest = ordered.filter(s => !isWorldCupStream(s));
+        ordered = [...wc, ...rest];
+      }
+    }
+    return ordered;
+  }, [searchFiltered, isSports]);
 
   return (
     <div className="pt-14 pb-32 min-h-screen">
@@ -742,6 +773,43 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
                 <NewsArena />
               </div>
             </React.Suspense>
+          )}
+
+          {/* ── World Cup — Featured Collection (sports only, pinned top) ─ */}
+          {worldCupStreams.length > 0 && !searchQuery && (
+            <section className="mt-4 mb-6 reveal">
+              <div className="px-4 mb-3">
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-4 h-4" style={{ color: '#FFD24A', filter: 'drop-shadow(0 0 6px rgba(255,210,74,0.5))' }} />
+                  <h2 className="text-lg font-black text-white">World Cup</h2>
+                  <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded"
+                    style={{ background: 'rgba(255,210,74,0.12)', color: '#FFD24A' }}>
+                    Live
+                  </span>
+                </div>
+              </div>
+              <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-x px-4 pb-2">
+                {worldCupStreams.slice(0, 40).map((stream, i) => (
+                  <button
+                    key={stream.stream_id}
+                    onClick={() => handlePlay(stream, worldCupStreams)}
+                    className="flex-shrink-0 group"
+                    style={{ width: i === 0 ? 170 : 150, ...(i < 10 ? { animation: `vee-card-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) ${i * 100}ms both` } : {}) }}
+                  >
+                    <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 transition-all duration-300 group-hover:shadow-lg flex items-center justify-center"
+                      style={{ background: 'rgba(255,210,74,0.05)', border: '1px solid rgba(255,210,74,0.18)', boxShadow: i === 0 ? '0 0 22px rgba(255,210,74,0.18)' : undefined }}>
+                      <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" />
+                      <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-black/60 rounded text-[8px] font-semibold" style={{ color: '#FFD24A' }}>
+                        <span className="w-1 h-1 rounded-full live-badge-pulse" style={{ background: '#FFD24A' }} />
+                        LIVE
+                      </div>
+                      <ChannelBadge streamId={stream.stream_id} />
+                    </div>
+                    <p className="text-[10px] text-white/40 truncate group-hover:text-white/70 transition-colors">{stream.name}</p>
+                  </button>
+                ))}
+              </div>
+            </section>
           )}
 
           {/* ── VEE Curated Row (AI picks for this experience) ───────── */}
