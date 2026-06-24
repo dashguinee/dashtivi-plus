@@ -14,18 +14,20 @@ function toChannel(ch: CatalogChannel, creds: XtreamCredentials): Channel {
 }
 
 /**
- * SearchWidget — the MASTER SEARCH. A little lit glass pebble that lives at
- * half-screen (biased up), can be DRAGGED anywhere, breathes/glows, and fades in
- * two stages (dim after a few idle sec, deeper after 45s) but never fully leaves —
- * a tap always wakes it. Opening RISES an ambient modal in the same page (neon beam
- * behind, bouncy cheer, gold caret + golden-shimmer typed text). Find gems, no break.
+ * SearchWidget — the MASTER SEARCH. A lit glass pebble that lives at thumb-height
+ * (biased up), can be DRAGGED anywhere (haptic on pickup), is small at rest and
+ * grows when grabbed, fades in two stages but never fully leaves, and swipes off an
+ * edge to dismiss like a real phone bubble. It's excluded from pull-to-refresh
+ * (data-no-ptr). Opening RISES an ambient modal (neon beam, gold caret + shimmer).
+ * The nav search-pill opens the same modal via window.openTiviSearch.
  */
 interface Props {
   credentials: XtreamCredentials;
   onPlay: (ch: Channel) => void;
 }
 
-const SIZE = 42;
+const SIZE = 48;  // hit area (tap target) — the visual disc inside is smaller
+const DISC = 42;  // visual disc, full size when interacting
 
 export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
   const [open, setOpen] = useState(false);
@@ -33,11 +35,13 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
   const [fade, setFade] = useState(0); // 0 awake · 1 dim (4s) · 2 deep (45s)
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [pressing, setPressing] = useState(false);
   const [hidden, setHidden] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const start = useRef<{ px: number; py: number; x0: number; y0: number; moved: boolean } | null>(null);
   const dimT = useRef<ReturnType<typeof setTimeout>>();
   const deepT = useRef<ReturnType<typeof setTimeout>>();
+  const active = dragging || pressing;
 
   const results = useMemo(() => {
     const cat = getCatalogSync();
@@ -46,11 +50,11 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
     return cat.channels.filter((c) => c.name.toLowerCase().includes(needle)).slice(0, 12);
   }, [q]);
 
-  // Default rest position: half-screen, biased up ~15%, floated off the right edge.
+  // Default rest position: thumb-height (biased up ~28%), floated off the right edge.
   useEffect(() => {
     if (pos) return;
-    const x = window.innerWidth - SIZE - 16;
-    const y = Math.round(window.innerHeight * 0.28); // higher — where the thumb rests
+    const x = window.innerWidth - SIZE - 14;
+    const y = Math.round(window.innerHeight * 0.28);
     setPos({ x, y });
   }, [pos]);
 
@@ -75,17 +79,19 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  // Global opener — the nav search-pill (and anything else) opens the same modal,
-  // and re-summons the pebble if it was swiped away.
+  // Global opener — the nav search-pill opens the same modal, and re-summons the
+  // pebble if it was swiped away.
   useEffect(() => {
     (window as any).openTiviSearch = () => { setHidden(false); setOpen(true); };
     return () => { (window as any).openTiviSearch = undefined; };
   }, []);
 
-  // Drag to reposition; a still press is a tap → open; swipe to an edge → dismiss.
+  // Drag to reposition (haptic on pickup); a still press is a tap → open; swipe to
+  // an edge → dismiss.
   const onDown = (e: React.PointerEvent) => {
     if (!pos) return;
-    wake();
+    wake(); tap();
+    setPressing(true);
     e.currentTarget.setPointerCapture?.(e.pointerId);
     start.current = { px: e.clientX, py: e.clientY, x0: pos.x, y0: pos.y, moved: false };
   };
@@ -95,58 +101,65 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
     if (!s.moved && Math.hypot(dx, dy) > 5) { s.moved = true; setDragging(true); }
     if (s.moved) {
       setPos({
-        x: Math.max(8, Math.min(window.innerWidth - SIZE - 8, s.x0 + dx)),
-        y: Math.max(72, Math.min(window.innerHeight - SIZE - 90, s.y0 + dy)),
+        x: Math.max(6, Math.min(window.innerWidth - SIZE - 6, s.x0 + dx)),
+        y: Math.max(70, Math.min(window.innerHeight - SIZE - 88, s.y0 + dy)),
       });
     }
   };
   const onUp = () => {
     const s = start.current; start.current = null;
-    setDragging(false);
+    setDragging(false); setPressing(false);
     if (!s) return;
-    if (!s.moved) { tap(); setOpen(true); return; }
+    if (!s.moved) { setOpen(true); return; }
     // swept to an edge → it disappears, like a real phone bubble
-    setPos((p) => { if (p && (p.x < 26 || p.x > window.innerWidth - SIZE - 26)) setHidden(true); return p; });
+    setPos((p) => { if (p && (p.x < 24 || p.x > window.innerWidth - SIZE - 24)) setHidden(true); return p; });
     wake();
   };
 
   return (
     <>
       <style>{`
-        @keyframes sw-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+        @keyframes sw-glow{0%,100%{box-shadow:0 6px 22px rgba(157,78,221,0.35),inset 0 1px 1px rgba(255,255,255,0.22)}50%{box-shadow:0 9px 30px rgba(157,78,221,0.55),inset 0 1px 1px rgba(255,255,255,0.30)}}
         @keyframes sw-fade{from{opacity:0}to{opacity:1}}
         @keyframes sw-cheer{0%{opacity:0;transform:translateY(26px) scale(0.94)}60%{opacity:1;transform:translateY(-6px) scale(1.015)}100%{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes sw-beam{0%,100%{opacity:0.55;transform:scaleY(1)}50%{opacity:0.9;transform:scaleY(1.06)}}
         @keyframes sw-shimmer{from{background-position:200% 0}to{background-position:-40% 0}}
-        @keyframes sw-caret{0%,45%{opacity:1}55%,100%{opacity:0.15}}
         .sw-shimmer-text{background:linear-gradient(100deg,#E8B53A 0%,#FFF6CE 26%,#FFD700 50%,#FFF6CE 74%,#E8B53A 100%);background-size:240% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:sw-shimmer 2.6s linear infinite}
       `}</style>
 
-      {/* Lit, draggable, breathing pebble */}
+      {/* Lit, draggable pebble — large hit area, smaller visual disc at rest */}
       {pos && !hidden && (
         <button
           onPointerDown={onDown}
           onPointerMove={onMove}
           onPointerUp={onUp}
           aria-label="Search channels"
+          data-no-ptr
           className="fixed z-[55] flex items-center justify-center"
           style={{
-            left: pos.x, top: pos.y, width: SIZE, height: SIZE, borderRadius: '50%',
-            background: 'radial-gradient(circle at 38% 32%, rgba(220,166,255,0.30), rgba(255,255,255,0.08) 60%)',
-            border: '1px solid rgba(199,125,255,0.42)',
-            backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
-            boxShadow: dragging
-              ? '0 14px 40px rgba(157,78,221,0.55), 0 0 0 4px rgba(199,125,255,0.18)'
-              : '0 6px 22px rgba(157,78,221,0.40), inset 0 1px 1px rgba(255,255,255,0.25)',
+            left: pos.x, top: pos.y, width: SIZE, height: SIZE, padding: 0,
+            background: 'transparent', border: 'none',
             opacity: open ? 0 : fade === 2 ? 0.2 : fade === 1 ? 0.5 : 1,
-            transform: 'translateZ(0)',
-            transition: dragging ? 'box-shadow .2s' : 'opacity 1s ease, left .5s cubic-bezier(0.34,1.56,0.64,1), top .5s cubic-bezier(0.34,1.56,0.64,1), box-shadow .4s',
+            transition: dragging ? 'none' : 'opacity 1s ease, left .5s cubic-bezier(0.34,1.56,0.64,1), top .5s cubic-bezier(0.34,1.56,0.64,1)',
             pointerEvents: open ? 'none' : 'auto',
-            touchAction: 'none', cursor: 'grab',
-            animation: dragging ? 'none' : 'sw-breathe 4.5s ease-in-out infinite',
+            touchAction: 'none', cursor: 'grab', WebkitTapHighlightColor: 'transparent',
           }}
         >
-          <Search className="w-[18px] h-[18px] text-white/90" style={{ filter: 'drop-shadow(0 0 6px rgba(199,125,255,0.7))' }} />
+          <div
+            style={{
+              width: DISC, height: DISC, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'radial-gradient(circle at 38% 32%, rgba(220,166,255,0.30), rgba(255,255,255,0.08) 60%)',
+              border: '1px solid rgba(199,125,255,0.42)',
+              backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+              boxShadow: active ? '0 14px 40px rgba(157,78,221,0.55), 0 0 0 4px rgba(199,125,255,0.18)' : undefined,
+              transform: `scale(${active ? 1 : 0.8})`,
+              transition: 'transform .3s cubic-bezier(0.34,1.56,0.64,1), box-shadow .3s',
+              animation: active ? 'none' : 'sw-glow 4.5s ease-in-out infinite',
+            }}
+          >
+            <Search className="w-[18px] h-[18px] text-white/90" style={{ filter: 'drop-shadow(0 0 6px rgba(199,125,255,0.7))' }} />
+          </div>
         </button>
       )}
 
@@ -157,7 +170,6 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
           style={{ background: 'rgba(6,6,12,0.42)', backdropFilter: 'blur(11px)', WebkitBackdropFilter: 'blur(11px)', animation: 'sw-fade 0.3s ease' }}
           onClick={() => setOpen(false)}
         >
-          {/* neon beam behind the card */}
           <div
             className="absolute pointer-events-none"
             style={{
@@ -178,7 +190,6 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
           >
             <div className="flex items-center gap-3 px-4 py-3.5">
               <Search className="w-5 h-5 flex-shrink-0" style={{ color: 'rgba(255,215,0,0.55)' }} />
-              {/* input + golden-shimmer mirror + stylized gold caret */}
               <div className="relative flex-1 min-w-0">
                 <input
                   ref={inputRef}

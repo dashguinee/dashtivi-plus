@@ -15,6 +15,9 @@ export function usePullToRefresh() {
   useEffect(() => {
     function onTouchStart(e: TouchEvent) {
       if (window.scrollY > 5) return;
+      // The floating search pebble (and anything marked data-no-ptr) must NOT
+      // count toward the pull — dragging it is its own gesture, not a refresh.
+      if ((e.target as HTMLElement)?.closest?.('[data-no-ptr]')) return;
       startY.current = e.touches[0].clientY;
       startX.current = e.touches[0].clientX;
       active.current = true;
