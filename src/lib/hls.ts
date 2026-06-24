@@ -1,5 +1,3 @@
-import mpegts from 'mpegts.js';
-
 export interface HlsInstance {
   hls: any | null;
   destroy: () => void;
@@ -9,11 +7,14 @@ export interface HlsInstance {
  * Create an MPEG-TS player for raw .ts streams (proxied from Starshare)
  * Used for Live TV — needed for every live channel (primary use case)
  */
-export function createMpegTsPlayer(
+export async function createMpegTsPlayer(
   videoEl: HTMLVideoElement,
   url: string,
   onError?: (msg: string) => void
-): HlsInstance {
+): Promise<HlsInstance> {
+  // PERF: mpegts.js (~273KB) loaded dynamically — only if a raw .ts stream is
+  // ever played, never on home arrival. (hls.js already gets this below.)
+  const { default: mpegts } = await import('mpegts.js');
 
   if (!mpegts.isSupported()) {
     onError?.('MPEG-TS playback is not supported in this browser');
