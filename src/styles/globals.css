@@ -1752,3 +1752,150 @@
     to   { opacity: 1; }
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   MEDIA-SPACE BREATH — "navigation = movement through media spaces"
+
+   Route changes don't hard-cut: the incoming space CONDENSES in
+   (.merge-infuse) over the persistent world, and a single ambient
+   bloom (#merge-breath) swells then dissolves (.breathe). When the
+   destination is the Movies space, the bloom turns deep VIOLET — a
+   purple breath dissolves the live world and the cinema condenses out
+   of it. GPU-cheap: opacity + transform only.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* The page content condenses in — fade + a whisper of upward settle.
+   Replaces the old hard remount cut with a soft materialization. */
+.merge-infuse {
+  animation: merge-condense 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: opacity, transform;
+}
+@keyframes merge-condense {
+  from { opacity: 0; transform: translateY(10px) scale(0.992); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* The ambient bloom layer — a fixed, pointer-transparent violet veil that
+   swells to cover the transition, then dissolves. Sits above the world
+   (z below modals/player). Idle = invisible; .breathe runs one cycle. */
+#merge-breath {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0;
+  /* Default (non-movies) breath: a soft neutral-violet whisper. */
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 42%,
+      rgba(157,78,221,0.12) 0%,
+      rgba(124,58,237,0.06) 40%,
+      transparent 72%);
+  will-change: opacity, transform;
+  contain: strict;
+}
+#merge-breath.breathe {
+  animation: merge-breath-cycle 0.74s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes merge-breath-cycle {
+  0%   { opacity: 0; transform: scale(1.06); }
+  42%  { opacity: 0.9; transform: scale(1.0); }
+  100% { opacity: 0; transform: scale(1.02); }
+}
+
+/* MOVIES SPACE — the breath swells DEEP VIOLET and lingers a touch longer
+   (the live world dissolves into purple, the cinema condenses out of it).
+   Stronger, fuller bloom; brand violet at its core. */
+#merge-breath[data-space="movies"] {
+  background:
+    radial-gradient(ellipse 120% 95% at 50% 45%,
+      rgba(157,78,221,0.42) 0%,
+      rgba(109,40,184,0.30) 32%,
+      rgba(42,15,74,0.40) 62%,
+      rgba(13,6,24,0.55) 100%);
+}
+#merge-breath[data-space="movies"].breathe {
+  animation: merge-breath-movies 0.95s cubic-bezier(0.33, 0, 0.2, 1) both;
+}
+@keyframes merge-breath-movies {
+  0%   { opacity: 0;    transform: scale(1.08); }
+  38%  { opacity: 0.96; transform: scale(1.0); }
+  100% { opacity: 0;    transform: scale(1.015); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .merge-infuse { animation: none; }
+  #merge-breath, #merge-breath.breathe, #merge-breath[data-space="movies"].breathe {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FLOATING-MOVIES SHOWCASE — the cinema materializing in the dark.
+   ~6–9 posters drift at different depths/sizes/opacities. Pure
+   transform/opacity float (GPU). Each poster gets one of a few drift
+   tracks + a depth via inline style. Reduced-motion freezes them.
+   ═══════════════════════════════════════════════════════════════════ */
+.fm-showcase {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  /* Sits flush under the top breath; flows into the grid below with no seam. */
+  background:
+    radial-gradient(ellipse 100% 60% at 50% 30%, rgba(157,78,221,0.10) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(8,5,16,0.0) 0%, rgba(8,5,16,0.0) 70%, #060609 100%);
+  animation: fm-showcase-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes fm-showcase-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+/* Edge vignette — posters emerge from / sink into the dark at the rim. */
+.fm-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background:
+    radial-gradient(ellipse 78% 70% at 50% 46%, transparent 38%, rgba(6,6,9,0.55) 82%, rgba(6,6,9,0.92) 100%),
+    linear-gradient(180deg, rgba(6,6,9,0.6) 0%, transparent 22%, transparent 78%, rgba(6,6,9,0.9) 100%);
+}
+.fm-poster {
+  position: absolute;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  will-change: transform;
+  transform: translateZ(0);
+  box-shadow: 0 14px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(157,78,221,0.18);
+  transition: box-shadow 0.5s ease, filter 0.5s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.fm-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.fm-poster:active { filter: brightness(1.08); }
+/* Four gentle drift tracks — slow, organic, never the same phase. */
+@keyframes fm-drift-a {
+  0%,100% { transform: translate3d(0, 0, 0); }
+  50%     { transform: translate3d(6px, -12px, 0); }
+}
+@keyframes fm-drift-b {
+  0%,100% { transform: translate3d(0, 0, 0); }
+  50%     { transform: translate3d(-8px, -8px, 0); }
+}
+@keyframes fm-drift-c {
+  0%,100% { transform: translate3d(0, 0, 0); }
+  50%     { transform: translate3d(5px, 10px, 0); }
+}
+@keyframes fm-drift-d {
+  0%,100% { transform: translate3d(0, 0, 0); }
+  50%     { transform: translate3d(-6px, 9px, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fm-showcase { animation: none; }
+  .fm-poster { animation: none !important; }
+}

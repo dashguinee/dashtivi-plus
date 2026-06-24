@@ -10,6 +10,7 @@ import { TMDB_GENRES } from '@/lib/tmdb-map.generated';
 import { PosterCard } from '@/components/ui/PosterCard';
 import { VeeCollectionRow } from '@/components/ui/VeeCollectionRow';
 import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
+import { FloatingMoviesShowcase } from '@/components/home/FloatingMoviesShowcase';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { NeonGate, RowCountBadge, cardScaleStyle } from '@/components/ui/NeonGate';
@@ -457,6 +458,21 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   return (
     <div className="pb-32" style={{ paddingTop: 'max(4rem, calc(3.5rem + env(safe-area-inset-top, 0px)))' }}>
+      {/* ── Floating-movies showcase — the cinema materializing in the dark.
+          The entry to the Movies media space: a full-bleed dark stage where a
+          handful of posters drift at different depths; tap one → its trailer
+          (ContentDetailModal). Reuses the already-loaded VOD pool. Below it the
+          hero + grid continue, so the scroll flows showcase → grid with no break.
+          Hidden while searching (search owns the view). ── */}
+      {!isSearching && (
+        <FloatingMoviesShowcase
+          credentials={credentials}
+          movies={movies}
+          tmdbMap={tmdbMap}
+          onPlay={onPlay}
+        />
+      )}
+
       {/* ── Hero Billboard ── */}
       {heroMovie ? (
         <div className="relative overflow-hidden" style={{ height: 'clamp(160px, 35vh, 280px)' }}>

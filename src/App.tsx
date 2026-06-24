@@ -150,14 +150,26 @@ function ScrollToTop() {
   return null;
 }
 
-// Country-not-buildings: content infuses over the persistent world (background,
-// header, navbar stay) instead of hard-cutting. A soft ambient "breath" blooms
-// on every route change — the merge, not a horizontal shift.
+// Navigation = movement through media spaces, not page transitions. Content
+// CONDENSES over the persistent world (background, header, navbar stay) instead
+// of hard-cutting, and a single ambient bloom (#merge-breath) swells then
+// dissolves on every route change — the merge, not a horizontal shift.
+//
+// MOVIES SPACE: when the destination is /movies, the bloom turns deep VIOLET —
+// a purple breath dissolves the live world and the cinema condenses out of it.
+// Routing is untouched (real route, back/forward intact); only the *transition*
+// becomes a breath. Respects prefers-reduced-motion (the CSS no-ops the breath).
 function MergeTransition({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
   React.useEffect(() => {
     const el = document.getElementById('merge-breath');
-    if (el) { el.classList.remove('breathe'); void el.offsetWidth; el.classList.add('breathe'); }
+    if (el) {
+      // Movies = the purple breath; everything else = the soft neutral whisper.
+      if (pathname.startsWith('/movies')) el.setAttribute('data-space', 'movies');
+      else el.removeAttribute('data-space');
+      // Restart the one-shot breath cycle (remove → reflow → add).
+      el.classList.remove('breathe'); void el.offsetWidth; el.classList.add('breathe');
+    }
   }, [pathname]);
   return <div key={pathname} className="merge-infuse">{children}</div>;
 }
@@ -385,6 +397,10 @@ function AppContent({ guestMode, onRequestCode }: { guestMode?: boolean; onReque
           }} />
         </>
       )}
+      {/* Media-space breath — the ambient bloom that swells then dissolves on
+          route change (purple when entering the Movies space). Hidden during
+          full-screen playback. Styling + reduced-motion guard live in globals.css. */}
+      {!showFullPlayer && <div id="merge-breath" aria-hidden="true" />}
       <div className="relative z-10">
         <ScrollToTop />
         {/* Cross-app notification pill + push opt-in */}
@@ -398,6 +414,7 @@ function AppContent({ guestMode, onRequestCode }: { guestMode?: boolean; onReque
         <main className="pb-20 lg:pb-0 lg:pl-[72px] safe-bottom-content">
           <ErrorBoundary>
             <Suspense fallback={<div className="pt-20 px-4 space-y-6 animate-pulse"><div className="h-[22vh] rounded-2xl bg-white/[0.02]" /><div className="flex gap-2">{[1,2,3,4].map(i=><div key={i} className="h-8 w-16 rounded-full bg-white/[0.03]" />)}</div><div className="space-y-4">{[1,2,3].map(i=><div key={i} className="h-32 rounded-xl bg-white/[0.02]" />)}</div></div>}>
+              <MergeTransition>
                 <Routes>
                   <Route path="/" element={<ErrorBoundary><HomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/live/:experienceId" element={<ErrorBoundary><ExperienceHomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
@@ -417,6 +434,7 @@ function AppContent({ guestMode, onRequestCode }: { guestMode?: boolean; onReque
                   <Route path="/test" element={<ErrorBoundary><TestChannelsPage onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
+              </MergeTransition>
             </Suspense>
           </ErrorBoundary>
         </main>
