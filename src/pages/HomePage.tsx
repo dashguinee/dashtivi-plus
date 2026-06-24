@@ -258,7 +258,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
             <React.Fragment key={experience}>
               <ExperienceRow
                 index={idx}
-                title={experience}
+                title={experience === 'Movies' ? 'Cinéma Live' : experience}
                 accent={EXPERIENCE_ACCENT[experience] || '#9D4EDD'}
                 channels={channels}
                 onPlay={(ch) => play(ch, channels)}

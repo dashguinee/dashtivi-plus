@@ -33,8 +33,9 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
   const [fade, setFade] = useState(0); // 0 awake · 1 dim (4s) · 2 deep (45s)
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const dragRef = useRef<{ ox: number; oy: number; moved: boolean } | null>(null);
+  const start = useRef<{ px: number; py: number; x0: number; y0: number; moved: boolean } | null>(null);
   const dimT = useRef<ReturnType<typeof setTimeout>>();
   const deepT = useRef<ReturnType<typeof setTimeout>>();
 
@@ -49,7 +50,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
   useEffect(() => {
     if (pos) return;
     const x = window.innerWidth - SIZE - 16;
-    const y = Math.round(window.innerHeight * 0.35);
+    const y = Math.round(window.innerHeight * 0.28); // higher — where the thumb rests
     setPos({ x, y });
   }, [pos]);
 
@@ -74,28 +75,39 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  // Drag to reposition; a still press is a tap → open.
+  // Global opener — the nav search-pill (and anything else) opens the same modal,
+  // and re-summons the pebble if it was swiped away.
+  useEffect(() => {
+    (window as any).openTiviSearch = () => { setHidden(false); setOpen(true); };
+    return () => { (window as any).openTiviSearch = undefined; };
+  }, []);
+
+  // Drag to reposition; a still press is a tap → open; swipe to an edge → dismiss.
   const onDown = (e: React.PointerEvent) => {
     if (!pos) return;
     wake();
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-    dragRef.current = { ox: e.clientX - pos.x, oy: e.clientY - pos.y, moved: false };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    start.current = { px: e.clientX, py: e.clientY, x0: pos.x, y0: pos.y, moved: false };
   };
   const onMove = (e: React.PointerEvent) => {
-    const d = dragRef.current; if (!d) return;
-    const nx = e.clientX - d.ox, ny = e.clientY - d.oy;
-    if (!d.moved && Math.hypot(e.clientX - (d.ox + (pos?.x ?? 0)), e.clientY - (d.oy + (pos?.y ?? 0))) > 6) { d.moved = true; setDragging(true); }
-    if (d.moved) {
-      const x = Math.max(8, Math.min(window.innerWidth - SIZE - 8, nx));
-      const y = Math.max(70, Math.min(window.innerHeight - SIZE - 90, ny));
-      setPos({ x, y });
+    const s = start.current; if (!s) return;
+    const dx = e.clientX - s.px, dy = e.clientY - s.py;
+    if (!s.moved && Math.hypot(dx, dy) > 5) { s.moved = true; setDragging(true); }
+    if (s.moved) {
+      setPos({
+        x: Math.max(8, Math.min(window.innerWidth - SIZE - 8, s.x0 + dx)),
+        y: Math.max(72, Math.min(window.innerHeight - SIZE - 90, s.y0 + dy)),
+      });
     }
   };
   const onUp = () => {
-    const d = dragRef.current; dragRef.current = null;
+    const s = start.current; start.current = null;
     setDragging(false);
-    if (d && !d.moved) { tap(); setOpen(true); }
-    else wake();
+    if (!s) return;
+    if (!s.moved) { tap(); setOpen(true); return; }
+    // swept to an edge → it disappears, like a real phone bubble
+    setPos((p) => { if (p && (p.x < 26 || p.x > window.innerWidth - SIZE - 26)) setHidden(true); return p; });
+    wake();
   };
 
   return (
@@ -111,7 +123,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
       `}</style>
 
       {/* Lit, draggable, breathing pebble */}
-      {pos && (
+      {pos && !hidden && (
         <button
           onPointerDown={onDown}
           onPointerMove={onMove}
