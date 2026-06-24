@@ -65,6 +65,7 @@ const WelcomePage = lazyRetry(() => import('@/pages/WelcomePage').then((m) => ({
 const PlatformsPage = lazyRetry(() => import('@/pages/PlatformsPage').then((m) => ({ default: m.PlatformsPage })));
 const ExperienceHomePage = lazyRetry(() => import('@/pages/ExperienceHomePage').then((m) => ({ default: m.ExperienceHomePage })));
 const ExplorePage = lazyRetry(() => import('@/pages/ExplorePage').then((m) => ({ default: m.ExplorePage })));
+const NbaPage = lazyRetry(() => import('@/pages/NbaPage').then((m) => ({ default: m.NbaPage })));
 const TestChannelsPage = lazyRetry(() => import('@/pages/TestChannelsPage'));
 
 // Build-time version stamp — compared against remote version.json
@@ -412,6 +413,7 @@ function AppContent({ guestMode, onRequestCode }: { guestMode?: boolean; onReque
                   <Route path="/" element={<ErrorBoundary><HomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/live/:experienceId" element={<ErrorBoundary><ExperienceHomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/live" element={<ErrorBoundary><LiveTVPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
+                  <Route path="/nba" element={<ErrorBoundary><NbaPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/movies" element={<ErrorBoundary><MoviesPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/series" element={<ErrorBoundary><SeriesPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/french" element={<ErrorBoundary><FrenchPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
