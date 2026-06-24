@@ -3,13 +3,13 @@ import { Download, Search, X, SlidersHorizontal, Moon, TrendingUp, Coffee, Rabbi
 import { getActiveMomentPacks, getMomentPackResults } from '@/lib/moment-packs';
 import type { MomentPack } from '@/lib/moment-packs';
 import type { XtreamCredentials, VodStream } from '@/lib/xtream';
-import { getVodStreams, buildVodUrl, buildVodFallbackUrl, getTmdbMap, getVodByCategory, vodDbToStream, searchVod } from '@/lib/xtream';
+import { getVodStreams, buildVodUrl, getTmdbMap, getVodByCategory, vodDbToStream, searchVod } from '@/lib/xtream';
 import { tap } from '@/lib/haptics';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { TMDB_GENRES } from '@/lib/tmdb-map.generated';
 import { PosterCard } from '@/components/ui/PosterCard';
 import { VeeCollectionRow } from '@/components/ui/VeeCollectionRow';
-import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
+import { MoviesTrailerSpace } from '@/components/home/MoviesTrailerSpace';
 import { FloatingMoviesShowcase } from '@/components/home/FloatingMoviesShowcase';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -827,25 +827,17 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         </>
       )}
 
-      {/* ── Detail Modal ── */}
+      {/* ── Trailer SPACE (Phase B) ── reuses ContentDetailModal's trailer
+          playback, wrapped in the 4-direction navigator. Pool = what's on
+          screen (filtered/sorted) so L/R neighbours match the current context;
+          U/D jump genre rows. Exit breathes back to this grid. ── */}
       {detailMovie && (
-        <ContentDetailModal
-          streamId={detailMovie.stream_id} name={detailMovie.name}
-          poster={detailMovie.stream_icon} rating={detailMovie.rating}
-          containerExtension={detailMovie.container_extension} type="movie"
-          tmdbData={tmdbMap[`m:${detailMovie.stream_id}`]} credentials={credentials}
-          onPlay={knownDuration => {
-            const tmdb = tmdbMap[`m:${detailMovie.stream_id}`];
-            const duration = knownDuration || (tmdb?.t ? tmdb.t * 60 : undefined);
-            const ext = detailMovie.container_extension || 'mp4';
-            onPlay({
-              id: `vod-${detailMovie.stream_id}`, name: detailMovie.name,
-              url: buildVodUrl(credentials, detailMovie.stream_id, ext),
-              logo: detailMovie.stream_icon, category: 'movie', knownDuration: duration,
-              fallbackUrl: buildVodFallbackUrl(credentials, detailMovie.stream_id, ext, 'movie'),
-            });
-            setDetailMovie(null);
-          }}
+        <MoviesTrailerSpace
+          credentials={credentials}
+          initial={detailMovie}
+          pool={filteredAndSorted.length > 0 ? filteredAndSorted : movies}
+          tmdbMap={tmdbMap}
+          onPlay={onPlay}
           onClose={() => setDetailMovie(null)}
         />
       )}

@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import type { XtreamCredentials, VodStream } from '@/lib/xtream';
-import { buildVodUrl, buildVodFallbackUrl } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
-import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
+import { MoviesTrailerSpace } from '@/components/home/MoviesTrailerSpace';
 import { tap } from '@/lib/haptics';
 import type { Channel } from '@/types';
 
@@ -160,32 +159,18 @@ export const FloatingMoviesShowcase: React.FC<Props> = ({ credentials, movies, t
         <p className="text-[11px] text-white/30 mt-0.5">Tap a film to watch its trailer</p>
       </div>
 
-      {/* Trailer via the existing modal — no rebuilt playback. */}
+      {/* Trailer SPACE — Phase B. Reuses ContentDetailModal's trailer playback
+          (no rebuilt playback) but wraps it in the 4-direction navigator: swipe
+          to glide to an adjacent movie's trailer (tactile-glass, same as
+          HeroDeck), exit breathes back here. The VOD pool we already hold is the
+          spatial model it navigates. */}
       {detailMovie && (
-        <ContentDetailModal
-          streamId={detailMovie.stream_id}
-          name={detailMovie.name}
-          poster={detailMovie.stream_icon}
-          rating={detailMovie.rating}
-          containerExtension={detailMovie.container_extension}
-          type="movie"
-          tmdbData={tmdbMap[`m:${detailMovie.stream_id}`]}
+        <MoviesTrailerSpace
           credentials={credentials}
-          onPlay={(knownDuration) => {
-            const tmdb = tmdbMap[`m:${detailMovie.stream_id}`];
-            const duration = knownDuration || (tmdb?.t ? tmdb.t * 60 : undefined);
-            const ext = detailMovie.container_extension || 'mp4';
-            onPlay({
-              id: `vod-${detailMovie.stream_id}`,
-              name: detailMovie.name,
-              url: buildVodUrl(credentials, detailMovie.stream_id, ext),
-              logo: detailMovie.stream_icon,
-              category: 'movie',
-              knownDuration: duration,
-              fallbackUrl: buildVodFallbackUrl(credentials, detailMovie.stream_id, ext, 'movie'),
-            });
-            setDetailMovie(null);
-          }}
+          initial={detailMovie}
+          pool={movies}
+          tmdbMap={tmdbMap}
+          onPlay={onPlay}
           onClose={() => setDetailMovie(null)}
         />
       )}
