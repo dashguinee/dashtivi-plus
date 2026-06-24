@@ -563,7 +563,9 @@ const ExperienceRow = React.memo(function ExperienceRow({
                 width: cardW,
                 height: cardH,
                 background: 'linear-gradient(157deg, rgba(255,255,255,0.085) 0%, rgba(255,255,255,0.025) 50%, rgba(255,255,255,0.012) 100%)',
-                boxShadow: '0 4px 14px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1px rgba(255,255,255,0.045)',
+                boxShadow: ch.free
+                  ? '0 4px 14px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1.5px rgba(34,197,94,0.55), 0 0 16px rgba(34,197,94,0.16)'
+                  : '0 4px 14px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1px rgba(255,255,255,0.045)',
               }}
             >
               {/* per-experience accent sheen, top-lit */}
@@ -576,10 +578,10 @@ const ExperienceRow = React.memo(function ExperienceRow({
               <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 rounded-full"
                 style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}>
                 <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-70" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-400" style={{ boxShadow: '0 0 5px rgba(248,113,113,0.9)' }} />
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-70 ${ch.free ? 'bg-green-400' : 'bg-red-400'}`} />
+                  <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${ch.free ? 'bg-green-400' : 'bg-red-400'}`} style={{ boxShadow: ch.free ? '0 0 5px rgba(74,222,128,0.95)' : '0 0 5px rgba(248,113,113,0.9)' }} />
                 </span>
-                <span className="text-[7px] font-bold text-white/75 tracking-wide">{liveLabel}</span>
+                <span className="text-[7px] font-bold text-white/75 tracking-wide">{ch.free ? 'FREE' : liveLabel}</span>
               </div>
 
               {/* glassy play affordance on hover/press */}

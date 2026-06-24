@@ -38,6 +38,7 @@ export interface RawCatalogChannel {
   plays: 'proxy' | 'direct';
   url: string | null;  // set for direct channels
   tested: boolean;
+  free?: boolean;      // open-source HLS gem, merged into the collection (green/FREE tag)
 }
 
 interface RawCatalog {
@@ -129,7 +130,13 @@ export function buildCatalogUrl(
   return `${PROXY}/live?id=${ch.ext_id}&u=${encodeURIComponent(u)}&p=${encodeURIComponent(p)}&q=${DEFAULT_QUALITY}`;
 }
 
-function buildCatalog(raw: RawCatalog): Catalog {
+interface GemChannel { id: string; name: string; url: string; logo?: string; district: string; }
+const GEM_DISTRICT_TO_EXPERIENCE: Record<string, string> = {
+  sports: 'Sports', movies: 'Movies', news: 'News', french: 'France',
+  african: 'African', kids: 'Kids', discover: 'Documentary', music: 'Entertainment',
+};
+
+function buildCatalog(raw: RawCatalog, gems: GemChannel[] = []): Catalog {
   const channels: CatalogChannel[] = raw.channels.map((c) => ({
     ...c,
     stream_id: streamIdFor(c),
@@ -143,6 +150,22 @@ function buildCatalog(raw: RawCatalog): Catalog {
     (byExperience[ch.experience] ||= []).push(ch);
     byStreamId.set(ch.stream_id, ch);
     if (ch.plays === 'direct' && ch.url) directUrlMap.set(ch.stream_id, ch.url);
+  }
+
+  // ── Merge the open-source FREE gems into the collections. No discrimination:
+  // they sit in the experience rows next to premium, flagged for the green/FREE tag.
+  let gid = 990000;
+  for (const g of gems) {
+    const experience = GEM_DISTRICT_TO_EXPERIENCE[g.district] || 'Entertainment';
+    const ch: CatalogChannel = {
+      id: g.id, ext_id: g.id, name: g.name, icon: g.logo || '', experience,
+      bucket: g.district, tier: 'starter', collection: null, plays: 'direct',
+      url: g.url, tested: true, free: true, stream_id: gid++,
+    };
+    (byExperience[experience] ||= []).push(ch);
+    channels.push(ch);
+    byStreamId.set(ch.stream_id, ch);
+    directUrlMap.set(ch.stream_id, g.url);
   }
 
   const wcIds = new Set(raw.collections?.worldcup || []);
@@ -164,13 +187,15 @@ function buildCatalog(raw: RawCatalog): Catalog {
 export async function getCatalog(): Promise<Catalog> {
   if (_catalog) return _catalog;
   if (_catalogPromise) return _catalogPromise;
-  _catalogPromise = fetch('/tivi-curated.json')
-    .then((r) => {
+  _catalogPromise = Promise.all([
+    fetch('/tivi-curated.json').then((r) => {
       if (!r.ok) throw new Error(`catalog fetch ${r.status}`);
       return r.json() as Promise<RawCatalog>;
-    })
-    .then((raw) => {
-      _catalog = buildCatalog(raw);
+    }),
+    fetch('/streamore-gems.json').then((r) => (r.ok ? r.json() : { gems: [] })).catch(() => ({ gems: [] })),
+  ])
+    .then(([raw, gemsData]) => {
+      _catalog = buildCatalog(raw as RawCatalog, (gemsData as { gems?: GemChannel[] }).gems || []);
       return _catalog;
     })
     .catch((e) => {
