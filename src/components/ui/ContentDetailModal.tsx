@@ -129,14 +129,22 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const showTrailer = hasTrailer && !trailerFailed;
 
-  // Poster-first arrival: hold the STILL poster + chrome (buttons), then dissolve
-  // to the live trailer once the chrome auto-hides. Calm landing, then it breathes.
-  // Tap anywhere brings the poster + buttons back (and re-arms the hide).
+  // Trailer fullscreen. Two independent fades:
+  //  • posterUp — a brief still-poster cover that smooths the iframe load (no black
+  //    flash), then dissolves fast (~1.8s) to the full-bleed looping video.
+  //  • chrome — the buttons/title/close + scrim; auto-hides (~4.5s) so the trailer
+  //    breathes CLEAN, tap anywhere toggles it back.
+  const [posterUp, setPosterUp] = useState(true);
   const [chrome, setChrome] = useState(true);
   useEffect(() => {
+    if (!showTrailer) return;
+    const t = setTimeout(() => setPosterUp(false), 1800);
+    return () => clearTimeout(t);
+  }, [showTrailer]);
+  useEffect(() => {
     if (!showTrailer || !chrome) return;
-    const tHide = setTimeout(() => setChrome(false), 4500);
-    return () => clearTimeout(tHide);
+    const t = setTimeout(() => setChrome(false), 4500);
+    return () => clearTimeout(t);
   }, [showTrailer, chrome]);
 
   // Cleanup iframe on unmount + delayed unmute for trailer audio
@@ -153,9 +161,9 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
       if (attempts < 5) unmuteTimer = setTimeout(tryUnmute, 600);
     };
     if (showTrailer) {
-      // Unmute as the poster dissolves (~4.5s) so audio arrives WITH the reveal,
-      // not behind the still poster. Retry up to 5 times (covers slow YouTube init).
-      unmuteTimer = setTimeout(tryUnmute, 4500);
+      // Unmute as the poster dissolves (~2s) so audio arrives WITH the video.
+      // Retry up to 5 times (covers slow YouTube init).
+      unmuteTimer = setTimeout(tryUnmute, 2000);
     }
     return () => {
       clearTimeout(unmuteTimer);
@@ -264,15 +272,18 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   // ══════════════════════════════════════════════════════════════
   if (showTrailer) {
     return (
-      <div className="fixed inset-0 z-[9998] bg-black" onClick={() => setChrome((c) => !c)}>
-        {/* Ambient trailer — plays UNDER a still poster that holds until the chrome
-            auto-hides, then dissolves to reveal the live trailer (poster-first). */}
-        <div className="absolute inset-0">
+      <div className="fixed inset-0 z-[9998] bg-black overflow-hidden" onClick={() => setChrome((c) => !c)}>
+        {/* Full-bleed looping trailer — cover-sized so a 16:9 video FILLS the portrait
+            screen (no letterbox gap); overflow cropped. loop needs playlist=<id>. */}
+        <div className="absolute inset-0 overflow-hidden">
           <iframe
             ref={iframeRef}
             className="absolute pointer-events-none"
-            style={{ top: '-10%', left: '-5%', width: '110%', height: '130%' }}
-            src={`https://www.youtube-nocookie.com/embed/${trailerKey}?rel=0&modestbranding=1&controls=0&showinfo=0&iv_load_policy=3&disablekb=1&start=5&autoplay=1&mute=1&enablejsapi=1&playsinline=1&loop=1`}
+            style={{
+              top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+              width: '100vw', height: '56.25vw', minHeight: '100vh', minWidth: '177.78vh',
+            }}
+            src={`https://www.youtube-nocookie.com/embed/${trailerKey}?rel=0&modestbranding=1&controls=0&showinfo=0&iv_load_policy=3&disablekb=1&start=5&autoplay=1&mute=1&enablejsapi=1&playsinline=1&loop=1&playlist=${trailerKey}`}
             title={`${cleanTitle} - Trailer`}
             allow="autoplay; encrypted-media"
             frameBorder="0"
@@ -282,13 +293,14 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
               src={backdropUrl}
               alt={cleanTitle}
               className="absolute inset-0 w-full h-full object-cover"
-              style={{ opacity: chrome ? 1 : 0, transition: 'opacity 1.1s cubic-bezier(0.23,1,0.32,1)' }}
+              style={{ opacity: posterUp ? 1 : 0, transition: 'opacity 0.9s cubic-bezier(0.23,1,0.32,1)' }}
             />
           )}
         </div>
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-black/50" />
+        {/* Scrim — fades out WITH the chrome so the video plays CLEAN when buttons hide */}
+        <div className="absolute inset-0 pointer-events-none" style={{ opacity: chrome ? 1 : 0, transition: 'opacity 0.6s ease' }}>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-black/35" />
         </div>
 
         <div className="absolute top-4 right-4 z-50" style={{ opacity: chrome ? 1 : 0, transition: 'opacity 0.55s ease', pointerEvents: chrome ? 'auto' : 'none' }}>
