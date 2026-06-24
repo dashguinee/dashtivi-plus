@@ -214,7 +214,7 @@ export function FreeHlsShowcaseCard({
           className="absolute inset-0 rounded-2xl pointer-events-none"
           style={{
             padding: '1px',
-            background: `linear-gradient(90deg, transparent 0%, ${GREEN}26 30%, ${GREEN}77 50%, ${GREEN}26 70%, transparent 100%)`,
+            background: `linear-gradient(90deg, transparent 0%, ${GREEN}26 30%, ${GREEN}55 50%, ${GREEN}26 70%, transparent 100%)`,
             backgroundSize: '200% 100%',
             animation: focused ? 'beam-sweep 4s ease-in-out infinite alternate' : 'none',
             WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',

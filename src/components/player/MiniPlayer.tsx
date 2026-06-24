@@ -86,11 +86,11 @@ export const MiniPlayer: React.FC<Props> = ({
               ) : (
                 <>
                   <span className="live-pulse !w-1.5 !h-1.5" />
-                  <span className="text-[10px] text-success font-medium">LIVE</span>
+                  <span className="text-[10px] font-bold text-success tracking-wide">LIVE</span>
                 </>
               )}
               {state.isLoading && (
-                <span className="text-[10px] text-warning">Buffering...</span>
+                <span className="text-[9px] font-medium text-warning/80">Buffering…</span>
               )}
             </div>
           </div>
@@ -99,7 +99,7 @@ export const MiniPlayer: React.FC<Props> = ({
           <div className="flex items-center gap-1">
             <button
               onClick={onTogglePlay}
-              className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center hover:bg-primary/30 transition-colors"
+              className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center hover:bg-primary/30 active:bg-primary/40 transition-colors"
             >
               {state.isPlaying ? (
                 <Pause className="w-4 h-4 text-primary-light" />
@@ -109,13 +109,13 @@ export const MiniPlayer: React.FC<Props> = ({
             </button>
             <button
               onClick={onExpand}
-              className="w-8 h-8 rounded-full hover:bg-bg-hover flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-full hover:bg-bg-hover active:bg-white/[0.08] flex items-center justify-center transition-colors"
             >
               <Maximize2 className="w-4 h-4 text-text-secondary" />
             </button>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full hover:bg-bg-hover flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-full hover:bg-bg-hover active:bg-white/[0.08] flex items-center justify-center transition-colors"
             >
               <X className="w-4 h-4 text-text-secondary" />
             </button>
@@ -123,7 +123,7 @@ export const MiniPlayer: React.FC<Props> = ({
         </div>
 
         {/* Progress bar — actual progress for VOD, animated pulse for live */}
-        <div className="h-0.5 bg-bg-elevated">
+        <div className="h-1 bg-bg-elevated">
           {isVod && state.duration > 0 ? (
             <div
               className="h-full bg-primary transition-[width] duration-500"

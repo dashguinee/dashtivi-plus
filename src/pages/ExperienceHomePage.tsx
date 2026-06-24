@@ -34,6 +34,7 @@ import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { setAmbientSpeed, setAmbientExperience } from '@/lib/ambient-audio';
 import { ChannelIcon, ChannelBadge } from '@/components/ui/ChannelIcon';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { useSmartSticky } from '@/hooks/useSmartSticky';
 
 import type { Channel } from '@/types';
 
@@ -72,9 +73,9 @@ const EXPERIENCE_CONFIGS: Record<string, ExperienceConfig> = {
     veeHomepageId: 'homepage_sports',
     name: 'Sports',
     tagline: 'Every match. Every league. Every moment.',
-    heroGradient: 'from-cyan-900/40 via-[#060609] to-blue-900/20',
-    accentColor: '#00D4FF',
-    accentGlow: 'rgba(0,212,255,0.3)',
+    heroGradient: 'from-teal-900/40 via-[#060609] to-emerald-900/20',
+    accentColor: '#0EA5A0',
+    accentGlow: 'rgba(14,165,160,0.28)',
     icon: <Trophy className="w-5 h-5" />,
     subtypes: SPORT_TYPES,
     timeGreetings: {
@@ -464,6 +465,9 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
   const { experienceId } = useParams<{ experienceId: string }>();
   const navigate = useNavigate();
   const { lang } = useLanguage();
+  // Smart sticky — hide the search on sustained scroll-down, snap back on
+  // scroll-up/idle. Matches LiveTVPage so navigating between them feels seamless.
+  const { stickyHidden } = useSmartSticky();
   const config = experienceId ? EXPERIENCE_CONFIGS[experienceId] : null;
 
   const [loading, setLoading] = useState(true);
@@ -613,10 +617,12 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
   // (never a black void or a silent hard swap).
   if (!config) {
     return (
-      <div className="pt-24 pb-32 min-h-screen flex flex-col items-center justify-center px-8 text-center">
-        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+      <div className="pt-24 pb-32 min-h-screen flex flex-col items-center justify-center px-8 text-center reveal">
+        <div className="relative w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
           style={{ background: 'rgba(157,78,221,0.12)', border: '1px solid rgba(157,78,221,0.25)' }}>
-          <Globe className="w-6 h-6 text-white/50" />
+          {/* gentle breathing ring — visible feedback during the glide, never a frozen void */}
+          <span className="absolute inset-0 rounded-2xl animate-ping" style={{ background: 'rgba(157,78,221,0.10)', animationDuration: '1.6s' }} />
+          <Globe className="relative w-6 h-6 text-white/50 animate-pulse" style={{ animationDuration: '1.6s' }} />
         </div>
         <p className="text-[15px] font-semibold text-white/70">Taking you to all channels…</p>
         <p className="text-[12px] text-white/30 mt-1.5 max-w-[260px]">That district moved — gliding you to the full live lineup.</p>
@@ -721,21 +727,23 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
     <div className="pt-14 pb-32 min-h-screen">
       {/* ── Hero Banner ────────────────────────────────────────────── */}
       <div className={`relative px-4 pt-4 pb-4 bg-gradient-to-b ${config.heroGradient}`}>
-        {/* Back button */}
+        {/* Back button — always returns to the Live hub (a guaranteed exit, never
+            a history gamble on deep-links). Destination is named, not just a chevron. */}
         <button
-          onClick={() => navigate(-1)}
-          className="group flex items-center gap-1.5 pr-3 pl-2 py-1.5 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.97] mb-3"
+          onClick={() => navigate('/live')}
+          aria-label="Back to Live"
+          className="group flex items-center gap-1.5 pr-3.5 pl-2.5 py-2 min-h-[40px] rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.97] mb-3"
           style={{
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
           }}
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+          <svg width="15" height="15" viewBox="0 0 14 14" fill="none"
             className="group-hover:-translate-x-0.5 transition-transform duration-200">
-            <path d="M8.5 3L4.5 7l4 4" stroke="rgba(157,78,221,0.5)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M8.5 3L4.5 7l4 4" stroke="rgba(216,180,255,0.75)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span className="text-[10px] font-medium tracking-wide uppercase" style={{ color: 'rgba(255,255,255,0.3)' }}>
-            Back
+          <span className="text-[11px] font-semibold tracking-wide" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            {lang === 'fr' ? 'Retour · Live' : 'Back to Live'}
           </span>
         </button>
 
@@ -754,8 +762,18 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
 
       </div>
 
-      {/* ── Search ──────────────────────────────────────────────────── */}
-      <div className="sticky top-14 z-20 px-4 py-3 bg-[#060609]/95 backdrop-blur-lg border-b border-white/5">
+      {/* ── Search — smart sticky (hides on sustained scroll-down) ──────── */}
+      <div
+        className="sticky top-14 z-20 px-4 py-3 bg-[#060609]/95 backdrop-blur-lg border-b border-white/5"
+        style={{
+          opacity: stickyHidden ? 0 : 1,
+          transform: stickyHidden ? 'translateY(-100%)' : 'translateY(0)',
+          pointerEvents: stickyHidden ? 'none' : 'auto',
+          transition: stickyHidden
+            ? 'transform 0.35s cubic-bezier(0.4,0,1,1), opacity 0.25s ease-out'
+            : 'transform 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.3s cubic-bezier(0.16,1,0.3,1)',
+        }}
+      >
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
           <input
@@ -812,7 +830,7 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
                   </span>
                 </div>
               </div>
-              <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-x px-4 pb-2">
+              <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-x scroll-fade px-4 pb-2">
                 {worldCupStreams.slice(0, 40).map((stream, i) => (
                   <button
                     key={stream.stream_id}
@@ -845,7 +863,7 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
                   <h2 className="text-lg font-black text-white">Top Picks</h2>
                 </div>
               </div>
-              <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-x px-4 pb-2">
+              <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-x scroll-fade px-4 pb-2">
                 {veeStreams.slice(0, 40).map((stream, i) => (
                   <button
                     key={stream.stream_id}
@@ -882,7 +900,7 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
                 <button
                   key={sub.id}
                   onClick={() => setActiveSubTab(sub.id)}
-                  className="flex-shrink-0 text-[11px] px-3 py-2 rounded-full transition-all duration-300"
+                  className="flex-shrink-0 whitespace-nowrap text-[11px] px-3 py-2 min-h-[36px] rounded-full transition-all duration-300"
                   style={activeSubTab === sub.id ? {
                     background: config.accentColor,
                     color: '#fff',
@@ -906,7 +924,7 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
               </h2>
               <span className="text-[11px] text-white/25">{deduped.length} channels</span>
             </div>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3 cv-auto-grid">
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-2.5 cv-auto-grid">
               {deduped.slice(0, gridVisibleCount).map((stream, i) => (
                 <button
                   key={stream.stream_id}
@@ -970,11 +988,11 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
             <section className="mb-8">
               <div className="px-4 mb-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" style={{ boxShadow: '0 0 6px rgba(0,212,255,0.5)' }} />
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#34D3C4', boxShadow: '0 0 6px rgba(52,211,196,0.5)' }} />
                   <h2 className="text-base font-black text-white">Popular Right Now</h2>
                 </div>
               </div>
-              <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-x px-4 pb-2">
+              <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-smooth-x scroll-fade px-4 pb-2">
                 {socialStreams.slice(0, 30).map((stream, i) => (
                   <button
                     key={stream.stream_id}
@@ -983,8 +1001,8 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
                   >
                     <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 bg-white/[0.03] flex items-center justify-center">
                       <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" />
-                      <div className="absolute top-1 left-1 flex items-center gap-1 px-1 py-0.5 bg-black/60 rounded text-[7px] font-semibold text-cyan-300">
-                        <span className="w-1 h-1 rounded-full bg-cyan-400 live-badge-pulse" />
+                      <div className="absolute top-1 left-1 flex items-center gap-1 px-1 py-0.5 bg-black/60 rounded text-[7px] font-semibold" style={{ color: '#5EEAD4' }}>
+                        <span className="w-1 h-1 rounded-full live-badge-pulse" style={{ background: '#34D3C4' }} />
                         LIVE
                       </div>
                     </div>

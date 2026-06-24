@@ -46,6 +46,8 @@ export const AfricaSpark = ({
 
   return (
     <div
+      role="img"
+      aria-label="Oyé Africa globe"
       className={`africa-spark relative inline-block ${className}`}
       style={{ width: size, height: size, ['--spark-play' as string]: playState }}
     >
@@ -88,11 +90,11 @@ export const AfricaSpark = ({
         <g className="spark-continent">
           <path d={AFRICA_PATH} fill="#000" opacity="0.4" transform="translate(1 1.5)" />
           <path d={AFRICA_PATH} fill="url(#spark-gold)" stroke="#FFD46B" strokeWidth="0.8" strokeLinejoin="round" />
+          {/* EQ beams — 2 (was 4): same lively read, half the compositing
+              work on mid-range GPUs during scroll. */}
           <g clipPath="url(#spark-clip)">
-            <rect className="spark-beam-1" x="34" y="12" width="3" height="78" rx="1.5" fill="#FFF1CC" opacity="0.55" />
             <rect className="spark-beam-2" x="42" y="12" width="3" height="78" rx="1.5" fill="#FFF1CC" opacity="0.65" />
-            <rect className="spark-beam-3" x="50" y="12" width="3" height="78" rx="1.5" fill="#FFF1CC" opacity="0.6" />
-            <rect className="spark-beam-4" x="58" y="12" width="3" height="78" rx="1.5" fill="#FFF1CC" opacity="0.5" />
+            <rect className="spark-beam-3" x="52" y="12" width="3" height="78" rx="1.5" fill="#FFF1CC" opacity="0.6" />
           </g>
           <path d="M 34,16 C 42,13 52,13 62,14" stroke="#FFF1CC" strokeWidth="0.8" strokeLinecap="round" opacity="0.5" fill="none" />
         </g>
@@ -108,17 +110,9 @@ export const AfricaSpark = ({
         @keyframes spark-spin     { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes spark-spin-rev { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
 
-        /* The cheer: continent bounces on the DASH signature ease — alive, not noisy */
-        .spark-continent {
-          transform-origin: 50% 80%;
-          animation: spark-cheer 2.2s cubic-bezier(0.23, 1, 0.32, 1) infinite;
-          animation-play-state: var(--spark-play);
-        }
-        @keyframes spark-cheer {
-          0%, 100% { transform: translateY(0) scale(1); }
-          42%      { transform: translateY(-3px) scale(1.06); }
-          60%      { transform: translateY(0.5px) scale(0.99); }
-        }
+        /* Continent stays steady — the card's own breathe carries the bounce,
+           so a second bounce here was redundant motion (and jank). The cheer
+           lives in the glow pulse + rings + beams. */
 
         .spark-glow {
           transform-origin: 50% 50%;
@@ -130,20 +124,16 @@ export const AfricaSpark = ({
           42%      { opacity: 0.85; transform: scale(1.12); }
         }
 
-        .spark-beam-1 { animation: spark-beam-1 1.1s ease-in-out infinite; transform-origin: 50% 100%; animation-play-state: var(--spark-play); }
         .spark-beam-2 { animation: spark-beam-2 0.9s ease-in-out infinite; transform-origin: 50% 100%; animation-play-state: var(--spark-play); }
         .spark-beam-3 { animation: spark-beam-3 1.3s ease-in-out infinite; transform-origin: 50% 100%; animation-play-state: var(--spark-play); }
-        .spark-beam-4 { animation: spark-beam-4 1.0s ease-in-out infinite; transform-origin: 50% 100%; animation-play-state: var(--spark-play); }
 
-        @keyframes spark-beam-1 { 0%,100% { transform: scaleY(0.3); opacity: 0.3; } 50% { transform: scaleY(0.95); opacity: 0.7; } }
         @keyframes spark-beam-2 { 0%,100% { transform: scaleY(0.9); opacity: 0.8; } 50% { transform: scaleY(0.4); opacity: 0.5; } }
         @keyframes spark-beam-3 { 0%,100% { transform: scaleY(0.5); opacity: 0.55; } 50% { transform: scaleY(1); opacity: 0.8; } }
-        @keyframes spark-beam-4 { 0%,100% { transform: scaleY(0.7); opacity: 0.4; } 50% { transform: scaleY(0.3); opacity: 0.6; } }
 
         @media (prefers-reduced-motion: reduce) {
           .spark-ring-1, .spark-ring-2, .spark-ring-3,
-          .spark-continent, .spark-glow,
-          .spark-beam-1, .spark-beam-2, .spark-beam-3, .spark-beam-4 { animation: none; }
+          .spark-glow,
+          .spark-beam-2, .spark-beam-3 { animation: none; }
         }
       `}</style>
     </div>

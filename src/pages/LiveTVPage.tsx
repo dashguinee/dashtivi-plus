@@ -635,9 +635,9 @@ const SHOWCASE_CONFIG: Record<string, {
     name: 'Sports',
     tagline: '',
     route: '/live/sports',
-    gradient: 'from-cyan-900/50 via-cyan-900/20 to-transparent',
-    accentColor: '#00D4FF',
-    accentGlow: 'rgba(0,212,255,0.25)',
+    gradient: 'from-teal-900/50 via-emerald-900/20 to-transparent',
+    accentColor: '#0EA5A0',
+    accentGlow: 'rgba(14,165,160,0.22)',
     icon: <Trophy className="w-5 h-5" />,
   },
   kids: {
@@ -812,13 +812,13 @@ function ExperienceShowcase({
         )}
 
         {/* Channel strip */}
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 items-end">
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade pb-1 items-end">
           {top.map((stream, i) => (
             <button
               key={stream.stream_id}
               onClick={() => onPlay(stream, filtered)}
               className="flex-shrink-0 group"
-              style={{ width: i === 0 ? 150 : 125, ...cardScaleStyle(i), ...(i < 8 ? { animation: `vee-card-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${i * 90}ms both` } : {}) }}
+              style={{ width: i === 0 ? 'clamp(132px, 38vw, 150px)' : 'clamp(110px, 31vw, 125px)', ...cardScaleStyle(i), ...(i < 8 ? { animation: `vee-card-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${i * 90}ms both` } : {}) }}
             >
               <div
                 className="relative aspect-[16/10] rounded-xl overflow-hidden transition-all duration-300 group-hover:ring-1 flex items-center justify-center card-glass"
@@ -973,7 +973,7 @@ const ThemeRow = React.memo(function ThemeRow({
             <button
               key={sub.id}
               onClick={() => setActiveSubTab(sub.id)}
-              className={`flex-shrink-0 text-[11px] px-3 py-2 min-h-[36px] rounded-full transition-all duration-300 flex items-center justify-center ${
+              className={`flex-shrink-0 whitespace-nowrap text-[11px] px-3 py-2 min-h-[36px] rounded-full transition-all duration-300 flex items-center justify-center ${
                 activeSubTab === sub.id
                   ? `bg-gradient-to-r ${theme.gradient} text-white border border-white/20`
                   : 'bg-white/5 text-white/40 border border-transparent hover:text-white/70'
@@ -985,18 +985,18 @@ const ThemeRow = React.memo(function ThemeRow({
         </div>
       )}
 
-      {/* Horizontal scroll of channels — larger cards */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2 items-end">
+      {/* Horizontal scroll of channels — larger cards, fluid widths + edge fade */}
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-2 items-end">
         {displayed.map((stream, i) => (
           <button
             key={stream.stream_id}
             onClick={() => onPlay(stream, sorted)}
-            className={`flex-shrink-0 group ${i === 0 ? 'w-[140px]' : 'w-[110px]'}`}
-            style={cardScaleStyle(i)}
+            className="flex-shrink-0 group"
+            style={{ width: i === 0 ? 'clamp(124px, 36vw, 140px)' : 'clamp(98px, 28vw, 110px)', ...cardScaleStyle(i) }}
           >
-            <div className={`relative rounded-xl flex items-center justify-center overflow-hidden
+            <div className={`relative rounded-xl flex items-center justify-center overflow-hidden w-full
                             group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/10 group-hover:scale-[1.03]
-                            active:scale-95 transition-all duration-300 ${i === 0 ? 'w-[140px] h-[90px] card-hero' : 'w-[110px] h-[72px] card-surface'}`}>
+                            active:scale-95 transition-all duration-300 ${i === 0 ? 'h-[90px] card-hero' : 'h-[72px] card-surface'}`}>
               <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" />
               <ChannelBadge streamId={stream.stream_id} compact />
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-xl">

@@ -17,7 +17,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Users, MessageCircle, UserPlus, Check, Loader2, Clock, Plus,
-  ChevronRight, Search, Zap, Bell, CreditCard, BadgeCheck, Tv,
+  ChevronRight, Search, Zap, CreditCard, BadgeCheck, Tv,
 } from 'lucide-react';
 import {
   friendsAPI, messagesAPI, presenceAPI,
@@ -215,7 +215,7 @@ function ProfileCard({
               {onlineFriends.slice(1, 4).map((friend, i) => {
                 const angles = [-50, 50, 180];
                 const angle = angles[i] * (Math.PI / 180);
-                const radius = 32;
+                const radius = 26;
                 const x = Math.cos(angle) * radius;
                 const y = Math.sin(angle) * radius;
                 return (
@@ -308,7 +308,7 @@ function MyPassCard({
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-white/55 text-xs font-semibold uppercase tracking-wider mb-1">My Pass</p>
-                <p className="text-white font-bold text-xl leading-tight truncate">{greeting}</p>
+                <p className="text-white font-bold text-xl leading-tight break-words">{greeting}</p>
               </div>
               <div
                 className="px-3 py-1.5 rounded-full flex items-center gap-1.5 flex-shrink-0"
@@ -328,7 +328,12 @@ function MyPassCard({
               href={`https://wa.me/${WA_NUMBER}?text=${activateMsg}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 w-full py-3.5 rounded-2xl font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.98] bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/30"
+              className="mt-5 w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+              style={{
+                background: 'linear-gradient(to right, #FFD700, #F59E0B)',
+                color: '#1a1205',
+                boxShadow: '0 8px 22px rgba(245,158,11,0.32)',
+              }}
             >
               <CreditCard size={18} />
               <span>Activate your pass</span>
@@ -386,11 +391,16 @@ function MyPassCard({
 
           <div className="flex items-end justify-between gap-4 mt-5">
             <div>
-              <p className="text-white/40 text-[11px] font-medium uppercase tracking-wider mb-1">Expires</p>
+              <p className="text-white/55 text-[11px] font-medium uppercase tracking-wider mb-1">Expires</p>
               <p className="text-white font-semibold text-[15px]">{expiryStr}</p>
             </div>
             <div className="text-right">
-              <p className="text-white/40 text-[11px] font-medium uppercase tracking-wider mb-1">Days left</p>
+              <p
+                className="text-[11px] font-medium uppercase tracking-wider mb-1"
+                style={{ color: urgent ? accent : 'rgba(255,255,255,0.55)' }}
+              >
+                Days left
+              </p>
               <p className="font-bold text-2xl" style={{ color: daysLeft != null ? accent : 'rgba(255,255,255,0.85)' }}>
                 {daysLeft != null ? Math.max(0, daysLeft) : '—'}
               </p>
@@ -438,9 +448,9 @@ function FollowingSection() {
   return (
     <div className="px-6 pt-2 pb-6">
       <p className="text-white/45 text-xs font-semibold uppercase tracking-wider mb-4 text-center">Following</p>
-      <div className="flex justify-center">
-        <div className="w-full max-w-[420px] overflow-x-auto scrollbar-hide">
-          <div className="flex gap-4 py-1 px-2 justify-center">
+      <div className="flex">
+        <div className="w-full overflow-x-auto scrollbar-hide">
+          <div className="flex gap-4 py-1 px-1 justify-start min-w-min">
             {FOLLOWING_DATA.map((svc) => (
               <button key={svc.id} className="flex-shrink-0 transition-transform active:scale-95">
                 <div className={`relative w-20 h-20 rounded-2xl overflow-hidden ${svc.isLive ? 'ring-2 ring-red-500' : 'ring-1 ring-white/10'}`}>
@@ -777,16 +787,21 @@ function AddFriendModal({ userId, onClose, onAdded }: { userId: string; onClose:
           </div>
         ) : (
           <>
-            <div className="relative mb-6">
+            <div className="relative mb-2">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
               <input
                 type="text" value={friendId}
                 onChange={(e) => { setFriendId(e.target.value.toUpperCase()); setStatus('idle'); setError(''); }}
-                placeholder="Enter DASH ID"
-                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 outline-none focus:border-purple-500/50 font-mono text-lg tracking-wider"
+                placeholder="001AA"
+                inputMode="text"
+                autoCapitalize="characters"
+                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-white/25 outline-none focus:border-purple-500/50 font-mono text-lg tracking-wider"
                 autoFocus
               />
             </div>
+            <p className="text-white/40 text-xs mb-6 pl-1">
+              Your friend&apos;s DASH ID — 5-6 characters, e.g. <span className="text-white/60 font-mono">001AA</span>. Not case-sensitive.
+            </p>
             {error && <p className="text-red-400 text-sm text-center mb-4">{error}</p>}
             <button
               onClick={handleAdd}
@@ -861,11 +876,32 @@ function PricingCard({ plan }: { plan: typeof PRICING[number] }) {
           <span className="text-white font-bold text-lg">{plan.name}</span>
           <span className="font-extrabold text-xl" style={{ color: plan.color }}>{plan.price}</span>
         </div>
-        <p className="text-white/45 text-[12px] leading-relaxed">{plan.perks}</p>
-        <div className="flex items-center gap-1.5 mt-3 text-[12px] font-medium" style={{ color: plan.color }}>
-          <span>Get this plan</span>
-          <ChevronRight size={14} />
-        </div>
+        <p className="text-white/55 text-[12px] leading-relaxed">{plan.perks}</p>
+        {plan.featured ? (
+          <div
+            className="mt-4 w-full py-2.5 rounded-xl font-bold text-[13px] flex items-center justify-center gap-1.5"
+            style={{
+              background: 'linear-gradient(to right, #FFD700, #F59E0B)',
+              color: '#1a1205',
+              boxShadow: '0 6px 16px rgba(245,158,11,0.28)',
+            }}
+          >
+            <span>Get Full</span>
+            <ChevronRight size={15} />
+          </div>
+        ) : (
+          <div
+            className="mt-4 w-full py-2.5 rounded-xl font-semibold text-[13px] flex items-center justify-center gap-1.5"
+            style={{
+              background: `${plan.color}1f`,
+              border: `1px solid ${plan.color}55`,
+              color: plan.color,
+            }}
+          >
+            <span>Select plan</span>
+            <ChevronRight size={15} />
+          </div>
+        )}
       </div>
     </a>
   );
@@ -890,7 +926,6 @@ export function DaHubPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddFriend, setShowAddFriend] = useState(false);
-  const [showSupportMenu, setShowSupportMenu] = useState(false);
   const [activeChat, setActiveChat] = useState<{ friendId: string; friendName: string; friendAvatar?: string } | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [connectingId, setConnectingId] = useState<string | null>(null);
@@ -1024,7 +1059,7 @@ export function DaHubPage() {
           WebkitBackdropFilter: 'blur(8px)',
         }}
       >
-        <TabBar activeTab={activeTab} onTabChange={setActiveTab} friendCount={onlineCount} unreadCount={unreadCount} />
+        <TabBar activeTab={activeTab} onTabChange={setActiveTab} friendCount={friends.length} unreadCount={unreadCount} />
       </div>
 
       {/* Content */}
@@ -1037,11 +1072,24 @@ export function DaHubPage() {
               </div>
             ) : friends.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-4">
-                  <Users size={32} className="text-white/20" />
+                <div
+                  className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
+                  style={{
+                    background: 'radial-gradient(circle at 50% 35%, rgba(139,92,246,0.18) 0%, rgba(255,255,255,0.04) 70%)',
+                    border: '1px solid rgba(139,92,246,0.18)',
+                  }}
+                >
+                  <Users size={32} className="text-white/45" />
                 </div>
-                <p className="text-white/55 font-medium mb-1 text-base">No friends yet</p>
-                <p className="text-white/30 text-sm">Add friends with their DASH ID</p>
+                <p className="text-white/70 font-medium mb-1 text-base">No friends yet</p>
+                <p className="text-white/40 text-sm mb-5">Add friends with their DASH ID</p>
+                <button
+                  onClick={() => setShowAddFriend(true)}
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl font-semibold text-white bg-gradient-to-r from-purple-500 to-violet-600 shadow-lg shadow-purple-500/30 transition-all active:scale-[0.97]"
+                >
+                  <UserPlus size={18} />
+                  <span>Find friends</span>
+                </button>
               </div>
             ) : (
               friends.map((friend) => (
@@ -1112,54 +1160,25 @@ export function DaHubPage() {
             <div>
               <p className="text-white/45 text-xs font-semibold uppercase tracking-wider mb-4">Support &amp; Updates</p>
               <div className="space-y-2.5">
-                <button
-                  onClick={() => setShowSupportMenu(!showSupportMenu)}
-                  className="w-full flex items-center gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-all active:scale-[0.98] min-h-[76px]"
+                {/* Direct WhatsApp support — one tap, no fake disclosure menu. */}
+                <a
+                  href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Hi DASH! I need help with my Tivi+ account.')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center gap-4 p-5 rounded-2xl bg-emerald-500/[0.05] border border-emerald-500/15 hover:bg-emerald-500/10 transition-all active:scale-[0.98] min-h-[76px]"
                 >
-                  <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: '#FBBF2415' }}>
-                    <Zap size={24} style={{ color: '#FBBF24' }} />
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center bg-emerald-500/15">
+                    <span className="text-emerald-400 font-bold text-base">WA</span>
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="text-white/85 font-medium text-[15px]">DASH Support</p>
-                    <p className="text-white/35 text-sm mt-0.5">Get help anytime</p>
+                    <p className="text-white/85 font-medium text-[15px]">DASH on WhatsApp</p>
+                    <p className="text-white/40 text-sm mt-0.5">Support Agent · fastest reply</p>
                   </div>
-                  <div className="transition-transform" style={{ transform: showSupportMenu ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                     <ChevronRight size={20} className="text-white/25" />
                   </div>
-                </button>
-
-                {showSupportMenu && (
-                  <div className="overflow-hidden animate-voyo-fade-in">
-                    <div className="pl-4 space-y-2.5 pb-2">
-                      <a
-                        href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent('Hi DASH! I need help with my Tivi+ account.')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full flex items-center gap-3 p-4 rounded-xl bg-emerald-500/[0.06] border border-emerald-500/10 hover:bg-emerald-500/10 transition-all active:scale-[0.97] min-h-[60px]"
-                      >
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-emerald-500/20">
-                          <span className="text-emerald-400 font-bold text-sm">WA</span>
-                        </div>
-                        <div className="flex-1 text-left">
-                          <p className="text-white/85 text-sm font-medium">DASH on WhatsApp</p>
-                          <p className="text-white/35 text-xs mt-0.5">Support Agent · fastest</p>
-                        </div>
-                        <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                <button className="w-full flex items-center gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-all active:scale-[0.98] min-h-[76px]">
-                  <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: '#8B5CF615' }}>
-                    <Bell size={24} style={{ color: '#8B5CF6' }} />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-white/85 font-medium text-[15px]">Announcements</p>
-                    <p className="text-white/35 text-sm mt-0.5">Latest updates</p>
-                  </div>
-                  <ChevronRight size={20} className="text-white/25" />
-                </button>
+                </a>
               </div>
             </div>
 
