@@ -141,7 +141,7 @@ export const DynamicIsland = ({ appCode = 'tivi', dashId: dashIdProp = null, gue
         id: '1',
         type: 'music',
         title: 'Tivi+',
-        subtitle: '4,922 live channels ready'
+        subtitle: 'Hand-picked. The World Cup is live.'
       });
     }, 2000);
 

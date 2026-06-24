@@ -278,7 +278,7 @@ export const PlatformsPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
       {/* Episode picker modal */}
       {selectedSeries && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center" onClick={() => setSelectedSeries(null)}>
+        <div className="fixed inset-0 z-50 bg-black/35 backdrop-blur-sm flex items-end sm:items-center justify-center" onClick={() => setSelectedSeries(null)}>
           <div className="w-full max-w-lg max-h-[85vh] bg-[#141414] rounded-t-2xl sm:rounded-2xl overflow-hidden animate-slide-up border border-white/10" onClick={(e) => e.stopPropagation()}>
             <div className="relative h-48 overflow-hidden">
               {selectedSeries.cover ? (

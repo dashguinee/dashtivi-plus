@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Tv, Clapperboard, PlayCircle, Users } from 'lucide-react';
+import { Home, Tv, Users } from 'lucide-react';
 import { useLanguage } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
 import { tap } from '@/lib/haptics';
+import { TiviModeToggle } from './TiviModeToggle';
 
 interface NavItem {
   path: string;
@@ -12,11 +13,13 @@ interface NavItem {
   isLive?: boolean;
 }
 
+// FINAL nav (Aziz, 2026-06-24): Home · Vee · Hub. ONLY. No Stream+ tab.
+// Stream+ is no longer a page — it's the continuation of the ONE home canvas
+// (the free showcase + Oyé/Stations woven through the infinite home scroll).
+// The center "Live" slot is the Vee multi-selector pebble (TiviModeToggle).
 const NAV_ITEMS: NavItem[] = [
   { path: '/', labelKey: 'navHome', icon: Home },
   { path: '/live', labelKey: 'navLiveTV', icon: Tv, isLive: true },
-  { path: '/movies', labelKey: 'navMovies', icon: Clapperboard },
-  { path: '/series', labelKey: 'navSeries', icon: PlayCircle },
   { path: '/hub', labelKey: 'navHub', icon: Users },
 ];
 
@@ -135,6 +138,9 @@ export const Navbar: React.FC = () => {
             const active = isActive(item.path);
             const Icon = item.icon;
 
+            // The center "Live" slot is the textured T/M/S mode pebble.
+            if (item.isLive) return <TiviModeToggle key={item.path} />;
+
             return (
               <button
                 key={item.path}
@@ -230,8 +236,8 @@ export const Navbar: React.FC = () => {
             style={{ width: sidebarHover ? 'auto' : 0, opacity: sidebarHover ? 1 : 0 }}
           >
             <span className="text-lg font-bold whitespace-nowrap tracking-tight">
-              <span className="text-gradient">DashTivi</span>
-              <span className="text-primary-light text-sm font-black ml-0.5">+</span>
+              <span className="uppercase text-white" style={{ fontFamily: "'Clash Display','Space Grotesk',sans-serif", letterSpacing: '-0.03em' }}>DASH<span className="font-light text-white/55 normal-case">tivi</span></span>
+              <span className="text-sm font-black ml-0.5" style={{ background: 'linear-gradient(135deg,#C77DFF,#22C55E)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>+</span>
             </span>
           </div>
         </div>

@@ -82,9 +82,9 @@ export const WelcomePage: React.FC = () => {
           >
             <Tv className="w-5 h-5 text-white" />
           </div>
-          <span className="text-xl font-bold tracking-wide flex items-baseline gap-0.5">
-            <span className="text-gradient">DashTivi</span>
-            <span className="text-primary-light text-sm font-black">+</span>
+          <span className="text-xl font-bold flex items-baseline gap-0.5">
+            <span className="uppercase text-white" style={{ fontFamily: "'Clash Display','Space Grotesk',sans-serif", letterSpacing: '-0.03em' }}>DASH<span className="font-light text-white/55 normal-case">tivi</span></span>
+            <span className="text-sm font-black" style={{ background: 'linear-gradient(135deg,#C77DFF,#22C55E)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>+</span>
           </span>
         </div>
         <div className="flex items-center gap-2">

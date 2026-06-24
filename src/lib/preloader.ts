@@ -96,40 +96,19 @@ export function startPreload() {
     setTimeout(prefetchPages, 2000);
   }
 
-  // 2. Prefetch + parse curator + VEE data DURING splash/login
-  // curator.json: primary from VPS (hourly rebuild), Vercel fallback
+  // 2. STATIC CATALOG: warm /tivi-curated.json during splash/login. No more
+  //    curator/vee/channels/verified network fetches — "we control".
   loads.push(
-    fetch(`${PROXY}/curator.json`, { signal: AbortSignal.timeout(5000) })
+    fetch(`${ORIGIN}/tivi-curated.json`, { signal: AbortSignal.timeout(5000) })
       .then(r => r.ok ? r.json() : null)
-      .catch(() => fetch(`${ORIGIN}/curator.json`, { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null))
-      .then(data => { if (data) _prefetchedCurator = data; })
+      .then(() => {})
       .catch(() => {})
       .finally(stepDone),
   );
-  loads.push(
-    fetch(`${ORIGIN}/vee.json`, { signal: AbortSignal.timeout(5000) })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) _prefetchedVee = data; })
-      .catch(() => {})
-      .finally(stepDone),
-  );
-
-  // 3. channels.json is served by VPS proxy (hourly health check) — keep fetching from PROXY
-  loads.push(
-    fetch(`${PROXY}/channels.json`, { signal: AbortSignal.timeout(5000) })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) _prefetchedChannels = data; })
-      .catch(() => {})
-      .finally(stepDone),
-  );
-  // verified.json is in Vercel public/ — fetch from origin
-  loads.push(
-    fetch(`${ORIGIN}/verified.json`, { signal: AbortSignal.timeout(5000) })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data) _prefetchedVerified = data; })
-      .catch(() => {})
-      .finally(stepDone),
-  );
+  // Remaining steps are inert now (kept so the progress bar still completes).
+  stepDone(); // (was vee)
+  stepDone(); // (was channels)
+  stepDone(); // (was verified)
 
   // Signal ready when chunk + data are loaded (or timeout)
   Promise.allSettled(loads).then(() => resolveReady());
@@ -139,11 +118,7 @@ export function startPreload() {
 /**
  * Preload after auth — only fires if splash prefetch missed
  */
-export function preloadApiData(proxyUrl: string, _username: string, _password: string) {
-  if (!hasPrefetchedCurator()) {
-    fetch(`${proxyUrl}/curator.json`, { signal: AbortSignal.timeout(8000) }).catch(() => {});
-  }
-  if (!hasPrefetchedVee()) {
-    fetch(`${proxyUrl}/vee.json`, { signal: AbortSignal.timeout(5000) }).catch(() => {});
-  }
+export function preloadApiData(_proxyUrl: string, _username: string, _password: string) {
+  // STATIC CATALOG: nothing to warm post-auth — channels come from the static
+  // /tivi-curated.json already loaded during splash. No runtime panel fetches.
 }

@@ -10,6 +10,7 @@ const translations = {
     navWorldEX: 'WorldEX',
     navHub: 'Hub',
     navFrench: 'Français',
+    navStreamore: 'Stream+',
 
     // ── Header ────────────────────────────────────────────────
     welcome: 'Bienvenue',
@@ -28,6 +29,30 @@ const translations = {
     pleaseEnterCode: 'Veuillez entrer votre code d\'accès',
     invalidCode: 'Code d\'accès invalide',
     connectionError: 'Erreur de connexion — vérifiez votre internet',
+
+    // ── Guest Entry Modal ─────────────────────────────────────
+    'guestModal.title': 'Regardez gratuitement pendant 24h',
+    'guestModal.subtitle': 'Dites-nous qui vous êtes pour qu\'on recommande ce que vous allez aimer.',
+    'guestModal.nameLabel': 'Nom',
+    'guestModal.namePlaceholder': 'Votre prénom',
+    'guestModal.whatsappLabel': 'WhatsApp',
+    'guestModal.interestLabel': 'Qu\'est-ce que vous regardez ?',
+    'guestModal.firstTimeLabel': 'Première fois sur DashTivi+ ?',
+    'guestModal.firstTimeYes': 'Oui',
+    'guestModal.firstTimeNo': 'Non',
+    'guestModal.cta': 'Démarrer 24h gratuites',
+    'guestModal.skip': 'Passer — regarder sans donner d\'infos',
+    'guestModal.whatsappCta': 'Parler à un humain sur WhatsApp',
+    'guestModal.footer': '24h gratuites. Abonnez-vous pour profiter de plus.',
+    'guestModal.whatsappPrefill': 'Salut, je teste DashTivi+ en guest',
+    'guestCat.sports': 'Sport',
+    'guestCat.entertainment': 'Divertis.',
+    'guestCat.news': 'Actu',
+    'guestCat.kids': 'Enfants',
+    'guestCat.movies': 'Cinéma',
+    'guestCat.music': 'Musique',
+    'guestCat.faith': 'Spirituel',
+    'guestCat.premium4k': 'Premium 4K',
 
     // ── Welcome Page ──────────────────────────────────────────
     signIn: 'Se connecter',
@@ -372,6 +397,16 @@ const translations = {
     streamFlow: 'StreamFlow',
     hdLabel: 'HD',
 
+    // ── Go Premium modal ──────────────────────────────────────
+    goPremiumTitle: 'Passer en Premium',
+    goPremiumSubtitle: 'Ceci est exclusif. Débloquez toutes les chaînes premium, la Coupe du Monde et plus — rejoignez le cercle DASH.',
+    goPremiumCta: 'Devenir Premium sur WhatsApp →',
+    goPremiumCodePlaceholder: 'Déjà un code ? DASH-XXXXXX',
+    goPremiumUnlock: 'Débloquer avec un code',
+    goPremiumLater: 'Plus tard',
+    goPremiumWhatsappPrefill: 'Bonjour DASH, je veux passer en Premium Tivi+ (accès exclusif)',
+    joinDashWhatsappPrefill: 'Bonjour DASH, je veux rejoindre Tivi+',
+
     // ── App Updates ───────────────────────────────────────────
     updateAvailable: 'Mise à jour disponible',
     updatingDashTivi: 'Mise à jour de DashTivi+',
@@ -390,6 +425,7 @@ const translations = {
     navWorldEX: 'WorldEX',
     navHub: 'Hub',
     navFrench: 'French',
+    navStreamore: 'Stream+',
 
     // ── Header ────────────────────────────────────────────────
     welcome: 'Welcome',
@@ -409,12 +445,36 @@ const translations = {
     invalidCode: 'Invalid access code',
     connectionError: 'Connection error — check your internet',
 
+    // ── Guest Entry Modal ─────────────────────────────────────
+    'guestModal.title': 'Watch free for 24 hours',
+    'guestModal.subtitle': 'Tell us a bit about you so we can recommend what you\'ll love.',
+    'guestModal.nameLabel': 'Name',
+    'guestModal.namePlaceholder': 'Your first name',
+    'guestModal.whatsappLabel': 'WhatsApp',
+    'guestModal.interestLabel': 'What do you watch?',
+    'guestModal.firstTimeLabel': 'First time on DashTivi+?',
+    'guestModal.firstTimeYes': 'Yes',
+    'guestModal.firstTimeNo': 'No',
+    'guestModal.cta': 'Start 24h free',
+    'guestModal.skip': 'Skip — browse without sharing',
+    'guestModal.whatsappCta': 'Talk to a human on WhatsApp',
+    'guestModal.footer': '24h free. Subscribe to enjoy more.',
+    'guestModal.whatsappPrefill': 'Hi, I\'m trying DashTivi+ as a guest',
+    'guestCat.sports': 'Sports',
+    'guestCat.entertainment': 'Entertain.',
+    'guestCat.news': 'News',
+    'guestCat.kids': 'Kids',
+    'guestCat.movies': 'Cinema',
+    'guestCat.music': 'Music',
+    'guestCat.faith': 'Faith',
+    'guestCat.premium4k': 'Premium 4K',
+
     // ── Welcome Page ──────────────────────────────────────────
     signIn: 'Sign In',
     showmaxBadge: 'Showmax shut down. We didn\'t.',
     heroTitle1: 'Showmax is gone.',
     heroTitle2: 'Your streaming isn\'t.',
-    heroSubtitle: '60,000+ movies. 11,000 live channels. YouTube trailers. AI-powered picks.',
+    heroSubtitle: 'Every World Cup match. Premier League. Movies & kids. Hand-picked — not 10,000 dead channels.',
     heroPrice: 'From $3/month.',
     heroCTA: 'Start Watching — Free for 48 Hours',
     heroFooter: 'No credit card. No dish. Just your phone.',
@@ -751,6 +811,16 @@ const translations = {
     liveLabel: 'LIVE',
     streamFlow: 'StreamFlow',
     hdLabel: 'HD',
+
+    // ── Go Premium modal ──────────────────────────────────────
+    goPremiumTitle: 'Go Premium',
+    goPremiumSubtitle: 'This one\'s exclusive. Unlock every premium channel, World Cup & more — join the DASH inner circle.',
+    goPremiumCta: 'Become Premium on WhatsApp →',
+    goPremiumCodePlaceholder: 'Already have a code? DASH-XXXXXX',
+    goPremiumUnlock: 'Unlock with code',
+    goPremiumLater: 'Maybe later',
+    goPremiumWhatsappPrefill: 'Hi DASH, I\'d like to go Premium on Tivi+ (exclusive access)',
+    joinDashWhatsappPrefill: 'Hi DASH, I\'d like to join Tivi+',
 
     // ── App Updates ───────────────────────────────────────────
     updateAvailable: 'Update available',

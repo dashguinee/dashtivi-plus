@@ -142,6 +142,18 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // Detail + TMDB
   const [detailMovie, setDetailMovie] = useState<VodStream | null>(null);
   const [tmdbMap, setTmdbMap] = useState<Record<string, TmdbEntry>>({});
+  // Personalization seed: remember what you open (localStorage, per-device) → "For You" row.
+  const [recent, setRecent] = useState<VodStream[]>(() => {
+    try { return JSON.parse(localStorage.getItem('tivi_recent_movies') || '[]'); } catch { return []; }
+  });
+  useEffect(() => {
+    if (!detailMovie) return;
+    setRecent(prev => {
+      const next = [detailMovie, ...prev.filter(m => m.stream_id !== detailMovie.stream_id)].slice(0, 14);
+      try { localStorage.setItem('tivi_recent_movies', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, [detailMovie]);
 
   // ── Derived ──────────────────────────────────────────────────
 
@@ -587,6 +599,25 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         )}
       </div>
 
+      {/* ── For You — personalized from what you've opened (localStorage) ── */}
+      {!isSearching && !loading && recent.length > 0 && (
+        <section className="px-4 pt-6 pb-3">
+          <h2 className="text-[19px] font-black text-white/90 mb-3 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#9D4EDD', boxShadow: '0 0 6px #9D4EDD' }} />
+            For You
+            <RowCountBadge count={recent.length} label="movies" />
+          </h2>
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 items-end">
+            {recent.map((m) => (
+              <div key={m.stream_id} className="flex-shrink-0 w-[140px]">
+                <PosterCard title={m.name} poster={m.stream_icon} rating={m.rating}
+                  tmdbData={tmdbMap[`m:${m.stream_id}`]} onClick={() => setDetailMovie(m)} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ── Trending row ── */}
       {!isSearching && !loading && activeGenre === 0 && trendingMovies.length >= 5 && (
         <section className="px-4 pt-6 pb-3 row-tier-hero reveal">
@@ -691,7 +722,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         </div>
       ) : filteredAndSorted.length === 0 ? (
         isSearching || activeGenre !== 0 ? (
-          <EmptyState icon="film" title={isSearching ? t(lang, 'noMoviesMatch') : t(lang, 'noMoviesGenre')} subtitle="Try a different search or genre" />
+          <EmptyState icon="film" title={isSearching ? t(lang, 'noMoviesMatch') : t(lang, 'noMoviesGenre')} subtitle="Try a different search or genre" action={{ label: isSearching ? 'Clear search' : 'Show all genres', onClick: () => { setSearchQuery(''); setActiveGenre(0); } }} />
         ) : (
           <div className="flex flex-col items-center justify-center py-24 text-text-muted text-sm gap-2">
             {t(lang, 'noMoviesInCategory')}

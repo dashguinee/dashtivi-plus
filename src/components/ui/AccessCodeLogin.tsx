@@ -4,14 +4,25 @@ import { t, useLanguage } from '@/i18n';
 import { onPreloadProgress, getPreloadProgress } from '@/lib/preloader';
 
 interface Props {
+  /** Primary gate — DASH ID + PIN. */
+  onLoginPin: (id: string, pin: string) => Promise<{ success: boolean; guest?: boolean; error?: string }>;
+  /** Legacy fallback — single DASH-XXXX access code. */
   onLogin: (code: string) => Promise<{ success: boolean; error?: string }>;
-  onGuest?: () => void;
 }
 
-export const AccessCodeLogin: React.FC<Props> = ({ onLogin, onGuest }) => {
+export const AccessCodeLogin: React.FC<Props> = ({ onLoginPin, onLogin }) => {
   const { lang } = useLanguage();
+
+  // Primary: DASH ID + PIN
+  const [dashId, setDashId] = useState('');
+  const [pin, setPin] = useState('');
+  const [showPin, setShowPin] = useState(false);
+
+  // Legacy: single access code (revealed via secondary link)
+  const [showLegacy, setShowLegacy] = useState(false);
   const [code, setCode] = useState('');
   const [showCode, setShowCode] = useState(false);
+
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(getPreloadProgress);
@@ -19,17 +30,39 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin, onGuest }) => {
   // Subscribe to preload progress updates
   useEffect(() => onPreloadProgress(setProgress), []);
 
-  const handleSubmit = useCallback(
+  const handleSubmitPin = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!dashId.trim() || !pin.trim()) {
+        setError('Enter your DASH ID and PIN');
+        return;
+      }
+      setLoading(true);
+      setError('');
+      try {
+        const result = await onLoginPin(dashId, pin);
+        if (!result.success) {
+          setError(result.error ?? 'Invalid DASH ID or PIN');
+          setLoading(false);
+        }
+        // success (active OR guest) → App swaps this screen out; nothing to do.
+      } catch {
+        setError(t(lang, 'connectionError'));
+        setLoading(false);
+      }
+    },
+    [dashId, pin, onLoginPin, lang]
+  );
+
+  const handleSubmitLegacy = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (!code.trim()) {
         setError(t(lang, 'pleaseEnterCode'));
         return;
       }
-
       setLoading(true);
       setError('');
-
       try {
         const result = await onLogin(code);
         if (!result.success) {
@@ -41,8 +74,11 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin, onGuest }) => {
         setLoading(false);
       }
     },
-    [code, onLogin]
+    [code, onLogin, lang]
   );
+
+  const inputBase =
+    'w-full py-4 px-5 bg-white/[0.07] border border-white/[0.12] rounded-xl text-white text-[15px] outline-none transition-[border-color,background-color,box-shadow] duration-300 placeholder:text-white/35 focus:border-primary/70 focus:bg-white/[0.09] focus:shadow-[inset_0_0_0_1px_rgba(157,78,221,0.2),0_0_0_3px_rgba(157,78,221,0.2)]';
 
   return (
     <div className="fixed inset-0 z-[10000] overflow-hidden">
@@ -60,44 +96,126 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin, onGuest }) => {
       </div>
 
       {/* Login content */}
-      <div className="relative z-10 flex items-center justify-center w-full h-full px-5">
+      <div className="relative z-10 flex items-center justify-center w-full h-full px-5 md:px-0">
         <div className="login-box-appear w-full max-w-[400px]">
 
           {/* Logo — DASHtivi+ brand */}
           <div className="text-center mb-10">
             <h1 className="mb-3">
-              <span className="text-[32px] font-black tracking-tight text-white uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>DASH</span>
-              <span className="text-[24px] font-light tracking-wide text-white/50" style={{ fontFamily: "'Outfit', sans-serif" }}>tivi</span>
-              <span className="text-primary-light text-[18px] font-bold ml-0.5">+</span>
+              <span className="text-[34px] font-bold uppercase text-white" style={{ fontFamily: "'Clash Display', 'Space Grotesk', sans-serif", letterSpacing: '-0.03em' }}>DASH</span>
+              <span className="text-[26px] font-light text-white/55" style={{ fontFamily: "'Clash Display', 'Outfit', sans-serif", letterSpacing: '-0.01em' }}>tivi</span>
+              <span className="text-[22px] font-bold ml-0.5" style={{ background: 'linear-gradient(135deg, #C77DFF, #22C55E)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>+</span>
             </h1>
-            <p className="text-[11px] text-white/20 tracking-[5px] uppercase font-light">
+            <p className="text-[11px] text-white/40 tracking-[4px] uppercase font-light" style={{ textShadow: '0 0 6px rgba(157,78,221,0.2)' }}>
               {t(lang, 'premiumStreaming')}
             </p>
           </div>
 
           {/* Card */}
           <div
-            className="rounded-2xl p-8"
+            className="rounded-2xl p-6 md:p-8"
             style={{
               background: 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(10,10,15,0.9) 40%, rgba(157,78,221,0.03) 100%)',
               border: '1px solid rgba(157,78,221,0.1)',
               boxShadow: '0 8px 40px rgba(0,0,0,0.5), 0 0 60px rgba(157,78,221,0.08)',
             }}
           >
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label className="block text-[11px] text-white/30 font-medium tracking-wide uppercase mb-2 ml-1">
+            {!showLegacy ? (
+              /* ── PRIMARY GATE: DASH ID + PIN ────────────────────── */
+              <form onSubmit={handleSubmitPin} className="space-y-5">
+                <label className="block text-[12px] text-white/50 font-medium tracking-wide uppercase ml-1 pt-px">
+                  Access Code
+                </label>
+
+                {/* DASH ID */}
+                <div>
+                  <input
+                    type="text"
+                    value={dashId}
+                    onChange={(e) => { setDashId(e.target.value.toUpperCase()); setError(''); }}
+                    placeholder="DASH ID  ·  e.g. 001AA"
+                    autoFocus
+                    autoCapitalize="characters"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    className={inputBase}
+                    style={{ fontFamily: "'Space Grotesk', monospace", letterSpacing: '0.05em' }}
+                  />
+                </div>
+
+                {/* PIN */}
+                <div className="relative">
+                  <input
+                    type={showPin ? 'text' : 'password'}
+                    value={pin}
+                    onChange={(e) => { setPin(e.target.value); setError(''); }}
+                    placeholder="PIN"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    className={`${inputBase} pr-12`}
+                    style={{ fontFamily: "'Space Grotesk', monospace", letterSpacing: '0.3em' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPin(!showPin)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/50 transition-colors"
+                    aria-label={showPin ? 'Hide PIN' : 'Show PIN'}
+                  >
+                    {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+
+                {error && (
+                  <p className="text-red-400/80 text-[12px] text-center font-medium">{error}</p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`dash-gold-btn relative overflow-hidden w-full py-4 rounded-xl font-black text-[13px] leading-none tracking-[2px] uppercase transition-[transform,opacity,background] duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:transform-none ${loading ? 'dash-gold-btn--loading' : ''}`}
+                  style={{
+                    color: '#1a1400',
+                    background: loading
+                      ? 'linear-gradient(135deg, #E6CB86 0%, #D9B45A 42%, #B89A52 100%)'
+                      : 'linear-gradient(135deg, #DDB962 0%, #C9A14A 42%, #9D7E3C 100%)',
+                    boxShadow: '0 4px 14px rgba(0,0,0,0.35), 0 0 18px rgba(157,78,221,0.10), inset 0 1px 0 rgba(255,255,255,0.15)',
+                  }}
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2 text-black/70">
+                      <span className="w-4 h-4 border-2 border-black/25 border-t-black/70 rounded-full animate-spin dash-spin-pulse" />
+                      {progress < 1 ? 'Preparing...' : t(lang, 'verifying')}
+                    </span>
+                  ) : (
+                    t(lang, 'enter')
+                  )}
+                </button>
+
+                {/* Secondary: legacy access-code reveal */}
+                <button
+                  type="button"
+                  onClick={() => { setShowLegacy(true); setError(''); }}
+                  className="dash-secondary-link group w-full text-center text-[11px] text-white/40 hover:text-white/60 transition-colors tracking-wide"
+                  style={{ fontFamily: "'Outfit', sans-serif" }}
+                >
+                  <span className="group-hover:underline underline-offset-4 decoration-white/30">Have a DASH-XXXX code?</span>
+                  <span className="inline-block ml-1 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">→</span>
+                </button>
+              </form>
+            ) : (
+              /* ── LEGACY GATE: single access code ────────────────── */
+              <form onSubmit={handleSubmitLegacy} className="space-y-5">
+                <label className="block text-[12px] text-white/50 font-medium tracking-wide uppercase ml-1 pt-px">
                   {t(lang, 'accessCode')}
                 </label>
                 <div className="relative">
                   <input
                     type={showCode ? 'text' : 'password'}
                     value={code}
-                    onChange={(e) => setCode(e.target.value)}
+                    onChange={(e) => { setCode(e.target.value); setError(''); }}
                     placeholder="DASH-SL-001"
                     autoFocus
-                    className="w-full py-4 px-5 pr-12 bg-white/[0.03] border border-white/[0.06] rounded-xl text-white text-[15px] outline-none transition-[border-color,background-color,box-shadow] duration-300 placeholder:text-white/20 focus:border-primary/40 focus:bg-white/[0.05] focus:shadow-[0_0_0_3px_rgba(157,78,221,0.1)]"
+                    className={`${inputBase} pr-12`}
                     style={{ fontFamily: "'Space Grotesk', monospace" }}
                   />
                   <button
@@ -108,31 +226,43 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin, onGuest }) => {
                     {showCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-              </div>
 
-              {error && (
-                <p className="text-red-400/80 text-[12px] text-center font-medium">{error}</p>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-4 rounded-xl font-semibold text-[13px] tracking-[2px] uppercase transition-[transform,opacity] duration-300 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-white"
-                style={{
-                  background: 'linear-gradient(135deg, #9D4EDD 0%, #7B2CBF 100%)',
-                  boxShadow: '0 4px 20px rgba(157,78,221,0.3), 0 0 30px rgba(157,78,221,0.15)',
-                }}
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    {progress < 1 ? 'Preparing...' : t(lang, 'verifying')}
-                  </span>
-                ) : (
-                  t(lang, 'enter')
+                {error && (
+                  <p className="text-red-400/80 text-[12px] text-center font-medium">{error}</p>
                 )}
-              </button>
-            </form>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`dash-gold-btn relative overflow-hidden w-full py-4 rounded-xl font-black text-[13px] leading-none tracking-[2px] uppercase transition-[transform,opacity,background] duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:transform-none ${loading ? 'dash-gold-btn--loading' : ''}`}
+                  style={{
+                    color: '#1a1400',
+                    background: loading
+                      ? 'linear-gradient(135deg, #E6CB86 0%, #D9B45A 42%, #B89A52 100%)'
+                      : 'linear-gradient(135deg, #DDB962 0%, #C9A14A 42%, #9D7E3C 100%)',
+                    boxShadow: '0 4px 14px rgba(0,0,0,0.35), 0 0 18px rgba(157,78,221,0.10), inset 0 1px 0 rgba(255,255,255,0.15)',
+                  }}
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2 text-black/70">
+                      <span className="w-4 h-4 border-2 border-black/25 border-t-black/70 rounded-full animate-spin dash-spin-pulse" />
+                      {progress < 1 ? 'Preparing...' : t(lang, 'verifying')}
+                    </span>
+                  ) : (
+                    t(lang, 'enter')
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setShowLegacy(false); setError(''); }}
+                  className="w-full text-center text-[11px] text-white/40 hover:text-white/60 transition-colors tracking-wide"
+                  style={{ fontFamily: "'Outfit', sans-serif" }}
+                >
+                  ← Use DASH ID + PIN
+                </button>
+              </form>
+            )}
           </div>
 
           {/* Preload progress — the "F1 pit lane" bar */}
@@ -153,32 +283,38 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLogin, onGuest }) => {
             </p>
           </div>
 
-          {/* Guest mode + WhatsApp */}
-          {onGuest && (
-            <div className="mt-6 flex flex-col items-center gap-3">
-              <button
-                onClick={onGuest}
-                className="px-6 py-2 rounded-xl text-sm font-medium transition-all duration-300 active:scale-95"
-                style={{
-                  background: 'rgba(157,78,221,0.08)',
-                  border: '1px solid rgba(157,78,221,0.2)',
-                  color: 'rgba(199,125,255,0.75)',
-                  fontFamily: "'Outfit', sans-serif",
-                }}
-              >
-                Browse as Guest
-              </button>
-              <a
-                href="https://wa.me/224611361300?text=Hi%20DASH%2C%20I%20want%20a%20Tivi%2B%20code"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[10px] font-medium tracking-wide"
-                style={{ color: 'rgba(255,255,255,0.2)', fontFamily: "'Outfit', sans-serif" }}
-              >
-                Get your code on WhatsApp
-              </a>
-            </div>
-          )}
+          {/* Join DASH — the become-a-member route (create a free DASH ID via
+              WhatsApp). The ONLY way in besides logging in; no anonymous browse.
+              Bronze-gold = the premium/pride door to DASH. */}
+          <div className="mt-7 flex flex-col items-center gap-2.5">
+            <p className="text-[11px] text-white/30 tracking-wide" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              {lang === 'fr' ? 'Pas encore membre ?' : 'Not a member yet?'}
+            </p>
+            <a
+              href="https://wa.me/224611361300?text=Bonjour%20DASH%2C%20je%20veux%20rejoindre%20DASH%20et%20cr%C3%A9er%20mon%20DASH%20ID%20Tivi%2B%20(gratuit)"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="dash-gold-btn relative overflow-hidden w-full text-center py-3.5 rounded-xl text-[13px] font-black tracking-[1.5px] uppercase transition-transform duration-300 active:scale-[0.98]"
+              style={{
+                color: '#1a1400',
+                background: 'linear-gradient(135deg, #FFE680 0%, #FFD700 42%, #D4A053 100%)',
+                boxShadow: '0 6px 22px rgba(212,160,83,0.38), 0 0 26px rgba(255,215,0,0.10), inset 0 1px 0 rgba(255,255,255,0.5)',
+                fontFamily: "'Outfit', sans-serif",
+              }}
+            >
+              {lang === 'fr' ? 'Rejoindre DASH' : 'Join DASH'}
+            </a>
+          </div>
+
+          {/* Bronze-gold shimmer — the premium sheen on every DASH action button. */}
+          <style>{`
+            @keyframes dash-gold-sweep { 0% { background-position: -180% 0; } 100% { background-position: 180% 0; } }
+            .dash-gold-btn::after {
+              content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+              background: linear-gradient(110deg, transparent 32%, rgba(255,255,255,0.5) 50%, transparent 68%);
+              background-size: 220% 100%; animation: dash-gold-sweep 3s ease-in-out infinite;
+            }
+          `}</style>
         </div>
       </div>
     </div>

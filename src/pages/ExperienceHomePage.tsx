@@ -20,6 +20,7 @@ import {
   groupChannelsByQuality,
   getChannelMeta,
   safeImageUrl,
+  isWorldCupStreamId,
 } from '@/lib/xtream';
 import type { VeePlaylist } from '@/lib/xtream';
 import {
@@ -39,7 +40,8 @@ import type { Channel } from '@/types';
 // World Cup detection — Starshare adds live categories/channels named "World Cup",
 // "Coupe du Monde", "Mondial", "FIFA". Match on the (human-readable) channel name.
 const WORLD_CUP_RE = /world\s?cup|coupe\s?du\s?monde|mondial|fifa/i;
-const isWorldCupStream = (s: LiveStream) => WORLD_CUP_RE.test(s.name);
+// STATIC: prefer the curated collection flag; fall back to name match.
+const isWorldCupStream = (s: LiveStream) => isWorldCupStreamId(s.stream_id) || WORLD_CUP_RE.test(s.name);
 
 // Sports Arena — lazy loaded, only when experience=sports
 const SportsArena = React.lazy(() => import('@/components/sports/SportsArena'));
@@ -483,10 +485,12 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
 
   const timeSlot = getTimeSlot();
 
-  // Redirect to /live if experience not found
+  // Unknown experience → soft flow back to /live, not a jarring silent swap.
+  // Show a brief inline note so the brain registers "this district moved", then glide.
   useEffect(() => {
     if (experienceId && !EXPERIENCE_CONFIGS[experienceId]) {
-      navigate('/live', { replace: true });
+      const id = setTimeout(() => navigate('/live', { replace: true }), 900);
+      return () => clearTimeout(id);
     }
   }, [experienceId, navigate]);
 
@@ -605,7 +609,27 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
     return () => window.removeEventListener('sports-play-channel', handler);
   }, [allStreams, handlePlay, onPlay, credentials]);
 
-  if (!config) return null;
+  // Unknown experience — a calm inline bridge while we glide to All Channels
+  // (never a black void or a silent hard swap).
+  if (!config) {
+    return (
+      <div className="pt-24 pb-32 min-h-screen flex flex-col items-center justify-center px-8 text-center">
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+          style={{ background: 'rgba(157,78,221,0.12)', border: '1px solid rgba(157,78,221,0.25)' }}>
+          <Globe className="w-6 h-6 text-white/50" />
+        </div>
+        <p className="text-[15px] font-semibold text-white/70">Taking you to all channels…</p>
+        <p className="text-[12px] text-white/30 mt-1.5 max-w-[260px]">That district moved — gliding you to the full live lineup.</p>
+        <button
+          onClick={() => navigate('/live', { replace: true })}
+          className="mt-5 px-5 py-2.5 rounded-full text-[12px] font-semibold text-white/80 active:scale-95 transition-transform"
+          style={{ background: 'linear-gradient(135deg, rgba(157,78,221,0.18), rgba(157,78,221,0.08))', border: '1px solid rgba(157,78,221,0.3)' }}
+        >
+          Go now →
+        </button>
+      </div>
+    );
+  }
 
   // Filter by sub-tab
   let filtered = allStreams;
@@ -829,8 +853,13 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
                     className="flex-shrink-0 group"
                     style={{ width: i === 0 ? 160 : 140, ...(i < 10 ? { animation: `vee-card-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) ${i * 100}ms both` } : {}) }}
                   >
-                    <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 transition-all duration-300 group-hover:shadow-lg flex items-center justify-center"
-                      style={{ background: 'rgba(255,255,255,0.03)', boxShadow: i === 0 ? `0 0 20px ${config.accentGlow}` : undefined }}>
+                    <div className="relative aspect-video rounded-xl overflow-hidden mb-1.5 transition-transform duration-200 ease-out group-hover:scale-[1.03] flex items-center justify-center"
+                      style={{
+                        background: 'linear-gradient(157deg, rgba(255,255,255,0.085) 0%, rgba(255,255,255,0.025) 50%, rgba(255,255,255,0.012) 100%)',
+                        boxShadow: i === 0
+                          ? `0 4px 14px rgba(0,0,0,0.42), 0 0 20px ${config.accentGlow}, inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1px rgba(255,255,255,0.045)`
+                          : '0 4px 14px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1px rgba(255,255,255,0.045)',
+                      }}>
                       <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" />
                       <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-black/60 rounded text-[8px] font-semibold"
                         style={{ color: config.accentColor }}>
@@ -968,7 +997,7 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
 
 
           {/* ── Bottom callback — sticky quick nav ───────────────────── */}
-          <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 px-2 py-1.5 rounded-full bg-black/80 backdrop-blur-lg border border-white/10 shadow-lg"
+          <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 px-2 py-1.5 rounded-full bg-black/80 backdrop-blur-lg border border-white/10 shadow-lg"
             style={{ boxShadow: `0 4px 20px rgba(0,0,0,0.5), 0 0 10px ${config.accentGlow}` }}>
             <button
               onClick={() => navigate('/')}

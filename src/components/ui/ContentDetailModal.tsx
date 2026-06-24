@@ -6,6 +6,7 @@ import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { safeImageUrl, type XtreamCredentials } from '@/lib/xtream';
 import { click as hapticClick } from '@/lib/haptics';
 import { muteAmbient, unmuteAmbient } from '@/lib/ambient-audio';
+import { useBackGuard } from '@/hooks/useBackGuard';
 
 const TMDB_GENRES: Record<number, string> = {
   12: 'Adventure', 14: 'Fantasy', 16: 'Animation', 18: 'Drama',
@@ -55,6 +56,11 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
 }) => {
   const { lang } = useLanguage();
 
+  // Layered back: system/browser BACK recedes this detail sheet (pops the top
+  // layer) instead of leaving the app. The component only renders when its
+  // call-site has it open, so open=true for its whole lifetime.
+  useBackGuard(true, onClose, 'content-detail');
+
   // ── VOD info fetch ──────────────────────────────────────────
   const [vodDescription, setVodDescription] = useState<string | null>(null);
   const [vodDuration, setVodDuration] = useState<number | null>(null);
@@ -75,7 +81,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
     let mounted = true;
     import('@/lib/xtream').then(({ getVodInfo }) => {
       getVodInfo(credentials, streamId).then(info => {
-        if (!info || !mounted) return;
+        if (!info || !info.info || !mounted) return;
         const i = info.info;
         if (i.plot || i.description) setVodDescription(i.plot || i.description || null);
         if (i.episode_run_time) setVodDuration(parseInt(i.episode_run_time) || null);
@@ -235,7 +241,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
             ref={iframeRef}
             className="absolute pointer-events-none"
             style={{ top: '-10%', left: '-5%', width: '110%', height: '130%' }}
-            src={`https://www.youtube-nocookie.com/embed/${trailerKey}?rel=0&modestbranding=1&controls=0&showinfo=0&iv_load_policy=3&disablekb=1&start=1&autoplay=1&mute=1&enablejsapi=1&playsinline=1&loop=1`}
+            src={`https://www.youtube-nocookie.com/embed/${trailerKey}?rel=0&modestbranding=1&controls=0&showinfo=0&iv_load_policy=3&disablekb=1&start=5&autoplay=1&mute=1&enablejsapi=1&playsinline=1&loop=1`}
             title={`${cleanTitle} - Trailer`}
             allow="autoplay; encrypted-media"
             frameBorder="0"
@@ -261,19 +267,37 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   }
 
   // ══════════════════════════════════════════════════════════════
-  // CARD MODE — elegant bottom sheet (default for most movies)
+  // CARD MODE — continuity sheet (default for most movies)
+  // The detail RISES as a continuation of the canvas, not a covering wall:
+  // a soft (not opaque) scrim lets the section above PEEK through at the top
+  // (the floating live cards = "you're still in the flow, here's where you came
+  // from"). Capped height guarantees that sliver. Tapping the peek closes —
+  // it flows you straight back into the scroll, never a dead-end.
   // ══════════════════════════════════════════════════════════════
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/90 backdrop-blur-sm"
-      style={{ animation: 'fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both' }}
+      className="fixed inset-0 z-50 flex items-end justify-center"
+      style={{
+        animation: 'fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both',
+        // Soft graduated scrim — darkens toward the sheet, but the very top stays
+        // light so the canvas above peeks (depth/continuity cue, not a black wall).
+        background: 'linear-gradient(to bottom, rgba(6,6,9,0.18) 0%, rgba(6,6,9,0.45) 38%, rgba(6,6,9,0.82) 100%)',
+        backdropFilter: 'blur(2px)',
+      }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl max-h-[92vh] bg-[#0a0a0f] rounded-t-2xl sm:rounded-2xl overflow-hidden overflow-y-auto border border-white/8"
-        style={{ animation: 'slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both' }}
+        className="w-full max-w-2xl max-h-[88vh] bg-[#0a0a0f] rounded-t-2xl overflow-hidden overflow-y-auto border border-white/8"
+        style={{
+          animation: 'slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
+          boxShadow: '0 -18px 60px rgba(0,0,0,0.6)',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Grab handle — signals "this is a sheet that flows back", not a wall. */}
+        <div className="flex justify-center pt-2.5 pb-1">
+          <div className="w-10 h-1 rounded-full bg-white/20" />
+        </div>
         {/* Close */}
         <div className="absolute top-3 right-3 z-20">
           <CosmicClose onClick={onClose} />

@@ -20,6 +20,7 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
   const [headerHidden, setHeaderHidden] = useState(false);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
+  const idleTimer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     const onScroll = () => {
@@ -36,10 +37,14 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
         }
         lastScrollY.current = y;
         ticking.current = false;
+        // Immersion: header steps out of the way while scrolling, then
+        // quietly returns when the user pauses (Giraf feed pattern).
+        clearTimeout(idleTimer.current);
+        idleTimer.current = setTimeout(() => setHeaderHidden(false), 2600);
       });
     };
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => { window.removeEventListener('scroll', onScroll); clearTimeout(idleTimer.current); };
   }, []);
 
   // Reset on route change
@@ -75,9 +80,9 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
           onClick={() => navigate('/')}
           className="flex items-baseline group"
         >
-          <span className="text-[20px] font-black tracking-tight text-white uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>DASH</span>
-          <span className="text-[16px] font-light tracking-wide text-white/50" style={{ fontFamily: "'Outfit', sans-serif", marginLeft: '1px' }}>tivi</span>
-          <span className="text-primary-light text-[13px] font-bold" style={{ marginLeft: '2px' }}>+</span>
+          <span className="text-[21px] font-bold uppercase text-white" style={{ fontFamily: "'Clash Display', 'Space Grotesk', sans-serif", letterSpacing: '-0.03em' }}>DASH</span>
+          <span className="text-[17px] font-light text-white/55" style={{ fontFamily: "'Clash Display', 'Outfit', sans-serif", letterSpacing: '-0.01em', marginLeft: '1px' }}>tivi</span>
+          <span className="text-[15px] font-bold ml-0.5" style={{ background: 'linear-gradient(135deg, #C77DFF, #22C55E)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>+</span>
         </button>
         {/* Welcome — only on Home */}
         {isHome && (

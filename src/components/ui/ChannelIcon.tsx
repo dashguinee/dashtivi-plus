@@ -462,9 +462,9 @@ function findLogoUrl(channelName: string): string | null {
 }
 
 const sizes = {
-  sm: 'w-10 h-10 text-sm',
-  md: 'w-14 h-14 text-lg',
-  lg: 'w-20 h-20 text-2xl',
+  sm: 'w-[52px] h-[52px] text-sm',
+  md: 'w-[72px] h-[72px] text-lg',
+  lg: 'w-[104px] h-[104px] text-2xl',
 };
 
 export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', className = '', eager = false }: Props) {

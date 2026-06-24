@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { PlayerControls } from './PlayerControls';
-import { RefreshCw, AlertTriangle, ChevronLeft as ChevLeft, ChevronRight as ChevRight, SkipForward, SkipBack } from 'lucide-react';
+import { RefreshCw, AlertTriangle, ChevronLeft as ChevLeft, ChevronRight as ChevRight, SkipForward, SkipBack, Tv } from 'lucide-react';
 import { useAdjacentChannels, usePlaylistState, setCurrentChannel } from '@/lib/playlist';
 import { useKeyboard } from '@/hooks/useKeyboard';
+import { useSwipeSurf } from '@/hooks/useSwipeSurf';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { SmartMatch } from './SmartMatch';
 import { EpgWidget } from './EpgWidget';
@@ -60,40 +61,44 @@ export const VideoPlayer: React.FC<Props> = ({
 
   const isVod = detectVod(state);
 
-  const touchStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const lastTapRef = useRef<{ x: number; t: number }>({ x: 0, t: 0 });
+  const tapStartRef = useRef<{ x: number; y: number } | null>(null);
   const { prev: adjPrev, next: adjNext } = useAdjacentChannels();
+
+  // ── New-era remote: swipe-surf the channel. Live only (VOD uses double-tap
+  //    seek). The hook handles all gesture coexistence (scroll / scrubber /
+  //    close / tap pass through untouched). dragX drives a subtle slide. ──
+  const [surfDragX, setSurfDragX] = useState(0);
+  const handleSurfPrev = useCallback(() => {
+    if (adjPrev) { setCurrentChannel(adjPrev.id); onRetry(adjPrev); }
+  }, [adjPrev, onRetry]);
+  const handleSurfNext = useCallback(() => {
+    if (adjNext) { setCurrentChannel(adjNext.id); onRetry(adjNext); }
+  }, [adjNext, onRetry]);
+  const surfHandlers = useSwipeSurf({
+    enabled: !isVod,
+    onPrev: handleSurfPrev,
+    onNext: handleSurfNext,
+    onDrag: setSurfDragX,
+  });
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY, t: Date.now() };
+    tapStartRef.current = { x: touch.clientX, y: touch.clientY };
   }, []);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    const start = touchStartRef.current;
-    if (!start) return;
-    touchStartRef.current = null;
+    const start = tapStartRef.current;
+    tapStartRef.current = null;
+    // VOD double-tap seek (the only touch gesture VideoPlayer still owns —
+    // channel surfing is handled by useSwipeSurf via pointer events).
+    if (!isVod || !start) return;
     const touch = e.changedTouches[0];
-    const dx = touch.clientX - start.x;
-    const dy = touch.clientY - start.y;
-    const absDx = Math.abs(dx);
-    const absDy = Math.abs(dy);
-    const elapsed = Date.now() - start.t;
-
-    // Horizontal swipe: >50px horizontal, <30px vertical, <300ms — live channels only
-    if (absDx > 50 && absDy < 30 && elapsed < 300 && !isVod) {
-      if (dx < 0 && adjNext) {
-        setCurrentChannel(adjNext.id);
-        onRetry(adjNext);
-      } else if (dx > 0 && adjPrev) {
-        setCurrentChannel(adjPrev.id);
-        onRetry(adjPrev);
-      }
-      return;
-    }
-
-    // Double-tap: +10s forward (right side) or -10s backward (left side) — VOD only
-    if (isVod && absDx < 20 && absDy < 20) {
+    const absDx = Math.abs(touch.clientX - start.x);
+    const absDy = Math.abs(touch.clientY - start.y);
+    // Double-tap: +10s forward (right side) or -10s backward (left side).
+    // Must be a tap, not a drag (so it never collides with a swipe/seek-drag).
+    if (absDx < 20 && absDy < 20) {
       const now = Date.now();
       const screenW = window.innerWidth;
       const isRightSide = touch.clientX > screenW * 0.55;
@@ -114,7 +119,7 @@ export const VideoPlayer: React.FC<Props> = ({
       }
       lastTapRef.current = { x: touch.clientX, t: now };
     }
-  }, [isVod, adjPrev, adjNext, onRetry, onSeek, state.duration, state.currentTime]);
+  }, [isVod, onSeek, state.duration, state.currentTime]);
 
   // Auto-retry with backoff: 3s → 6s → 10s, then give up to manual
   const autoRetryRef = useRef(0);
@@ -401,6 +406,10 @@ export const VideoPlayer: React.FC<Props> = ({
       onMouseMove={showControls}
       onTouchStart={(e) => { showControls(); handleTouchStart(e); }}
       onTouchEnd={handleTouchEnd}
+      onPointerDown={surfHandlers.onPointerDown}
+      onPointerMove={surfHandlers.onPointerMove}
+      onPointerUp={surfHandlers.onPointerUp}
+      onPointerCancel={surfHandlers.onPointerCancel}
       onClick={() => {
         if (controlsVisible) showControls();
         else setControlsVisible(true);
@@ -410,10 +419,39 @@ export const VideoPlayer: React.FC<Props> = ({
           It renders at z-50 behind this overlay when full player is active.
           No <video> here — eliminates mount/unmount audio orphaning. */}
 
+      {/* New-era remote: directional swipe-surf peek. A subtle edge glow that
+          tracks the live horizontal drag (live only), then settles. Purely a
+          visual hint over the controls layer — never touches the <video>. */}
+      {!isVod && surfDragX !== 0 && (
+        <div className="absolute inset-0 z-[45] pointer-events-none overflow-hidden">
+          <div
+            className="absolute top-0 bottom-0 w-24"
+            style={{
+              [surfDragX > 0 ? 'left' : 'right']: 0,
+              background: surfDragX > 0
+                ? 'linear-gradient(90deg, rgba(157,78,221,0.28), transparent)'
+                : 'linear-gradient(270deg, rgba(157,78,221,0.28), transparent)',
+              opacity: Math.min(1, Math.abs(surfDragX) / 120),
+              transition: `opacity 0.2s cubic-bezier(0.23,1,0.32,1)`,
+            } as React.CSSProperties}
+          />
+        </div>
+      )}
+
       {/* Cinema intro — VOD only, runs independently of loading state */}
       {showCinemaIntro && (
         <>
           <DashCinemaLoader title={state.channel?.name} />
+          {/* Tap-to-skip — tap anywhere dismisses the cinema intro early and lets
+              the stream through (never traps the viewer behind the brand bumper). */}
+          <button
+            onClick={(e) => { e.stopPropagation(); cinemaAbortedRef.current = true; setShowCinemaIntro(false); }}
+            className="absolute inset-0 z-[55] cursor-pointer"
+            aria-label="Skip intro"
+          />
+          <div className="absolute bottom-7 left-1/2 -translate-x-1/2 z-[56] pointer-events-none">
+            <span className="text-[10px] uppercase tracking-[0.22em] text-white/35 font-semibold">Tap to skip</span>
+          </div>
           {/* Escape hatch — always accessible during cinema intro */}
           <button
             onClick={(e) => { e.stopPropagation(); setShowCinemaIntro(false); onClose(); }}
@@ -452,19 +490,34 @@ export const VideoPlayer: React.FC<Props> = ({
 
       {/* Transition loader — thin animated bar on blurred frozen frame during channel switch */}
       {state.isLoading && !state.error && !showCinemaIntro && !postCinemaBlackout && (
-        <div className="absolute inset-0 z-40">
+        <div className="absolute inset-0 z-40 flex items-center justify-center">
           {/* Blur overlay on frozen frame */}
-          <div className="absolute inset-0 bg-black/20 transition-opacity duration-300" 
-               style={{ backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)' }} />
-          {/* Thin pulsing bar at top — YouTube-style, non-intrusive */}
+          <div className="absolute inset-0 bg-black/35 transition-opacity duration-300"
+               style={{ backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} />
+          {/* Thin beam at top */}
           <div className="absolute top-0 left-0 right-0 h-[2px] z-50">
-            <div className="h-full animate-pulse"
+            <div className="h-full"
               style={{
                 background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.7), rgba(157,78,221,0.9), rgba(157,78,221,0.7), transparent)',
                 backgroundSize: '200% 100%',
                 animation: 'dash-beam 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
               }}
             />
+          </div>
+          {/* Calm premium "connecting" — reassures on weak networks (buffering = the #1 SL pain) */}
+          <div className="relative z-50 flex flex-col items-center gap-3.5">
+            <div className="relative w-16 h-16">
+              <div className="absolute inset-0 rounded-2xl" style={{ animation: 'connect-pulse 1.7s ease-in-out infinite' }} />
+              <div className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center"
+                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(157,78,221,0.32)' }}>
+                {state.channel?.logo
+                  ? <img src={state.channel.logo} alt="" className="w-full h-full object-contain p-1.5" />
+                  : <Tv className="w-7 h-7 text-white/40" />}
+              </div>
+            </div>
+            <p className="text-[13px] text-white/75 font-medium tracking-wide">
+              Connecting{state.channel?.name ? ` · ${state.channel.name}` : '…'}
+            </p>
           </div>
         </div>
       )}
@@ -485,13 +538,24 @@ export const VideoPlayer: React.FC<Props> = ({
                 <AlertTriangle className="w-6 h-6 text-white/30" />
               </div>
               <p className="text-sm text-white/40">{state.error || 'Unable to connect — tap to try again'}</p>
-              <button
-                onClick={() => { autoRetryRef.current = 0; state.channel && onRetry(state.channel); }}
-                className="flex items-center gap-2 px-6 py-3 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Reconnect
-              </button>
+              <div className="flex items-center gap-2.5">
+                <button
+                  onClick={() => { autoRetryRef.current = 0; state.channel && onRetry(state.channel); }}
+                  className="flex items-center gap-2 px-5 py-3 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors active:scale-95"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Reconnect
+                </button>
+                {/* Never trap the viewer in a broken stream — give a way out. */}
+                <button
+                  onClick={() => (onBack || onClose)()}
+                  className="flex items-center gap-2 px-5 py-3 rounded-xl font-medium text-sm text-white/70 hover:text-white transition-colors active:scale-95"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+                >
+                  <ChevLeft className="w-4 h-4" />
+                  Choose another
+                </button>
+              </div>
             </div>
           )}
         </div>

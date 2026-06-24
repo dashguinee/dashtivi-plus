@@ -8,13 +8,20 @@ const VARIANTS: Record<string, { title: string; subtitle: string }> = {
   offline: { title: 'Signal interrupted', subtitle: 'Check your connection and try again' },
 };
 
+interface EmptyStateAction {
+  label: string;
+  onClick: () => void;
+}
+
 interface EmptyStateProps {
   icon?: string;
   title?: string;
   subtitle?: string;
+  /** CONTINUITY FIRST — an empty state is never a dead end. Give a way out. */
+  action?: EmptyStateAction;
 }
 
-export function EmptyState({ icon = 'search', title, subtitle }: EmptyStateProps) {
+export function EmptyState({ icon = 'search', title, subtitle, action }: EmptyStateProps) {
   const variant = VARIANTS[icon] || VARIANTS.search;
   const displayTitle = title || variant.title;
   const displaySubtitle = subtitle || variant.subtitle;
@@ -37,6 +44,18 @@ export function EmptyState({ icon = 'search', title, subtitle }: EmptyStateProps
       <p className="text-[11px] max-w-[240px] text-center leading-relaxed" style={{ color: 'rgba(255,255,255,0.2)' }}>
         {displaySubtitle}
       </p>
+      {action && (
+        <button
+          onClick={action.onClick}
+          className="mt-5 px-5 py-2.5 rounded-full text-[12px] font-semibold text-white/80 active:scale-95 transition-transform"
+          style={{
+            background: 'linear-gradient(135deg, rgba(157,78,221,0.18), rgba(157,78,221,0.08))',
+            border: '1px solid rgba(157,78,221,0.3)',
+          }}
+        >
+          {action.label}
+        </button>
+      )}
     </div>
   );
 }

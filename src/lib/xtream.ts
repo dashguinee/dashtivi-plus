@@ -1,3 +1,6 @@
+import { getCatalog, getCatalogSync, getByExperience as catGetByExperience, buildCatalogUrl } from './catalog';
+import type { CatalogChannel } from './catalog';
+
 const STREAM_BASE = (import.meta.env.VITE_XTREAM_STREAM || 'http://fastshare1.com:8080').trim();
 const PROXY = (import.meta.env.VITE_PROXY_URL || 'https://stream.zionsynapse.online').trim();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
@@ -373,12 +376,25 @@ async function enrichIcons(streams: LiveStream[]): Promise<LiveStream[]> {
   return result;
 }
 
-export async function getLiveStreams(c: XtreamCredentials, catId: string): Promise<LiveStream[]> {
-  const streams = await cachedFetch<LiveStream[]>(
-    `live_streams_${catId}`,
-    apiUrl(c, 'get_live_streams', `&category_id=${catId}`)
-  );
-  return enrichIcons(streams);
+// Coarse map: legacy Starshare category id -> static catalog experience.
+// Covers FrenchPage culture blocks + HomePage sport categories so those paths
+// resolve to curated channels instead of hitting the network.
+const CATEGORY_TO_EXPERIENCE: Record<string, string> = {
+  // France / francophone culture blocks (FrenchPage)
+  '336': 'french', '428': 'french', '343': 'french', '427': 'french', '345': 'french',
+  '429': 'french', '344': 'french', '430': 'french', '347': 'french', '431': 'french',
+  '346': 'french',
+  // Sports (HomePage SPORT_TABS + fixtures)
+  '234': 'sports', '85': 'sports', '342': 'sports', '492': 'sports', '11': 'sports',
+};
+
+/** STATIC: return curated catalog channels for a legacy category id (no network). */
+export async function getLiveStreams(_c: XtreamCredentials, catId: string): Promise<LiveStream[]> {
+  await getCatalog();
+  const expId = CATEGORY_TO_EXPERIENCE[catId];
+  if (!expId) return [];
+  const chs = catGetByExperience(expId);
+  return curatorToLiveStreams(chs.map(catalogToCuratorChannel));
 }
 
 // --- VOD ---
@@ -474,8 +490,18 @@ export function setStreamQuality(q: StreamMode) {
 }
 
 export function buildLiveUrl(c: XtreamCredentials, streamId: number, quality?: FlowTier): string {
-  const q = quality || 'source';
-  return `${PROXY}/live?id=${streamId}&u=${enc(c.username)}&p=${enc(c.password)}${q !== 'source' ? '&q=' + q : ''}`;
+  // STATIC CATALOG: direct (free HLS) channels carry their own url; proxy
+  // channels favor hd720 (weak West-Africa networks), never source/4K.
+  const cat = getCatalogSync();
+  const ch = cat?.byStreamId.get(streamId);
+  if (ch) {
+    if (ch.plays === 'direct') return ch.url || '';
+    const q = quality || 'hd720';
+    return `${PROXY}/live?id=${ch.ext_id}&u=${enc(c.username)}&p=${enc(c.password)}&q=${q}`;
+  }
+  // Fallback (unknown id) — proxy with hd720 default.
+  const q = quality || 'hd720';
+  return `${PROXY}/live?id=${streamId}&u=${enc(c.username)}&p=${enc(c.password)}&q=${q}`;
 }
 
 export function buildVodUrl(c: XtreamCredentials, streamId: number, ext = 'mp4'): string {
@@ -694,53 +720,9 @@ export function isChannelPlayable(streamId: number | string): boolean {
 // Active probe sets to prevent duplicate requests
 const activeProbes = new Set<string>();
 
-export async function probeChannels(c: XtreamCredentials, streamIds: number[]): Promise<Record<string, string>> {
-  // Filter out already-cached channels
-  const cache = getProbeCache();
-  const now = Date.now();
-  const toCheck = streamIds.filter(id => {
-    const entry = cache[String(id)];
-    if (entry && now - entry.ts < PROBE_CACHE_TTL) return false; // still fresh
-    return true;
-  });
-
-  if (toCheck.length === 0) return {};
-
-  // Batch in groups of 20 (VPS limit)
-  const allResults: Record<string, string> = {};
-  for (let i = 0; i < toCheck.length; i += 20) {
-    const batch = toCheck.slice(i, i + 20);
-    const batchKey = batch.join(',');
-
-    // Skip if this exact batch is already being probed
-    if (activeProbes.has(batchKey)) continue;
-    activeProbes.add(batchKey);
-
-    try {
-      // Probe uses VPS server-side credentials — no secrets in client bundle
-      const url = `${PROXY}/probe?ids=${batch.join(',')}`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-      if (!res.ok) continue;
-      const data = await res.json();
-
-      // Update cache + results
-      const updatedCache = getProbeCache();
-      for (const id of batch) {
-        const status = data[String(id)];
-        if (status) {
-          updatedCache[String(id)] = { status, ts: Date.now() };
-          allResults[String(id)] = status;
-        }
-      }
-      setProbeCache(updatedCache);
-    } catch {
-      // Probe failed — don't mark as dead, just skip
-    } finally {
-      activeProbes.delete(batchKey);
-    }
-  }
-
-  return allResults;
+/** STATIC: probing disabled — catalog channels are pre-tested. No /probe calls. */
+export async function probeChannels(_c: XtreamCredentials, _streamIds: number[]): Promise<Record<string, string>> {
+  return {};
 }
 
 // --- Server Probe Data (pre-load from VPS cron) ---
@@ -759,27 +741,9 @@ let serverProbePromise: Promise<ServerProbeData | null> | null = null;
 let serverProbeFetchedAt = 0;
 const SERVER_PROBE_TTL = 10 * 60 * 1000; // 10min
 
+/** STATIC: no server probe — catalog is the source of truth. */
 export async function fetchServerProbeData(): Promise<ServerProbeData | null> {
-  // TTL check — re-fetch if data is stale
-  if (serverProbePromise && Date.now() - serverProbeFetchedAt < SERVER_PROBE_TTL) return serverProbePromise;
-  // Stale — clear and re-fetch
-  serverProbePromise = null;
-
-  serverProbePromise = (async () => {
-    try {
-      // Vercel copy is from our deep-probe.cjs (accurate byte-level checks)
-      // VPS probe-results.json is broken (marks everything alive without real probing)
-      let res = await fetch('/probe-results.json', { signal: AbortSignal.timeout(3000) }).catch(() => null);
-      if (!res?.ok) res = await fetch(`${PROXY}/probe-results.json`, { signal: AbortSignal.timeout(5000) });
-      if (!res.ok) return null;
-      const data = await res.json() as ServerProbeData;
-      if (!data.alive_set?.length) return null;
-      serverProbeFetchedAt = Date.now();
-      return data;
-    } catch { return null; }
-    finally { /* keep promise for dedup across navigations */ }
-  })();
-  return serverProbePromise;
+  return null;
 }
 
 // Standalone alive set from server — checked by isChannelProbeAlive()
@@ -807,26 +771,9 @@ export interface VerifiedData {
   experience_categories?: Record<string, string[]>;
 }
 
+/** STATIC: no /verified.json — every catalog channel is pre-verified. */
 export async function fetchVerifiedData(): Promise<VerifiedData | null> {
-  // TTL check — re-fetch if data is stale
-  if (verifiedPromise && Date.now() - verifiedFetchedAt < VERIFIED_TTL) return verifiedPromise;
-  // Stale — clear and re-fetch
-  verifiedPromise = null;
-
-  verifiedPromise = (async () => {
-    try {
-      // Use prefetched data from preloader if available
-      const cached = consumePrefetchedVerified();
-      const data: VerifiedData | null = cached
-        ? cached as VerifiedData
-        : await fetch(`${PROXY}/verified.json`, { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null);
-      if (!data?.verified_set?.length) return null;
-      verifiedFetchedAt = Date.now();
-      return data;
-    } catch { return null; }
-    finally { /* keep promise for dedup across navigations */ }
-  })();
-  return verifiedPromise;
+  return null;
 }
 
 let experienceMap: Record<string, Set<number>> | null = null;
@@ -892,92 +839,48 @@ const CURATOR_TTL = 30 * 60 * 1000; // 30min
 let curatorFlagChecked = false;
 let curatorFlagEnabled = true;
 
+// Curator experience ids the pages query — each maps to static catalog channels.
+const CURATOR_EXPERIENCE_IDS = [
+  'sports', 'movies', 'entertainment', 'french', 'africa',
+  'arabic', 'kids', 'news', 'documentary', 'premium4k',
+];
+
+/** Convert a static CatalogChannel into the CuratorChannel shape the UI expects. */
+function catalogToCuratorChannel(ch: CatalogChannel): CuratorChannel {
+  // Cache parsed meta so getChannelMeta() (English/flag/quality) keeps working.
+  const meta = parseChannelMeta(ch.name);
+  channelMetaCache.set(ch.stream_id, meta);
+  return {
+    id: ch.stream_id,
+    name: ch.name,
+    icon: ch.icon || '',
+    quality: meta.qualityTag || '',
+    gem: ch.collection === 'worldcup', // World Cup channels surface first
+    cat: ch.experience,
+  };
+}
+
+/**
+ * STATIC: build CuratorData from the curated catalog. No network. This is the
+ * single seam that flips the whole live render path to the static 207 channels.
+ */
 export async function fetchCuratorData(): Promise<CuratorData | null> {
-  // TTL check — re-fetch if data is stale
-  if (curatorData && Date.now() - curatorFetchedAt < CURATOR_TTL) return curatorData;
-  if (curatorPromise && Date.now() - curatorFetchedAt < CURATOR_TTL) return curatorPromise;
-  // Stale — clear and re-fetch
-  curatorData = null;
-  curatorPromise = null;
-
-  // Feature flag — check once per session, not every call
-  if (!curatorFlagChecked) {
-    curatorFlagChecked = true;
-    try {
-      const vRes = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store', signal: AbortSignal.timeout(2000) });
-      const vData = await vRes.json();
-      curatorFlagEnabled = !!vData.curator;
-    } catch { curatorFlagEnabled = true; }
-  }
-  if (!curatorFlagEnabled) return null;
-
+  if (curatorData) return curatorData;
   if (curatorPromise) return curatorPromise;
   curatorPromise = (async () => {
-    const t0 = Date.now();
-    try {
-      // Use prefetched parsed data from splash screen if available
-      let data: CuratorData;
-      const cached = consumePrefetchedCurator();
-      if (cached) {
-        data = cached as CuratorData;
-      } else {
-        // VPS proxy is primary (hourly rebuild), Vercel origin is fallback
-        let res = await fetch(`${PROXY}/curator.json`, { signal: AbortSignal.timeout(5000) });
-        if (!res.ok) res = await fetch(`${self.location?.origin || ''}/curator.json`, { signal: AbortSignal.timeout(5000) });
-        if (!res.ok) {
-          console.error('[CURATOR] Fetch failed: HTTP %d', res.status);
-          return null;
-        }
-        data = await res.json() as CuratorData;
-      }
-      if (!data.experiences || Object.keys(data.experiences).length === 0) {
-        console.error('[CURATOR] Empty data — no experiences returned');
-        return null;
-      }
-      curatorData = data;
-      curatorFetchedAt = Date.now();
-      seedGemSet(data);
-
-      // Validate experiences
-      const expCount = Object.keys(data.experiences).length;
-      let totalChannels = 0;
-      let nullExps: string[] = [];
-      let emptyExps: string[] = [];
-      for (const [expId, channels] of Object.entries(data.experiences)) {
-        if (channels === null) { nullExps.push(expId); continue; }
-        if (!Array.isArray(channels)) { console.warn('[CURATOR] Experience %s is not an array:', expId, typeof channels); continue; }
-        if (channels.length === 0) { emptyExps.push(expId); continue; }
-        totalChannels += channels.length;
-        // Validate first channel has required fields
-        const first = channels[0];
-        if (!first.id || !first.name) {
-          console.warn('[CURATOR] Experience %s has channels with missing id/name:', expId, first);
-        }
-      }
-      if (nullExps.length) console.warn('[CURATOR] NULL experiences:', nullExps.join(', '));
-      if (emptyExps.length) console.warn('[CURATOR] Empty experiences:', emptyExps.join(', '));
-
-      // Seed verified set
-      const allIds: number[] = [];
-      for (const channels of Object.values(data.experiences)) {
-        if (channels && Array.isArray(channels)) {
-          for (const ch of channels) allIds.push(ch.id);
-        }
-      }
-      // Merge with existing verifiedSet instead of overwriting
-      if (verifiedSet) {
-        for (const id of allIds) verifiedSet.add(id);
-      } else {
-        verifiedSet = new Set(allIds);
-      }
-
-      console.info('[CURATOR] %d experiences, %d channels, %dms', expCount, totalChannels, Date.now() - t0);
-      return data;
-    } catch (e) {
-      console.error('[CURATOR] Fetch error:', e);
-      return null;
+    await getCatalog(); // ensure /tivi-curated.json is loaded
+    const experiences: Record<string, CuratorChannel[]> = {};
+    let total = 0;
+    for (const expId of CURATOR_EXPERIENCE_IDS) {
+      const chs = catGetByExperience(expId); // tier-gated
+      experiences[expId] = chs.map(catalogToCuratorChannel);
+      total += experiences[expId].length;
     }
-    finally { /* keep curatorPromise for dedup across navigations */ }
+    curatorData = { ts: new Date().toISOString(), total, experiences };
+    curatorFetchedAt = Date.now();
+    seedGemSet(curatorData);
+    console.info('[CATALOG] curator built from static file — %d channels across %d experiences', total, CURATOR_EXPERIENCE_IDS.length);
+    return curatorData;
   })();
   return curatorPromise;
 }
@@ -1040,6 +943,15 @@ export function hasCuratorData(): boolean {
   return curatorData !== null;
 }
 
+/** STATIC: set of stream_ids in the World Cup featured collection. Honest signal
+ *  (from the catalog's `collection` field), not a name-regex guess. */
+export function isWorldCupStreamId(streamId: number): boolean {
+  const cat = getCatalogSync();
+  if (!cat) return false;
+  const ch = cat.byStreamId.get(streamId);
+  return ch?.collection === 'worldcup';
+}
+
 // --- VEE Data (AI-curated playlists, 3x daily) ---
 // VPS /vee.json — built by vee-engine.py, 30-min cache
 // Returns 7 homepage rows + VEE Hot + VEE Explore + 6 moods
@@ -1080,36 +992,10 @@ let veePromise: Promise<VeeData | null> | null = null;
 let veeFetchedAt = 0;
 const VEE_TTL = 15 * 60 * 1000; // 15min
 
+/** STATIC: VEE AI-curation layer unplugged — no /vee.json fetch. Pages that
+ *  consume VEE rows simply skip them (null), falling back to catalog rows. */
 export async function fetchVeeData(): Promise<VeeData | null> {
-  // TTL check — re-fetch if data is stale
-  if (veeData && Date.now() - veeFetchedAt < VEE_TTL) return veeData;
-  if (veePromise && Date.now() - veeFetchedAt < VEE_TTL) return veePromise;
-  // Stale — clear and re-fetch
-  veeData = null;
-  veePromise = null;
-  veePromise = (async () => {
-    try {
-      // Use prefetched parsed data from splash screen if available
-      let data: VeeData;
-      const cachedVee = consumePrefetchedVee();
-      if (cachedVee) {
-        data = cachedVee as VeeData;
-      } else {
-        const res = await fetch(`${PROXY}/vee.json`, { signal: AbortSignal.timeout(8000) });
-        if (!res.ok) return null;
-        data = await res.json() as VeeData;
-      }
-      if (!data.homepage?.length) return null;
-      veeData = data;
-      veeFetchedAt = Date.now();
-      console.debug('[VEE] Loaded — rows:%d slot:%s', data.homepage.length, data.time_slot);
-      return data;
-    } catch (e) {
-      console.warn('[VEE] Fetch failed:', e);
-      return null;
-    }
-  })();
-  return veePromise;
+  return null;
 }
 
 export function getVeeData(): VeeData | null { return veeData; }
@@ -1135,49 +1021,9 @@ let vpsHealthPromise: Promise<VpsHealthData> | null = null;
 let vpsHealthFetchedAt = 0;
 let vpsHealthData: VpsHealthData | null = null;
 
+/** STATIC: no VPS health scan — catalog channels are all live by definition. */
 export async function fetchVpsHealth(): Promise<VpsHealthData> {
-  // TTL check — re-fetch if data is stale (10min, matching VPS_HEALTH_TTL)
-  if (vpsHealthData && Date.now() - vpsHealthFetchedAt < VPS_HEALTH_TTL) return vpsHealthData;
-  if (vpsHealthPromise && Date.now() - vpsHealthFetchedAt < VPS_HEALTH_TTL) return vpsHealthPromise;
-  // Stale — clear and re-fetch
-  vpsHealthData = null;
-  vpsHealthPromise = null;
-
-  vpsHealthPromise = (async () => {
-    // Check localStorage cache first
-    try {
-      const cached = localStorage.getItem(VPS_HEALTH_KEY);
-      if (cached) {
-        const { data, ts } = JSON.parse(cached);
-        if (Date.now() - ts < VPS_HEALTH_TTL) {
-          vpsHealthData = data as VpsHealthData;
-          vpsHealthFetchedAt = Date.now();
-          return vpsHealthData;
-        }
-      }
-    } catch {}
-
-    try {
-      // Use prefetched data from preloader if available
-      const cached = consumePrefetchedChannels();
-      const data: VpsHealthData = cached
-        ? cached as VpsHealthData
-        : await fetch(`${PROXY}/channels.json`, { signal: AbortSignal.timeout(5000) }).then(r => { if (!r.ok) throw new Error('Health fetch failed'); return r.json(); });
-      vpsHealthData = data;
-      vpsHealthFetchedAt = Date.now();
-      try {
-        localStorage.setItem(VPS_HEALTH_KEY, JSON.stringify({ data, ts: Date.now() }));
-      } catch {}
-      return data;
-    } catch {
-      // Return empty — don't filter anything if health data unavailable
-      return { categories: {}, lastChecked: null, totalLive: 0, totalDead: 0 };
-    } finally {
-      /* keep promise for dedup across navigations */
-    }
-  })();
-
-  return vpsHealthPromise;
+  return { categories: {}, lastChecked: null, totalLive: 0, totalDead: 0, liveCategories: [], deadCategories: [] };
 }
 
 export function isCategoryDead(healthData: VpsHealthData, catId: string): boolean {
@@ -1276,23 +1122,14 @@ let freeChannelCache: FreeChannel[] | null = null;
 let freeChannelPromise: Promise<FreeChannel[]> | null = null;
 let freeChannelFetchedAt = 0;
 
+/** STATIC: the separate free-channels list is unplugged. Direct (free HLS)
+ *  channels now live inside the curated catalog, folded into their experience. */
 export function getFreeChannels(): Promise<FreeChannel[]> {
-  // TTL check — re-fetch if data is stale
-  if (freeChannelCache && Date.now() - freeChannelFetchedAt < CACHE_TTL) return Promise.resolve(freeChannelCache);
-  if (freeChannelPromise && Date.now() - freeChannelFetchedAt < CACHE_TTL) return freeChannelPromise;
-  // Stale — clear and re-fetch
-  freeChannelCache = null;
-  freeChannelPromise = null;
-
-  freeChannelPromise = fetch('/free-channels-curated.json')
-    .then(r => r.json())
-    .then((data: FreeChannel[]) => { freeChannelCache = data; freeChannelFetchedAt = Date.now(); return data; })
-    .catch(() => { freeChannelCache = []; freeChannelFetchedAt = Date.now(); return []; });
-  return freeChannelPromise;
+  return Promise.resolve([]);
 }
 
-export function getFreeChannelsByCulture(culture: string): Promise<FreeChannel[]> {
-  return getFreeChannels().then(all => all.filter(ch => ch.culture === culture));
+export function getFreeChannelsByCulture(_culture: string): Promise<FreeChannel[]> {
+  return Promise.resolve([]);
 }
 
 /** Convert a FreeChannel to LiveStream for unified rendering */
@@ -1316,9 +1153,11 @@ export function buildFreeUrlMap(channels: FreeChannel[]): Record<number, string>
   return map;
 }
 
-/** Check if a stream_id belongs to a free channel */
-export function isFreeChannel(streamId: number): boolean {
-  return streamId >= 900000;
+/** STATIC: there is no separate "free" layer anymore. Direct (free HLS) catalog
+ *  channels route through buildLiveUrl (which returns their raw url), so callers
+ *  must NOT short-circuit to the free url-map. Always return false. */
+export function isFreeChannel(_streamId: number): boolean {
+  return false;
 }
 
 // ═══════════════════════════════════════════════════════════════════

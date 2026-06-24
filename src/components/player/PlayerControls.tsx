@@ -12,6 +12,7 @@ import {
   Download,
   Waves,
   Zap,
+  Flag,
 } from 'lucide-react';
 import type { PlayerState } from '@/types';
 
@@ -237,7 +238,7 @@ export const PlayerControls: React.FC<Props> = ({
               className="w-11 h-11 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
               title="Report offline channel"
             >
-              <span className="text-base">🚨</span>
+              <Flag className="w-4 h-4" strokeWidth={1.8} />
             </button>
 
             {/* Flow pill — only for VPS-proxied paid channels */}

@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Play, Pause, X, Maximize2 } from 'lucide-react';
-import type { PlayerState } from '@/types';
+import type { Channel, PlayerState } from '@/types';
+import { useAdjacentChannels, setCurrentChannel } from '@/lib/playlist';
+import { useSwipeSurf } from '@/hooks/useSwipeSurf';
 
 interface Props {
   state: PlayerState;
@@ -8,6 +10,8 @@ interface Props {
   onTogglePlay: () => void;
   onClose: () => void;
   onExpand: () => void;
+  /** Swipe-surf in the mini card → play the adjacent channel (live only). */
+  onSurf?: (channel: Channel) => void;
   visible: boolean;
 }
 
@@ -26,16 +30,39 @@ export const MiniPlayer: React.FC<Props> = ({
   onTogglePlay,
   onClose,
   onExpand,
+  onSurf,
   visible,
 }) => {
-  if (!state.channel || !visible) return null;
-
-  const category = state.channel.category?.toLowerCase() ?? '';
+  const category = state.channel?.category?.toLowerCase() ?? '';
   const isVod = category === 'movie' || category === 'series';
+
+  // New-era remote inside the mini card — swipe to surf channels (live only).
+  // The card's buttons are <button>, so the hook ignores gestures that start
+  // on them; a horizontal swipe across the card body surfs.
+  const { prev: adjPrev, next: adjNext } = useAdjacentChannels();
+  const surf = useCallback((ch: Channel) => {
+    setCurrentChannel(ch.id);
+    onSurf?.(ch);
+  }, [onSurf]);
+  const surfHandlers = useSwipeSurf({
+    enabled: !isVod && !!onSurf,
+    onPrev: adjPrev ? () => surf(adjPrev) : undefined,
+    onNext: adjNext ? () => surf(adjNext) : undefined,
+    // Mini card is small — a shorter throw feels right.
+    threshold: 44,
+  });
+
+  if (!state.channel || !visible) return null;
 
   return (
     <div className="fixed bottom-20 lg:bottom-4 right-4 z-40 animate-slide-up">
-      <div className="glass-strong rounded-2xl shadow-2xl shadow-black/50 overflow-hidden w-72 sm:w-80 neon-primary">
+      <div
+        className="glass-strong rounded-2xl shadow-2xl shadow-black/50 overflow-hidden w-72 sm:w-80 neon-primary"
+        onPointerDown={surfHandlers.onPointerDown}
+        onPointerMove={surfHandlers.onPointerMove}
+        onPointerUp={surfHandlers.onPointerUp}
+        onPointerCancel={surfHandlers.onPointerCancel}
+      >
         <div className="flex items-center gap-3 p-3">
           {/* Thumbnail placeholder */}
           <div

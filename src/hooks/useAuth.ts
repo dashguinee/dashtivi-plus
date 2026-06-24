@@ -7,7 +7,9 @@ interface AuthState {
   credentials: XtreamCredentials | null;
   tier: string;
   code: string;
+  coreId: string;
   customerName: string;
+  expires: string;
   isLoading: boolean;
 }
 
@@ -17,12 +19,20 @@ const AUTH_KEY = 'tivi_auth';
 const SB_URL = `${(import.meta.env.VITE_SUPABASE_URL || 'https://mclbbkmpovnvcfmwsoqt.supabase.co').trim()}/rest/v1`;
 const SB_ANON = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
-// Stored auth no longer contains credentials — only the code, tier, expiry, name
+// Stored auth no longer contains xtream credentials — only the identifiers
+// needed to re-validate on reload.
+//  - method 'code' : legacy DASH-XXXX access code (lookup_access_code)
+//  - method 'pin'  : DASH ID + PIN (login_with_pin); persists the PIN so the
+//                    secret xtream creds can be re-fetched (never stored).
 interface StoredAuth {
-  code: string;
+  method?: 'code' | 'pin';
+  code: string;          // the access code (legacy) OR the DASH ID for pin method
+  pin?: string;          // pin method only — secret, re-validated on reload
+  coreId?: string;
   tier: string;
   expires: string;
   customerName: string;
+  guest?: boolean;       // pin method: valid id+pin but no active entitlement
 }
 
 interface SupabaseCodeRow {
@@ -79,6 +89,54 @@ async function lookupCode(code: string): Promise<LookupResult> {
   }
 }
 
+// ── login_with_pin RPC (DASH ID + PIN) ─────────────────────────────
+// Verified contract (jsonb):
+//   invalid id/pin  → { ok:false, reason:'invalid' }
+//   valid, no sub   → { ok:true, guest:true, core_id, name }
+//   active member   → { ok:true, guest:false, core_id, name, tier,
+//                       expires_at, username, password, max_streams }
+interface PinRpcResponse {
+  ok: boolean;
+  reason?: string;
+  guest?: boolean;
+  core_id?: string;
+  name?: string;
+  tier?: string;
+  expires_at?: string;
+  username?: string;
+  password?: string;
+  max_streams?: number;
+}
+
+type PinResult =
+  | { ok: true; data: PinRpcResponse }
+  | { ok: false; reason: 'invalid' | 'network' };
+
+async function lookupPin(id: string, pin: string): Promise<PinResult> {
+  try {
+    const res = await fetch(
+      `${SB_URL}/rpc/login_with_pin`,
+      {
+        method: 'POST',
+        headers: {
+          'apikey': SB_ANON,
+          'Authorization': `Bearer ${SB_ANON}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ p_id: id.trim().toUpperCase(), p_pin: pin.trim() }),
+      }
+    );
+    if (!res.ok) return { ok: false, reason: 'network' };
+    // RPC returns a single jsonb object (PostgREST may wrap scalar in array)
+    const body = await res.json();
+    const data = (Array.isArray(body) ? body[0] : body) as PinRpcResponse | null;
+    if (!data || data.ok !== true) return { ok: false, reason: 'invalid' };
+    return { ok: true, data };
+  } catch {
+    return { ok: false, reason: 'network' };
+  }
+}
+
 // Rate limit: track failed attempts
 const FAIL_KEY = 'tivi_login_fails';
 
@@ -111,7 +169,9 @@ const UNAUTHENTICATED: AuthState = {
   credentials: null,
   tier: '',
   code: '',
+  coreId: '',
   customerName: '',
+  expires: '',
   isLoading: false,
 };
 
@@ -130,6 +190,49 @@ export function useAuth() {
       return;
     }
 
+    // PIN method — re-validate DASH ID + PIN via login_with_pin so the
+    // secret xtream creds (never persisted) come back fresh. Guests have
+    // no creds but a valid id+pin → restore guest-authenticated state.
+    if (stored.method === 'pin' && stored.pin) {
+      const pinTimeout = new Promise<PinResult>((resolve) =>
+        setTimeout(() => resolve({ ok: false, reason: 'network' }), 6000)
+      );
+      Promise.race([lookupPin(stored.code, stored.pin), pinTimeout]).then((result) => {
+        if (result.ok) {
+          const d = result.data;
+          const isGuest = d.guest === true;
+          setState({
+            isAuthenticated: true,
+            credentials: isGuest ? null : { username: d.username || '', password: d.password || '' },
+            tier: isGuest ? 'guest' : (d.tier || ''),
+            code: stored.code,
+            coreId: d.core_id || stored.coreId || stored.code,
+            customerName: d.name || '',
+            expires: isGuest ? '' : (d.expires_at || ''),
+            isLoading: false,
+          });
+          setItem(AUTH_KEY, {
+            method: 'pin',
+            code: stored.code,
+            pin: stored.pin,
+            coreId: d.core_id || stored.code,
+            tier: isGuest ? 'guest' : (d.tier || ''),
+            expires: isGuest ? '' : (d.expires_at || ''),
+            customerName: d.name || '',
+            guest: isGuest,
+          } satisfies StoredAuth);
+        } else {
+          removeItem(AUTH_KEY);
+          setState({ ...UNAUTHENTICATED, isLoading: false });
+        }
+      }).catch(() => {
+        removeItem(AUTH_KEY);
+        setState({ ...UNAUTHENTICATED, isLoading: false });
+      });
+      return;
+    }
+
+    // Legacy access-code method (DASH-XXXX).
     // Race lookup against a 6s timeout — never hang on loading screen
     const timeout = new Promise<LookupResult>((resolve) =>
       setTimeout(() => resolve({ ok: false, reason: 'network' }), 6000)
@@ -141,12 +244,16 @@ export function useAuth() {
           credentials: { username: result.row.user_xtream, password: result.row.pass_xtream },
           tier: result.row.tier,
           code: stored.code,
+          coreId: stored.coreId || stored.code,
           customerName: result.row.customer_name || '',
+          expires: result.row.expires_at,
           isLoading: false,
         });
         // Refresh stored expiry in case it changed server-side
         setItem(AUTH_KEY, {
+          method: 'code',
           code: stored.code,
+          coreId: stored.coreId || stored.code,
           tier: result.row.tier,
           expires: result.row.expires_at,
           customerName: result.row.customer_name || '',
@@ -204,7 +311,9 @@ export function useAuth() {
 
     // #26 — Store only non-sensitive fields; credentials stay in memory only
     const stored: StoredAuth = {
+      method: 'code',
       code: upper,
+      coreId: upper,
       tier: result.row.tier,
       expires: result.row.expires_at,
       customerName: result.row.customer_name || '',
@@ -216,12 +325,72 @@ export function useAuth() {
       credentials: { username: result.row.user_xtream, password: result.row.pass_xtream },
       tier: result.row.tier,
       code: upper,
+      coreId: upper,
       customerName: result.row.customer_name || '',
+      expires: result.row.expires_at,
       isLoading: false,
     });
 
     return { success: true };
   }, []);
+
+  // ── loginWithPin — DASH ID + PIN (primary gate) ──────────────────
+  const loginWithPin = useCallback(
+    async (id: string, pin: string): Promise<{ success: boolean; guest?: boolean; error?: string }> => {
+      // Reuse the same brute-force backoff as the legacy path.
+      const delay = getLoginDelay();
+      if (delay > 0) {
+        return { success: false, error: `Too many attempts. Wait ${Math.ceil(delay / 1000)}s` };
+      }
+
+      const upperId = id.trim().toUpperCase();
+      const cleanPin = pin.trim();
+      if (!upperId || !cleanPin) {
+        return { success: false, error: 'Enter your DASH ID and PIN' };
+      }
+
+      const result = await lookupPin(upperId, cleanPin);
+
+      if (!result.ok) {
+        if (result.reason === 'network') {
+          return { success: false, error: 'Connection error — check your internet' };
+        }
+        recordFail();
+        return { success: false, error: 'Invalid DASH ID or PIN' };
+      }
+
+      clearFails();
+      const d = result.data;
+      const isGuest = d.guest === true;
+      const coreId = d.core_id || upperId;
+
+      const stored: StoredAuth = {
+        method: 'pin',
+        code: upperId,
+        pin: cleanPin,
+        coreId,
+        tier: isGuest ? 'guest' : (d.tier || ''),
+        expires: isGuest ? '' : (d.expires_at || ''),
+        customerName: d.name || '',
+        guest: isGuest,
+      };
+      setItem(AUTH_KEY, stored);
+
+      setState({
+        isAuthenticated: true,
+        credentials: isGuest ? null : { username: d.username || '', password: d.password || '' },
+        tier: isGuest ? 'guest' : (d.tier || ''),
+        code: upperId,
+        coreId,
+        customerName: d.name || '',
+        expires: isGuest ? '' : (d.expires_at || ''),
+        isLoading: false,
+      });
+
+      return { success: true, guest: isGuest };
+    },
+    []
+  );
 
   const logout = useCallback(() => {
     removeItem(AUTH_KEY);
@@ -242,8 +411,11 @@ export function useAuth() {
     credentials: state.credentials,
     tier: state.tier,
     code: state.code,
+    coreId: state.coreId,
     customerName: state.customerName,
+    expires: state.expires,
     login,
+    loginWithPin,
     logout,
   };
 }

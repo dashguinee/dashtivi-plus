@@ -78,7 +78,7 @@ export const VeeMoodOverlay: React.FC<VeeMoodOverlayProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-md animate-fade-in"
       onClick={onClose}
     >
       <div

@@ -2,7 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Home rows arrive — gentle staggered fade+rise instead of snapping in */
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Player "connecting" — breathing ring (reassures during buffering, the #1 SL pain) */
+@keyframes connect-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(157, 78, 221, 0.35); }
+  50%      { box-shadow: 0 0 0 12px rgba(157, 78, 221, 0); }
+}
+
 @layer base {
+  :root {
+    /* Display type — Wakanda-DASH: Clash Display on the big headers only (not body). */
+    --font-display: 'Clash Display', 'Space Grotesk', 'Outfit', system-ui, sans-serif;
+  }
+  /* Big display headers get the display face; body text stays clean/legible. */
+  h1, h2 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
   * {
     margin: 0;
     padding: 0;
@@ -440,10 +461,43 @@
   .badge-prime { background: #00A8E1; }
   .badge-hbo { background: #9D4EDD; }
   .badge-4k {
-    background: linear-gradient(135deg, #9D4EDD, #00D4FF);
+    background: linear-gradient(135deg, #9D4EDD, #00A896);
   }
   .badge-new { background: #FF006E; color: #FFFFFF; }
   .badge-popular { background: #FFD700; color: #0A0A0A; }
+
+  /* ═══ COLOR-LAW CONTENT TAGS ═══
+     GREEN = free only · GOLD #FFD700 = premium/pride/exclusive · SILVER = locked.
+     Calm, glassy pills — quiet luxury, never a shout. Shared utility so every
+     surface (PosterCard, rows, grids) marks free vs premium vs locked the same
+     way. Pair with the dot helpers below for the "alive" signal on free/live. */
+  .badge-free {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 7px; border-radius: 9999px;
+    font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #4ade80;
+    background: rgba(34, 197, 94, 0.14);
+    border: 1px solid rgba(34, 197, 94, 0.42);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
+  .badge-premium {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 7px; border-radius: 9999px;
+    font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #FFE9A6;
+    background: rgba(255, 215, 0, 0.13);
+    border: 1px solid rgba(255, 215, 0, 0.40);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
+  .badge-locked {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 7px; border-radius: 9999px;
+    font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+    color: rgba(226, 232, 240, 0.85);
+    background: rgba(203, 213, 225, 0.10);
+    border: 1px solid rgba(203, 213, 225, 0.30);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
 
   @keyframes pulse-badge {
     0%, 100% { opacity: 1; }
@@ -471,7 +525,7 @@
   /* ═══ FLOW PILL — border flash on quality change, fades to subtle ═══ */
   @keyframes flow-pill-flash {
     0% { border-color: rgba(157,78,221,0.6); background: rgba(157,78,221,0.08); }
-    30% { border-color: rgba(0,212,255,0.4); background: rgba(0,212,255,0.04); }
+    30% { border-color: rgba(157,78,221,0.4); background: rgba(157,78,221,0.05); }
     100% { background: rgba(255,255,255,0.03); }
   }
 
@@ -618,7 +672,8 @@
   /* ═══ OG TEXT EFFECTS ═══ */
   .text-gradient-cosmic {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #fff 0%, #9D4EDD 50%, #00F5FF 100%);
+    /* Color law: violet brand → seal-green luxury, never cliché AI-teal. */
+    background-image: linear-gradient(135deg, #fff 0%, #9D4EDD 50%, #00A896 100%);
     background-size: 200% 200%;
   }
 
@@ -643,7 +698,7 @@
   }
 
   .card-og-neon {
-    background: linear-gradient(135deg, #9D4EDD, #00F5FF);
+    background: linear-gradient(135deg, #9D4EDD, #00A896);
   }
 
   /* ═══ SCROLL FOCUS GLOW — sci-fi ambient halo on active viewport center ═══ */
@@ -1504,3 +1559,174 @@
 .aurora-beam-3 { animation: aurora-drift 20s cubic-bezier(0.37, 0, 0.63, 1) infinite; }
 .aurora-orb { animation: aurora-breathe 8s cubic-bezier(0.37, 0, 0.63, 1) infinite; }
 .aurora-shimmer { animation: aurora-shimmer 6s cubic-bezier(0.37, 0, 0.63, 1) infinite; }
+
+/* ════════════════════════════════════════════════════════════════
+   VOYO DaHub animations (ported from voyo-music for the /hub page).
+   Faithful to the Voyo design tokens. Used by DaHubPage + dahub/*.
+   ════════════════════════════════════════════════════════════════ */
+@keyframes voyo-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes voyo-slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes voyo-slide-in-bottom {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes voyo-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes voyo-pop-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes voyo-ambient-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+.animate-voyo-fade-in { animation: voyo-fade-in 0.3s ease-out forwards; }
+.animate-voyo-slide-in-right { animation: voyo-slide-in-right 0.35s cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+.animate-voyo-slide-in-bottom { animation: voyo-slide-in-bottom 0.4s cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+.animate-voyo-scale-in { animation: voyo-scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-voyo-pop-in { animation: voyo-pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+/* ════════════════════════════════════════════════════════════════
+   FREE-HLS SHOWCASE — the "alive gift" cards woven into the home feed
+   for free/guest members only. Neon-green glow + a calm "FREE" tag.
+   ONE live <video> across the whole home (FocusRegistry concurrency).
+   Signature ease everywhere: cubic-bezier(0.23, 1, 0.32, 1).
+   Reuses beam-sweep keyframe from PlatformShowcase.
+   ════════════════════════════════════════════════════════════════ */
+.freehls-card {
+  animation: freehls-merge 0.7s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+@keyframes freehls-merge {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* The neon-green "FREE" tag — a calm, glassy pill, not a shout. */
+.freehls-free-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.42);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.freehls-free-dot {
+  width: 5px; height: 5px; border-radius: 9999px;
+  background: #22c55e;
+  box-shadow: 0 0 7px rgba(34, 197, 94, 0.95);
+  animation: freehls-pulse 1.6s cubic-bezier(0.23, 1, 0.32, 1) infinite;
+}
+
+/* LIVE badge dot (when the focused card is on air). */
+.freehls-live-dot {
+  width: 6px; height: 6px; border-radius: 9999px;
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.95);
+  animation: freehls-pulse 1.6s cubic-bezier(0.23, 1, 0.32, 1) infinite;
+}
+@keyframes freehls-pulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* "warming up" dot on the focused card before paint. */
+.freehls-warm-dot {
+  width: 6px; height: 6px; border-radius: 9999px;
+  background: #22c55e;
+  animation: freehls-warm 1.3s cubic-bezier(0.23, 1, 0.32, 1) infinite;
+}
+@keyframes freehls-warm {
+  0%, 100% { opacity: 0.35; transform: scale(0.7); }
+  50%      { opacity: 1;    transform: scale(1.15); }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   SURFACE STACK — the no-page-break living place.
+   Surfaces RISE over the persistent world and RECEDE on pop. The world
+   underneath never unmounts; surfaces are kept mounted while stacked so
+   scroll + state are preserved. One organic heartbeat: cubic-bezier(0.23,1,0.32,1).
+   ───────────────────────────────────────────────────────────────────────── */
+.surface-stack-root {
+  position: fixed;
+  inset: 0;
+  z-index: 55; /* above routed <main> + the persistent full-player <video> (z-50) */
+  pointer-events: none; /* the root is inert; each layer re-enables itself */
+}
+.surface-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: auto;
+  /* The rise/recede is a translateY + opacity move, eased by the DNA heartbeat.
+     Transform creates a containing block so the layer's own fixed children
+     ride the rise instead of escaping to the viewport. */
+  will-change: transform, opacity;
+  transition:
+    transform 0.42s cubic-bezier(0.23, 1, 0.32, 1),
+    opacity 0.42s cubic-bezier(0.23, 1, 0.32, 1);
+}
+/* Rising: starts low + faint, before promotion to 'open'. */
+.surface-rising {
+  transform: translateY(7%);
+  opacity: 0;
+}
+/* Open: at rest, fully present. */
+.surface-open {
+  transform: translateY(0);
+  opacity: 1;
+}
+/* Receding: sinks back into the world, fading — then unmounts. */
+.surface-receding {
+  transform: translateY(7%);
+  opacity: 0;
+  pointer-events: none;
+}
+.surface-portal-mount {
+  position: absolute;
+  inset: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .surface-layer { transition-duration: 0.18s; }
+  .surface-rising, .surface-receding { transform: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   GLOBAL ENTRANCE KEYFRAMES — for INLINE style={{ animation: '...' }} use.
+   Tailwind's animate-* keyframes live scoped to their utilities and are NOT
+   visible to inline-style animation references; ContentDetailModal (and any
+   surface that rises as a continuation) uses inline `fade-in` / `slide-up`,
+   so they must exist in the global keyframe namespace. Without these the
+   detail modal popped in/out instantly — breaking CONTINUITY FIRST (it should
+   flow up). The DNA heartbeat ease is cubic-bezier(0.23,1,0.32,1); these are
+   the plain travel curves the modal passes its own easing to.
+   ───────────────────────────────────────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slide-up {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  @keyframes slide-up {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+}

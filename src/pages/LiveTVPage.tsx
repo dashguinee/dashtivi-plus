@@ -511,7 +511,7 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
             <LoadingSpinner size="lg" text={t(lang, 'searching')} />
           </div>
         ) : searchResults.length === 0 ? (
-          <EmptyState icon="tv" title={t(lang, 'noChannelsMatch')} subtitle="Try a different search" />
+          <EmptyState icon="tv" title={t(lang, 'noChannelsMatch')} subtitle="Try a different search" action={{ label: 'Clear search', onClick: () => { setSearchQuery(''); setSearchCategory(null); } }} />
         ) : (
           <SearchResultsWithFilter
             streams={searchResults}

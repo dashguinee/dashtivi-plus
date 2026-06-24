@@ -23,17 +23,20 @@ export default {
           deeper: '#2D1B4E',
           glow: 'rgba(157, 78, 221, 0.3)',
         },
+        /* Color law: seal-green luxury, NOT cliché AI-teal. The cyan/neon-blue
+           tokens are retuned to deep seal tones so any consumer inherits a
+           color-law-compliant value without renaming classes. */
         cyan: {
-          DEFAULT: '#00F5FF',
-          dark: '#00D9FF',
+          DEFAULT: '#00A896',
+          dark: '#006B5D',
         },
         accent: {
           DEFAULT: '#FF6B35',
           light: '#FF8F5E',
           gold: '#FFD700',
           red: '#FF006E',
-          green: '#06FFA5',
-          'neon-blue': '#00D4FF',
+          green: '#22C55E',
+          'neon-blue': '#006B5D',
         },
         success: '#9D4EDD',
         warning: '#FFB300',

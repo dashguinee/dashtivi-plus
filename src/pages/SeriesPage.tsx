@@ -138,6 +138,18 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // Detail + TMDB
   const [detailSeries, setDetailSeries] = useState<SeriesItem | null>(null);
   const [tmdbMap, setTmdbMap] = useState<Record<string, TmdbEntry>>({});
+  // Personalization seed: remember what you open (localStorage, per-device) → "For You" row.
+  const [recent, setRecent] = useState<SeriesItem[]>(() => {
+    try { return JSON.parse(localStorage.getItem('tivi_recent_series') || '[]'); } catch { return []; }
+  });
+  useEffect(() => {
+    if (!detailSeries) return;
+    setRecent(prev => {
+      const next = [detailSeries, ...prev.filter(s => s.series_id !== detailSeries.series_id)].slice(0, 14);
+      try { localStorage.setItem('tivi_recent_series', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, [detailSeries]);
 
   // Series episode picker modal
   const [selectedSeries, setSelectedSeries] = useState<SeriesItem | null>(null);
@@ -643,6 +655,25 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         )}
       </div>
 
+      {/* ── For You — personalized from what you've opened (localStorage) ── */}
+      {!isSearching && !loading && recent.length > 0 && (
+        <section className="px-4 pt-6 pb-3">
+          <h2 className="text-[19px] font-black text-white/90 mb-3 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#9D4EDD', boxShadow: '0 0 6px #9D4EDD' }} />
+            For You
+            <RowCountBadge count={recent.length} label="series" />
+          </h2>
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 items-end">
+            {recent.map((s) => (
+              <div key={s.series_id} className="flex-shrink-0 w-[140px]">
+                <PosterCard title={s.name} poster={s.cover} rating={s.rating}
+                  tmdbData={tmdbMap[`s:${s.series_id}`]} onClick={() => setDetailSeries(s)} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ── Trending row ── */}
       {!isSearching && !loading && activeGenre === 0 && trendingSeries.length >= 5 && (
         <section className="px-4 pt-6 pb-3 row-tier-hero reveal">
@@ -744,7 +775,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         </div>
       ) : filteredAndSorted.length === 0 ? (
         isSearching || activeGenre !== 0 ? (
-          <EmptyState icon="tv" title={isSearching ? t(lang, 'noSeriesMatch') : t(lang, 'noSeriesGenre')} subtitle="Try a different search or genre" />
+          <EmptyState icon="tv" title={isSearching ? t(lang, 'noSeriesMatch') : t(lang, 'noSeriesGenre')} subtitle="Try a different search or genre" action={{ label: isSearching ? 'Clear search' : 'Show all genres', onClick: () => { setSearchQuery(''); setActiveGenre(0); } }} />
         ) : (
           <div className="flex flex-col items-center justify-center py-24 text-text-muted text-sm gap-2">
             {t(lang, 'noSeriesInCategory')}
@@ -819,7 +850,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
       {/* ── Series Episode Picker Modal ── */}
       {selectedSeries && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center" onClick={() => closeEpisodeModal()}>
+        <div className="fixed inset-0 z-50 bg-black/35 backdrop-blur-sm flex items-end sm:items-center justify-center" onClick={() => closeEpisodeModal()}>
           <div className="w-full max-w-lg max-h-[85vh] bg-[#141414] rounded-t-2xl sm:rounded-2xl overflow-hidden animate-slide-up border border-white/10" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="relative h-48 overflow-hidden">

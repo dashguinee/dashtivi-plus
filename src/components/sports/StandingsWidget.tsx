@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Trophy } from 'lucide-react';
 import type { Standing } from '@/services/sports-data';
 
 interface Props {
@@ -32,7 +33,7 @@ function StandingsWidgetInner({ standings, leagueName, isLoading }: Props) {
     <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3">
       {/* Header */}
       <div className="flex items-center gap-1.5 mb-2">
-        <span className="text-[13px]">🏆</span>
+        <Trophy className="w-3.5 h-3.5 text-amber-400/80" strokeWidth={2} />
         <span className="text-[14px] font-bold text-white/70">{leagueName}</span>
       </div>
 
