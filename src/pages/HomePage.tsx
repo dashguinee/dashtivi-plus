@@ -209,7 +209,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const heroChannel = worldcup[0] || null;
 
   return (
-    <div className="pt-12 pb-48">
+    <div className="pt-12 pb-12">
       {/* ════════════════════════════════════════════════════════════════
           THE MAGIC HELLO — one good thing auto-plays at the very top, for
           EVERYONE (free + premium). The FreeHlsShowcaseCard focus engine
@@ -379,14 +379,14 @@ function GiraLoopSentinel() {
   return (
     <div ref={ref} className="flex flex-col items-center justify-center gap-2 pt-16 pb-24 select-none">
       <div className="flex items-center gap-1.5">
-        <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(255,215,0,0.55)', animation: 'gira-pulse 1.4s ease-in-out infinite' }} />
-        <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(255,215,0,0.55)', animation: 'gira-pulse 1.4s ease-in-out 0.2s infinite' }} />
-        <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(255,215,0,0.55)', animation: 'gira-pulse 1.4s ease-in-out 0.4s infinite' }} />
+        <span className="w-1 h-1 rounded-full" style={{ background: 'rgba(255,215,0,0.5)', animation: 'gira-pulse 1.4s ease-in-out infinite' }} />
+        <span className="w-1 h-1 rounded-full" style={{ background: 'rgba(255,215,0,0.5)', animation: 'gira-pulse 1.4s ease-in-out 0.2s infinite' }} />
+        <span className="w-1 h-1 rounded-full" style={{ background: 'rgba(255,215,0,0.5)', animation: 'gira-pulse 1.4s ease-in-out 0.4s infinite' }} />
       </div>
       <p className="text-[11.5px] tracking-wide text-white/45 font-medium">
         {lang === 'fr' ? 'On recommence en haut…' : 'Looping back to the top…'}
       </p>
-      <style>{`@keyframes gira-pulse { 0%,100% { opacity:0.3; transform:scale(0.6) } 50% { opacity:1; transform:scale(1.4) } }`}</style>
+      <style>{`@keyframes gira-pulse { 0%,100% { opacity:0.25; transform:scale(0.8) } 50% { opacity:1; transform:scale(1.2) } }`}</style>
     </div>
   );
 }
@@ -519,8 +519,8 @@ const ExperienceRow = React.memo(function ExperienceRow({
   // Small experiences (e.g. Movies = 3) render honestly — bigger cards, no
   // "See all", no padding to fake a fuller row.
   const isSmall = channels.length <= 4;
-  const cardW = isSmall ? 146 : 130;
-  const cardH = isSmall ? 104 : 96;
+  const cardW = isSmall ? 158 : 130;
+  const cardH = isSmall ? 112 : 96;
 
   return (
     <section className="mb-9" style={{ animation: 'row-in 0.55s cubic-bezier(0.16,1,0.3,1) both', animationDelay: `${Math.min(index, 9) * 65}ms` }}>
