@@ -37,8 +37,9 @@ export interface HeroSlide {
 
 const MAX_SLIDES = 10;
 // Past this fraction of slide width (or a quick flick), commit to next/prev.
-const COMMIT_FRACTION = 0.25;
-const FLICK_VELOCITY = 0.45; // px/ms
+// Tactile-glass: a modest push commits — the pane goes where you shove it.
+const COMMIT_FRACTION = 0.18;
+const FLICK_VELOCITY = 0.32; // px/ms — a light flick advances
 
 // A few fairy-dust motes trailing the brush stroke — hand-placed so they read
 // as following the diagonal sweep (top-left → bottom-right), not random noise.
@@ -52,7 +53,17 @@ const SPARKLES: { left: string; top: string; size: number; delay: number }[] = [
   { left: '85%', top: '56%', size: 3, delay: 0.54 },
 ];
 
-export function HeroDeck({ slides, lang }: { slides: HeroSlide[]; lang: Lang }) {
+export function HeroDeck({
+  slides,
+  lang,
+  onActiveChange,
+}: {
+  slides: HeroSlide[];
+  lang: Lang;
+  /** Fires with the active slide index whenever the deck settles (and on mount).
+   *  Lets the page DRIVE a top hero from the carousel's current category. */
+  onActiveChange?: (index: number) => void;
+}) {
   // Cap + skip empties (defensive — callers should already skip, but enforce).
   const deck = useMemo(
     () => slides.filter((s) => s.channels.length > 0).slice(0, MAX_SLIDES),
@@ -111,7 +122,7 @@ export function HeroDeck({ slides, lang }: { slides: HeroSlide[]; lang: Lang }) 
 
     // Decide intent once: horizontal drag grabs; vertical lets the page scroll.
     if (!grabbed.current) {
-      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
       if (Math.abs(dy) > Math.abs(dx)) {
         // Vertical — release to the page scroll, abandon this gesture.
         dragging.current = false;
@@ -158,6 +169,14 @@ export function HeroDeck({ slides, lang }: { slides: HeroSlide[]; lang: Lang }) 
     }
   }, [dragOffset, index, clampIdx, settleTo]);
 
+  // Report the active category to the page so it can drive the top hero.
+  // Fires on mount (index 0) and on every settle / dot-jump (index change).
+  const onActiveChangeRef = useRef(onActiveChange);
+  onActiveChangeRef.current = onActiveChange;
+  useEffect(() => {
+    onActiveChangeRef.current?.(index);
+  }, [index]);
+
   // Measure slide width (the track width = one slide).
   useEffect(() => {
     const measure = () => {
@@ -174,6 +193,19 @@ export function HeroDeck({ slides, lang }: { slides: HeroSlide[]; lang: Lang }) 
   const baseTranslate = w > 0 ? -(index * w) : 0;
   const translate = baseTranslate + (grabbed.current ? dragOffset : 0);
 
+  // ── Fairy / water TRAIL that follows the DRAG (Task C) ──────────────
+  // A soft accent glow streak + a few drifting motes that ride the live
+  // dragOffset, then dissolve as the slide settles into the paintbrush reveal.
+  // GPU-cheap: only transforms/opacity, accent-driven, no per-frame JS beyond
+  // the dragOffset we already track.
+  const activeAccent = deck[index]?.accent || '#22C55E';
+  const activeAccentRgb = hexToRgb(activeAccent);
+  const dragActive = grabbed.current && Math.abs(dragOffset) > 4;
+  // Normalize drag progress (0→1) for trail intensity; cap so it never blooms out.
+  const dragMag = w > 0 ? Math.min(1, Math.abs(dragOffset) / (w * 0.6)) : 0;
+  // Lag the trail a touch behind the finger so it reads as a wake, not a cursor.
+  const trailX = dragOffset * 0.82;
+
   return (
     <section className="px-4 select-none">
       <div
@@ -189,14 +221,18 @@ export function HeroDeck({ slides, lang }: { slides: HeroSlide[]; lang: Lang }) 
           className="flex"
           style={{
             transform: `translate3d(${translate}px,0,0)`,
-            transition: snapping ? 'transform 0.42s cubic-bezier(0.22,1,0.36,1)' : 'none',
+            // Tactile-glass snap: quick + decisive with a touch of weight (slight
+            // overshoot = the pane "docking" into place, not drifting in).
+            transition: snapping ? 'transform 0.36s cubic-bezier(0.34,1.26,0.4,1)' : 'none',
             willChange: 'transform',
           }}
           onTransitionEnd={() => setSnapping(false)}
         >
           {deck.map((s, i) => {
             const active = i === index;
-            const near = Math.abs(i - index) <= 1; // active ± 1 mount heavy content
+            // EVERY slide mounts the real CategoryHero — these are light cards
+            // (icon + gradient, no video), so there's no win in placeholders and
+            // a real card is ready the instant you swipe to it (no pop-in).
             return (
               <div
                 key={s.key}
@@ -204,99 +240,126 @@ export function HeroDeck({ slides, lang }: { slides: HeroSlide[]; lang: Lang }) 
                 style={{ width: '100%' }}
                 aria-hidden={!active}
               >
-                {near ? (
-                  <div
-                    className="relative"
-                    style={
-                      active
-                        ? {
-                            // Fairy paintbrush — the hero is "painted in" by a
-                            // diagonal neon clip-path wipe (the stroke), accent
-                            // driven via --accent, then it calms. No per-frame JS.
-                            ['--accent' as string]: s.accent,
-                            animation: `hero-deck-paint 0.72s cubic-bezier(0.22,1,0.36,1) both`,
-                            clipPath: 'inset(0 0 0 0)',
-                          }
-                        : undefined
-                    }
-                    // Re-key the active slide on each settle so the entrance replays.
-                    key={active ? `${s.key}-${settleNonce}` : s.key}
-                  >
-                    {active && (
-                      <>
-                        {/* The glowing neon BRUSH HEAD — an accent-tinted stroke
-                            of light that sweeps diagonally across, painting the
-                            frame in as it passes. */}
+                <div
+                  className="relative"
+                  style={
+                    active
+                      ? {
+                          // Fairy paintbrush — the hero is "painted in" by a
+                          // diagonal neon clip-path wipe (the stroke), accent
+                          // driven via --accent, then it calms. No per-frame JS.
+                          ['--accent' as string]: s.accent,
+                          animation: `hero-deck-paint 0.72s cubic-bezier(0.22,1,0.36,1) both`,
+                          clipPath: 'inset(0 0 0 0)',
+                        }
+                      : undefined
+                  }
+                  // Re-key the active slide on each settle so the entrance replays.
+                  key={active ? `${s.key}-${settleNonce}` : s.key}
+                >
+                  {active && (
+                    <>
+                      {/* The glowing neon BRUSH HEAD — an accent-tinted stroke
+                          of light that sweeps diagonally across, painting the
+                          frame in as it passes. */}
+                      <div
+                        className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl"
+                        style={{ zIndex: 6 }}
+                        key={`brush-${settleNonce}`}
+                      >
                         <div
-                          className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl"
-                          style={{ zIndex: 6 }}
-                          key={`brush-${settleNonce}`}
-                        >
-                          <div
-                            className="absolute top-0 bottom-0"
+                          className="absolute top-0 bottom-0"
+                          style={{
+                            width: '46%',
+                            left: '-50%',
+                            background:
+                              `linear-gradient(105deg, transparent 0%, ${s.accent}00 30%, ${s.accent}aa 48%, #ffffffcc 50%, ${s.accent}aa 52%, ${s.accent}00 70%, transparent 100%)`,
+                            filter: 'blur(2px)',
+                            mixBlendMode: 'screen',
+                            animation: 'hero-deck-brush 0.72s cubic-bezier(0.5,0,0.2,1) both',
+                          }}
+                        />
+                      </div>
+
+                      {/* Fairy-dust SPARKLES — a few accent motes trailing the
+                          stroke, then they twinkle out. Pure transform/opacity. */}
+                      <div
+                        className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl"
+                        style={{ zIndex: 7 }}
+                        key={`spark-${settleNonce}`}
+                      >
+                        {SPARKLES.map((sp, si) => (
+                          <span
+                            key={si}
+                            className="absolute rounded-full"
                             style={{
-                              width: '46%',
-                              left: '-50%',
-                              background:
-                                `linear-gradient(105deg, transparent 0%, ${s.accent}00 30%, ${s.accent}aa 48%, #ffffffcc 50%, ${s.accent}aa 52%, ${s.accent}00 70%, transparent 100%)`,
-                              filter: 'blur(2px)',
-                              mixBlendMode: 'screen',
-                              animation: 'hero-deck-brush 0.72s cubic-bezier(0.5,0,0.2,1) both',
+                              left: sp.left,
+                              top: sp.top,
+                              width: sp.size,
+                              height: sp.size,
+                              background: s.accent,
+                              boxShadow: `0 0 6px ${s.accent}, 0 0 12px ${s.accent}`,
+                              opacity: 0,
+                              animation: `hero-deck-sparkle 0.9s ease-out ${sp.delay}s both`,
                             }}
                           />
-                        </div>
-
-                        {/* Fairy-dust SPARKLES — a few accent motes trailing the
-                            stroke, then they twinkle out. Pure transform/opacity. */}
-                        <div
-                          className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl"
-                          style={{ zIndex: 7 }}
-                          key={`spark-${settleNonce}`}
-                        >
-                          {SPARKLES.map((sp, si) => (
-                            <span
-                              key={si}
-                              className="absolute rounded-full"
-                              style={{
-                                left: sp.left,
-                                top: sp.top,
-                                width: sp.size,
-                                height: sp.size,
-                                background: s.accent,
-                                boxShadow: `0 0 6px ${s.accent}, 0 0 12px ${s.accent}`,
-                                opacity: 0,
-                                animation: `hero-deck-sparkle 0.9s ease-out ${sp.delay}s both`,
-                              }}
-                            />
-                          ))}
-                        </div>
-                      </>
-                    )}
-                    <CategoryHero
-                      title={s.title}
-                      accent={s.accent}
-                      channels={s.channels}
-                      lang={lang}
-                      onPlay={s.onPlay}
-                      onSeeAll={s.onSeeAll}
-                    />
-                  </div>
-                ) : (
-                  // Light placeholder for far slides — keeps layout, no heavy mount.
-                  <div
-                    className="rounded-2xl"
-                    style={{
-                      height: '22vh',
-                      minHeight: 158,
-                      maxHeight: 190,
-                      background: `linear-gradient(160deg, rgba(${hexToRgb(s.accent)},0.06), rgba(8,10,14,0.9))`,
-                      border: `1px solid rgba(${hexToRgb(s.accent)},0.12)`,
-                    }}
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  <CategoryHero
+                    title={s.title}
+                    accent={s.accent}
+                    channels={s.channels}
+                    lang={lang}
+                    onPlay={s.onPlay}
+                    onSeeAll={s.onSeeAll}
                   />
-                )}
+                </div>
               </div>
             );
           })}
+        </div>
+
+        {/* ── DRAG TRAIL — a neon/water "fairy wake" following the swipe. Lives
+            above the track (NOT translated by it) so it tracks the finger in
+            viewport space. Opacity rides drag magnitude; dissolves on settle. */}
+        <div
+          className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden"
+          style={{ zIndex: 8, opacity: dragActive ? 1 : 0, transition: 'opacity 0.32s ease-out' }}
+          aria-hidden
+        >
+          {/* Soft glow streak — a vertical accent band centered on the drag,
+              lagging slightly so it reads as a wake. */}
+          <div
+            className="absolute top-0 bottom-0 left-1/2"
+            style={{
+              width: '58%',
+              transform: `translate3d(calc(-50% + ${trailX}px), 0, 0)`,
+              background: `linear-gradient(90deg, transparent 0%, rgba(${activeAccentRgb},${0.05 + dragMag * 0.16}) 38%, rgba(${activeAccentRgb},${0.10 + dragMag * 0.28}) 50%, rgba(${activeAccentRgb},${0.05 + dragMag * 0.16}) 62%, transparent 100%)`,
+              filter: 'blur(10px)',
+              mixBlendMode: 'screen',
+            }}
+          />
+          {/* Drifting sparkle motes — ride the wake, drift opposite the drag so
+              they trail behind the finger. Pure transform/opacity. */}
+          {SPARKLES.map((sp, si) => (
+            <span
+              key={`trail-${si}`}
+              className="absolute rounded-full"
+              style={{
+                left: sp.left,
+                top: sp.top,
+                width: sp.size,
+                height: sp.size,
+                background: activeAccent,
+                boxShadow: `0 0 6px ${activeAccent}, 0 0 12px ${activeAccent}`,
+                opacity: dragActive ? 0.35 + dragMag * 0.6 : 0,
+                transform: `translate3d(${trailX - dragOffset * sp.delay * 1.4}px, 0, 0)`,
+                transition: 'opacity 0.25s ease-out',
+              }}
+            />
+          ))}
         </div>
       </div>
 

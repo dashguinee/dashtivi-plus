@@ -20,6 +20,16 @@ import { useSwipeSurf } from '@/hooks/useSwipeSurf';
 
 const EASE = 'cubic-bezier(0.23, 1, 0.32, 1)'; // DASH / Giraf signature
 const GREEN = '#22C55E';
+// Cinema / Hollywood free gems wear a 21st-century GOLD instead of the
+// universal green — "Made in Hollywood" et al read as movie magic, not sports.
+const GOLD = '#FFC927';
+
+/** Derive a card's signature accent. Cinema/movie gems → gold; rest → green. */
+function accentFor(ch: { name: string; district?: string }): string {
+  if (/hollywood|movie|cinema|cinéma|film/i.test(ch.name)) return GOLD;
+  if (ch.district && /movie|cinema|cinéma|film/i.test(ch.district)) return GOLD;
+  return GREEN;
+}
 
 export interface FreeHlsChannel {
   id: string;
@@ -188,6 +198,15 @@ export function FreeHlsShowcaseCard({
 
   const showLogo = !logoFailed && !!channel.logo;
 
+  // Signature accent — gold for cinema gems, green otherwise. Drives the glow,
+  // the wash, the seam, and (via CSS vars) the FREE pill + LIVE/warm dots.
+  const accent = accentFor(channel);
+  const accentRgb = ((hex: string) => {
+    const h = hex.replace('#', '');
+    const n = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+    return `${parseInt(n.slice(0, 2), 16)}, ${parseInt(n.slice(2, 4), 16)}, ${parseInt(n.slice(4, 6), 16)}`;
+  })(accent);
+
   return (
     <div className="px-4">
       <div
@@ -199,22 +218,24 @@ export function FreeHlsShowcaseCard({
         onPointerUp={surfHandlers.onPointerUp}
         onPointerCancel={surfHandlers.onPointerCancel}
         style={{
+          ['--freehls-accent' as string]: accent,
+          ['--freehls-accent-rgb' as string]: accentRgb,
           boxShadow: focused
-            ? `0 12px 44px ${GREEN}33, 0 0 0 1px ${GREEN}66`
-            : `0 5px 22px ${GREEN}1f, 0 0 0 1px ${GREEN}2e`,
+            ? `0 12px 44px ${accent}33, 0 0 0 1px ${accent}66`
+            : `0 5px 22px ${accent}1f, 0 0 0 1px ${accent}2e`,
           transition: `transform 0.6s ${EASE}, box-shadow 0.6s ${EASE}, opacity 0.6s ${EASE}`,
           transform: focused ? 'scale(1)' : 'scale(0.975)',
           opacity: focused ? 1 : 0.9,
         }}
       >
-        {/* neon-green wash */}
-        <div className="absolute inset-0" style={{ background: `linear-gradient(155deg, ${GREEN}2e 0%, ${GREEN}14 38%, rgba(6,12,8,0.97) 78%)` }} />
-        {/* sweeping green seam (only when on air) */}
+        {/* accent wash (gold for cinema, green otherwise) */}
+        <div className="absolute inset-0" style={{ background: `linear-gradient(155deg, ${accent}2e 0%, ${accent}14 38%, rgba(6,12,8,0.97) 78%)` }} />
+        {/* sweeping accent seam (only when on air) */}
         <div
           className="absolute inset-0 rounded-2xl pointer-events-none"
           style={{
             padding: '1px',
-            background: `linear-gradient(90deg, transparent 0%, ${GREEN}26 30%, ${GREEN}77 50%, ${GREEN}26 70%, transparent 100%)`,
+            background: `linear-gradient(90deg, transparent 0%, ${accent}26 30%, ${accent}77 50%, ${accent}26 70%, transparent 100%)`,
             backgroundSize: '200% 100%',
             animation: focused ? 'beam-sweep 4s ease-in-out infinite alternate' : 'none',
             WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
