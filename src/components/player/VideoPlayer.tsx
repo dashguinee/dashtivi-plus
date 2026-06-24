@@ -2,9 +2,15 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { PlayerControls } from './PlayerControls';
 import { RefreshCw, AlertTriangle, ChevronLeft as ChevLeft, ChevronRight as ChevRight, SkipForward, SkipBack, Tv } from 'lucide-react';
-import { useAdjacentChannels, usePlaylistState, setCurrentChannel } from '@/lib/playlist';
+import { useAdjacentChannels, usePlaylistState, setCurrentChannel, setPlaylist } from '@/lib/playlist';
 import { useKeyboard } from '@/hooks/useKeyboard';
 import { useSwipeSurf } from '@/hooks/useSwipeSurf';
+import {
+  experienceForChannelId,
+  adjacentCategory,
+  accentForExperience,
+} from '@/lib/catalog';
+import { tap } from '@/lib/haptics';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { SmartMatch } from './SmartMatch';
 import { EpgWidget } from './EpgWidget';
@@ -34,6 +40,28 @@ interface Props {
   onBack?: () => void;
   onSeek?: (time: number) => void;
   onGenreSwitch?: (themeId: string) => void;
+  /** Credentials — needed to build the playlist when surfing to a new category. */
+  credentials?: { username: string; password: string } | null;
+}
+
+// ── Connecting-card throttle ──────────────────────────────────────────────
+// Show the logo + channel-name "connecting" block only the FIRST few times per
+// session (weak-network reassurance is most valuable early). After that the
+// thin top beam alone signals the switch — no full card. Module-level so it
+// survives player remounts within a session, resets on full reload.
+const CONNECT_CARD_MAX = 3;
+let _connectCardSeen = 0;
+const _connectCardChannels = new Set<string>();
+/** Returns true if the full connecting card should render for this channel. */
+function shouldShowConnectCard(channelId: string | null | undefined): boolean {
+  if (!channelId) return false;
+  // Count each distinct channel once — re-buffering the same channel doesn't
+  // burn a slot, and a quick A→B→A surf doesn't either.
+  if (_connectCardChannels.has(channelId)) return _connectCardSeen <= CONNECT_CARD_MAX;
+  if (_connectCardSeen >= CONNECT_CARD_MAX) return false;
+  _connectCardSeen += 1;
+  _connectCardChannels.add(channelId);
+  return true;
 }
 
 export const VideoPlayer: React.FC<Props> = ({
@@ -51,6 +79,7 @@ export const VideoPlayer: React.FC<Props> = ({
   onBack,
   onSeek,
   onGenreSwitch,
+  credentials,
 }) => {
   const [controlsVisible, setControlsVisible] = useState(true);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -75,10 +104,41 @@ export const VideoPlayer: React.FC<Props> = ({
   const handleSurfNext = useCallback(() => {
     if (adjNext) { setCurrentChannel(adjNext.id); onRetry(adjNext); }
   }, [adjNext, onRetry]);
+  // ── Vertical surf = CATEGORY switch. Derive the current category from the
+  //    playing channel's experience (via the catalog), jump to the adjacent
+  //    category's channels as the new playlist, play its first channel, and
+  //    bloom a brief full-screen accent overlay. Live only. ──
+  const [catOverlay, setCatOverlay] = useState<{ name: string; accent: string; key: number } | null>(null);
+  const catOverlayTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const credsRef = useRef(credentials);
+  useEffect(() => { credsRef.current = credentials; }, [credentials]);
+
+  const surfCategory = useCallback((dir: 1 | -1) => {
+    const currentExp = experienceForChannelId(state.channel?.id);
+    const adj = adjacentCategory(currentExp, dir, credsRef.current ?? null);
+    if (!adj || adj.channels.length === 0) return; // not a catalog channel / no ring — do nothing
+    tap();
+    setPlaylist(adj.channels);
+    const first = adj.channels[0];
+    setCurrentChannel(first.id);
+    onRetry(first as unknown as Channel);
+    // Bloom the accent overlay — blooms, holds, fades into the new channel.
+    if (catOverlayTimerRef.current) clearTimeout(catOverlayTimerRef.current);
+    setCatOverlay({ name: adj.name, accent: accentForExperience(adj.name), key: Date.now() });
+    catOverlayTimerRef.current = setTimeout(() => setCatOverlay(null), 1100);
+  }, [state.channel?.id, onRetry]);
+
+  const handleSurfUp = useCallback(() => surfCategory(-1), [surfCategory]);   // swipe DOWN → prev category
+  const handleSurfDown = useCallback(() => surfCategory(1), [surfCategory]);  // swipe UP   → next category
+
+  useEffect(() => () => { if (catOverlayTimerRef.current) clearTimeout(catOverlayTimerRef.current); }, []);
+
   const surfHandlers = useSwipeSurf({
     enabled: !isVod,
     onPrev: handleSurfPrev,
     onNext: handleSurfNext,
+    onUp: handleSurfUp,
+    onDown: handleSurfDown,
     onDrag: setSurfDragX,
   });
 
@@ -271,6 +331,24 @@ export const VideoPlayer: React.FC<Props> = ({
   const isPlayingRef = useRef(state.isPlaying);
   useEffect(() => { isPlayingRef.current = state.isPlaying; }, [state.isPlaying]);
 
+  // Connecting-card throttle — decide once per (channel, loading-start) whether
+  // the full logo+name block shows. After the first few channels this session,
+  // only the thin top beam remains. Computed in an effect so the render stays
+  // a pure read (no side effect during render).
+  const [showConnectCard, setShowConnectCard] = useState(false);
+  const connectDecidedForRef = useRef<string | null>(null);
+  useEffect(() => {
+    const id = state.channel?.id ?? null;
+    if (state.isLoading && id) {
+      if (connectDecidedForRef.current !== id) {
+        connectDecidedForRef.current = id;
+        setShowConnectCard(shouldShowConnectCard(id));
+      }
+    } else if (!state.isLoading) {
+      connectDecidedForRef.current = null;
+    }
+  }, [state.isLoading, state.channel?.id]);
+
   const showControls = useCallback(() => {
     if (switchCooldownRef.current) return; // During live switch cooldown, don't flash controls
     setControlsVisible(true);
@@ -453,6 +531,42 @@ export const VideoPlayer: React.FC<Props> = ({
         </div>
       )}
 
+      {/* Category-surf bloom — vertical swipe switched category. A wash in the
+          category accent + the NAME centered with a pulse. Blooms, holds ~0.6s,
+          fades into the new channel. pointer-events-none — never blocks tap /
+          controls / close / playback. */}
+      {catOverlay && (
+        <div
+          key={catOverlay.key}
+          className="absolute inset-0 z-[48] flex items-center justify-center pointer-events-none"
+          style={{ animation: 'cat-bloom 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
+        >
+          {/* Accent wash */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `radial-gradient(circle at 50% 50%, ${catOverlay.accent}38 0%, ${catOverlay.accent}1a 40%, transparent 72%)`,
+            }}
+          />
+          {/* Pulse ring + name */}
+          <div className="relative flex flex-col items-center gap-3">
+            <div
+              className="absolute -inset-10 rounded-full"
+              style={{ boxShadow: `0 0 0 0 ${catOverlay.accent}59`, animation: 'connect-pulse 1.1s ease-out' }}
+            />
+            <span
+              className="relative text-4xl sm:text-5xl font-black uppercase tracking-tight select-none"
+              style={{
+                color: '#fff',
+                textShadow: `0 0 28px ${catOverlay.accent}cc, 0 0 60px ${catOverlay.accent}66`,
+              }}
+            >
+              {catOverlay.name}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Cinema intro — VOD only, runs independently of loading state */}
       {showCinemaIntro && (
         <>
@@ -519,27 +633,31 @@ export const VideoPlayer: React.FC<Props> = ({
               }}
             />
           </div>
-          {/* Calm premium "connecting" — reassures on weak networks (buffering = the #1 SL pain) */}
-          <div className="relative z-50 flex flex-col items-center gap-3.5">
-            <div className="relative w-16 h-16">
-              <div className="absolute inset-0 rounded-2xl" style={{ animation: 'connect-pulse 1.7s ease-in-out infinite' }} />
-              <div className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center"
-                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(157,78,221,0.32)' }}>
-                {state.channel?.logo
-                  ? <img src={state.channel.logo} alt="" className="w-full h-full object-contain p-1.5" />
-                  : <Tv className="w-7 h-7 text-white/40" />}
+          {/* Calm premium "connecting" — reassures on weak networks (buffering = the #1 SL pain).
+              Throttled: full logo+name block shows only the first few channels per
+              session; after that just the thin top beam signals the switch. */}
+          {showConnectCard && (
+            <div className="relative z-50 flex flex-col items-center gap-3.5">
+              <div className="relative w-16 h-16">
+                <div className="absolute inset-0 rounded-2xl" style={{ animation: 'connect-pulse 1.7s ease-in-out infinite' }} />
+                <div className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center"
+                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(157,78,221,0.32)' }}>
+                  {state.channel?.logo
+                    ? <img src={state.channel.logo} alt="" className="w-full h-full object-contain p-1.5" />
+                    : <Tv className="w-7 h-7 text-white/40" />}
+                </div>
               </div>
+              <p className="text-[13px] text-white/85 font-medium tracking-wide max-w-xs text-center line-clamp-1 px-4">
+                {state.channel?.name || '…'}
+              </p>
+              {/* Reassurance on weak networks (buffering = #1 SL pain) — appears
+                  after a beat so a fast connect never shows it. */}
+              <p className="text-[11px] text-white/40 text-center -mt-1.5"
+                 style={{ animation: 'fade-in 0.6s ease-out 2s both' }}>
+                Slow connection? Check your network.
+              </p>
             </div>
-            <p className="text-[13px] text-white/85 font-medium tracking-wide max-w-xs text-center line-clamp-1 px-4">
-              {state.channel?.name || '…'}
-            </p>
-            {/* Reassurance on weak networks (buffering = #1 SL pain) — appears
-                after a beat so a fast connect never shows it. */}
-            <p className="text-[11px] text-white/40 text-center -mt-1.5"
-               style={{ animation: 'fade-in 0.6s ease-out 2s both' }}>
-              Slow connection? Check your network.
-            </p>
-          </div>
+          )}
         </div>
       )}
 

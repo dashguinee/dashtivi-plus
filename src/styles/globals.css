@@ -25,6 +25,15 @@
   50%      { box-shadow: 0 0 0 12px rgba(157, 78, 221, 0); }
 }
 
+/* Category-surf bloom — vertical swipe switches category: wash + name blooms,
+   holds ~0.6s, then fades into the new channel. One premium signature effect. */
+@keyframes cat-bloom {
+  0%   { opacity: 0; transform: scale(0.94); }
+  18%  { opacity: 1; transform: scale(1); }
+  68%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.04); }
+}
+
 @layer base {
   :root {
     /* Display type — Wakanda-DASH: Clash Display on the big headers only (not body). */

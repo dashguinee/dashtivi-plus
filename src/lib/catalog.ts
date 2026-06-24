@@ -275,4 +275,100 @@ export function curatorIdToDisplay(curatorId: string): string | null {
   return null;
 }
 
+// ── Player-side helpers: derive a channel's category + build category
+//    playlists for vertical (up/down) category surfing in the player. ──
+
+/** Runtime Channel shape the player consumes (matches HomePage.toChannel). */
+export interface RuntimeChannel {
+  id: string;
+  name: string;
+  url: string;
+  logo?: string;
+  category: string;
+}
+
+/** Turn a catalog channel into a runtime Channel ready for the player. */
+export function catalogChannelToRuntime(
+  ch: CatalogChannel,
+  creds: { username: string; password: string } | null,
+): RuntimeChannel {
+  return {
+    id: `live-${ch.stream_id}`,
+    name: ch.name.replace(/\s+/g, ' ').trim(),
+    url: buildCatalogUrl(ch, creds),
+    logo: ch.icon,
+    category: 'live',
+  };
+}
+
+/**
+ * Resolve the DISPLAY experience name of a currently-playing channel from its
+ * runtime id ("live-<stream_id>"). Returns null if it isn't a catalog channel
+ * (e.g. a free-HLS hello card) — caller should then skip category surfing.
+ */
+export function experienceForChannelId(channelId: string | null | undefined): string | null {
+  const cat = _catalog;
+  if (!cat || !channelId) return null;
+  const m = /^live-(\d+)$/.exec(channelId);
+  if (!m) return null;
+  const sid = parseInt(m[1], 10);
+  const ch = cat.byStreamId.get(sid);
+  return ch?.experience ?? null;
+}
+
+/**
+ * The ordered list of experience display names that actually have at least one
+ * tier-visible channel — the surfable "category ring" for up/down swipes.
+ */
+function surfableExperiences(cat: Catalog): string[] {
+  const order = cat.experienceOrder.length
+    ? cat.experienceOrder
+    : Object.keys(cat.byExperience);
+  return order.filter((name) => (cat.byExperience[name] || []).some(isVisibleForTier));
+}
+
+/**
+ * Given the current experience name and a direction, return the adjacent
+ * category's display name + its tier-visible runtime channels (wrapping).
+ * Returns null when category surfing isn't possible (no catalog, <2 categories,
+ * or the current experience isn't in the ring).
+ */
+export function adjacentCategory(
+  currentExperience: string | null,
+  dir: 1 | -1,
+  creds: { username: string; password: string } | null,
+): { name: string; channels: RuntimeChannel[] } | null {
+  const cat = _catalog;
+  if (!cat || !currentExperience) return null;
+  const ring = surfableExperiences(cat);
+  if (ring.length < 2) return null;
+  const idx = ring.indexOf(currentExperience);
+  if (idx === -1) return null;
+  const nextName = ring[(idx + dir + ring.length) % ring.length];
+  const channels = (cat.byExperience[nextName] || [])
+    .filter(isVisibleForTier)
+    .map((ch) => catalogChannelToRuntime(ch, creds));
+  if (channels.length === 0) return null;
+  return { name: nextName, channels };
+}
+
+/** Accent color per experience (mirrors HomePage EXPERIENCE_ACCENT). */
+export const EXPERIENCE_ACCENT: Record<string, string> = {
+  'World Cup': '#22C55E',
+  'Sports': '#22C55E',
+  'Movies': '#9D4EDD',
+  'Entertainment': '#C77DFF',
+  'Français': '#3B82F6',
+  'African': '#F97316',
+  'Arabic': '#14B8A6',
+  'Kids': '#EC4899',
+  'News': '#EF4444',
+  'Documentary': '#A78BFA',
+  '4K Showcase': '#EAB308',
+};
+
+export function accentForExperience(name: string | null | undefined): string {
+  return (name && EXPERIENCE_ACCENT[name]) || '#9D4EDD';
+}
+
 export { EXPERIENCE_TO_CURATOR_ID };

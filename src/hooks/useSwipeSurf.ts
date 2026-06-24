@@ -25,11 +25,17 @@ export interface SwipeSurfOptions {
   onPrev?: () => void;
   /** Swipe-left → next channel. */
   onNext?: () => void;
+  /** Swipe-down → previous category. */
+  onUp?: () => void;
+  /** Swipe-up → next category. */
+  onDown?: () => void;
   /** Master switch — when false the hook is inert (e.g. disable on VOD). */
   enabled?: boolean;
   /** Minimum horizontal distance (px) to commit a surf. Default 60. */
   threshold?: number;
-  /** dx must exceed dy by this ratio to count as horizontal. Default 1.5. */
+  /** Minimum vertical distance (px) to commit a category switch. Default 70. */
+  vThreshold?: number;
+  /** dominant-axis delta must exceed the other axis by this ratio. Default 1.5. */
   ratio?: number;
   /**
    * Optional visual hook — called continuously with the live horizontal drag
@@ -48,6 +54,8 @@ interface Tracker {
   t: number;
   /** Has this gesture locked into a horizontal surf intent? */
   locked: boolean;
+  /** Has this gesture locked into a vertical (category) intent? */
+  lockedV: boolean;
   /** Did it start on an interactive / opt-out target? */
   ignored: boolean;
 }
@@ -63,8 +71,11 @@ export function useSwipeSurf(opts: SwipeSurfOptions) {
   const {
     onPrev,
     onNext,
+    onUp,
+    onDown,
     enabled = true,
     threshold = 60,
+    vThreshold = 70,
     ratio = 1.5,
     onDrag,
     cooldown = 350,
@@ -74,8 +85,8 @@ export function useSwipeSurf(opts: SwipeSurfOptions) {
   const lastSurfRef = useRef(0);
 
   // Keep latest callbacks/flags without re-creating the handlers each render.
-  const cbRef = useRef({ onPrev, onNext, enabled, threshold, ratio, onDrag, cooldown });
-  cbRef.current = { onPrev, onNext, enabled, threshold, ratio, onDrag, cooldown };
+  const cbRef = useRef({ onPrev, onNext, onUp, onDown, enabled, threshold, vThreshold, ratio, onDrag, cooldown });
+  cbRef.current = { onPrev, onNext, onUp, onDown, enabled, threshold, vThreshold, ratio, onDrag, cooldown };
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     const c = cbRef.current;
@@ -88,6 +99,7 @@ export function useSwipeSurf(opts: SwipeSurfOptions) {
       y: e.clientY,
       t: Date.now(),
       locked: false,
+      lockedV: false,
       ignored: startsOnInteractive(e.target),
     };
   }, []);
@@ -102,21 +114,33 @@ export function useSwipeSurf(opts: SwipeSurfOptions) {
     const absDx = Math.abs(dx);
     const absDy = Math.abs(dy);
 
-    if (!t.locked) {
-      // Decide direction once we've moved enough to read intent.
-      if (absDx < 10 && absDy < 10) return; // still a tap-sized jitter — wait
+    if (!t.locked && !t.lockedV) {
+      // Decide direction once we've moved enough to read intent (~40px so small
+      // movements and taps never capture — tap-to-toggle-controls stays intact).
+      if (absDx < 40 && absDy < 40) return; // still tap/jitter sized — wait
       if (absDy > absDx) {
-        // Vertical-dominant — this is a scroll / close gesture. Bow out for the
-        // rest of this pointer sequence; let it pass through cleanly.
+        // Vertical-dominant. If a category handler is wired, lock into a
+        // category-surf intent; otherwise bow out so the gesture passes through
+        // cleanly (page scroll / close / minimize untouched).
+        if ((c.onUp || c.onDown) && absDy > absDx * c.ratio) {
+          t.lockedV = true;
+        } else {
+          t.ignored = true;
+          return;
+        }
+      } else if (absDx > absDy * c.ratio) {
+        // Clearly horizontal-dominant — lock into channel-surf intent.
+        t.locked = true;
+      } else {
+        // Ambiguous diagonal at the decision point — don't capture.
         t.ignored = true;
         return;
       }
-      // Horizontal-dominant — lock into surf intent.
-      t.locked = true;
     }
 
     // Locked horizontal: report drag for the slide/peek visual.
-    c.onDrag?.(dx);
+    // (Vertical lock is intentionally silent — no live peek for category surf.)
+    if (t.locked) c.onDrag?.(dx);
   }, []);
 
   const finish = useCallback((e: React.PointerEvent) => {
@@ -125,17 +149,29 @@ export function useSwipeSurf(opts: SwipeSurfOptions) {
     trackRef.current = null;
     if (!t || t.id !== e.pointerId) return;
     c.onDrag?.(0); // settle the visual regardless of outcome
-    if (t.ignored || !t.locked || !c.enabled) return;
+    if (t.ignored || !c.enabled) return;
+    if (!t.locked && !t.lockedV) return;
 
     const dx = e.clientX - t.x;
     const dy = e.clientY - t.y;
     const absDx = Math.abs(dx);
     const absDy = Math.abs(dy);
 
+    const now = Date.now();
+
+    if (t.lockedV) {
+      // Final gate: vertical-dominant AND past the vertical threshold.
+      if (absDy <= c.vThreshold || absDy <= absDx * c.ratio) return;
+      if (now - lastSurfRef.current < c.cooldown) return;
+      lastSurfRef.current = now;
+      // Swipe DOWN (dy>0) → previous category; swipe UP (dy<0) → next category.
+      if (dy > 0) c.onUp?.();
+      else c.onDown?.();
+      return;
+    }
+
     // Final gate: horizontal-dominant AND past threshold.
     if (absDx <= c.threshold || absDx <= absDy * c.ratio) return;
-
-    const now = Date.now();
     if (now - lastSurfRef.current < c.cooldown) return;
     lastSurfRef.current = now;
 

@@ -430,7 +430,8 @@ function AppContent({ guestMode, onRequestCode }: { guestMode?: boolean; onReque
               onTogglePlay={player.togglePlay} onToggleMute={player.toggleMute} onVolumeChange={player.setVolume}
               onToggleFullscreen={player.toggleFullscreen} onTogglePiP={player.togglePiP}
               onQualityChange={player.changeQuality}
-              onClose={handleClosePlayer} onRetry={handlePlayChannel} onBack={handleClosePlayer} onSeek={player.seek} />,
+              onClose={handleClosePlayer} onRetry={handlePlayChannel} onBack={handleClosePlayer} onSeek={player.seek}
+              credentials={credentials} />,
             playerPortalTarget
           )}
         {player.streamLimit && (
