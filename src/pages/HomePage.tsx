@@ -9,7 +9,6 @@ import { useShowcaseTier } from '@/hooks/useShowcaseTier';
 import { FreeHlsShowcaseCard, type FreeHlsChannel } from '@/components/ui/FreeHlsShowcaseCard';
 import { OyeAfricaCard, StationsCard } from '@/components/voyo';
 import { MoviesExploration } from '@/components/home/MoviesExploration';
-import { NbaShowcase } from '@/components/home/NbaShowcase';
 import { HeroDeck, type HeroSlide } from '@/components/home/HeroDeck';
 import {
   getCatalog,
@@ -238,11 +237,6 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
     });
   }
 
-  // ── NBA showcase — the headline NBA card. NBA channels live in the Sports
-  // experience (NBA TV / NBA Network / Bein Sport NBA); filter by name. Only
-  // shown when there's at least one. "NBA alone adds perceived value."
-  const nbaChannels = (catalog.byExperience['Sports'] || []).filter((c) => /nba/i.test(c.name));
-
   return (
     <div className="pt-16 pb-48">
       {/* ════════════════════════════════════════════════════════════════
@@ -271,18 +265,6 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           hero per category (World Cup first), each with its own accent. ── */}
       {heroSlides.length > 0 && (
         <HeroDeck slides={heroSlides} lang={lang} />
-      )}
-
-      {/* ── NBA showcase — the headline NBA card, right under the WC hero ── */}
-      {nbaChannels.length > 0 && (
-        <div className="mt-6">
-          <NbaShowcase
-            channels={nbaChannels}
-            lang={lang}
-            onPlay={(ch) => play(ch, nbaChannels)}
-            onSeeAll={() => navigate('/nba')}
-          />
-        </div>
       )}
 
       {/* ── The curated experiences, in experience_order, exact names ─── */}

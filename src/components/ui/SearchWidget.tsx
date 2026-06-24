@@ -110,9 +110,26 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
     const s = start.current; start.current = null;
     setDragging(false); setPressing(false);
     if (!s) return;
-    if (!s.moved) { setOpen(true); return; }
-    // swept to an edge → it disappears, like a real phone bubble
-    setPos((p) => { if (p && (p.x < 24 || p.x > window.innerWidth - SIZE - 24)) setHidden(true); return p; });
+    if (!s.moved) {
+      // Tap — if it was docked at a peek, restore it to a full edge position first.
+      setPos((p) => {
+        if (!p) return p;
+        const w = window.innerWidth;
+        if (p.x < 0 || p.x > w - SIZE) return { ...p, x: w - SIZE - 14 };
+        return p;
+      });
+      setOpen(true);
+      return;
+    }
+    // Swept toward an edge → DOCK to a half-peek at that edge (recoverable: tap to
+    // restore + open). Never fully vanishes, so it can't get lost.
+    setPos((p) => {
+      if (!p) return p;
+      const w = window.innerWidth;
+      if (p.x < 24) return { ...p, x: -Math.round(DISC * 0.5) };
+      if (p.x > w - SIZE - 24) return { ...p, x: w - Math.round(DISC * 0.5) };
+      return p;
+    });
     wake();
   };
 

@@ -35,6 +35,8 @@ import { setAmbientSpeed, setAmbientExperience } from '@/lib/ambient-audio';
 import { ChannelIcon, ChannelBadge } from '@/components/ui/ChannelIcon';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useSmartSticky } from '@/hooks/useSmartSticky';
+import { NbaShowcase } from '@/components/home/NbaShowcase';
+import { getCatalog, getCatalogSync, type Catalog, type CatalogChannel } from '@/lib/catalog';
 
 import type { Channel } from '@/types';
 
@@ -483,6 +485,10 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
   const searchRef = useRef<HTMLInputElement>(null);
   const GRID_PAGE_SIZE = 60;
   const [gridVisibleCount, setGridVisibleCount] = useState(GRID_PAGE_SIZE);
+  // Curated catalog — only used by the Sports experience to surface the NBA
+  // showcase from catalog.byExperience['Sports'] filtered /nba/i (same source
+  // the home used). Loaded lazily, sync-primed if already warm.
+  const [catalog, setCatalog] = useState<Catalog | null>(getCatalogSync());
 
   // Reset visible count when experience or sub-tab changes
   useEffect(() => { setGridVisibleCount(GRID_PAGE_SIZE); }, [experienceId, activeSubTab]);
@@ -497,6 +503,15 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
       return () => clearTimeout(id);
     }
   }, [experienceId, navigate]);
+
+  // Load the curated catalog once (Sports uses it for the NBA showcase). Cheap
+  // no-op when already warm; silent on failure (NBA card is a bonus).
+  useEffect(() => {
+    if (config?.id !== 'sports' || catalog) return;
+    let mounted = true;
+    getCatalog().then((c) => { if (mounted) setCatalog(c); }).catch(() => { /* bonus */ });
+    return () => { mounted = false; };
+  }, [config, catalog]);
 
   // Set ambient mood
   useEffect(() => {
@@ -689,6 +704,36 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
     }).filter(Boolean);
   }, [isSports, allStreams]);
 
+  // ── NBA showcase (sports only) — headline NBA card, sourced from the curated
+  // catalog Sports experience filtered /nba/i (the same seam the home used).
+  const nbaChannels = useMemo<CatalogChannel[]>(() => {
+    if (!isSports || !catalog) return [];
+    return (catalog.byExperience['Sports'] || []).filter((c) => /nba/i.test(c.name));
+  }, [isSports, catalog]);
+
+  // Play an NBA catalog channel through the same proxy seam handlePlay uses,
+  // with the full NBA row as playlist context (next/prev).
+  const playNba = useCallback((ch: CatalogChannel) => {
+    if (nbaChannels.length > 1) {
+      setPlaylist(nbaChannels.map((c) => ({
+        id: `live-${c.stream_id}`,
+        name: c.name.replace(/\s+/g, ' ').trim(),
+        url: buildLiveUrl(credentials, c.stream_id),
+        logo: c.icon,
+        category: 'live' as const,
+      })));
+    }
+    const channel: Channel = {
+      id: `live-${ch.stream_id}`,
+      name: ch.name.replace(/\s+/g, ' ').trim(),
+      url: buildLiveUrl(credentials, ch.stream_id),
+      logo: ch.icon,
+      category: 'live',
+    };
+    setCurrentChannel(channel.id);
+    onPlay(channel);
+  }, [nbaChannels, credentials, onPlay]);
+
   // Group quality variants for the main grid (memoized to avoid re-compute on every render)
   const deduped = useMemo(() => {
     const grouped = groupChannelsByQuality(searchFiltered);
@@ -806,6 +851,20 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
             <React.Suspense fallback={<div className="mx-4 mt-4 space-y-3"><div className="h-10 rounded-xl bg-white/[0.03] animate-pulse" /><div className="h-40 rounded-2xl bg-white/[0.02] animate-pulse" /><div className="h-32 rounded-xl bg-white/[0.02] animate-pulse" /></div>}>
               <SportsArena />
             </React.Suspense>
+          )}
+
+          {/* ── NBA showcase — headline NBA card (sports only). Sourced from the
+              curated catalog Sports experience filtered /nba/i. Renders nothing
+              when there are no NBA channels. ── */}
+          {config.id === 'sports' && !searchQuery && nbaChannels.length > 0 && (
+            <div className="mt-6 mb-2 reveal">
+              <NbaShowcase
+                channels={nbaChannels}
+                lang={lang}
+                onPlay={playNba}
+                onSeeAll={() => navigate('/nba')}
+              />
+            </div>
           )}
 
           {/* ── News Arena (BBC headlines — only for news experience) ── */}

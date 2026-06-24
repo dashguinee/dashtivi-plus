@@ -40,6 +40,18 @@ const MAX_SLIDES = 10;
 const COMMIT_FRACTION = 0.25;
 const FLICK_VELOCITY = 0.45; // px/ms
 
+// A few fairy-dust motes trailing the brush stroke — hand-placed so they read
+// as following the diagonal sweep (top-left → bottom-right), not random noise.
+// Restrained: 6 motes, staggered delays, varied sizes. Accent-colored at render.
+const SPARKLES: { left: string; top: string; size: number; delay: number }[] = [
+  { left: '24%', top: '30%', size: 4, delay: 0.16 },
+  { left: '40%', top: '54%', size: 3, delay: 0.26 },
+  { left: '52%', top: '22%', size: 5, delay: 0.32 },
+  { left: '63%', top: '60%', size: 3, delay: 0.40 },
+  { left: '74%', top: '38%', size: 4, delay: 0.46 },
+  { left: '85%', top: '56%', size: 3, delay: 0.54 },
+];
+
 export function HeroDeck({ slides, lang }: { slides: HeroSlide[]; lang: Lang }) {
   // Cap + skip empties (defensive — callers should already skip, but enforce).
   const deck = useMemo(
@@ -198,25 +210,67 @@ export function HeroDeck({ slides, lang }: { slides: HeroSlide[]; lang: Lang }) 
                     style={
                       active
                         ? {
-                            // Entrance — fade + slight scale-in on settle, then calm.
-                            animation: `hero-deck-enter 0.5s cubic-bezier(0.22,1,0.36,1) both`,
+                            // Fairy paintbrush — the hero is "painted in" by a
+                            // diagonal neon clip-path wipe (the stroke), accent
+                            // driven via --accent, then it calms. No per-frame JS.
+                            ['--accent' as string]: s.accent,
+                            animation: `hero-deck-paint 0.72s cubic-bezier(0.22,1,0.36,1) both`,
+                            clipPath: 'inset(0 0 0 0)',
                           }
                         : undefined
                     }
                     // Re-key the active slide on each settle so the entrance replays.
                     key={active ? `${s.key}-${settleNonce}` : s.key}
                   >
-                    {/* Accent edge-glow bloom — blooms once on settle, then fades. */}
                     {active && (
-                      <div
-                        className="pointer-events-none absolute inset-0 rounded-2xl"
-                        style={{
-                          boxShadow: `0 0 0 1px ${s.accent}, 0 0 38px ${s.accent}`,
-                          animation: `hero-deck-bloom 0.9s ease-out both`,
-                          zIndex: 5,
-                        }}
-                        key={`bloom-${settleNonce}`}
-                      />
+                      <>
+                        {/* The glowing neon BRUSH HEAD — an accent-tinted stroke
+                            of light that sweeps diagonally across, painting the
+                            frame in as it passes. */}
+                        <div
+                          className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl"
+                          style={{ zIndex: 6 }}
+                          key={`brush-${settleNonce}`}
+                        >
+                          <div
+                            className="absolute top-0 bottom-0"
+                            style={{
+                              width: '46%',
+                              left: '-50%',
+                              background:
+                                `linear-gradient(105deg, transparent 0%, ${s.accent}00 30%, ${s.accent}aa 48%, #ffffffcc 50%, ${s.accent}aa 52%, ${s.accent}00 70%, transparent 100%)`,
+                              filter: 'blur(2px)',
+                              mixBlendMode: 'screen',
+                              animation: 'hero-deck-brush 0.72s cubic-bezier(0.5,0,0.2,1) both',
+                            }}
+                          />
+                        </div>
+
+                        {/* Fairy-dust SPARKLES — a few accent motes trailing the
+                            stroke, then they twinkle out. Pure transform/opacity. */}
+                        <div
+                          className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl"
+                          style={{ zIndex: 7 }}
+                          key={`spark-${settleNonce}`}
+                        >
+                          {SPARKLES.map((sp, si) => (
+                            <span
+                              key={si}
+                              className="absolute rounded-full"
+                              style={{
+                                left: sp.left,
+                                top: sp.top,
+                                width: sp.size,
+                                height: sp.size,
+                                background: s.accent,
+                                boxShadow: `0 0 6px ${s.accent}, 0 0 12px ${s.accent}`,
+                                opacity: 0,
+                                animation: `hero-deck-sparkle 0.9s ease-out ${sp.delay}s both`,
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </>
                     )}
                     <CategoryHero
                       title={s.title}
@@ -232,9 +286,9 @@ export function HeroDeck({ slides, lang }: { slides: HeroSlide[]; lang: Lang }) 
                   <div
                     className="rounded-2xl"
                     style={{
-                      height: '34vh',
-                      minHeight: 220,
-                      maxHeight: 300,
+                      height: '22vh',
+                      minHeight: 158,
+                      maxHeight: 190,
                       background: `linear-gradient(160deg, rgba(${hexToRgb(s.accent)},0.06), rgba(8,10,14,0.9))`,
                       border: `1px solid rgba(${hexToRgb(s.accent)},0.12)`,
                     }}
@@ -270,14 +324,33 @@ export function HeroDeck({ slides, lang }: { slides: HeroSlide[]; lang: Lang }) 
       )}
 
       <style>{`
-        @keyframes hero-deck-enter {
-          0%   { opacity: 0.25; transform: scale(0.965); }
-          100% { opacity: 1;    transform: scale(1); }
+        /* Fairy paintbrush — the frame is REVEALED by a diagonal clip-path wipe,
+           as if a neon brush stroke paints it in from one corner to the other.
+           Inset clip animated so the start corner is "unpainted" until the
+           stroke sweeps past. Settles fully visible (inset 0). */
+        @keyframes hero-deck-paint {
+          0%   { clip-path: inset(0 100% 0 0); opacity: 0.4; }
+          12%  { opacity: 1; }
+          100% { clip-path: inset(0 0 0 0);    opacity: 1; }
         }
-        @keyframes hero-deck-bloom {
-          0%   { opacity: 0; }
-          30%  { opacity: 0.55; }
-          100% { opacity: 0; }
+        /* The glowing neon brush HEAD sweeps left→right across the frame. */
+        @keyframes hero-deck-brush {
+          0%   { transform: translateX(0)    skewX(-12deg); opacity: 0; }
+          12%  { opacity: 1; }
+          88%  { opacity: 1; }
+          100% { transform: translateX(330%) skewX(-12deg); opacity: 0; }
+        }
+        /* Fairy-dust motes — pop, drift up a touch, twinkle out. */
+        @keyframes hero-deck-sparkle {
+          0%   { opacity: 0; transform: scale(0.2) translateY(4px); }
+          35%  { opacity: 1; transform: scale(1.15) translateY(-2px); }
+          70%  { opacity: 0.8; transform: scale(0.9) translateY(-6px); }
+          100% { opacity: 0; transform: scale(0.3) translateY(-12px); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          [style*="hero-deck-paint"] { animation: none !important; clip-path: none !important; }
+          [style*="hero-deck-brush"],
+          [style*="hero-deck-sparkle"] { animation: none !important; opacity: 0 !important; }
         }
       `}</style>
     </section>
