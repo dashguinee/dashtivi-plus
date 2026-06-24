@@ -110,26 +110,9 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
     const s = start.current; start.current = null;
     setDragging(false); setPressing(false);
     if (!s) return;
-    if (!s.moved) {
-      // Tap — if it was docked at a peek, restore it to a full edge position first.
-      setPos((p) => {
-        if (!p) return p;
-        const w = window.innerWidth;
-        if (p.x < 0 || p.x > w - SIZE) return { ...p, x: w - SIZE - 14 };
-        return p;
-      });
-      setOpen(true);
-      return;
-    }
-    // Swept toward an edge → DOCK to a half-peek at that edge (recoverable: tap to
-    // restore + open). Never fully vanishes, so it can't get lost.
-    setPos((p) => {
-      if (!p) return p;
-      const w = window.innerWidth;
-      if (p.x < 24) return { ...p, x: -Math.round(DISC * 0.5) };
-      if (p.x > w - SIZE - 24) return { ...p, x: w - Math.round(DISC * 0.5) };
-      return p;
-    });
+    if (!s.moved) { setOpen(true); return; }
+    // Stays exactly where you drop it — always fully on-screen (onMove clamps to the
+    // viewport), so it can never dock off-screen or get lost again.
     wake();
   };
 
@@ -156,7 +139,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
           style={{
             left: pos.x, top: pos.y, width: SIZE, height: SIZE, padding: 0,
             background: 'transparent', border: 'none',
-            opacity: open ? 0 : fade === 2 ? 0.6 : fade === 1 ? 0.8 : 1,
+            opacity: open ? 0 : fade === 2 ? 0.72 : fade === 1 ? 0.88 : 1,
             transition: dragging ? 'none' : 'opacity 1s ease, left .5s cubic-bezier(0.34,1.56,0.64,1), top .5s cubic-bezier(0.34,1.56,0.64,1)',
             pointerEvents: open ? 'none' : 'auto',
             touchAction: 'none', cursor: 'grab', WebkitTapHighlightColor: 'transparent',

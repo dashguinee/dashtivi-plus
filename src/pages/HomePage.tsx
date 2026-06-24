@@ -79,24 +79,6 @@ function toChannel(ch: CatalogChannel, credentials: XtreamCredentials): Channel 
   };
 }
 
-// A channel is free-HLS playable (no proxy creds, plays in the free visor) when
-// it's a direct stream carrying its own url. Premium channels need the proxy.
-function isFreeHls(ch: CatalogChannel): boolean {
-  return ch.plays === 'direct' && !!ch.url;
-}
-
-// Convert a free/direct catalog channel into the FreeHlsChannel the top visor
-// auto-plays. Premium channels can't make this trip (no direct url).
-function toFreeHls(ch: CatalogChannel): FreeHlsChannel {
-  return {
-    id: `cat-${ch.stream_id}`,
-    name: cleanName(ch.name),
-    url: ch.url || '',
-    logo: ch.icon,
-    district: ch.bucket,
-  };
-}
-
 // ── Free-HLS "alive gift" — curated picks woven into the home for guests.
 // Hand-picked ids from /streamore-locked.json: global-CDN-first, strong for
 // our people, spread across districts so the scatter reads varied. Each is
@@ -122,9 +104,6 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const navigate = useNavigate();
   const [catalog, setCatalog] = useState<Catalog | null>(getCatalogSync());
   const [freeHls, setFreeHls] = useState<FreeHlsData | null>(null);
-  // The carousel DRIVES the top hero — HeroDeck reports its active slide here,
-  // and the top visor reflects that category's top channel (Task B).
-  const [activeHeroIndex, setActiveHeroIndex] = useState(0);
 
   // ONE source of truth for the free-vs-premium showcase split (shared with the
   // Stream+ tab + page so they can never disagree).
@@ -258,75 +237,33 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
     });
   }
 
-  // ── The carousel-driven TOP HERO (Task B) ─────────────────────────────
-  // The deck reports its active slide; the top visor reflects THAT category's
-  // top channel. Free top channel → live-HLS auto-play (the magic hello). A
-  // premium top channel can't auto-play in the free visor (needs proxy creds),
-  // so it shows as a featured "now" hero card with a real play button.
-  const activeSlide = heroSlides.length
-    ? heroSlides[Math.min(activeHeroIndex, heroSlides.length - 1)]
-    : undefined;
-  const activeTop = activeSlide?.channels[0];
-  // Free → drive the visor with the category's top channel; fall back to the
-  // streamore-pool hello (covers the brief window before the deck mounts and
-  // any category whose top is premium-but-pool-has-a-free-hello).
-  const visorChannel: FreeHlsChannel | null =
-    activeTop && isFreeHls(activeTop) ? toFreeHls(activeTop) : helloChannel;
-  // Premium top: featured card (icon + name + accent + a real play button).
-  const premiumTop = activeTop && !isFreeHls(activeTop) ? activeTop : null;
-  const topAccent = activeSlide?.accent || '#22C55E';
-
   return (
     <div className="pt-16 pb-48">
       {/* ════════════════════════════════════════════════════════════════
-          THE TOP HERO — DRIVEN BY THE CAROUSEL. As you swipe the deck below,
-          this top slot features the active category's TOP channel:
-            • FREE top → it auto-plays live (the magic hello, calm, no click).
-            • PREMIUM top → a featured "now" card with a real play button
-              (the free-HLS visor can't stream premium — needs proxy creds).
+          THE TOP HERO — the magic hello. The strongest live pick auto-plays at
+          the very top for EVERYONE, calm, no click ("there it is"). The
+          FreeHlsShowcaseCard focus engine claims the one live <video> surface.
           ════════════════════════════════════════════════════════════════ */}
-      {premiumTop ? (
+      {helloChannel && (
         <section className="mb-8">
           <div className="px-4 mb-2 flex items-center gap-2">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-70" style={{ background: topAccent }} />
-              <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: topAccent }} />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-70" style={{ background: '#22C55E' }} />
+              <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: '#22C55E' }} />
             </span>
-            <span className="text-[10px] font-black tracking-[2.5px] uppercase" style={{ color: topAccent }}>
-              {lang === 'fr' ? `En vedette · ${activeSlide?.title}` : `Featured · ${activeSlide?.title}`}
-            </span>
-          </div>
-          <div className="px-4">
-            <PremiumTopHero
-              channel={premiumTop}
-              accent={topAccent}
-              lang={lang}
-              onPlay={() => activeSlide?.onPlay(premiumTop)}
-            />
-          </div>
-        </section>
-      ) : visorChannel ? (
-        <section className="mb-8">
-          <div className="px-4 mb-2 flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-70" style={{ background: topAccent }} />
-              <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: topAccent }} />
-            </span>
-            <span className="text-[10px] font-black tracking-[2.5px] uppercase" style={{ color: topAccent }}>
+            <span className="text-[10px] font-black tracking-[2.5px] uppercase" style={{ color: '#86EFAC' }}>
               {lang === 'fr' ? 'En direct · à l’instant' : 'Live · right now'}
             </span>
           </div>
-          {/* key on the channel id so the focus engine re-claims cleanly when the
-              carousel swaps the visor's channel (no stale <video> across swaps). */}
-          <FreeHlsShowcaseCard key={visorChannel.id} channel={visorChannel} onSurf={surfHello} />
+          <FreeHlsShowcaseCard channel={helloChannel} onSurf={surfHello} />
         </section>
-      ) : null}
+      )}
 
       {/* ── The hero deck — swipe horizontally to glide through one cinematic
-          hero per category (World Cup first), each with its own accent. The
-          deck DRIVES the top hero above via onActiveChange. ── */}
+          hero per category (World Cup first), each with its own accent.
+          Independent of the top hero above. ── */}
       {heroSlides.length > 0 && (
-        <HeroDeck slides={heroSlides} lang={lang} onActiveChange={setActiveHeroIndex} />
+        <HeroDeck slides={heroSlides} lang={lang} />
       )}
 
       {/* ── The curated experiences, in experience_order, exact names ─── */}
@@ -478,83 +415,6 @@ function GiraLoopSentinel() {
     </div>
   );
 }
-
-// ── Premium top hero (Task B) ───────────────────────────────────────
-// When the active carousel category's top channel is PREMIUM (proxy, needs
-// creds), the top visor can't auto-play it in the free-HLS player. Instead we
-// feature it as a calm "now" card — icon + name + accent + a real play button
-// that opens the actual player via the slide's onPlay (with row context).
-const PremiumTopHero = React.memo(function PremiumTopHero({
-  channel,
-  accent,
-  lang,
-  onPlay,
-}: {
-  channel: CatalogChannel;
-  accent: string;
-  lang: Lang;
-  onPlay: () => void;
-}) {
-  // "#RRGGBB" → "r,g,b" so we can mix arbitrary alpha into the accent.
-  const a = (() => {
-    const h = accent.replace('#', '');
-    const n = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
-    return `${parseInt(n.slice(0, 2), 16)},${parseInt(n.slice(2, 4), 16)},${parseInt(n.slice(4, 6), 16)}`;
-  })();
-  return (
-    <button
-      onPointerDown={() => tap()}
-      onClick={onPlay}
-      className="relative w-full overflow-hidden rounded-2xl text-left active:scale-[0.99] transition-transform duration-200 group aspect-video"
-      style={{
-        background:
-          `radial-gradient(ellipse 90% 70% at 25% 20%, rgba(${a},0.22) 0%, transparent 60%), ` +
-          'radial-gradient(ellipse 80% 80% at 90% 90%, rgba(10,12,16,0.6) 0%, transparent 70%), ' +
-          'linear-gradient(160deg, #0a0e14 0%, #070a0d 55%, #050608 100%)',
-        border: `1px solid rgba(${a},0.18)`,
-        boxShadow: `0 0 40px rgba(${a},0.10), inset 0 1px 0 rgba(255,255,255,0.04)`,
-      }}
-    >
-      {/* PREMIUM · top-left pill */}
-      <div
-        className="absolute top-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-full"
-        style={{ background: `rgba(${a},0.14)`, border: `1px solid rgba(${a},0.4)`, backdropFilter: 'blur(8px)' }}
-      >
-        <span className="relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: accent }} />
-          <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: accent }} />
-        </span>
-        <span className="text-[10px] font-black tracking-[2.5px] uppercase" style={{ color: accent }}>
-          {t(lang, 'liveLabel')}
-        </span>
-      </div>
-
-      {/* Marquee channel — bottom */}
-      <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end gap-4">
-        <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden"
-          style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(${a},0.25)` }}
-        >
-          <ChannelIcon src={channel.icon} name={channel.name} size="md" eager className="!w-14 !h-14" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-semibold tracking-[2px] uppercase mb-1" style={{ color: `rgba(${a},0.8)` }}>
-            {lang === 'fr' ? 'En direct' : 'Now streaming'}
-          </p>
-          <h1 className="text-[22px] leading-tight font-black text-white tracking-tight line-clamp-2">
-            {cleanName(channel.name)}
-          </h1>
-        </div>
-        <div
-          className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ background: `linear-gradient(135deg, ${accent}, rgba(${a},0.55))` }}
-        >
-          <Play className="w-6 h-6 text-white ml-0.5" fill="white" />
-        </div>
-      </div>
-    </button>
-  );
-});
 
 // ── Experience row ──────────────────────────────────────────────────
 
