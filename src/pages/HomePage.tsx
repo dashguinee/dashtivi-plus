@@ -10,6 +10,7 @@ import { FreeHlsShowcaseCard, type FreeHlsChannel } from '@/components/ui/FreeHl
 import { OyeAfricaCard, StationsCard } from '@/components/voyo';
 import { MoviesExploration } from '@/components/home/MoviesExploration';
 import { NbaShowcase } from '@/components/home/NbaShowcase';
+import { HeroDeck, type HeroSlide } from '@/components/home/HeroDeck';
 import {
   getCatalog,
   getCatalogSync,
@@ -207,7 +208,35 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   // ── World Cup hero — the live moment. Marquee = first WC feed (beIN). ──
   const worldcup = catalog.worldcup;
-  const heroChannel = worldcup[0] || null;
+
+  // ── Hero deck — World Cup first, then each non-empty experience in order,
+  // capped at 10 (HeroDeck enforces the cap + skips empties too). Each slide
+  // carries its own accent. 'Movies' shows as "Cinéma Live" to match the row.
+  const heroSlides: HeroSlide[] = [];
+  if (worldcup.length > 0) {
+    heroSlides.push({
+      key: 'World Cup',
+      title: 'World Cup',
+      accent: EXPERIENCE_ACCENT['World Cup'],
+      channels: worldcup,
+      onPlay: (ch) => play(ch, worldcup),
+      onSeeAll: () => navigate('/live/sports'),
+    });
+  }
+  for (const experience of catalog.experienceOrder) {
+    if (experience === 'World Cup') continue; // already the lead slide
+    const chans = catalog.byExperience[experience] || [];
+    if (chans.length === 0) continue;
+    const seeAllId = EXPERIENCE_TO_CURATOR_ID[experience];
+    heroSlides.push({
+      key: experience,
+      title: experience === 'Movies' ? 'Cinéma Live' : experience,
+      accent: EXPERIENCE_ACCENT[experience] || '#9D4EDD',
+      channels: chans,
+      onPlay: (ch) => play(ch, chans),
+      onSeeAll: seeAllId ? () => navigate(`/live/${seeAllId}`) : undefined,
+    });
+  }
 
   // ── NBA showcase — the headline NBA card. NBA channels live in the Sports
   // experience (NBA TV / NBA Network / Bein Sport NBA); filter by name. Only
@@ -238,13 +267,10 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
         </section>
       )}
 
-      {heroChannel && (
-        <WorldCupHero
-          channel={heroChannel}
-          channels={worldcup}
-          lang={lang}
-          onPlay={() => play(heroChannel, worldcup)}
-        />
+      {/* ── The hero deck — swipe horizontally to glide through one cinematic
+          hero per category (World Cup first), each with its own accent. ── */}
+      {heroSlides.length > 0 && (
+        <HeroDeck slides={heroSlides} lang={lang} />
       )}
 
       {/* ── NBA showcase — the headline NBA card, right under the WC hero ── */}
@@ -406,111 +432,6 @@ function GiraLoopSentinel() {
       </p>
       <style>{`@keyframes gira-pulse { 0%,100% { opacity:0.25; transform:scale(0.8) } 50% { opacity:1; transform:scale(1.2) } }`}</style>
     </div>
-  );
-}
-
-// ── World Cup hero ──────────────────────────────────────────────────
-
-function WorldCupHero({
-  channel,
-  channels,
-  lang,
-  onPlay,
-}: {
-  channel: CatalogChannel;
-  channels: CatalogChannel[];
-  lang: Lang;
-  onPlay: () => void;
-}) {
-  const liveLabel = t(lang, 'liveLabel');
-  return (
-    <section className="px-4">
-      <button
-        onClick={onPlay}
-        className="relative w-full overflow-hidden rounded-2xl text-left active:scale-[0.99] transition-transform duration-200 group"
-        style={{
-          height: '34vh',
-          minHeight: 220,
-          maxHeight: 300,
-          background:
-            'radial-gradient(ellipse 90% 70% at 25% 20%, rgba(34,197,94,0.22) 0%, transparent 60%), ' +
-            'radial-gradient(ellipse 80% 80% at 90% 90%, rgba(16,40,24,0.6) 0%, transparent 70%), ' +
-            'linear-gradient(160deg, #0a1a0f 0%, #060b08 55%, #050608 100%)',
-          border: '1px solid rgba(34,197,94,0.18)',
-          boxShadow: '0 0 40px rgba(34,197,94,0.08), inset 0 1px 0 rgba(255,255,255,0.04)',
-        }}
-      >
-        <style>{`
-          @keyframes hero-sweep { 0%{transform:translateX(-40%)} 100%{transform:translateX(140%)} }
-          @keyframes hero-play-breathe {
-            0%,100% { box-shadow: 0 0 22px rgba(34,197,94,0.45); transform: scale(1); }
-            50%     { box-shadow: 0 0 34px rgba(34,197,94,0.70); transform: scale(1.06); }
-          }
-        `}</style>
-        {/* Stadium-light sweep — slow, continuous */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div
-            className="absolute inset-y-0 -left-1/3 w-2/3 opacity-70"
-            style={{
-              background: 'linear-gradient(115deg, transparent 20%, rgba(34,197,94,0.07) 46%, rgba(255,255,255,0.05) 50%, transparent 70%)',
-              animation: 'hero-sweep 7s ease-in-out infinite',
-            }}
-          />
-        </div>
-        {/* Cinema vignette */}
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 100% 80% at 50% 40%, transparent 55%, rgba(0,0,0,0.45) 100%)' }}
-        />
-
-        {/* LIVE · World Cup pill — top left */}
-        <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full"
-          style={{
-            background: 'rgba(34,197,94,0.14)',
-            border: '1px solid rgba(34,197,94,0.4)',
-            backdropFilter: 'blur(8px)',
-          }}
-        >
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
-          </span>
-          <span className="text-[11px] font-black tracking-[2.5px] text-green-300 uppercase">
-            {liveLabel} · World Cup
-          </span>
-        </div>
-
-        {/* Marquee channel — bottom */}
-        <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end gap-4">
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(34,197,94,0.25)' }}
-          >
-            <ChannelIcon src={channel.icon} name={channel.name} size="md" eager className="!w-14 !h-14" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-semibold tracking-[2px] uppercase text-green-300/70 mb-1">
-              Now streaming
-            </p>
-            <h1 className="text-[23px] leading-tight font-black text-white tracking-tight line-clamp-2">
-              {cleanName(channel.name)}
-            </h1>
-            <p className="text-[12px] text-white/45 mt-0.5">
-              {channels.length} World Cup feed{channels.length !== 1 ? 's' : ''} live now
-            </p>
-          </div>
-          {/* Big play target */}
-          <div
-            className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{
-              background: 'linear-gradient(135deg, #22C55E, #16A34A)',
-              animation: 'hero-play-breathe 2.8s ease-in-out infinite',
-            }}
-          >
-            <Play className="w-6 h-6 text-white ml-0.5" fill="white" />
-          </div>
-        </div>
-      </button>
-    </section>
   );
 }
 
