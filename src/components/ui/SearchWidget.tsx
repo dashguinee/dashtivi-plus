@@ -14,23 +14,29 @@ function toChannel(ch: CatalogChannel, creds: XtreamCredentials): Channel {
 }
 
 /**
- * SearchWidget — the MASTER SEARCH. A little Apple-glass trigger pill (small,
- * floaty, dims after a few idle seconds) that opens a floaty AMBIENT modal which
- * RISES in the same page: the page stays visible-but-blurred behind (continuity,
- * no page break), the field auto-focuses, results stream live from the catalog.
- * Tap a result → it plays. "Find gems" without leaving the flow.
+ * SearchWidget — the MASTER SEARCH. A little lit glass pebble that lives at
+ * half-screen (biased up), can be DRAGGED anywhere, breathes/glows, and fades in
+ * two stages (dim after a few idle sec, deeper after 45s) but never fully leaves —
+ * a tap always wakes it. Opening RISES an ambient modal in the same page (neon beam
+ * behind, bouncy cheer, gold caret + golden-shimmer typed text). Find gems, no break.
  */
 interface Props {
   credentials: XtreamCredentials;
   onPlay: (ch: Channel) => void;
 }
 
+const SIZE = 42;
+
 export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
-  const [dim, setDim] = useState(false);
+  const [fade, setFade] = useState(0); // 0 awake · 1 dim (4s) · 2 deep (45s)
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const dimTimer = useRef<ReturnType<typeof setTimeout>>();
+  const dragRef = useRef<{ ox: number; oy: number; moved: boolean } | null>(null);
+  const dimT = useRef<ReturnType<typeof setTimeout>>();
+  const deepT = useRef<ReturnType<typeof setTimeout>>();
 
   const results = useMemo(() => {
     const cat = getCatalogSync();
@@ -39,20 +45,28 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
     return cat.channels.filter((c) => c.name.toLowerCase().includes(needle)).slice(0, 12);
   }, [q]);
 
-  // Ambient dim — fade the trigger after a few idle seconds; any touch wakes it.
+  // Default rest position: half-screen, biased up ~15%, floated off the right edge.
+  useEffect(() => {
+    if (pos) return;
+    const x = window.innerWidth - SIZE - 16;
+    const y = Math.round(window.innerHeight * 0.35);
+    setPos({ x, y });
+  }, [pos]);
+
+  // Two-stage idle fade — any touch wakes it back to full.
   const wake = useCallback(() => {
-    setDim(false);
-    clearTimeout(dimTimer.current);
-    dimTimer.current = setTimeout(() => setDim(true), 3500);
+    setFade(0);
+    clearTimeout(dimT.current); clearTimeout(deepT.current);
+    dimT.current = setTimeout(() => setFade(1), 4000);
+    deepT.current = setTimeout(() => setFade(2), 45000);
   }, []);
 
   useEffect(() => {
-    if (open) { clearTimeout(dimTimer.current); const t = setTimeout(() => inputRef.current?.focus(), 90); return () => clearTimeout(t); }
+    if (open) { clearTimeout(dimT.current); clearTimeout(deepT.current); const t = setTimeout(() => inputRef.current?.focus(), 110); return () => clearTimeout(t); }
     setQ(''); wake();
-    return () => clearTimeout(dimTimer.current);
+    return () => { clearTimeout(dimT.current); clearTimeout(deepT.current); };
   }, [open, wake]);
 
-  // Back-gesture / Esc closes the master search (continuity: pops the layer).
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
@@ -60,52 +74,118 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
+  // Drag to reposition; a still press is a tap → open.
+  const onDown = (e: React.PointerEvent) => {
+    if (!pos) return;
+    wake();
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    dragRef.current = { ox: e.clientX - pos.x, oy: e.clientY - pos.y, moved: false };
+  };
+  const onMove = (e: React.PointerEvent) => {
+    const d = dragRef.current; if (!d) return;
+    const nx = e.clientX - d.ox, ny = e.clientY - d.oy;
+    if (!d.moved && Math.hypot(e.clientX - (d.ox + (pos?.x ?? 0)), e.clientY - (d.oy + (pos?.y ?? 0))) > 6) { d.moved = true; setDragging(true); }
+    if (d.moved) {
+      const x = Math.max(8, Math.min(window.innerWidth - SIZE - 8, nx));
+      const y = Math.max(70, Math.min(window.innerHeight - SIZE - 90, ny));
+      setPos({ x, y });
+    }
+  };
+  const onUp = () => {
+    const d = dragRef.current; dragRef.current = null;
+    setDragging(false);
+    if (d && !d.moved) { tap(); setOpen(true); }
+    else wake();
+  };
+
   return (
     <>
-      {/* Trigger — small ambient glass pill that dims when idle */}
-      <button
-        onPointerDown={wake}
-        onClick={() => { tap(); setOpen(true); }}
-        aria-label="Search channels"
-        className="fixed bottom-24 right-3 z-[55] w-9 h-9 rounded-full flex items-center justify-center active:scale-90"
-        style={{
-          background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.16)',
-          backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
-          opacity: open ? 0 : (dim ? 0.32 : 1),
-          transition: 'opacity 0.9s ease, transform 0.2s ease',
-          pointerEvents: open ? 'none' : 'auto',
-        }}
-      >
-        <Search className="w-4 h-4 text-white/85" />
-      </button>
+      <style>{`
+        @keyframes sw-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+        @keyframes sw-fade{from{opacity:0}to{opacity:1}}
+        @keyframes sw-cheer{0%{opacity:0;transform:translateY(26px) scale(0.94)}60%{opacity:1;transform:translateY(-6px) scale(1.015)}100%{opacity:1;transform:translateY(0) scale(1)}}
+        @keyframes sw-beam{0%,100%{opacity:0.55;transform:scaleY(1)}50%{opacity:0.9;transform:scaleY(1.06)}}
+        @keyframes sw-shimmer{from{background-position:200% 0}to{background-position:-40% 0}}
+        @keyframes sw-caret{0%,45%{opacity:1}55%,100%{opacity:0.15}}
+        .sw-shimmer-text{background:linear-gradient(100deg,#E8B53A 0%,#FFF6CE 26%,#FFD700 50%,#FFF6CE 74%,#E8B53A 100%);background-size:240% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:sw-shimmer 2.6s linear infinite}
+      `}</style>
 
-      {/* Master search — rises over the page; page stays visible-but-blurred (continuity) */}
+      {/* Lit, draggable, breathing pebble */}
+      {pos && (
+        <button
+          onPointerDown={onDown}
+          onPointerMove={onMove}
+          onPointerUp={onUp}
+          aria-label="Search channels"
+          className="fixed z-[55] flex items-center justify-center"
+          style={{
+            left: pos.x, top: pos.y, width: SIZE, height: SIZE, borderRadius: '50%',
+            background: 'radial-gradient(circle at 38% 32%, rgba(220,166,255,0.30), rgba(255,255,255,0.08) 60%)',
+            border: '1px solid rgba(199,125,255,0.42)',
+            backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+            boxShadow: dragging
+              ? '0 14px 40px rgba(157,78,221,0.55), 0 0 0 4px rgba(199,125,255,0.18)'
+              : '0 6px 22px rgba(157,78,221,0.40), inset 0 1px 1px rgba(255,255,255,0.25)',
+            opacity: open ? 0 : fade === 2 ? 0.2 : fade === 1 ? 0.5 : 1,
+            transform: 'translateZ(0)',
+            transition: dragging ? 'box-shadow .2s' : 'opacity 1s ease, left .5s cubic-bezier(0.34,1.56,0.64,1), top .5s cubic-bezier(0.34,1.56,0.64,1), box-shadow .4s',
+            pointerEvents: open ? 'none' : 'auto',
+            touchAction: 'none', cursor: 'grab',
+            animation: dragging ? 'none' : 'sw-breathe 4.5s ease-in-out infinite',
+          }}
+        >
+          <Search className="w-[18px] h-[18px] text-white/90" style={{ filter: 'drop-shadow(0 0 6px rgba(199,125,255,0.7))' }} />
+        </button>
+      )}
+
+      {/* Ambient master search — rises in-page over a blurred world */}
       {open && (
         <div
           className="fixed inset-0 z-[70] flex flex-col items-center"
-          style={{ background: 'rgba(6,6,12,0.42)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', animation: 'sw-fade 0.3s ease' }}
+          style={{ background: 'rgba(6,6,12,0.42)', backdropFilter: 'blur(11px)', WebkitBackdropFilter: 'blur(11px)', animation: 'sw-fade 0.3s ease' }}
           onClick={() => setOpen(false)}
         >
-          <style>{`@keyframes sw-fade{from{opacity:0}to{opacity:1}}@keyframes sw-rise{from{opacity:0;transform:translateY(18px) scale(0.975)}to{opacity:1;transform:none}}`}</style>
+          {/* neon beam behind the card */}
           <div
-            className="w-[88vw] max-w-[440px] mt-[17vh] rounded-3xl overflow-hidden"
+            className="absolute pointer-events-none"
             style={{
-              background: 'rgba(20,18,30,0.72)', border: '1px solid rgba(255,255,255,0.14)',
+              top: '6vh', width: 'min(520px, 96vw)', height: '44vh', left: '50%', transform: 'translateX(-50%)',
+              background: 'radial-gradient(ellipse 60% 50% at 50% 30%, rgba(157,78,221,0.55), rgba(157,78,221,0.12) 45%, transparent 70%)',
+              filter: 'blur(26px)', animation: 'sw-beam 3.4s ease-in-out infinite', transformOrigin: '50% 30%',
+            }}
+          />
+          <div
+            className="relative w-[88vw] max-w-[440px] mt-[15vh] rounded-3xl overflow-hidden"
+            style={{
+              background: 'rgba(20,18,30,0.74)', border: '1px solid rgba(199,125,255,0.22)',
               backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',
-              boxShadow: '0 30px 80px rgba(0,0,0,0.6)',
-              animation: 'sw-rise 0.36s cubic-bezier(0.23,1,0.32,1)',
+              boxShadow: '0 30px 90px rgba(0,0,0,0.6), 0 0 60px rgba(157,78,221,0.25)',
+              animation: 'sw-cheer 0.46s cubic-bezier(0.34,1.56,0.64,1)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 px-4 py-3.5">
-              <Search className="w-5 h-5 text-white/50 flex-shrink-0" />
-              <input
-                ref={inputRef}
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search all of DASH…"
-                className="flex-1 min-w-0 bg-transparent text-[16px] text-white placeholder-white/35 outline-none"
-              />
+              <Search className="w-5 h-5 flex-shrink-0" style={{ color: 'rgba(255,215,0,0.55)' }} />
+              {/* input + golden-shimmer mirror + stylized gold caret */}
+              <div className="relative flex-1 min-w-0">
+                <input
+                  ref={inputRef}
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Search all of DASH…"
+                  className="w-full bg-transparent text-[16px] outline-none placeholder-white/35"
+                  style={{ color: 'transparent', caretColor: '#FFD700' }}
+                  autoComplete="off" autoCorrect="off" spellCheck={false}
+                />
+                {q && (
+                  <span
+                    className="sw-shimmer-text absolute left-0 top-0 text-[16px] pointer-events-none whitespace-pre"
+                    style={{ fontWeight: 500, letterSpacing: '0.01em' }}
+                  >
+                    {q}
+                  </span>
+                )}
+              </div>
               <button onClick={() => { tap(); setOpen(false); }} aria-label="Close search" className="w-7 h-7 rounded-full flex items-center justify-center active:scale-90 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.08)' }}>
                 <X className="w-4 h-4 text-white/70" />
               </button>

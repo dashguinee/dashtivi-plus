@@ -1,15 +1,53 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1a0a2e"/>
-      <stop offset="100%" style="stop-color:#0A0A0A"/>
+    <radialGradient id="base" cx="50%" cy="36%" r="78%">
+      <stop offset="0%" stop-color="#3c1568"/>
+      <stop offset="52%" stop-color="#1d0937"/>
+      <stop offset="100%" stop-color="#0c0418"/>
+    </radialGradient>
+    <radialGradient id="orb" cx="40%" cy="33%" r="74%">
+      <stop offset="0%" stop-color="#F4E2FF"/>
+      <stop offset="20%" stop-color="#DCA6FF"/>
+      <stop offset="52%" stop-color="#9D4EDD"/>
+      <stop offset="100%" stop-color="#46198A"/>
+    </radialGradient>
+    <radialGradient id="aura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#C77DFF" stop-opacity="0.6"/>
+      <stop offset="58%" stop-color="#9D4EDD" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#9D4EDD" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0.2" y2="1">
+      <stop offset="0%" stop-color="#FFF6D6"/>
+      <stop offset="48%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#E3AC2E"/>
     </linearGradient>
-    <linearGradient id="purple" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#B77EFF"/>
-      <stop offset="100%" style="stop-color:#9D4EDD"/>
-    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="11"/></filter>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter>
   </defs>
-  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
-  <polygon points="200,140 200,372 380,256" fill="url(#purple)" opacity="0.9"/>
-  <text x="256" y="450" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800" font-size="72" fill="white" letter-spacing="8">TIVI</text>
+
+  <!-- deep violet cosmos -->
+  <rect width="512" height="512" rx="114" fill="url(#base)"/>
+  <!-- drifting particles (the living world) -->
+  <g fill="#C77DFF">
+    <circle cx="104" cy="126" r="2.6" opacity="0.7"/><circle cx="414" cy="142" r="2" opacity="0.55"/>
+    <circle cx="386" cy="402" r="2.6" opacity="0.6"/><circle cx="120" cy="392" r="2" opacity="0.5"/>
+    <circle cx="436" cy="286" r="1.7" opacity="0.5"/><circle cx="84" cy="262" r="1.7" opacity="0.5"/>
+    <circle cx="256" cy="84" r="1.7" opacity="0.45"/><circle cx="356" cy="92" r="1.5" opacity="0.4"/>
+  </g>
+
+  <!-- aura bloom + breathing rings -->
+  <circle cx="256" cy="246" r="172" fill="url(#aura)"/>
+  <circle cx="256" cy="246" r="150" fill="none" stroke="#C77DFF" stroke-width="1.6" opacity="0.28"/>
+  <circle cx="256" cy="246" r="134" fill="none" stroke="#E0B6FF" stroke-width="1.4" opacity="0.20"/>
+
+  <!-- the living orb -->
+  <circle cx="256" cy="246" r="120" fill="url(#orb)"/>
+  <circle cx="256" cy="246" r="120" fill="none" stroke="#2A0E52" stroke-width="3" opacity="0.45"/>
+  <!-- top-left lit highlight (alive, 3D) -->
+  <ellipse cx="216" cy="196" rx="58" ry="38" fill="#FFFFFF" opacity="0.32" filter="url(#soft)"/>
+
+  <!-- gold play — the doorway in -->
+  <polygon points="223,194 223,298 313,246" fill="url(#gold)" filter="url(#glow)" opacity="0.85"/>
+  <polygon points="223,194 223,298 313,246" fill="url(#gold)"/>
+  <polygon points="223,194 223,298 313,246" fill="none" stroke="#FFFAE6" stroke-width="2.2" opacity="0.55"/>
 </svg>
