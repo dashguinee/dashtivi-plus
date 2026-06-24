@@ -299,6 +299,19 @@ function TrailerExploreCard({
         />
       )}
 
+      {/* Purple brand mask — same as the full trailer: a strong violet-dark base
+          covers YouTube's logo (bottom), a 7% violet wash tints the rest DASH-purple. */}
+      {showTrailer && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'linear-gradient(to top, rgba(18,9,32,0.94) 0%, rgba(157,78,221,0.11) 12%, rgba(157,78,221,0.07) 50%, rgba(157,78,221,0.10) 84%, rgba(14,7,26,0.82) 100%)',
+            opacity: trailerReady ? 1 : 0,
+            transition: `opacity 0.7s ${EASE}`,
+          }}
+        />
+      )}
+
       {/* TRAILER tag — top-left, calm purple pill. */}
       {trailerKey && (
         <div className="absolute top-3 left-3">

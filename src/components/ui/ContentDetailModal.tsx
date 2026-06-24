@@ -294,6 +294,9 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
           />
           {/* Subtle 7% violet wash that stays on the trailer — brand tint, not raw YouTube. */}
           <div className="absolute inset-0 pointer-events-none" style={{ background: '#9D4EDD', opacity: 0.07 }} />
+          {/* Edge melt — top + bottom dark fade so the video blends into the canvas:
+              full immersion, no sharp rectangle edge. Always on. */}
+          <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to bottom, rgba(6,6,12,0.92) 0%, rgba(6,6,12,0.35) 9%, transparent 18%, transparent 74%, rgba(6,6,12,0.5) 90%, rgba(6,6,12,0.95) 100%)' }} />
         </div>
         {/* Scrim — fades out WITH the chrome so the video plays CLEAN when buttons hide */}
         <div className="absolute inset-0 pointer-events-none" style={{ opacity: chrome ? 1 : 0, transition: 'opacity 0.6s ease' }}>
