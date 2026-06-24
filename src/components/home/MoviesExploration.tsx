@@ -140,7 +140,7 @@ export const MoviesExploration: React.FC<Props> = ({ credentials, onPlay, featur
             style={{ background: ACCENT, boxShadow: `0 0 6px ${ACCENT}` }}
           />
           <h2 className="text-[19px] font-black tracking-tight text-white truncate">
-            {lang === 'fr' ? 'À explorer · Cinéma' : 'Explore · Cinema'}
+            {lang === 'fr' ? 'Cinéma Live' : 'Cinema Live'}
           </h2>
         </div>
         <button
