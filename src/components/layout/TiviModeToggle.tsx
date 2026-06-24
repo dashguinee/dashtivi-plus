@@ -31,9 +31,12 @@ export const TiviModeToggle: React.FC = () => {
     if (r) setWheel({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
   }, []);
 
-  const onDown = useCallback(() => {
+  const onDown = useCallback((e: React.PointerEvent) => {
     held.current = false;
     tap();
+    // Capture the pointer for the whole hold — without this the release landed on
+    // the wheel's own backdrop and closed it the instant it opened (the "fudge").
+    e.currentTarget.setPointerCapture?.(e.pointerId);
     holdTimer.current = setTimeout(openWheel, 420);
   }, [openWheel]);
 
@@ -42,22 +45,19 @@ export const TiviModeToggle: React.FC = () => {
     if (!held.current && !wheel) navigate(nextRoute(location.pathname));
   }, [navigate, location.pathname, wheel]);
 
-  const onLeave = useCallback(() => { clearTimeout(holdTimer.current); }, []);
-
   const onSelect = useCallback((a: VeeAction) => {
     setWheel(null); held.current = false;
     if (a === 'live') navigate('/');
     else if (a === 'movies') navigate('/movies');
     else if (a === 'series') navigate('/series');
     else if (a === 'ask') { navigate('/explore'); }
-    else if (a === 'search') navigate('/movies');
+    else if (a === 'search') (window as any).openTiviSearch?.();
   }, [navigate]);
 
   return (
     <button
       onPointerDown={onDown}
       onPointerUp={onUp}
-      onPointerLeave={onLeave}
       onContextMenu={(e) => e.preventDefault()}
       aria-label="Vee — tap to switch Live / Movies / Series, hold for actions"
       className="relative flex items-center justify-center flex-1 h-full"

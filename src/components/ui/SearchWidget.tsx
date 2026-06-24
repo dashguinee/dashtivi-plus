@@ -156,7 +156,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
           style={{
             left: pos.x, top: pos.y, width: SIZE, height: SIZE, padding: 0,
             background: 'transparent', border: 'none',
-            opacity: open ? 0 : fade === 2 ? 0.2 : fade === 1 ? 0.5 : 1,
+            opacity: open ? 0 : fade === 2 ? 0.6 : fade === 1 ? 0.8 : 1,
             transition: dragging ? 'none' : 'opacity 1s ease, left .5s cubic-bezier(0.34,1.56,0.64,1), top .5s cubic-bezier(0.34,1.56,0.64,1)',
             pointerEvents: open ? 'none' : 'auto',
             touchAction: 'none', cursor: 'grab', WebkitTapHighlightColor: 'transparent',
