@@ -129,23 +129,17 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const showTrailer = hasTrailer && !trailerFailed;
 
-  // Trailer fullscreen. Two independent fades:
-  //  • posterUp — a brief still-poster cover that smooths the iframe load (no black
-  //    flash), then dissolves fast (~1.8s) to the full-bleed looping video.
-  //  • chrome — the buttons/title/close + scrim; auto-hides (~4.5s) so the trailer
-  //    breathes CLEAN, tap anywhere toggles it back.
-  const [posterUp, setPosterUp] = useState(true);
+  // Trailer fullscreen, kept simple. A VOYO-style purple fade MASKS YouTube's load
+  // (branding + intro) for the first 6s, then drops to the clean looping video.
+  // The buttons auto-hide so it breathes; tap anywhere toggles them.
+  const [masked, setMasked] = useState(true);
   const [chrome, setChrome] = useState(true);
   useEffect(() => {
     if (!showTrailer) return;
-    const t = setTimeout(() => setPosterUp(false), 1800);
-    return () => clearTimeout(t);
+    const tMask = setTimeout(() => setMasked(false), 6000);
+    const tChrome = setTimeout(() => setChrome(false), 5500);
+    return () => { clearTimeout(tMask); clearTimeout(tChrome); };
   }, [showTrailer]);
-  useEffect(() => {
-    if (!showTrailer || !chrome) return;
-    const t = setTimeout(() => setChrome(false), 4500);
-    return () => clearTimeout(t);
-  }, [showTrailer, chrome]);
 
   // Cleanup iframe on unmount + delayed unmute for trailer audio
   useEffect(() => {
@@ -161,9 +155,9 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
       if (attempts < 5) unmuteTimer = setTimeout(tryUnmute, 600);
     };
     if (showTrailer) {
-      // Unmute as the poster dissolves (~2s) so audio arrives WITH the video.
+      // Unmute as the purple mask drops (~6s) so audio arrives WITH the reveal.
       // Retry up to 5 times (covers slow YouTube init).
-      unmuteTimer = setTimeout(tryUnmute, 2000);
+      unmuteTimer = setTimeout(tryUnmute, 6000);
     }
     return () => {
       clearTimeout(unmuteTimer);
@@ -283,19 +277,23 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
               top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
               width: '100vw', height: '56.25vw', minHeight: '100vh', minWidth: '177.78vh',
             }}
-            src={`https://www.youtube-nocookie.com/embed/${trailerKey}?rel=0&modestbranding=1&controls=0&showinfo=0&iv_load_policy=3&disablekb=1&start=5&autoplay=1&mute=1&enablejsapi=1&playsinline=1&loop=1&playlist=${trailerKey}`}
+            src={`https://www.youtube-nocookie.com/embed/${trailerKey}?rel=0&modestbranding=1&controls=0&showinfo=0&iv_load_policy=3&disablekb=1&start=6&autoplay=1&mute=1&enablejsapi=1&playsinline=1&loop=1&playlist=${trailerKey}`}
             title={`${cleanTitle} - Trailer`}
             allow="autoplay; encrypted-media"
             frameBorder="0"
           />
-          {backdropUrl && (
-            <img
-              src={backdropUrl}
-              alt={cleanTitle}
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ opacity: posterUp ? 1 : 0, transition: 'opacity 0.9s cubic-bezier(0.23,1,0.32,1)' }}
-            />
-          )}
+          {/* VOYO purple fade — masks YouTube's load + branding for the first 6s,
+              then drops to reveal the clean trailer. */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(165deg, #0d0618 0%, #2a0f4a 38%, #6d28b8 76%, #9D4EDD 100%)',
+              opacity: masked ? 1 : 0,
+              transition: 'opacity 1.2s cubic-bezier(0.23,1,0.32,1)',
+            }}
+          />
+          {/* Subtle 7% violet wash that stays on the trailer — brand tint, not raw YouTube. */}
+          <div className="absolute inset-0 pointer-events-none" style={{ background: '#9D4EDD', opacity: 0.07 }} />
         </div>
         {/* Scrim — fades out WITH the chrome so the video plays CLEAN when buttons hide */}
         <div className="absolute inset-0 pointer-events-none" style={{ opacity: chrome ? 1 : 0, transition: 'opacity 0.6s ease' }}>
