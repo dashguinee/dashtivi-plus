@@ -77,7 +77,7 @@ const EXPERIENCE_TO_CURATOR_ID: Record<string, string> = {
   'Sports': 'sports',
   'Movies': 'movies',
   'Entertainment': 'entertainment',
-  'France': 'french',
+  'Français': 'french',
   'African': 'africa',
   'Arabic': 'arabic',
   'Kids': 'kids',
@@ -132,7 +132,7 @@ export function buildCatalogUrl(
 
 interface GemChannel { id: string; name: string; url: string; logo?: string; district: string; }
 const GEM_DISTRICT_TO_EXPERIENCE: Record<string, string> = {
-  sports: 'Sports', movies: 'Movies', news: 'News', french: 'France',
+  sports: 'Sports', movies: 'Movies', news: 'News', french: 'Français',
   african: 'African', kids: 'Kids', discover: 'Documentary', music: 'Entertainment',
 };
 // Cross-listing — a channel that genuinely fits more than one collection shows on each.

@@ -48,7 +48,7 @@ const EXPERIENCE_ACCENT: Record<string, string> = {
   'Sports': '#22C55E',
   'Movies': '#9D4EDD',
   'Entertainment': '#C77DFF',
-  'France': '#3B82F6',
+  'Français': '#3B82F6',
   'African': '#F97316',
   'Arabic': '#14B8A6',
   'Kids': '#EC4899',

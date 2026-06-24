@@ -12,7 +12,7 @@ import { tap } from '@/lib/haptics';
  */
 const GRAD: Record<string, [string, string]> = {
   'World Cup': ['#0b3d2e', '#16a34a'], 'Sports': ['#0c1a2b', '#0ea5e9'], 'Movies': ['#2a0b45', '#a855f7'],
-  'Entertainment': ['#1a0b35', '#9333ea'], 'France': ['#14163a', '#6366f1'], 'African': ['#3a1c05', '#f59e0b'],
+  'Entertainment': ['#1a0b35', '#9333ea'], 'Français': ['#14163a', '#6366f1'], 'African': ['#3a1c05', '#f59e0b'],
   'Arabic': ['#052e2b', '#14b8a6'], 'Kids': ['#3d0633', '#ec4899'], 'News': ['#161b28', '#64748b'],
   'Documentary': ['#0c2a1a', '#22c55e'], '4K Showcase': ['#2e2305', '#eab308'],
 };
@@ -20,7 +20,7 @@ const TAG: Record<string, string> = {
   'World Cup': "Every match, live — what DStv & Canal+ don't carry.",
   'Sports': 'beIN, Sky, SuperSport — top of the table, uninterrupted.',
   'Movies': 'Sky Cinema, HBO & 60,000 titles on demand.',
-  'France': 'Canal+, Ciné+ — French cinema, curated.',
+  'Français': 'Canal+, Ciné+ — French cinema, curated.',
   'African': 'RTS, TFM, CRTV — home, in your language.',
   'Arabic': "MBC, Rotana — the region's headline, live.",
   'Kids': 'Cartoon Network, Nick, Disney — for the little ones.',
