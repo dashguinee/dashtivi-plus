@@ -138,6 +138,13 @@ const GEM_DISTRICT_TO_EXPERIENCE: Record<string, string> = {
 // Cross-listing — a channel that genuinely fits more than one collection shows on each.
 const GEM_CROSS_LIST: Record<string, string[]> = {
   'Trace Sports Stars': ['Entertainment'], // sports content + the Trace entertainment brand
+  // Francophone-African free gems belong on the French shelf too (balanced priority)
+  'Africanews French': ['Français'],
+  'Espace TV': ['Français'],
+  'Medi1TV Afrique': ['Français'],
+  'Africa 24 English': ['Français'],
+  'AfroLandTV': ['Français'],
+  'A2i TV': ['Français'],
 };
 
 function buildCatalog(raw: RawCatalog, gems: GemChannel[] = []): Catalog {
