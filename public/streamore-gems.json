@@ -1,6 +1,7 @@
 {
- "ts": "2026-06-24",
- "total": 112,
+ "ts": "2026-06-25",
+ "total": 96,
+ "verified": "frame-grabbed + eyeballed",
  "gems": [
   {
    "id": "free-3191",
@@ -31,14 +32,6 @@
    "name": "SportsGrid",
    "url": "https://sportsgrid-tribal.amagi.tv/playlist.m3u8",
    "logo": "https://i.imgur.com/ulGKX30.png",
-   "district": "sports",
-   "free": true
-  },
-  {
-   "id": "free-2616",
-   "name": "Trace Sport Stars",
-   "url": "https://lightning-tracesport-samsungau.amagi.tv/playlist.m3u8",
-   "logo": "https://i.imgur.com/FabFP5A.png",
    "district": "sports",
    "free": true
   },
@@ -103,14 +96,6 @@
    "name": "Grjngo Western Movies",
    "url": "https://amogonetworx-grjngo-3-dk.samsung.wurl.tv/playlist.m3u8",
    "logo": "https://i.imgur.com/wFqhK3p.png",
-   "district": "movies",
-   "free": true
-  },
-  {
-   "id": "free-4826",
-   "name": "Hallmark Movies & More",
-   "url": "https://stitcher.pluto.tv/stitch/hls/channel/628e685ba3811100070551a8/master.m3u8?deviceType=web&servertSideAds=false&deviceMake=safari&deviceVersion=1&deviceId=spencer&appVersion=1&deviceDNT=0&deviceModel=web&sid=1489fe1a-8afc-11f0-a08f-d2161128e34e",
-   "logo": "https://images.pluto.tv/channels/628e685ba3811100070551a8/colorLogoPNG.png",
    "district": "movies",
    "free": true
   },
@@ -267,14 +252,6 @@
    "free": true
   },
   {
-   "id": "free-882",
-   "name": "Euronews Deutsch",
-   "url": "https://jmp2.uk/plex-5e20b730f2f8d5003d739db7-6245efe9f137de43897ea1ae.m3u8",
-   "logo": "https://provider-static.plex.tv/epg/cms/production/2fe3efc9-5aef-40f7-be0e-46ff4b9ae94d/DELogo_Euronews_stacked_REallyWHite_on_german_RGB-01rdx.png",
-   "district": "news",
-   "free": true
-  },
-  {
    "id": "free-2129",
    "name": "Euronews English",
    "url": "https://a-cdn.klowdtv.com/live3/euronews_720p/playlist.m3u8",
@@ -291,22 +268,6 @@
    "free": true
   },
   {
-   "id": "free-1527",
-   "name": "Euronews Italiano",
-   "url": "https://jmp2.uk/plex-6430aa45fc3be5947780904e-6245f13093b402a3d1097789.m3u8",
-   "logo": "https://provider-static.plex.tv/epg/cms/production/ca19114a-f498-4ac3-bade-257fb304e0be/ITLogo_Euronews_stacked_white_on_italien_1500x1000whtrdx2.png",
-   "district": "news",
-   "free": true
-  },
-  {
-   "id": "free-1694",
-   "name": "Euronews Portuguese",
-   "url": "https://jmp2.uk/plex-608049aefa2b8ae93c2c3a63-6245cd154f27f4e9c76d67e9.m3u8",
-   "logo": "https://provider-static.plex.tv/epg/cms/production/73b5e777-8a44-4def-8e33-be43f7f8177c/Logo_Euronews_stacked_white_on_portuguese_1500x1000rdxWHITE.png",
-   "district": "news",
-   "free": true
-  },
-  {
    "id": "free-1481",
    "name": "Reuters",
    "url": "https://amg00453-reuters-amg00453c1-rakuten-uk-2110.playouts.now.amagi.tv/playlist/amg00453-reuters-reuters-rakutenuk/playlist.m3u8",
@@ -319,14 +280,6 @@
    "name": "Sky News Arabia",
    "url": "https://live-stream.skynewsarabia.com/c-horizontal-channel/horizontal-stream/index.m3u8",
    "logo": "https://i.imgur.com/SvjU4h6.png",
-   "district": "news",
-   "free": true
-  },
-  {
-   "id": "free-321",
-   "name": "Sky News Arabia Vertical",
-   "url": "https://live-stream.skynewsarabia.com/c-vertical-channel/vertical-stream/index.m3u8",
-   "logo": "https://i.imgur.com/FjtzQQs.png",
    "district": "news",
    "free": true
   },
@@ -360,38 +313,6 @@
    "url": "https://live.alarabiya.net/alarabiapublish/aaprograms.smil/playlist.m3u8",
    "logo": "https://i.imgur.com/Hoc3cfO.png",
    "district": "news",
-   "free": true
-  },
-  {
-   "id": "free-4659",
-   "name": "Bloomberg TV EMEA Live Event",
-   "url": "https://bloomberg.com/media-manifest/streams/eu-event.m3u8",
-   "logo": "https://i.imgur.com/OuogLHx.png",
-   "district": "news",
-   "free": true
-  },
-  {
-   "id": "free-1080",
-   "name": "Bloomberg TV US",
-   "url": "https://www.bloomberg.com/media-manifest/streams/us-event.m3u8",
-   "logo": "https://cdn-profiles.tunein.com/s47135/images/logog.png",
-   "district": "news",
-   "free": true
-  },
-  {
-   "id": "free-2143",
-   "name": "Euronews Albania",
-   "url": "https://gjirafa-video-live.gjirafa.net/gjvideo-live/2dw-zuf-1c9-pxu/index.m3u8",
-   "logo": "https://i.imgur.com/Skf6vdi.png",
-   "district": "news",
-   "free": true
-  },
-  {
-   "id": "free-421",
-   "name": "DiscoverFilm",
-   "url": "https://discoverfilm-discoverfilm-1-nl.samsung.wurl.tv/playlist.m3u8",
-   "logo": "https://i.imgur.com/oMnpsQ5.png",
-   "district": "french",
    "free": true
   },
   {
@@ -515,22 +436,6 @@
    "free": true
   },
   {
-   "id": "free-3834",
-   "name": "Wazobia Max TV Nigeria",
-   "url": "https://wazobia.live:8333/channel/wmax.m3u8",
-   "logo": "https://i.imgur.com/IeioxBp.png",
-   "district": "african",
-   "free": true
-  },
-  {
-   "id": "free-3329",
-   "name": "Wazobia Max TV Port Harcourt",
-   "url": "https://wazobia.live:8333/channel/wmaxph.m3u8",
-   "logo": "https://rndcdn.dstv.com/dstvcms/2016/10/20/WazobiaMaz_new4-4logo_001_xlrg.png",
-   "district": "african",
-   "free": true
-  },
-  {
    "id": "free-4146",
    "name": "Music Legends",
    "url": "https://jmp2.uk/plex-643054b1fc3be59477853717-6196c8c01d310bf925e02615.m3u8",
@@ -619,14 +524,6 @@
    "free": true
   },
   {
-   "id": "free-2988",
-   "name": "Trace Stars",
-   "url": "https://tracetv-tracesportstar-lgau.amagi.tv/hls/amagi_hls_data_lgAAAAAAA-tracetv-tracesportstar-lg-auA/CDN/playlist.m3u8?ads.deviceid=[DEVICE_ID]&ads.ifa=[IFA]&ads.ifatype=[IFA_TYPE]&ads.lat=[LMT]&ads.donotsell=[DNS]&ads.ua=[UA]&ads.ip=[IP]&ads.gdpr=[GDPR]&ads.gdprconsent=[GDPR_CONSENT]&ads.country=[COUNTRY]&ads.usprivacy=[US_PRIVACY]&ads.appstoreurl=[APP_STOREURL]&ads.bundleid=[APP_BUNDLE]&ads.appname=[APP_NAME]&ads.appversion=[APP_VERSION]&ads.devicetype=[DEVICE_TYPE]&ads.devicemake=[DEVICE_MAKE]&ads.devicemodel=[DEVICE_MODEL]&ads.targetad=[TARGETAD_ALLOWED]",
-   "logo": "https://d3dj3gmzxw0r4q.cloudfront.net/Trace_SportStars/LG_Ch_Logo_460x200.png",
-   "district": "music",
-   "free": true
-  },
-  {
    "id": "free-2690",
    "name": "Trace Urban",
    "url": "https://lightning-traceurban-samsungau.amagi.tv/playlist.m3u8",
@@ -639,14 +536,6 @@
    "name": "Trace Urban HD",
    "url": "https://amg01131-tracetv-traceurbanuk-samsunguk-6r213.amagi.tv/playlist/amg01131-tracetv-traceurbanuk-samsunguk/playlist.m3u8",
    "logo": "https://medianet.mv/media/channel/145x0-icon.png",
-   "district": "music",
-   "free": true
-  },
-  {
-   "id": "free-4693",
-   "name": "Vevo 2K",
-   "url": "https://d1s6jz7jeei17.cloudfront.net/playlist/amg00056-vevotv-vevo2kau-samsungau/playlist.m3u8",
-   "logo": "https://images.pluto.tv/channels/5fd7bca3e0a4ee0007a38e8c/featuredImage.jpg",
    "district": "music",
    "free": true
   },
@@ -679,14 +568,6 @@
    "name": "Vevo Country",
    "url": "https://amg00056-vevotv-vevocountryau-samsungau-ktmqm.amagi.tv/playlist/amg00056-vevotv-vevocountryau-samsungau/playlist.m3u8",
    "logo": "https://images.pluto.tv/channels/5da0d75e84830900098a1ea0/featuredImage.jpg",
-   "district": "music",
-   "free": true
-  },
-  {
-   "id": "free-649",
-   "name": "Vevo Latino",
-   "url": "https://amg00056-amg00056c13-rakuten-es-3246.playouts.now.amagi.tv/playlist.m3u8",
-   "logo": "https://i.imgur.com/D7SwmuB.png",
    "district": "music",
    "free": true
   },
@@ -791,14 +672,6 @@
    "name": "ToonGoggles",
    "url": "https://amg01329-otterainc-toongoggles-samsungau-ad-4c.amagi.tv/playlist/amg01329-otterainc-toongoggles-samsungau/playlist.m3u8",
    "logo": "https://i.imgur.com/JMnxswq.png",
-   "district": "kids",
-   "free": true
-  },
-  {
-   "id": "free-70",
-   "name": "Cartoonito",
-   "url": "https://cdn4.skygo.mn/live/disk1/Boomerang/HLSv3-FTA/Boomerang.m3u8",
-   "logo": "https://raw.githubusercontent.com/tv-logo/tv-logos/refs/heads/main/countries/united-states/cartoonito-us.png",
    "district": "kids",
    "free": true
   },
