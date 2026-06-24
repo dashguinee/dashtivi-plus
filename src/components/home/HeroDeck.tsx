@@ -286,9 +286,9 @@ export function HeroDeck({ slides, lang }: { slides: HeroSlide[]; lang: Lang }) 
                   <div
                     className="rounded-2xl"
                     style={{
-                      height: '22vh',
-                      minHeight: 158,
-                      maxHeight: 190,
+                      height: '34vh',
+                      minHeight: 220,
+                      maxHeight: 300,
                       background: `linear-gradient(160deg, rgba(${hexToRgb(s.accent)},0.06), rgba(8,10,14,0.9))`,
                       border: `1px solid rgba(${hexToRgb(s.accent)},0.12)`,
                     }}

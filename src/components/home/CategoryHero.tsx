@@ -75,9 +75,9 @@ export function CategoryHero({
       onClick={() => onPlay(featured)}
       className="relative w-full overflow-hidden rounded-2xl text-left active:scale-[0.99] transition-transform duration-200 group"
       style={{
-        height: '22vh',
-        minHeight: 158,
-        maxHeight: 190,
+        height: '34vh',
+        minHeight: 220,
+        maxHeight: 300,
         background:
           `radial-gradient(ellipse 90% 70% at 25% 20%, rgba(${a},0.22) 0%, transparent 60%), ` +
           'radial-gradient(ellipse 80% 80% at 90% 90%, rgba(10,12,16,0.6) 0%, transparent 70%), ' +
