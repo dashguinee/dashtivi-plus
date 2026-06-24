@@ -54,6 +54,21 @@ const TAB_NAME_MAP: Record<string, TranslationKey> = {
   'International': 'tabInternational',
 };
 
+// ── Mood-aware glow per moment pack (warm mornings, cool nights, hot binge).
+// Stays inside the quiet-luxury palette — the glow whispers context in the
+// row title/icon only, never tints the cards themselves. ──────────────
+const MOMENT_MOOD: Record<string, string> = {
+  'before-sleep': '#6366F1',   // calm deep violet-blue
+  'late-night': '#7C3AED',     // night violet
+  'quick-lunch': '#D97706',    // warm amber (midday)
+  'everyone-watching': '#9D4EDD',
+  'in-your-feelings': '#C084FC',
+  'family-time': '#F59E0B',    // warm gold
+  'adrenaline': '#EF4444',     // hot red (binge/action)
+  'mind-benders': '#8B5CF6',
+};
+const moodColor = (id: string) => MOMENT_MOOD[id] || '#9D4EDD';
+
 // ── Scoring ──────────────────────────────────────────────────────
 
 function getTrendingScore(movie: VodStream, tmdbMap: Record<string, TmdbEntry>): number {
@@ -441,10 +456,10 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // ── Render ───────────────────────────────────────────────────
 
   return (
-    <div className="pt-16 pb-32">
+    <div className="pb-32" style={{ paddingTop: 'max(4rem, calc(3.5rem + env(safe-area-inset-top, 0px)))' }}>
       {/* ── Hero Billboard ── */}
       {heroMovie ? (
-        <div className="relative overflow-hidden" style={{ height: 'clamp(140px, 25vh, 280px)' }}>
+        <div className="relative overflow-hidden" style={{ height: 'clamp(160px, 35vh, 280px)' }}>
           {/* Backdrop image */}
           <div
             className="absolute inset-0 bg-cover bg-center"
@@ -561,10 +576,10 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               <div ref={genreScrollRef} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide px-4 pb-2.5 pt-0.5">
                 {activeGenreFilters.map(g => (
                   <button key={g.id} onClick={() => setActiveGenre(g.id)}
-                    className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-medium transition-colors duration-300 ${
+                    className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 min-h-[34px] rounded-lg text-[12px] font-medium transition-colors duration-300 ${
                       activeGenre === g.id
                         ? 'bg-primary/20 text-primary-light border border-primary/30'
-                        : 'text-white/20 hover:text-white/40'
+                        : 'text-white/25 hover:text-white/45'
                     }`}>
                     {GENRE_NAME_MAP[g.name] ? t(lang, GENRE_NAME_MAP[g.name]) : g.name}
                     {g.id !== 0 && genreCounts[g.id] && (
@@ -580,8 +595,8 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                     const next = modes[(modes.indexOf(sortMode) + 1) % modes.length];
                     setSortMode(next);
                   }}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] text-white/25 hover:text-white/50 transition-colors">
-                    <SlidersHorizontal className="w-3 h-3" />
+                    className="flex items-center gap-1 px-3 py-1.5 min-h-[34px] rounded-lg text-[12px] text-white/35 hover:text-white/60 transition-colors">
+                    <SlidersHorizontal className="w-3.5 h-3.5" />
                     {(() => { const sm = SORT_MODES.find(s => s.id === sortMode); return sm && SORT_NAME_MAP[sm.name] ? t(lang, SORT_NAME_MAP[sm.name]) : sm?.name; })()}
                   </button>
                 </div>
@@ -599,19 +614,23 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         )}
       </div>
 
-      {/* ── For You — personalized from what you've opened (localStorage) ── */}
+      {/* ── For You — personalized from what you've opened (localStorage). A
+          remembered relationship: title breathes, the most-recent watch pulses. ── */}
       {!isSearching && !loading && recent.length > 0 && (
         <section className="px-4 pt-6 pb-3">
-          <h2 className="text-[19px] font-black text-white/90 mb-3 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#9D4EDD', boxShadow: '0 0 6px #9D4EDD' }} />
+          <h2 className="text-[19px] font-black text-white/90 mb-1 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#9D4EDD', boxShadow: '0 0 8px #9D4EDD, 0 0 14px rgba(157,78,221,0.4)' }} />
             For You
             <RowCountBadge count={recent.length} label="movies" />
           </h2>
-          <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 items-end">
-            {recent.map((m) => (
-              <div key={m.stream_id} className="flex-shrink-0 w-[140px]">
-                <PosterCard title={m.name} poster={m.stream_icon} rating={m.rating}
-                  tmdbData={tmdbMap[`m:${m.stream_id}`]} onClick={() => setDetailMovie(m)} />
+          <p className="text-[11px] text-white/30 mb-3 ml-3.5">{lang === 'fr' ? 'Repris là où vous étiez' : 'Recently watched'}</p>
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide scroll-fade pb-2 items-end">
+            {recent.map((m, i) => (
+              <div key={m.stream_id} className="flex-shrink-0" style={{ width: 'clamp(116px, 32vw, 140px)' }}>
+                <div className="relative" style={i === 0 ? { boxShadow: '0 0 0 1.5px rgba(157,78,221,0.45), 0 6px 22px rgba(157,78,221,0.18)', borderRadius: '0.75rem' } : undefined}>
+                  <PosterCard title={m.name} poster={m.stream_icon} rating={m.rating}
+                    tmdbData={tmdbMap[`m:${m.stream_id}`]} onClick={() => setDetailMovie(m)} />
+                </div>
               </div>
             ))}
           </div>
@@ -626,9 +645,9 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
             {t(lang, 'trendingNow')}
             <RowCountBadge count={trendingMovies.length} label="movies" />
           </h2>
-          <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 items-end">
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide scroll-fade pb-2 items-end">
             {trendingMovies.map((m, i) => (
-              <div key={m.stream_id} className="flex-shrink-0 w-[140px]" style={{ animation: i < 12 ? `vee-card-in 0.9s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms both` : undefined }}>
+              <div key={m.stream_id} className="flex-shrink-0" style={{ width: 'clamp(116px, 32vw, 140px)', animation: i < 12 ? `vee-card-in 0.9s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms both` : undefined }}>
                 <PosterCard title={m.name} poster={m.stream_icon} rating={m.rating}
                   tmdbData={tmdbMap[`m:${m.stream_id}`]} onClick={() => setDetailMovie(m)} />
               </div>
@@ -641,18 +660,20 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       {/* ── Moment pack rows ── */}
       {!isSearching && activeGenre === 0 && momentRows.length > 0 && (
         <div className="py-5">
-          {momentRows.map(({ pack, items }, rowIdx) => (
+          {momentRows.map(({ pack, items }, rowIdx) => {
+            const mood = moodColor(pack.id);
+            return (
             <section key={pack.id} className={`${rowIdx === 0 ? 'row-tier-featured' : 'row-tier-standard'} reveal`}>
               <div className="px-4 mb-2">
-                <h3 className={`${rowIdx === 0 ? 'text-[17px]' : 'text-[15px]'} font-semibold text-white/50 flex items-center gap-1.5`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                  <span className="text-white/30">{MOMENT_ICON_MAP[pack.icon]}</span>
+                <h3 className={`${rowIdx === 0 ? 'text-[17px]' : 'text-[15px]'} font-semibold text-white/65 flex items-center gap-1.5`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  <span style={{ color: mood, filter: `drop-shadow(0 0 6px ${mood}88)` }}>{MOMENT_ICON_MAP[pack.icon]}</span>
                   {t(lang, pack.nameKey as TranslationKey)}
                   <RowCountBadge count={items.length} label="movies" />
                 </h3>
               </div>
               <div className="flex gap-3.5 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-2 items-end">
                 {items.map((m, i) => (
-                  <div key={m.stream_id} className="flex-shrink-0 w-[108px]" style={{ animation: i < 12 ? `vee-card-in 0.9s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms both` : undefined }}>
+                  <div key={m.stream_id} className="flex-shrink-0" style={{ width: 'clamp(100px, 28vw, 116px)', animation: i < 12 ? `vee-card-in 0.9s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms both` : undefined }}>
                     <PosterCard title={m.name} poster={m.stream_icon} rating={m.rating}
                       tmdbData={tmdbMap[`m:${m.stream_id}`]} onClick={() => setDetailMovie(m)} />
                   </div>
@@ -660,7 +681,8 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 <NeonGate navigateTo="/movies" />
               </div>
             </section>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -730,11 +752,12 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         )
       ) : (
         <>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5">
+          <div className="grid grid-cols-2 min-[500px]:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5">
             {(isSearching ? filteredAndSorted : filteredAndSorted.slice(0, displayLimit)).map(movie => (
               <div key={movie.stream_id} className="relative group/card">
                 <PosterCard title={movie.name} poster={movie.stream_icon} rating={movie.rating}
                   tmdbData={tmdbMap[`m:${movie.stream_id}`]} onClick={() => setDetailMovie(movie)} />
+                {/* Download — always visible on touch (no hover on mobile), 44px tap target. */}
                 <button onClick={e => {
                     e.stopPropagation();
                     const url = buildVodUrl(credentials, movie.stream_id, movie.container_extension || 'mp4');
@@ -748,8 +771,9 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                     a.click();
                     document.body.removeChild(a);
                   }}
-                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/70 flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity z-10 hover:bg-black/90"
-                  title={t(lang, 'download')}>
+                  className="absolute top-1.5 right-1.5 w-11 h-11 rounded-full flex items-center justify-center z-10 opacity-90 sm:opacity-0 sm:group-hover/card:opacity-100 transition-opacity active:scale-90"
+                  style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)' }}
+                  title={t(lang, 'download')} aria-label={t(lang, 'download')}>
                   <Download className="w-4 h-4 text-white" />
                 </button>
               </div>
@@ -761,23 +785,23 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 onClick={() => setDisplayLimit(prev => prev + PAGE_SIZE)}
                 className="group w-full relative overflow-hidden rounded-2xl py-3.5 transition-all duration-300 hover:scale-[1.005] active:scale-[0.995]"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(157,78,221,0.02) 100%)',
-                  border: '1px solid rgba(157,78,221,0.1)',
+                  background: 'linear-gradient(135deg, rgba(157,78,221,0.13) 0%, rgba(157,78,221,0.05) 100%)',
+                  border: '1px solid rgba(157,78,221,0.22)',
                 }}
               >
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.04) 50%, transparent 100%)' }}
+                  style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.08) 50%, transparent 100%)' }}
                 />
                 <div className="relative flex flex-col items-center justify-center gap-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-medium tracking-[0.15em] uppercase" style={{ color: 'rgba(157,78,221,0.55)' }}>
+                    <span className="text-[11px] font-semibold tracking-[0.15em] uppercase" style={{ color: 'rgba(201,160,255,0.9)' }}>
                       {t(lang, 'showMore')}
                     </span>
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="group-hover:translate-y-0.5 transition-transform duration-300">
-                      <path d="M6 2v8M2 6l4 4 4-4" stroke="rgba(157,78,221,0.4)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="animate-bounce" style={{ animationDuration: '1.8s' }}>
+                      <path d="M6 2v8M2 6l4 4 4-4" stroke="rgba(201,160,255,0.7)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
-                  <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                  <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.35)' }}>
                     {t(lang, 'showing')} {Math.min(displayLimit, filteredAndSorted.length).toLocaleString()} {t(lang, 'of')} {filteredAndSorted.length.toLocaleString()}
                   </span>
                 </div>

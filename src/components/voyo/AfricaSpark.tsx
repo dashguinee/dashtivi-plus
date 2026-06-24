@@ -46,6 +46,8 @@ export const AfricaSpark = ({
 
   return (
     <div
+      role="img"
+      aria-label="Oyé Africa globe"
       className={`africa-spark relative inline-block ${className}`}
       style={{ width: size, height: size, ['--spark-play' as string]: playState }}
     >

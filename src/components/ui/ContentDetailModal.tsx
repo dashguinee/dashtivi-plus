@@ -129,6 +129,16 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const showTrailer = hasTrailer && !trailerFailed;
 
+  // Poster-first arrival: hold the STILL poster + chrome (buttons), then dissolve
+  // to the live trailer once the chrome auto-hides. Calm landing, then it breathes.
+  // Tap anywhere brings the poster + buttons back (and re-arms the hide).
+  const [chrome, setChrome] = useState(true);
+  useEffect(() => {
+    if (!showTrailer || !chrome) return;
+    const tHide = setTimeout(() => setChrome(false), 4500);
+    return () => clearTimeout(tHide);
+  }, [showTrailer, chrome]);
+
   // Cleanup iframe on unmount + delayed unmute for trailer audio
   useEffect(() => {
     let attempts = 0;
@@ -143,8 +153,9 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
       if (attempts < 5) unmuteTimer = setTimeout(tryUnmute, 600);
     };
     if (showTrailer) {
-      // Start after 1.2s, retry up to 5 times (covers slow YouTube init)
-      unmuteTimer = setTimeout(tryUnmute, 1200);
+      // Unmute as the poster dissolves (~4.5s) so audio arrives WITH the reveal,
+      // not behind the still poster. Retry up to 5 times (covers slow YouTube init).
+      unmuteTimer = setTimeout(tryUnmute, 4500);
     }
     return () => {
       clearTimeout(unmuteTimer);
@@ -253,10 +264,10 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   // ══════════════════════════════════════════════════════════════
   if (showTrailer) {
     return (
-      <div className="fixed inset-0 z-[9998] bg-black" onClick={() => {}}>
-        {/* Ambient trailer */}
+      <div className="fixed inset-0 z-[9998] bg-black" onClick={() => setChrome((c) => !c)}>
+        {/* Ambient trailer — plays UNDER a still poster that holds until the chrome
+            auto-hides, then dissolves to reveal the live trailer (poster-first). */}
         <div className="absolute inset-0">
-          {backdropUrl && <img src={backdropUrl} alt={cleanTitle} className="absolute inset-0 w-full h-full object-cover" />}
           <iframe
             ref={iframeRef}
             className="absolute pointer-events-none"
@@ -266,18 +277,26 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
             allow="autoplay; encrypted-media"
             frameBorder="0"
           />
+          {backdropUrl && (
+            <img
+              src={backdropUrl}
+              alt={cleanTitle}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ opacity: chrome ? 1 : 0, transition: 'opacity 1.1s cubic-bezier(0.23,1,0.32,1)' }}
+            />
+          )}
         </div>
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-black/50" />
         </div>
 
-        <div className="absolute top-4 right-4 z-50">
+        <div className="absolute top-4 right-4 z-50" style={{ opacity: chrome ? 1 : 0, transition: 'opacity 0.55s ease', pointerEvents: chrome ? 'auto' : 'none' }}>
           <CosmicClose onClick={onClose} />
         </div>
 
-        {/* Details at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 z-20" onClick={(e) => e.stopPropagation()}>
+        {/* Details at bottom — fade out WITH the chrome so the trailer breathes clean */}
+        <div className="absolute bottom-0 left-0 right-0 z-20" onClick={(e) => e.stopPropagation()} style={{ opacity: chrome ? 1 : 0, transition: 'opacity 0.55s ease', pointerEvents: chrome ? 'auto' : 'none' }}>
           <div className="px-5 pb-8 pt-16" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 60%, transparent 100%)' }}>
             {detailContent}
           </div>
