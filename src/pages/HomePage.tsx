@@ -550,7 +550,7 @@ const ExperienceRow = React.memo(function ExperienceRow({
             style={{ background: accent, boxShadow: `0 0 6px ${accent}` }}
           />
           <h2 className="text-[19px] font-black tracking-tight text-white truncate">{title}</h2>
-          <span className="text-[10px] font-semibold text-white/30 bg-white/[0.04] px-1.5 py-0.5 rounded-full flex-shrink-0">
+          <span className="tivi-count-metal text-[8px] font-bold flex-shrink-0" style={{ letterSpacing: '0.5px' }}>
             {channels.length}
           </span>
         </div>

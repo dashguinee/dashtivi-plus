@@ -531,7 +531,7 @@ export const VideoPlayer: React.FC<Props> = ({
               </div>
             </div>
             <p className="text-[13px] text-white/85 font-medium tracking-wide max-w-xs text-center line-clamp-1 px-4">
-              Connecting{state.channel?.name ? ` · ${state.channel.name}` : '…'}
+              {state.channel?.name || '…'}
             </p>
             {/* Reassurance on weak networks (buffering = #1 SL pain) — appears
                 after a beat so a fast connect never shows it. */}

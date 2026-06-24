@@ -389,17 +389,6 @@ function AppContent({ guestMode, onRequestCode }: { guestMode?: boolean; onReque
         <ScrollToTop />
         {/* Cross-app notification pill + push opt-in */}
         <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[9997] pointer-events-auto flex items-center gap-2">
-          {credentials && (
-            <button
-              onClick={() => (window as any).openTiviSearch?.()}
-              aria-label="Search"
-              className="flex items-center gap-1.5 h-7 pl-2.5 pr-3 rounded-full active:scale-95 transition-transform"
-              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(199,125,255,0.28)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,215,0,0.65)" strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
-              <span className="text-[11px] text-white/45">Search</span>
-            </button>
-          )}
           <DynamicIsland appCode="tivi" guestMode={guestMode} />
           <PushBell appCode="tivi" />
         </div>
