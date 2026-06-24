@@ -43,10 +43,13 @@ interface Props {
 }
 
 // Per-experience accent — one signature color per row (premium, not a rainbow).
-// Football / sports lead with World-Cup green.
+// Football / sports carry beIN's brand purple→magenta. Green is reserved
+// exclusively for the FREE / free-gift signal (the one intentional green).
 const EXPERIENCE_ACCENT: Record<string, string> = {
-  'World Cup': '#22C55E',
-  'Sports': '#22C55E',
+  // beIN SPORTS owns football here — beIN's brand purple→magenta, NOT green.
+  // Green is reserved for the FREE / free-gift indicator only.
+  'World Cup': '#C026D3',
+  'Sports': '#C026D3',
   'Movies': '#9D4EDD',
   'Entertainment': '#C77DFF',
   'Français': '#3B82F6',
@@ -252,7 +255,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
               <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: '#22C55E' }} />
             </span>
             <span className="text-[10px] font-black tracking-[2.5px] uppercase" style={{ color: '#86EFAC' }}>
-              {lang === 'fr' ? 'En direct · à l’instant' : 'Live · right now'}
+              {lang === 'fr' ? 'À l’instant' : 'Right now'}
             </span>
           </div>
           <FreeHlsShowcaseCard channel={helloChannel} onSurf={surfHello} />
@@ -435,7 +438,6 @@ const ExperienceRow = React.memo(function ExperienceRow({
   lang: Lang;
   index?: number;
 }) {
-  const liveLabel = t(lang, 'liveLabel');
   // Small experiences (e.g. Movies = 3) render honestly — bigger cards, no
   // "See all", no padding to fake a fuller row.
   const isSmall = channels.length <= 4;
@@ -501,7 +503,7 @@ const ExperienceRow = React.memo(function ExperienceRow({
                   <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-70 ${ch.free ? 'bg-green-400' : 'bg-red-400'}`} />
                   <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${ch.free ? 'bg-green-400' : 'bg-red-400'}`} style={{ boxShadow: ch.free ? '0 0 5px rgba(74,222,128,0.95)' : '0 0 5px rgba(248,113,113,0.9)' }} />
                 </span>
-                <span className="text-[7px] font-bold text-white/75 tracking-wide">{ch.free ? 'FREE' : liveLabel}</span>
+                {ch.free && <span className="text-[7px] font-bold text-white/75 tracking-wide">FREE</span>}
               </div>
 
               {/* glassy play affordance on hover/press */}

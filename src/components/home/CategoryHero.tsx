@@ -63,7 +63,6 @@ export function CategoryHero({
   const featured = channels[0];
   if (!featured) return null;
 
-  const liveLabel = t(lang, 'liveLabel'); // EN DIRECT / LIVE
   const a = rgb(accent);
   const dark = shade(accent);
   // Stable per-instance keyframe names so multiple heros don't collide.
@@ -111,21 +110,22 @@ export function CategoryHero({
         style={{ background: 'radial-gradient(ellipse 100% 80% at 50% 40%, transparent 55%, rgba(0,0,0,0.45) 100%)' }}
       />
 
-      {/* LIVE · <title> pill — top left */}
+      {/* Category pill — premium accent-tinted glass chip + quiet pulsing dot */}
       <div
-        className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full"
+        className="absolute top-4 left-4 flex items-center gap-1.5 pl-2 pr-2.5 py-1 rounded-full"
         style={{
-          background: `rgba(${a},0.14)`,
-          border: `1px solid rgba(${a},0.4)`,
-          backdropFilter: 'blur(8px)',
+          background: `linear-gradient(180deg, rgba(${a},0.16), rgba(${a},0.07))`,
+          border: `1px solid rgba(${a},0.32)`,
+          boxShadow: `0 0 14px rgba(${a},0.14), inset 0 1px 0 rgba(255,255,255,0.07)`,
+          backdropFilter: 'blur(10px)',
         }}
       >
-        <span className="relative flex h-2 w-2">
+        <span className="relative flex h-1.5 w-1.5">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: accent }} />
-          <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: accent }} />
+          <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: accent }} />
         </span>
-        <span className="text-[11px] font-black tracking-[2.5px] uppercase" style={{ color: accent }}>
-          {liveLabel} · {title}
+        <span className="text-[10.5px] font-bold tracking-[1.5px] uppercase" style={{ color: accent }}>
+          {title}
         </span>
       </div>
 
@@ -153,9 +153,6 @@ export function CategoryHero({
           <ChannelIcon src={featured.icon} name={featured.name} size="md" eager className="!w-14 !h-14" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-semibold tracking-[2px] uppercase mb-1" style={{ color: `rgba(${a},0.8)` }}>
-            {lang === 'fr' ? 'En direct' : 'Now streaming'}
-          </p>
           <h1 className="text-[23px] leading-tight font-black text-white tracking-tight line-clamp-2">
             {cleanName(featured.name)}
           </h1>
