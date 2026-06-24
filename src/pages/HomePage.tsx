@@ -209,7 +209,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const heroChannel = worldcup[0] || null;
 
   return (
-    <div className="pt-12 pb-12">
+    <div className="pt-16 pb-48">
       {/* ════════════════════════════════════════════════════════════════
           THE MAGIC HELLO — one good thing auto-plays at the very top, for
           EVERYONE (free + premium). The FreeHlsShowcaseCard focus engine
@@ -224,7 +224,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-70" style={{ background: '#22C55E' }} />
               <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: '#22C55E' }} />
             </span>
-            <span className="text-[10px] font-black tracking-[2px] uppercase" style={{ color: '#86EFAC' }}>
+            <span className="text-[10px] font-black tracking-[2.5px] uppercase" style={{ color: '#86EFAC' }}>
               {lang === 'fr' ? 'En direct · à l’instant' : 'Live · right now'}
             </span>
           </div>
@@ -289,9 +289,9 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           <div className="flex items-center gap-2 mb-4">
             <span
               className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-              style={{ background: '#FFD700', boxShadow: '0 0 3px rgba(255,215,0,0.4)' }}
+              style={{ background: '#FFD700', boxShadow: '0 0 6px rgba(255,215,0,0.6)' }}
             />
-            <h2 className="text-lg md:text-[19px] font-black tracking-tight text-white">
+            <h2 className="text-[19px] font-black tracking-tight text-white">
               {lang === 'fr' ? 'VOYO · Le continent' : 'VOYO · The continent'}
             </h2>
           </div>
@@ -321,10 +321,10 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           <div className="flex items-center gap-2 mb-3.5">
             <span
               className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-              style={{ background: '#FFD700', boxShadow: '0 0 3px rgba(255,215,0,0.4)' }}
+              style={{ background: '#FFD700', boxShadow: '0 0 6px rgba(255,215,0,0.55)' }}
             />
-            <h2 className="text-base md:text-[16px] font-semibold tracking-tight text-white/72">
-              {lang === 'fr' ? 'VOYO · Musique & Radio' : 'VOYO · Music & Radio'}
+            <h2 className="text-[15px] font-semibold tracking-tight text-white/55">
+              VOYO · Musique
             </h2>
           </div>
           <div className="space-y-4">
@@ -383,7 +383,7 @@ function GiraLoopSentinel() {
         <span className="w-1 h-1 rounded-full" style={{ background: 'rgba(255,215,0,0.5)', animation: 'gira-pulse 1.4s ease-in-out 0.2s infinite' }} />
         <span className="w-1 h-1 rounded-full" style={{ background: 'rgba(255,215,0,0.5)', animation: 'gira-pulse 1.4s ease-in-out 0.4s infinite' }} />
       </div>
-      <p className="text-[11.5px] tracking-wide text-white/45 font-medium">
+      <p className="text-[10.5px] tracking-wide text-white/25 font-medium">
         {lang === 'fr' ? 'On recommence en haut…' : 'Looping back to the top…'}
       </p>
       <style>{`@keyframes gira-pulse { 0%,100% { opacity:0.25; transform:scale(0.8) } 50% { opacity:1; transform:scale(1.2) } }`}</style>
@@ -412,8 +412,8 @@ function WorldCupHero({
         className="relative w-full overflow-hidden rounded-2xl text-left active:scale-[0.99] transition-transform duration-200 group"
         style={{
           height: '34vh',
-          minHeight: 210,
-          maxHeight: 280,
+          minHeight: 220,
+          maxHeight: 300,
           background:
             'radial-gradient(ellipse 90% 70% at 25% 20%, rgba(34,197,94,0.22) 0%, transparent 60%), ' +
             'radial-gradient(ellipse 80% 80% at 90% 90%, rgba(16,40,24,0.6) 0%, transparent 70%), ' +
@@ -470,13 +470,13 @@ function WorldCupHero({
             <ChannelIcon src={channel.icon} name={channel.name} size="md" eager className="!w-14 !h-14" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-semibold tracking-[2px] uppercase text-green-300/85 mb-1">
-              {lang === 'fr' ? 'En ce moment' : 'Now streaming'}
+            <p className="text-[10px] font-semibold tracking-[2px] uppercase text-green-300/70 mb-1">
+              Now streaming
             </p>
-            <h1 className="text-[21px] leading-[1.1] font-black text-white tracking-tight line-clamp-2">
+            <h1 className="text-[23px] leading-tight font-black text-white tracking-tight line-clamp-2">
               {cleanName(channel.name)}
             </h1>
-            <p className="text-[12px] text-white/50 mt-0.5">
+            <p className="text-[12px] text-white/45 mt-0.5">
               {channels.length} World Cup feed{channels.length !== 1 ? 's' : ''} live now
             </p>
           </div>
@@ -532,7 +532,7 @@ const ExperienceRow = React.memo(function ExperienceRow({
             style={{ background: accent, boxShadow: `0 0 6px ${accent}` }}
           />
           <h2 className="text-[19px] font-black tracking-tight text-white truncate">{title}</h2>
-          <span className="text-[10px] font-semibold text-white/55 bg-white/[0.06] px-1.5 py-0.5 rounded-full flex-shrink-0">
+          <span className="text-[10px] font-semibold text-white/30 bg-white/[0.04] px-1.5 py-0.5 rounded-full flex-shrink-0">
             {channels.length}
           </span>
         </div>
@@ -547,8 +547,8 @@ const ExperienceRow = React.memo(function ExperienceRow({
         )}
       </div>
 
-      {/* Horizontal channel strip — edge-fade signals there's more to swipe */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-1">
+      {/* Horizontal channel strip */}
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1">
         {channels.map((ch) => (
           <button
             key={ch.stream_id}

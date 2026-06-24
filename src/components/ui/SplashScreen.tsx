@@ -28,8 +28,8 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
       const proceed = () => {
         // verbose: '[SPLASH] Proceeding'
         setPhase('ready');
-        setTimeout(() => setPhase('exit'), 900);
-        setTimeout(() => onComplete(), 2800);
+        setTimeout(() => setPhase('exit'), 700);
+        setTimeout(() => onComplete(), 2600);
       };
       const waitForAuth = () => {
         if (authRef.current || Date.now() - authStart > 3000) {
@@ -78,9 +78,9 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
         </h1>
         <p
           className={`mt-2 text-[11px] font-light tracking-[0.25em] uppercase transition-opacity duration-1000 ${
-            phase === 'brand' || phase === 'ready' || phase === 'exit' ? 'opacity-100' : 'opacity-0'
+            phase === 'ready' || phase === 'exit' ? 'opacity-100' : 'opacity-0'
           }`}
-          style={{ color: 'rgba(255,255,255,0.32)', fontFamily: "'Outfit', sans-serif" }}
+          style={{ color: 'rgba(255,255,255,0.18)', fontFamily: "'Outfit', sans-serif" }}
         >
           Bring Joy
         </p>

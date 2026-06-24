@@ -51,18 +51,6 @@ const TAB_NAME_MAP: Record<string, TranslationKey> = {
   'Anime': 'tabAnime',
 };
 
-// ── Mood-aware glow per mood row (cool nights, warm days, hot binge).
-// Whispers in the title only — never tints the cards. Quiet-luxury palette. ──
-const MOOD_COLOR: Record<string, string> = {
-  binge: '#7C3AED',       // night violet
-  cozy: '#C084FC',        // soft warm violet
-  hook: '#EF4444',        // hot red (gets you hooked)
-  light: '#F59E0B',       // warm amber (light & easy)
-  quick: '#D97706',       // morning amber
-  masterpiece: '#FFD700', // gold (prestige TV)
-};
-const seriesMoodColor = (id: string) => MOOD_COLOR[id] || '#9D4EDD';
-
 // ── Scoring ──────────────────────────────────────────────────────
 
 function getTrendingScore(series: SeriesItem, tmdbMap: Record<string, TmdbEntry>): number {
@@ -491,31 +479,12 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     [credentials, onPlay, selectedSeries]
   );
 
-  const closeEpisodeModal = useCallback(() => {
+  const closeEpisodeModal = () => {
     setSelectedSeries(null);
     setSeriesInfo(null);
     setActiveSeason('');
     setEpisodesUnavailable(false);
-  }, []);
-
-  // ── Back-guard: the episode picker is a RISING SURFACE, not a modal wall.
-  // Pushing a history entry while it's open means the hardware/browser BACK
-  // gesture pops the surface (returns to the grid exactly where you were),
-  // never leaving the Series page. Continuity-first. ────────────────
-  useEffect(() => {
-    if (!selectedSeries) return;
-    window.history.pushState({ episodePicker: true }, '');
-    const onPop = () => closeEpisodeModal();
-    window.addEventListener('popstate', onPop);
-    return () => {
-      window.removeEventListener('popstate', onPop);
-      // If still in our pushed entry (closed via X / swipe), unwind it cleanly.
-      if (window.history.state?.episodePicker) window.history.back();
-    };
-  }, [selectedSeries, closeEpisodeModal]);
-
-  // Swipe-down to dismiss the rising surface (feels more natural than a tap).
-  const sheetTouch = useRef<{ y: number; t: number } | null>(null);
+  };
 
   const seasons = seriesInfo ? Object.keys(seriesInfo.episodes || {}) : [];
   const episodes = seriesInfo && activeSeason ? seriesInfo.episodes[activeSeason] || [] : [];
@@ -534,10 +503,10 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // ── Render ───────────────────────────────────────────────────
 
   return (
-    <div className="pb-32" style={{ paddingTop: 'max(4rem, calc(3.5rem + env(safe-area-inset-top, 0px)))' }}>
+    <div className="pt-16 pb-32">
       {/* ── Hero Billboard ── */}
       {heroSeries ? (
-        <div className="relative overflow-hidden" style={{ height: 'clamp(160px, 35vh, 280px)' }}>
+        <div className="relative overflow-hidden" style={{ height: 'clamp(180px, 40vh, 280px)' }}>
           {/* Backdrop image */}
           <div
             className="absolute inset-0 bg-cover bg-center"
@@ -648,10 +617,10 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               <div ref={genreScrollRef} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide px-4 pb-2.5 pt-0.5">
                 {activeGenreFilters.map(g => (
                   <button key={g.id} onClick={() => setActiveGenre(g.id)}
-                    className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 min-h-[34px] rounded-lg text-[12px] font-medium transition-colors duration-300 ${
+                    className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-medium transition-colors duration-300 ${
                       activeGenre === g.id
                         ? 'bg-primary/20 text-primary-light border border-primary/30'
-                        : 'text-white/25 hover:text-white/45'
+                        : 'text-white/20 hover:text-white/40'
                     }`}>
                     {GENRE_NAME_MAP[g.name] ? t(lang, GENRE_NAME_MAP[g.name]) : g.name}
                     {g.id !== 0 && genreCounts[g.id] && (
@@ -667,8 +636,8 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                     const next = modes[(modes.indexOf(sortMode) + 1) % modes.length];
                     setSortMode(next);
                   }}
-                    className="flex items-center gap-1 px-3 py-1.5 min-h-[34px] rounded-lg text-[12px] text-white/35 hover:text-white/60 transition-colors">
-                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] text-white/25 hover:text-white/50 transition-colors">
+                    <SlidersHorizontal className="w-3 h-3" />
                     {(() => { const sm = SORT_MODES.find(s => s.id === sortMode); return sm && SORT_NAME_MAP[sm.name] ? t(lang, SORT_NAME_MAP[sm.name]) : sm?.name; })()}
                   </button>
                 </div>
@@ -686,22 +655,19 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         )}
       </div>
 
-      {/* ── For You — a remembered relationship: title breathes, latest pulses. ── */}
+      {/* ── For You — personalized from what you've opened (localStorage) ── */}
       {!isSearching && !loading && recent.length > 0 && (
         <section className="px-4 pt-6 pb-3">
-          <h2 className="text-[19px] font-black text-white/90 mb-1 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#9D4EDD', boxShadow: '0 0 8px #9D4EDD, 0 0 14px rgba(157,78,221,0.4)' }} />
+          <h2 className="text-[19px] font-black text-white/90 mb-3 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#9D4EDD', boxShadow: '0 0 6px #9D4EDD' }} />
             For You
             <RowCountBadge count={recent.length} label="series" />
           </h2>
-          <p className="text-[11px] text-white/30 mb-3 ml-3.5">{lang === 'fr' ? 'Repris là où vous étiez' : 'Recently watched'}</p>
-          <div className="flex gap-4 overflow-x-auto scrollbar-hide scroll-fade pb-2 items-end">
-            {recent.map((s, i) => (
-              <div key={s.series_id} className="flex-shrink-0" style={{ width: 'clamp(116px, 32vw, 140px)' }}>
-                <div className="relative" style={i === 0 ? { boxShadow: '0 0 0 1.5px rgba(157,78,221,0.45), 0 6px 22px rgba(157,78,221,0.18)', borderRadius: '0.75rem' } : undefined}>
-                  <PosterCard title={s.name} poster={s.cover} rating={s.rating}
-                    tmdbData={tmdbMap[`s:${s.series_id}`]} onClick={() => setDetailSeries(s)} />
-                </div>
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 items-end">
+            {recent.map((s) => (
+              <div key={s.series_id} className="flex-shrink-0 w-[140px]">
+                <PosterCard title={s.name} poster={s.cover} rating={s.rating}
+                  tmdbData={tmdbMap[`s:${s.series_id}`]} onClick={() => setDetailSeries(s)} />
               </div>
             ))}
           </div>
@@ -716,9 +682,9 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
             {t(lang, 'trendingRightNow')}
             <RowCountBadge count={trendingSeries.length} label="series" />
           </h2>
-          <div className="flex gap-4 overflow-x-auto scrollbar-hide scroll-fade pb-2 items-end">
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 items-end">
             {trendingSeries.map((s, i) => (
-              <div key={s.series_id} className="flex-shrink-0" style={{ width: 'clamp(116px, 32vw, 140px)', animation: i < 12 ? `vee-card-in 0.9s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms both` : undefined }}>
+              <div key={s.series_id} className="flex-shrink-0 w-[140px]" style={{ animation: i < 12 ? `vee-card-in 0.9s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms both` : undefined }}>
                 <PosterCard title={s.name} poster={s.cover} rating={s.rating}
                   tmdbData={tmdbMap[`s:${s.series_id}`]} onClick={() => setDetailSeries(s)} />
               </div>
@@ -731,20 +697,17 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       {/* ── Mood rows ── */}
       {!isSearching && activeGenre === 0 && moodRows.length > 0 && (
         <div className="py-5">
-          {moodRows.map((row, rowIdx) => {
-            const mood = seriesMoodColor(row.id);
-            return (
+          {moodRows.map((row, rowIdx) => (
             <section key={row.id} className={`${rowIdx === 0 ? 'row-tier-featured' : 'row-tier-standard'} reveal`}>
               <div className="px-4 mb-2">
-                <h3 className={`${rowIdx === 0 ? 'text-[17px]' : 'text-[15px]'} font-semibold text-white/65 flex items-center gap-1.5`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: mood, boxShadow: `0 0 7px ${mood}` }} />
+                <h3 className={`${rowIdx === 0 ? 'text-[17px]' : 'text-[15px]'} font-semibold text-white/50 flex items-center gap-1.5`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                   {MOOD_NAME_MAP[row.name] ? t(lang, MOOD_NAME_MAP[row.name]) : row.name}
                   <RowCountBadge count={row.items.length} label="series" />
                 </h3>
               </div>
               <div className="flex gap-3.5 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-2 items-end">
                 {row.items.map((s, i) => (
-                  <div key={s.series_id} className="flex-shrink-0" style={{ width: 'clamp(100px, 28vw, 116px)', animation: i < 12 ? `vee-card-in 0.9s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms both` : undefined }}>
+                  <div key={s.series_id} className="flex-shrink-0 w-[108px]" style={{ animation: i < 12 ? `vee-card-in 0.9s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms both` : undefined }}>
                     <PosterCard title={s.name} poster={s.cover} rating={s.rating}
                       tmdbData={tmdbMap[`s:${s.series_id}`]} onClick={() => setDetailSeries(s)} />
                   </div>
@@ -752,8 +715,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 <NeonGate navigateTo="/series" />
               </div>
             </section>
-            );
-          })}
+          ))}
         </div>
       )}
 
@@ -821,7 +783,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         )
       ) : (
         <>
-          <div className="grid grid-cols-2 min-[500px]:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5">
             {filteredAndSorted.slice(0, displayLimit).map(series => (
               <PosterCard
                 key={series.series_id}
@@ -841,23 +803,23 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 onClick={() => setDisplayLimit(l => l + PAGE_SIZE)}
                 className="group w-full relative overflow-hidden rounded-2xl py-3.5 transition-all duration-300 hover:scale-[1.005] active:scale-[0.995]"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(157,78,221,0.13) 0%, rgba(157,78,221,0.05) 100%)',
-                  border: '1px solid rgba(157,78,221,0.22)',
+                  background: 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(157,78,221,0.02) 100%)',
+                  border: '1px solid rgba(157,78,221,0.1)',
                 }}
               >
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.08) 50%, transparent 100%)' }}
+                  style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.04) 50%, transparent 100%)' }}
                 />
                 <div className="relative flex flex-col items-center justify-center gap-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-semibold tracking-[0.15em] uppercase" style={{ color: 'rgba(201,160,255,0.9)' }}>
+                    <span className="text-[11px] font-medium tracking-[0.15em] uppercase" style={{ color: 'rgba(157,78,221,0.55)' }}>
                       {t(lang, 'showMore')}
                     </span>
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="animate-bounce" style={{ animationDuration: '1.8s' }}>
-                      <path d="M6 2v8M2 6l4 4 4-4" stroke="rgba(201,160,255,0.7)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="group-hover:translate-y-0.5 transition-transform duration-300">
+                      <path d="M6 2v8M2 6l4 4 4-4" stroke="rgba(157,78,221,0.4)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
-                  <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                  <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>
                     {filteredAndSorted.length - displayLimit} {t(lang, 'remaining')}
                   </span>
                 </div>
@@ -886,34 +848,12 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         />
       )}
 
-      {/* ── Series Episode Picker — a RISING SURFACE (not a modal wall).
-          The previous content peeks above the sheet (float-from-above =
-          "you're still in the same place"); swipe-down or back pops it. ── */}
+      {/* ── Series Episode Picker Modal ── */}
       {selectedSeries && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center"
-          style={{ background: 'rgba(4,4,8,0.30)', backdropFilter: 'blur(2px)' }}
-          onClick={() => closeEpisodeModal()}
-        >
-          <div
-            className="w-full max-w-lg overflow-hidden animate-slide-up border-t border-white/10"
-            style={{ maxHeight: '88vh', background: '#141414', borderTopLeftRadius: '1.25rem', borderTopRightRadius: '1.25rem', boxShadow: '0 -18px 50px rgba(0,0,0,0.55)' }}
-            onClick={(e) => e.stopPropagation()}
-            onTouchStart={(e) => { sheetTouch.current = { y: e.touches[0].clientY, t: Date.now() }; }}
-            onTouchEnd={(e) => {
-              if (!sheetTouch.current) return;
-              const dy = e.changedTouches[0].clientY - sheetTouch.current.y;
-              const dt = Date.now() - sheetTouch.current.t;
-              if (dy > 90 || (dy > 45 && dt < 260)) closeEpisodeModal();
-              sheetTouch.current = null;
-            }}
-          >
-            {/* Drag handle — the swipe affordance */}
-            <div className="flex justify-center pt-2 pb-1">
-              <div className="w-10 h-1 rounded-full bg-white/25" />
-            </div>
-            {/* Header — responsive height so episodes are reachable fast on short phones */}
-            <div className="relative overflow-hidden" style={{ height: 'clamp(140px, 30vh, 200px)' }}>
+        <div className="fixed inset-0 z-50 bg-black/35 backdrop-blur-sm flex items-end sm:items-center justify-center" onClick={() => closeEpisodeModal()}>
+          <div className="w-full max-w-lg max-h-[85vh] bg-[#141414] rounded-t-2xl sm:rounded-2xl overflow-hidden animate-slide-up border border-white/10" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="relative h-48 overflow-hidden">
               {selectedSeries.cover ? (
                 <img
                   src={selectedSeries.cover}

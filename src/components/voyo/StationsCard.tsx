@@ -12,7 +12,7 @@
  * DASH signature ease.
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Radio } from 'lucide-react';
 import { useOpenVoyo } from './VoyoSurface';
 
@@ -27,29 +27,14 @@ export function StationsCard({ className = '' }: StationsCardProps) {
   const open = useOpenVoyo('stations');
   const [pressed, setPressed] = useState(false);
 
-  // PERF: pause all loops (breathe / halo spin / disc / dot) when off-screen.
-  const ref = useRef<HTMLButtonElement>(null);
-  const [inView, setInView] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([e]) => setInView(e.isIntersecting),
-      { threshold: 0.15 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
   return (
     <button
-      ref={ref}
       onClick={() => open()}
       onPointerDown={() => setPressed(true)}
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}
       aria-label="Open VOYO Stations"
-      className={`stations-card group relative w-full text-left rounded-2xl overflow-hidden ${inView ? 'in-view' : ''} ${className}`}
+      className={`stations-card group relative w-full text-left rounded-2xl overflow-hidden ${className}`}
       style={{
         background: [
           'linear-gradient(135deg,',
@@ -68,8 +53,8 @@ export function StationsCard({ className = '' }: StationsCardProps) {
         aria-hidden
         className="stations-halo absolute top-3 right-3 w-9 h-9 rounded-full pointer-events-none"
         style={{
-          background: `radial-gradient(circle, ${GOLD}55 0%, ${GREEN}33 60%, transparent 100%)`,
-          border: `1px solid ${GOLD}66`,
+          background: `radial-gradient(circle, ${GOLD}40 0%, ${GREEN}18 60%, transparent 100%)`,
+          border: `1px solid ${GOLD}4D`,
         }}
       />
 
@@ -102,12 +87,12 @@ export function StationsCard({ className = '' }: StationsCardProps) {
             On Air
           </div>
           <h3
-            className="font-bold text-white text-lg leading-tight tracking-tight line-clamp-2"
+            className="font-bold text-white text-lg leading-tight tracking-tight"
             style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}
           >
             Stations
           </h3>
-          <p className="text-white/70 text-sm font-medium mt-0.5 line-clamp-1">
+          <p className="text-white/70 text-sm font-medium mt-0.5">
             Always-tuning African radio. Join one.
           </p>
         </div>
@@ -116,7 +101,7 @@ export function StationsCard({ className = '' }: StationsCardProps) {
         <span
           className="shrink-0 inline-flex items-center px-3 py-1.5 rounded-full font-bold text-[13px]"
           style={{
-            color: '#0f0f15',
+            color: '#1b1b22',
             background:
               'linear-gradient(135deg, #f7f7fa 0%, #e4e4ea 28%, #b9b9c1 55%, #d8d8df 78%, #f1f1f4 100%)',
             boxShadow: '0 5px 14px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.85)',
@@ -129,28 +114,26 @@ export function StationsCard({ className = '' }: StationsCardProps) {
       </div>
 
       <style>{`
-        /* All loops run ONLY while the card is on-screen (.in-view) — keeps
-           scroll at 60fps on mid-range Androids, saves battery off-screen. */
-        .stations-card.in-view { animation: stations-breathe 4.6s cubic-bezier(0.23, 1, 0.32, 1) infinite; }
+        .stations-card { animation: stations-breathe 4.6s cubic-bezier(0.23, 1, 0.32, 1) infinite; }
         @keyframes stations-breathe {
           0%, 100% { transform: translateY(0); }
           50%      { transform: translateY(-1.5px); }
         }
-        .stations-card.in-view .stations-halo { animation: stations-spin 13s linear infinite; }
+        .stations-halo { animation: stations-spin 13s linear infinite; }
         @keyframes stations-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         /* Disc gives a tiny celebratory bounce so it's alive, not static. */
-        .stations-card.in-view .stations-disc { animation: stations-disc-bounce 3.2s cubic-bezier(0.23, 1, 0.32, 1) infinite; transform-origin: 50% 80%; }
+        .stations-disc { animation: stations-disc-bounce 3.2s cubic-bezier(0.23, 1, 0.32, 1) infinite; transform-origin: 50% 80%; }
         @keyframes stations-disc-bounce {
           0%, 100% { transform: translateY(0) scale(1); }
           46%      { transform: translateY(-2px) scale(1.04); }
         }
-        .stations-card.in-view .stations-dot { animation: stations-dot-breathe 2s ease-in-out infinite; }
+        .stations-dot { animation: stations-dot-breathe 2s ease-in-out infinite; }
         @keyframes stations-dot-breathe {
           0%, 100% { opacity: 0.55; transform: scale(1); }
           50%      { opacity: 1; transform: scale(1.25); }
         }
         @media (prefers-reduced-motion: reduce) {
-          .stations-card, .stations-halo, .stations-disc, .stations-dot { animation: none !important; }
+          .stations-card, .stations-halo, .stations-disc, .stations-dot { animation: none; }
         }
       `}</style>
     </button>

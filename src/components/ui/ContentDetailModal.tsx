@@ -100,10 +100,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
     document.body.style.overflow = 'hidden';
     try { screen.orientation.unlock(); } catch {}
 
-    // Mute background video while modal is open. The app keeps very few <video>
-    // elements alive (one persistent player + at most one focused HLS card), so a
-    // document scan is cheap; savedStates is recreated per-open and GC'd on close
-    // (scoped to this effect — no growth across open/close cycles).
+    // Mute ALL background video elements while modal is open
     const allVideos = Array.from(document.querySelectorAll('video')) as HTMLVideoElement[];
     const savedStates = allVideos
       .filter(v => !v.paused && v.volume > 0)
@@ -171,11 +168,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   const runtime = runtimeMinutes ? formatRuntime(runtimeMinutes) : null;
   const knownDurationSeconds = runtimeMinutes ? runtimeMinutes * 60 : undefined;
   const description = vodDescription || null;
-  const allGenres = (tmdbData?.g || []).map((id) => TMDB_GENRES[id]).filter(Boolean);
-  const genres = allGenres.slice(0, 3);
-  const genreOverflow = allGenres.length - genres.length;
-  const castList = vodCast ? vodCast.split(',').map((c) => c.trim()).filter(Boolean) : [];
-  const castOverflow = castList.length - 4;
+  const genres = (tmdbData?.g || []).map((id) => TMDB_GENRES[id]).filter(Boolean).slice(0, 3);
 
   // ── Shared detail content ─────────────────────────────────────
   const detailContent = (
@@ -200,13 +193,10 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
       </div>
 
       {genres.length > 0 && (
-        <div className="flex gap-2 flex-wrap items-center mb-4">
+        <div className="flex gap-2 flex-wrap mb-4">
           {genres.map((g) => (
             <span key={g} className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-white/70 font-medium">{g}</span>
           ))}
-          {genreOverflow > 0 && (
-            <span className="text-xs text-white/40 font-medium">+{genreOverflow}</span>
-          )}
         </div>
       )}
 
@@ -218,15 +208,11 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
         </div>
       ) : (
         <>
-          {description && <p className="text-sm text-white/50 leading-relaxed line-clamp-4 mb-3">{description}</p>}
-          {(vodDirector || castList.length > 0) && (
+          {description && <p className="text-sm text-white/50 leading-relaxed line-clamp-3 mb-3">{description}</p>}
+          {(vodDirector || vodCast) && (
             <div className="text-xs text-white/30 space-y-1 mb-4">
               {vodDirector && <p>{t(lang, 'director')}: <span className="text-white/50">{vodDirector}</span></p>}
-              {castList.length > 0 && (
-                <p>{t(lang, 'cast')}: <span className="text-white/50">{castList.slice(0, 4).join(', ')}</span>
-                  {castOverflow > 0 && <span className="text-white/35"> +{castOverflow} more</span>}
-                </p>
-              )}
+              {vodCast && <p>{t(lang, 'cast')}: <span className="text-white/50">{vodCast.split(',').slice(0, 4).join(', ')}{vodCast.split(',').length > 4 ? ' ...' : ''}</span></p>}
             </div>
           )}
         </>
@@ -234,16 +220,10 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
 
       <button
         onClick={() => onPlay(knownDurationSeconds)}
-        className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-bold text-base transition-all active:scale-[0.98]"
-        style={{
-          // Color law: GOLD = premium/pride/exclusive. Watching premium content
-          // is the proudest action in the app — it shines, it doesn't whisper.
-          background: 'linear-gradient(135deg, rgba(255,215,0,0.95), rgba(255,183,0,0.95))',
-          color: '#1a1505',
-          boxShadow: '0 10px 30px rgba(255,215,0,0.22)',
-        }}
+        className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-bold text-white text-base shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all active:scale-[0.98]"
+        style={{ background: 'linear-gradient(135deg, rgba(157,78,221,0.9), rgba(124,58,237,0.9))' }}
       >
-        <Play className="w-5 h-5 fill-current" />{t(lang, 'playNow')}
+        <Play className="w-5 h-5 fill-white" />{t(lang, 'playNow')}
       </button>
     </>
   );
@@ -301,44 +281,38 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
         animation: 'fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both',
         // Soft graduated scrim — darkens toward the sheet, but the very top stays
         // light so the canvas above peeks (depth/continuity cue, not a black wall).
-        background: 'linear-gradient(to bottom, rgba(6,6,9,0.06) 0%, rgba(6,6,9,0.28) 20%, rgba(6,6,9,0.70) 100%)',
+        background: 'linear-gradient(to bottom, rgba(6,6,9,0.18) 0%, rgba(6,6,9,0.45) 38%, rgba(6,6,9,0.82) 100%)',
         backdropFilter: 'blur(2px)',
       }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl max-h-[88vh] bg-[#0a0a0f] rounded-t-2xl overflow-hidden overflow-y-auto border border-white/12"
+        className="w-full max-w-2xl max-h-[88vh] bg-[#0a0a0f] rounded-t-2xl overflow-hidden overflow-y-auto border border-white/8"
         style={{
           animation: 'slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
           boxShadow: '0 -18px 60px rgba(0,0,0,0.6)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Grab handle — the visual anchor: signals "this is a sheet that flows
-            back", not a wall. Centered; close sits clearly to the right. */}
-        <div className="relative flex justify-center pt-3 pb-1.5">
-          <div className="w-12 h-1.5 rounded-full bg-white/30" />
-          <div className="absolute top-2.5 right-3 z-20">
-            <CosmicClose onClick={onClose} />
-          </div>
+        {/* Grab handle — signals "this is a sheet that flows back", not a wall. */}
+        <div className="flex justify-center pt-2.5 pb-1">
+          <div className="w-10 h-1 rounded-full bg-white/20" />
+        </div>
+        {/* Close */}
+        <div className="absolute top-3 right-3 z-20">
+          <CosmicClose onClick={onClose} />
         </div>
 
-        {/* Media area — poster (immersive but height-aware on small phones so the
-            title/desc/play button always have room at 412px). */}
-        <div
-          className="relative w-full rounded-xl overflow-hidden bg-black"
-          style={{ paddingBottom: 'clamp(48%, 50vh, 56%)' }}
-        >
+        {/* Media area — poster with trailer overlay if available */}
+        <div className="relative w-full pb-[56%] rounded-xl overflow-hidden bg-black">
           {backdropUrl ? (
             <img src={backdropUrl} alt={cleanTitle} className="absolute inset-0 w-full h-full object-cover" />
           ) : (
-            // No image: a clean gradient placeholder — no ghost icon that reads as
-            // a broken load or a phantom play target.
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/15 to-black" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/15 to-black flex items-center justify-center">
+              <Play className="w-16 h-16 text-white/10" />
+            </div>
           )}
-          {/* Stronger bottom scrim so the sheet feels like one floating surface
-              (matches the trailer mode's from-black gradient language). */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f]/30 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f] via-transparent to-transparent pointer-events-none" />
         </div>
 
         {/* Content */}

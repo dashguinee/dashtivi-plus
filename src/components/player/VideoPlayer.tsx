@@ -425,31 +425,16 @@ export const VideoPlayer: React.FC<Props> = ({
       {!isVod && surfDragX !== 0 && (
         <div className="absolute inset-0 z-[45] pointer-events-none overflow-hidden">
           <div
-            className="absolute top-0 bottom-0 w-16 sm:w-24"
+            className="absolute top-0 bottom-0 w-24"
             style={{
               [surfDragX > 0 ? 'left' : 'right']: 0,
               background: surfDragX > 0
-                ? 'linear-gradient(90deg, rgba(157,78,221,0.30), transparent)'
-                : 'linear-gradient(270deg, rgba(157,78,221,0.30), transparent)',
-              opacity: Math.min(1, Math.abs(surfDragX) / 80),
+                ? 'linear-gradient(90deg, rgba(157,78,221,0.28), transparent)'
+                : 'linear-gradient(270deg, rgba(157,78,221,0.28), transparent)',
+              opacity: Math.min(1, Math.abs(surfDragX) / 120),
               transition: `opacity 0.2s cubic-bezier(0.23,1,0.32,1)`,
             } as React.CSSProperties}
           />
-          {/* Channel-intent preview — confirms WHICH way you're surfing once the
-              throw is committed (so swipe never feels like a guess). */}
-          {Math.abs(surfDragX) > 100 && (surfDragX > 0 ? adjPrev : adjNext) && (
-            <div
-              className={`absolute top-1/2 -translate-y-1/2 ${surfDragX > 0 ? 'left-3' : 'right-3'} flex flex-col items-center gap-1`}
-              style={{ opacity: Math.min(1, (Math.abs(surfDragX) - 100) / 60) }}
-            >
-              <span className="text-[9px] uppercase tracking-[0.18em] text-primary-light/70 font-semibold">
-                {surfDragX > 0 ? 'Prev' : 'Next'}
-              </span>
-              <span className="text-[11px] text-white/80 font-medium max-w-[88px] truncate text-center">
-                {(surfDragX > 0 ? adjPrev : adjNext)?.name}
-              </span>
-            </div>
-          )}
         </div>
       )}
 
@@ -486,14 +471,14 @@ export const VideoPlayer: React.FC<Props> = ({
       )}
 
       {seekIndicator && (
-        <div className={`absolute ${seekDirection === 'forward' ? 'right-8 sm:right-16' : 'left-8 sm:left-16'} top-1/2 -translate-y-1/2 z-50 pointer-events-none animate-pulse`}>
-          <div className="flex items-center gap-1.5 bg-black/60 rounded-full px-3.5 py-2.5">
+        <div className={`absolute ${seekDirection === 'forward' ? 'right-16' : 'left-16'} top-1/2 -translate-y-1/2 z-50 pointer-events-none animate-pulse`}>
+          <div className="flex items-center gap-1 bg-black/60 rounded-full px-3 py-2">
             {seekDirection === 'forward' ? (
               <SkipForward className="w-5 h-5 text-white" />
             ) : (
               <SkipBack className="w-5 h-5 text-white" />
             )}
-            <span className="text-base text-white font-semibold">10s</span>
+            <span className="text-sm text-white font-medium">10s</span>
           </div>
         </div>
       )}
@@ -530,14 +515,8 @@ export const VideoPlayer: React.FC<Props> = ({
                   : <Tv className="w-7 h-7 text-white/40" />}
               </div>
             </div>
-            <p className="text-[13px] text-white/85 font-medium tracking-wide max-w-xs text-center line-clamp-1 px-4">
+            <p className="text-[13px] text-white/75 font-medium tracking-wide">
               Connecting{state.channel?.name ? ` · ${state.channel.name}` : '…'}
-            </p>
-            {/* Reassurance on weak networks (buffering = #1 SL pain) — appears
-                after a beat so a fast connect never shows it. */}
-            <p className="text-[11px] text-white/40 text-center -mt-1.5"
-               style={{ animation: 'fade-in 0.6s ease-out 2s both' }}>
-              Slow connection? Check your network.
             </p>
           </div>
         </div>
@@ -645,6 +624,27 @@ export const VideoPlayer: React.FC<Props> = ({
         visible={controlsVisible}
         isLive={!!state.channel?.url?.includes('/live?')}
       />
+
+      {/* Smart Match — quality variants + family channels (live only, hidden for VOD) */}
+      {/* Stays visible during channel switch so user can keep browsing */}
+      {!isVod && (
+        <SmartMatchOverlay
+          channel={state.channel}
+          visible={controlsVisible || switchingChannel}
+          isLive={!!state.channel?.url?.includes('/live?')}
+          onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
+        />
+      )}
+
+      {/* Channel carousel — concave arc conveyor belt (live only, hidden for VOD) */}
+      {/* Stays visible during channel switch so user can keep browsing */}
+      {!isVod && (
+        <ChannelCarousel
+          visible={controlsVisible || switchingChannel}
+          isLive={!!state.channel?.url?.includes('/live?')}
+          onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
+        />
+      )}
 
       {/* Controls overlay — hidden during cinema intro and post-cinema blackout */}
       {!showCinemaIntro && !postCinemaBlackout && (
@@ -912,7 +912,6 @@ function ChannelHints({
       {prev && (
         <button
           onClick={(e) => { e.stopPropagation(); setCurrentChannel(prev.id); onSwitch(prev); }}
-          title={`Previous: ${prev.name}`}
           className={`absolute top-[56px] left-3 z-35 flex items-center gap-2 px-2 py-1.5 rounded-xl
                       transition-opacity duration-300
                       ${visible ? 'opacity-70 hover:opacity-100' : 'opacity-0 pointer-events-none'}`}
@@ -923,11 +922,11 @@ function ChannelHints({
             border: '1px solid rgba(255, 255, 255, 0.06)',
           }}
         >
-          <ChevLeft className="w-3 h-3 text-white/50" />
+          <ChevLeft className="w-3 h-3 text-white/40" />
           <div className="w-6 h-6 flex-shrink-0">
             <ChannelIcon src={prev.logo} name={prev.name} size="sm" className="!w-6 !h-6 !text-[8px] !rounded-md" />
           </div>
-          <span className="text-[10px] text-white/55 max-w-[64px] truncate hidden sm:block">{prev.name}</span>
+          <span className="text-[9px] text-white/40 max-w-[60px] truncate hidden sm:block">{prev.name}</span>
         </button>
       )}
 
@@ -935,8 +934,7 @@ function ChannelHints({
       {next && (
         <button
           onClick={(e) => { e.stopPropagation(); setCurrentChannel(next.id); onSwitch(next); }}
-          title={`Next: ${next.name}`}
-          className={`absolute top-[56px] right-[calc(2.75rem+0.5rem)] z-35 flex items-center gap-2 px-2 py-1.5 rounded-xl
+          className={`absolute top-[56px] right-14 z-35 flex items-center gap-2 px-2 py-1.5 rounded-xl
                       transition-opacity duration-300
                       ${visible ? 'opacity-70 hover:opacity-100' : 'opacity-0 pointer-events-none'}`}
           style={{
@@ -946,11 +944,11 @@ function ChannelHints({
             border: '1px solid rgba(255, 255, 255, 0.06)',
           }}
         >
-          <span className="text-[10px] text-white/55 max-w-[64px] truncate hidden sm:block">{next.name}</span>
+          <span className="text-[9px] text-white/40 max-w-[60px] truncate hidden sm:block">{next.name}</span>
           <div className="w-6 h-6 flex-shrink-0">
             <ChannelIcon src={next.logo} name={next.name} size="sm" className="!w-6 !h-6 !text-[8px] !rounded-md" />
           </div>
-          <ChevRight className="w-3 h-3 text-white/50" />
+          <ChevRight className="w-3 h-3 text-white/40" />
         </button>
       )}
     </>

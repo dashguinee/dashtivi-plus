@@ -126,7 +126,7 @@ export const PlayerControls: React.FC<Props> = ({
       </div>
 
       {/* Bottom controls */}
-      <div className="player-controls-gradient p-4 pt-8">
+      <div className="player-controls-gradient p-4 pt-12">
         {/* Progress bar — seek for mp4 passthrough, display-only for remux */}
         {isVod && state.duration > 0 ? (
           <div className="flex items-center gap-3 mb-4">
@@ -161,7 +161,7 @@ export const PlayerControls: React.FC<Props> = ({
           </div>
         ) : (
           <div className="w-full h-1 bg-white/10 rounded-full mb-4 overflow-hidden">
-            <div className="h-full bg-primary/40 rounded-full w-full animate-pulse" />
+            <div className="h-full bg-red-500 rounded-full w-full animate-pulse" />
           </div>
         )}
 
@@ -202,10 +202,9 @@ export const PlayerControls: React.FC<Props> = ({
               </button>
 
               <div
-                className={`overflow-hidden transition-[width,opacity] duration-[400ms] ${
+                className={`overflow-hidden transition-[width,opacity] duration-300 ${
                   showVolume ? 'w-20 opacity-100 ml-1' : 'w-0 opacity-0'
                 }`}
-                style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' }}
               >
                 <input
                   type="range"
@@ -221,7 +220,7 @@ export const PlayerControls: React.FC<Props> = ({
 
             {/* Live badge — only for live streams */}
             {!isVod && (
-              <span className="text-xs font-bold text-primary-light bg-primary/15 border border-primary/20 px-2 py-1 rounded ml-2">
+              <span className="text-xs font-bold text-red-500 bg-red-500/10 px-2 py-1 rounded ml-2">
                 LIVE
               </span>
             )}
@@ -252,16 +251,26 @@ export const PlayerControls: React.FC<Props> = ({
                 }}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-full ml-2 bg-white/[0.03] border transition-all duration-300 active:scale-95"
                 style={{
-                  // Color law: PRIMARY only. Full strength = best flow (AUTO/Source),
-                  // dimmer = degraded — quiet status, never a cyan/orange shout.
-                  borderColor: (state.quality?.startsWith('AUTO') || state.quality?.startsWith('Source'))
-                    ? 'rgba(157,78,221,0.3)'
-                    : 'rgba(157,78,221,0.2)',
+                  borderColor: state.quality?.startsWith('AUTO') ? 'rgba(157,78,221,0.35)'
+                    : state.quality?.startsWith('Source') ? 'rgba(0,212,255,0.3)'
+                    : state.quality?.startsWith('720p') ? 'rgba(0,212,255,0.2)'
+                    : state.quality?.startsWith('480p') ? 'rgba(16,185,129,0.3)'
+                    : state.quality?.startsWith('360p') ? 'rgba(251,146,60,0.3)'
+                    : 'rgba(255,255,255,0.08)',
                 }}
               >
                 <span className="text-[9px] font-medium text-white/30 tracking-wider">Flow</span>
                 <span className="text-[8px] text-white/15">·</span>
-                <span className="text-[10px] font-semibold tracking-wide text-primary-light">
+                <span className="text-[10px] font-semibold tracking-wide"
+                  style={{
+                    color: state.quality?.startsWith('AUTO') ? 'rgba(157,78,221,0.8)'
+                      : state.quality?.startsWith('Source') ? 'rgba(0,212,255,0.7)'
+                      : state.quality?.startsWith('720p') ? 'rgba(0,212,255,0.5)'
+                      : state.quality?.startsWith('480p') ? 'rgba(16,185,129,0.7)'
+                      : state.quality?.startsWith('360p') ? 'rgba(251,146,60,0.7)'
+                      : 'rgba(255,255,255,0.4)',
+                  }}
+                >
                   {state.quality || 'AUTO'}
                 </span>
               </button>

@@ -183,7 +183,7 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLoginPin, onLogin }) => {
                 >
                   {loading ? (
                     <span className="flex items-center justify-center gap-2 text-black/70">
-                      <span className="w-4 h-4 border-2 border-black/25 border-t-black/70 rounded-full dash-spin-pulse" />
+                      <span className="w-4 h-4 border-2 border-black/25 border-t-black/70 rounded-full animate-spin dash-spin-pulse" />
                       {progress < 1 ? 'Preparing...' : t(lang, 'verifying')}
                     </span>
                   ) : (
@@ -245,7 +245,7 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLoginPin, onLogin }) => {
                 >
                   {loading ? (
                     <span className="flex items-center justify-center gap-2 text-black/70">
-                      <span className="w-4 h-4 border-2 border-black/25 border-t-black/70 rounded-full dash-spin-pulse" />
+                      <span className="w-4 h-4 border-2 border-black/25 border-t-black/70 rounded-full animate-spin dash-spin-pulse" />
                       {progress < 1 ? 'Preparing...' : t(lang, 'verifying')}
                     </span>
                   ) : (
@@ -266,20 +266,19 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLoginPin, onLogin }) => {
           </div>
 
           {/* Preload progress — the "F1 pit lane" bar */}
-          <div className="mt-6 flex flex-col items-center gap-2.5">
-            <div className="w-24 h-[4px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+          <div className="mt-6 flex flex-col items-center gap-2">
+            <div className="w-24 h-[2px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)' }}>
               <div
                 className="h-full rounded-full transition-[width] duration-700 ease-out"
                 style={{
                   width: `${progress * 100}%`,
                   background: progress >= 1
-                    ? 'rgba(157,78,221,0.6)'
-                    : 'linear-gradient(90deg, rgba(157,78,221,0.45), rgba(199,125,255,0.85))',
-                  boxShadow: progress > 0 && progress < 1 ? '0 0 8px rgba(157,78,221,0.3)' : 'none',
+                    ? 'rgba(157,78,221,0.5)'
+                    : 'linear-gradient(90deg, rgba(157,78,221,0.3), rgba(199,125,255,0.6))',
                 }}
               />
             </div>
-            <p className="text-white/25 text-[10px] tracking-[3px] uppercase font-light text-center leading-snug px-2">
+            <p className="text-white/10 text-[9px] tracking-[4px] uppercase font-light">
               {loading ? t(lang, 'verifying') : progress >= 1 ? t(lang, 'enterCodeFromDash') : 'Loading'}
             </p>
           </div>
@@ -288,18 +287,18 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLoginPin, onLogin }) => {
               WhatsApp). The ONLY way in besides logging in; no anonymous browse.
               Bronze-gold = the premium/pride door to DASH. */}
           <div className="mt-7 flex flex-col items-center gap-2.5">
-            <p className="text-[11px] text-white/40 tracking-wide" style={{ fontFamily: "'Outfit', sans-serif" }}>
+            <p className="text-[11px] text-white/30 tracking-wide" style={{ fontFamily: "'Outfit', sans-serif" }}>
               {lang === 'fr' ? 'Pas encore membre ?' : 'Not a member yet?'}
             </p>
             <a
-              href={`https://wa.me/224611361300?text=${encodeURIComponent(t(lang, 'joinDashWhatsappPrefill'))}`}
+              href="https://wa.me/224611361300?text=Bonjour%20DASH%2C%20je%20veux%20rejoindre%20DASH%20et%20cr%C3%A9er%20mon%20DASH%20ID%20Tivi%2B%20(gratuit)"
               target="_blank"
               rel="noopener noreferrer"
-              className="dash-gold-btn relative overflow-hidden w-full text-center py-3.5 rounded-xl text-[13px] font-black leading-none tracking-[1.5px] uppercase transition-transform duration-300 active:scale-[0.98]"
+              className="dash-gold-btn relative overflow-hidden w-full text-center py-3.5 rounded-xl text-[13px] font-black tracking-[1.5px] uppercase transition-transform duration-300 active:scale-[0.98]"
               style={{
                 color: '#1a1400',
-                background: 'linear-gradient(135deg, #DDB962 0%, #C9A14A 42%, #9D7E3C 100%)',
-                boxShadow: '0 4px 14px rgba(0,0,0,0.32), 0 0 16px rgba(157,78,221,0.09), inset 0 1px 0 rgba(255,255,255,0.15)',
+                background: 'linear-gradient(135deg, #FFE680 0%, #FFD700 42%, #D4A053 100%)',
+                boxShadow: '0 6px 22px rgba(212,160,83,0.38), 0 0 26px rgba(255,215,0,0.10), inset 0 1px 0 rgba(255,255,255,0.5)',
                 fontFamily: "'Outfit', sans-serif",
               }}
             >
@@ -312,13 +311,9 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLoginPin, onLogin }) => {
             @keyframes dash-gold-sweep { 0% { background-position: -180% 0; } 100% { background-position: 180% 0; } }
             .dash-gold-btn::after {
               content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-              background: linear-gradient(110deg, transparent 36%, rgba(255,255,255,0.32) 50%, transparent 64%);
-              background-size: 220% 100%; animation: dash-gold-sweep 3.4s ease-in-out infinite;
+              background: linear-gradient(110deg, transparent 32%, rgba(255,255,255,0.5) 50%, transparent 68%);
+              background-size: 220% 100%; animation: dash-gold-sweep 3s ease-in-out infinite;
             }
-            .dash-gold-btn--loading { opacity: 0.92; }
-            @keyframes dash-spin-rot { to { transform: rotate(360deg); } }
-            @keyframes dash-spin-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
-            .dash-spin-pulse { animation: dash-spin-rot 0.7s linear infinite, dash-spin-pulse 1.2s ease-in-out infinite; }
           `}</style>
         </div>
       </div>

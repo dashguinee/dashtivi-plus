@@ -87,7 +87,7 @@ export const TestChannelsPage: React.FC<Props> = ({ onPlay }) => {
             {filtered.length} / {channels.length}
           </span>
         </div>
-        <p className="text-[11px] text-white/25">Free channels — tap to preview</p>
+        <p className="text-[11px] text-white/25">Free HLS channels — tap to test playback</p>
       </div>
 
       {/* Search */}

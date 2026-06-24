@@ -137,9 +137,9 @@ export const MoviesExploration: React.FC<Props> = ({ credentials, onPlay, featur
         <div className="flex items-center gap-2.5 min-w-0">
           <span
             className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-            style={{ background: ACCENT, boxShadow: `0 0 8px ${ACCENT}, 0 0 14px ${ACCENT}55` }}
+            style={{ background: ACCENT, boxShadow: `0 0 6px ${ACCENT}` }}
           />
-          <h2 className="text-lg md:text-[19px] font-black tracking-tight text-white truncate">
+          <h2 className="text-[19px] font-black tracking-tight text-white truncate">
             {lang === 'fr' ? 'À explorer · Cinéma' : 'Explore · Cinema'}
           </h2>
         </div>
@@ -166,7 +166,7 @@ export const MoviesExploration: React.FC<Props> = ({ credentials, onPlay, featur
 
       {/* Discovery strip — calm posters, tap to dive in. */}
       {stripItems.length > 0 && (
-        <div className="flex gap-3.5 overflow-x-auto scrollbar-hide scroll-fade px-4 pt-4 pb-1 items-end">
+        <div className="flex gap-3.5 overflow-x-auto scrollbar-hide px-4 pt-4 pb-1 items-end">
           {stripItems.map((m) => (
             <div key={m.stream_id} className="flex-shrink-0 w-[118px]">
               <PosterCard
@@ -332,18 +332,13 @@ function TrailerExploreCard({
               ))}
             </div>
           </div>
-          {/* Ghost play affordance — subtle but legible on a mid-range Android
-              (16% fill + faint ring). Content stays the hero; restraint = premium,
-              but a tappable card must show it's tappable. */}
+          {/* Ghost play affordance — barely a whisper (7% opacity, soft, no hard
+              gradient/shadow). Content is the hero; restraint = premium. */}
           <span
             className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{
-              background: 'rgba(157,78,221,0.16)',
-              border: '1px solid rgba(216,180,255,0.25)',
-              backdropFilter: 'blur(4px)',
-            }}
+            style={{ background: '#9D4EDD', opacity: 0.07, filter: 'blur(0.3px)' }}
           >
-            <Play className="w-5 h-5 text-white/80 ml-0.5" fill="currentColor" />
+            <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
           </span>
         </div>
       </button>

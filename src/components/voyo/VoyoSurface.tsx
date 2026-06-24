@@ -81,30 +81,17 @@ export function VoyoSurfaceContent({ section, onClose }: VoyoSurfaceContentProps
     >
       {/* Warm Oyé pre-roll wash while VOYO boots — green→gold, celebratory,
           fades out the instant the iframe paints. Keeps the rise from landing
-          on a black void. On slow/3G the iframe can take 2-3s+, so the wash is
-          richer (so it never reads as an empty void) AND gently breathes to say
-          "something is happening" — quiet luxury, no loud spinner. Stops the
-          instant VOYO paints. */}
+          on a black void. */}
       <div
         aria-hidden
-        className="voyo-preroll absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(120% 90% at 50% 38%, rgba(0,119,73,0.32) 0%, rgba(255,182,18,0.18) 46%, transparent 78%)',
+            'radial-gradient(120% 90% at 50% 38%, rgba(0,119,73,0.16) 0%, rgba(255,182,18,0.08) 46%, transparent 78%)',
           opacity: loaded ? 0 : 1,
           transition: 'opacity 600ms cubic-bezier(0.23, 1, 0.32, 1)',
-          animation: loaded ? 'none' : 'voyo-preroll-pulse 1.8s cubic-bezier(0.23, 1, 0.32, 1) infinite',
         }}
       />
-      <style>{`
-        @keyframes voyo-preroll-pulse {
-          0%, 100% { opacity: 0.82; }
-          50%      { opacity: 1; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .voyo-preroll { animation: none !important; }
-        }
-      `}</style>
 
       {mountFrame && (
         <iframe
@@ -121,16 +108,8 @@ export function VoyoSurfaceContent({ section, onClose }: VoyoSurfaceContentProps
         />
       )}
 
-      {/* Close — recedes the surface. Anchored to the SAFE-area edge (not the
-          raw viewport) so it sits a predictable ~12px from real content on every
-          device: notched iPhone, flat Android, foldable all land the same. */}
-      <div
-        className="absolute top-0 right-0 z-10"
-        style={{
-          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)',
-          paddingRight: 'calc(env(safe-area-inset-right, 0px) + 0.75rem)',
-        }}
-      >
+      {/* Close — recedes the surface. Floats top-right above VOYO. */}
+      <div className="absolute top-3 right-3 z-10" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <VoyoCloseX onClose={onClose} size="md" ariaLabel="Close VOYO" />
       </div>
     </div>
