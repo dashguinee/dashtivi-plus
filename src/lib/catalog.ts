@@ -135,6 +135,10 @@ const GEM_DISTRICT_TO_EXPERIENCE: Record<string, string> = {
   sports: 'Sports', movies: 'Movies', news: 'News', french: 'France',
   african: 'African', kids: 'Kids', discover: 'Documentary', music: 'Entertainment',
 };
+// Cross-listing — a channel that genuinely fits more than one collection shows on each.
+const GEM_CROSS_LIST: Record<string, string[]> = {
+  'Trace Sports Stars': ['Entertainment'], // sports content + the Trace entertainment brand
+};
 
 function buildCatalog(raw: RawCatalog, gems: GemChannel[] = []): Catalog {
   const channels: CatalogChannel[] = raw.channels.map((c) => ({
@@ -166,6 +170,10 @@ function buildCatalog(raw: RawCatalog, gems: GemChannel[] = []): Catalog {
     channels.push(ch);
     byStreamId.set(ch.stream_id, ch);
     directUrlMap.set(ch.stream_id, g.url);
+    // a channel that fits more than one shelf appears on each
+    for (const extra of (GEM_CROSS_LIST[g.name] || [])) {
+      if (extra !== experience) (byExperience[extra] ||= []).push(ch);
+    }
   }
 
   const wcIds = new Set(raw.collections?.worldcup || []);
