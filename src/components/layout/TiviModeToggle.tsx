@@ -1,14 +1,16 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { tap } from '@/lib/haptics';
-import { VeeWheel, type VeeAction } from './VeeWheel';
+import { VeeCanvas, type VeeAction } from './VeeCanvas';
 
 /**
  * VeePebble — the AI concierge at the heart of the nav.
  * Technique = the Giraf "G" textured pebble (radial off-center light = soft 3D),
  * recolored to VEE's identity: iridescent pink→violet→blue, BREATHING.
  *   TAP  = toggle Live → Movies → Series
- *   HOLD = Vee's floating quick-actions wheel (Giraf OrbitalWheel)
+ *   HOLD = "Vee's canvas" — a full-screen ambient hold experience, PORTALED to
+ *          document.body (z 10000) so it escapes the Navbar stacking context
+ *          that used to mask the old wheel.
  */
 const CYCLE = ['/', '/movies', '/series'];
 function nextRoute(path: string): string {
@@ -22,37 +24,35 @@ export const TiviModeToggle: React.FC = () => {
   const ref = useRef<HTMLDivElement>(null);
   const holdTimer = useRef<ReturnType<typeof setTimeout>>();
   const held = useRef(false);
-  const [wheel, setWheel] = useState<{ x: number; y: number } | null>(null);
+  const [canvasOpen, setCanvasOpen] = useState(false);
 
-  const openWheel = useCallback(() => {
+  const openCanvas = useCallback(() => {
     held.current = true;
     tap();
-    const r = ref.current?.getBoundingClientRect();
-    if (r) setWheel({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+    setCanvasOpen(true);
   }, []);
 
   const onDown = useCallback((e: React.PointerEvent) => {
     held.current = false;
     tap();
     // Capture the pointer for the whole hold — without this the release landed on
-    // the wheel's own backdrop and closed it the instant it opened (the "fudge").
+    // the canvas backdrop and dissolved it the instant it opened (the "fudge").
     e.currentTarget.setPointerCapture?.(e.pointerId);
-    holdTimer.current = setTimeout(openWheel, 420);
-  }, [openWheel]);
+    holdTimer.current = setTimeout(openCanvas, 420);
+  }, [openCanvas]);
 
   const onUp = useCallback(() => {
     clearTimeout(holdTimer.current);
-    if (!held.current && !wheel) navigate(nextRoute(location.pathname));
-  }, [navigate, location.pathname, wheel]);
+    if (!held.current && !canvasOpen) navigate(nextRoute(location.pathname));
+  }, [navigate, location.pathname, canvasOpen]);
 
+  // The canvas itself dispatches Live/Movies/Series/Search/Ask navigation;
+  // selecting Live/Movies/Series/Search closes the canvas, Ask keeps it open
+  // (it drops the founder into the compose surface).
   const onSelect = useCallback((a: VeeAction) => {
-    setWheel(null); held.current = false;
-    if (a === 'live') navigate('/');
-    else if (a === 'movies') navigate('/movies');
-    else if (a === 'series') navigate('/series');
-    else if (a === 'ask') { navigate('/explore'); }
-    else if (a === 'search') (window as any).openTiviSearch?.();
-  }, [navigate]);
+    held.current = false;
+    if (a !== 'ask') setCanvasOpen(false);
+  }, []);
 
   return (
     <button
@@ -84,12 +84,10 @@ export const TiviModeToggle: React.FC = () => {
           textShadow: '0 1px 3px rgba(0,0,0,0.35)', letterSpacing: '0.01em',
         }}>V</span>
       </div>
-      <VeeWheel
-        active={!!wheel}
-        centerX={wheel?.x ?? 0}
-        centerY={wheel?.y ?? 0}
+      <VeeCanvas
+        active={canvasOpen}
         onSelect={onSelect}
-        onClose={() => { setWheel(null); held.current = false; }}
+        onClose={() => { setCanvasOpen(false); held.current = false; }}
       />
     </button>
   );
