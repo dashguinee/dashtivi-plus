@@ -109,9 +109,14 @@ function StaticTriondaBall({ px }: { px: number }) {
         animation: 'tri-ambient 3.8s ease-in-out infinite',
       }}
     >
-      {/* The real ball render, circular — static. Tapping opens the full
-          interactive ball (the pop), where it spins + you can grab it. */}
+      <style>{`
+        @keyframes tri-home-spin { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) { [data-tri-home-spin] { animation: none !important; } }
+      `}</style>
+      {/* The real ball render — a simple, slow spin (calm, not dizzy). Tapping
+          opens the full interactive ball (the pop) + team picker. */}
       <img
+        data-tri-home-spin
         src={POSTER_SRC}
         alt="FIFA TRIONDA Ball World Cup 2026"
         draggable={false}
@@ -123,6 +128,8 @@ function StaticTriondaBall({ px }: { px: number }) {
           objectFit: 'cover',
           pointerEvents: 'none',
           userSelect: 'none',
+          animation: 'tri-home-spin 8s linear infinite',
+          willChange: 'transform',
         }}
       />
     </span>
