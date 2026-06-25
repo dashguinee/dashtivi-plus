@@ -175,12 +175,6 @@ interface TriondaBallProps {
   size?: 'icon' | 'pop';
   /** Pixel diameter override (defaults: icon 64, pop 268). */
   px?: number;
-  /**
-   * Show a small "pick your team" affordance next to the ball that opens the
-   * flag-picker pop. The inline ball itself = spin-only (it captures pointer
-   * events), so the picker lives on this separate pill. Default true for icon.
-   */
-  showPicker?: boolean;
 }
 
 export function TriondaBall({ size = 'icon', px }: TriondaBallProps) {

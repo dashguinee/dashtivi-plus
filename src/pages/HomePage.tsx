@@ -21,7 +21,6 @@ import {
   type CatalogChannel,
 } from '@/lib/catalog';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
-import { LiveFirstCardTile } from '@/components/ui/LiveFirstCardTile';
 import { tap } from '@/lib/haptics';
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { setAmbientSpeed } from '@/lib/ambient-audio';
@@ -311,7 +310,6 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                 worldCup={experience === 'World Cup'}
                 accent={EXPERIENCE_ACCENT[experience] || '#9D4EDD'}
                 channels={channels}
-                credentials={credentials}
                 onPlay={(ch) => play(ch, channels)}
                 onSeeAll={seeAllId ? () => navigate(`/live/${seeAllId}`) : undefined}
                 lang={lang}
@@ -448,7 +446,6 @@ const ExperienceRow = React.memo(function ExperienceRow({
   title,
   accent,
   channels,
-  credentials,
   onPlay,
   onSeeAll,
   lang,
@@ -458,8 +455,6 @@ const ExperienceRow = React.memo(function ExperienceRow({
   title: string;
   accent: string;
   channels: CatalogChannel[];
-  /** Threaded in so the FIRST card can build its live url exactly like onPlay. */
-  credentials: XtreamCredentials;
   onPlay: (ch: CatalogChannel) => void;
   onSeeAll?: () => void;
   lang: Lang;
@@ -510,18 +505,7 @@ const ExperienceRow = React.memo(function ExperienceRow({
 
       {/* Horizontal channel strip */}
       <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1">
-        {channels.map((ch, cardIdx) => {
-          // The FIRST card of each row becomes a LIVE mini-tile (the row's
-          // "breathing" beat). The rest stay as static logo cards, unchanged.
-          // The live tile is gated/capped internally (in-view + concurrency).
-          // Live first-card tiles DISABLED — they crashed on device ("Transmission
-          // lost"). Reverted to static logo cards; re-enable by restoring `cardIdx === 0`.
-          const isLiveTile = false;
-          const liveUrl = isLiveTile
-            ? (ch.plays === 'direct'
-                ? buildCatalogUrl(ch, credentials)
-                : buildLiveUrl(credentials, ch.stream_id))
-            : '';
+        {channels.map((ch) => {
           return (
           <button
             key={ch.stream_id}
@@ -545,18 +529,7 @@ const ExperienceRow = React.memo(function ExperienceRow({
               <div className="absolute inset-x-0 top-0 h-2/3 pointer-events-none z-[1]"
                 style={{ background: `radial-gradient(ellipse 85% 100% at 32% 0%, ${accent}26, transparent 72%)` }} />
 
-              {isLiveTile ? (
-                // First card = LIVE: muted mini-player with the logo as poster.
-                <LiveFirstCardTile
-                  url={liveUrl}
-                  logo={ch.icon}
-                  name={ch.name}
-                  width={cardW}
-                  height={cardH}
-                />
-              ) : (
-                <ChannelIcon src={ch.icon} name={ch.name} size="md" />
-              )}
+              <ChannelIcon src={ch.icon} name={ch.name} size="md" />
 
               {/* LIVE dot — breathing on the shared rhythm */}
               <div className="absolute top-1.5 left-1.5 z-[2] flex items-center gap-1 px-1.5 py-0.5 rounded-full"
