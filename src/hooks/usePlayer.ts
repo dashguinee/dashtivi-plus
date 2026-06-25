@@ -473,6 +473,15 @@ export function usePlayer() {
               switchCount++;
               bufferStalls = [];
               recoveryStarted = 0;
+              // Mask the re-buffer hitch of the hard src-swap with a frozen frame
+              // (revealed in onplaying when the new tier paints). Prime never shows
+              // a black flash on an adaptive quality change — neither should we.
+              const snap = captureFrame(video);
+              if (snap) {
+                setSwitchSnapshot(snap);
+                if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
+                snapshotTimerRef.current = setTimeout(() => setSwitchSnapshot(null), 12000);
+              }
               video.src = tierUrl(to);
               video.play().catch(() => {});
             };
