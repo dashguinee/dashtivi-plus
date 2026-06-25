@@ -51,7 +51,7 @@ export function WorldCupBackdrop() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 overflow-hidden"
+      className="pointer-events-none absolute inset-0 overflow-hidden"
       style={{ zIndex: 0 }}
     >
       {/* BIG, off-screen-edged video — object-cover so it always fills, scaled
@@ -82,10 +82,8 @@ export function WorldCupBackdrop() {
       <div
         className="absolute inset-0"
         style={{
-          // Fixed backdrop: darker over the TOP hero, opens up in the LOWER-MIDDLE
-          // (behind the World Cup / Sports section), fades dark again at the bottom.
           background:
-            'linear-gradient(180deg, rgba(5,6,8,0.86) 0%, rgba(5,6,8,0.64) 26%, rgba(5,6,8,0.34) 56%, rgba(5,6,8,0.40) 72%, rgba(5,6,8,0.84) 90%, rgba(5,6,8,0.97) 100%)',
+            'linear-gradient(180deg, rgba(5,6,8,0.72) 0%, rgba(5,6,8,0.40) 24%, rgba(5,6,8,0.46) 58%, rgba(5,6,8,0.86) 84%, rgba(5,6,8,0.99) 100%)',
         }}
       />
 
@@ -99,7 +97,7 @@ export function WorldCupBackdrop() {
           className="absolute inset-0 wc-visor"
           style={{
             background:
-              'radial-gradient(38% 40% at 50% 62%, rgba(255,255,255,0.11) 0%, rgba(5,6,8,0) 44%, rgba(5,6,8,0.30) 100%)',
+              'radial-gradient(36% 42% at 50% 46%, rgba(255,255,255,0.10) 0%, rgba(5,6,8,0) 42%, rgba(5,6,8,0.30) 100%)',
             mixBlendMode: 'soft-light',
           }}
         />

@@ -382,7 +382,16 @@ function TriondaPopOverlay({
           marginBottom: 28,
         }}
       >
-        <TriondaBall size="pop" interactive={false} />
+        {/* The REAL FIFA TRIONDA 2026 model (Sketchfab) — auto-spinning, chrome-stripped,
+            interactive (drag to rotate). Loads only when the pop opens. */}
+        <iframe
+          title="FIFA TRIONDA Ball World Cup 2026"
+          src="https://sketchfab.com/models/4c577717c59f44a882c48c5d8b5e41f8/embed?autospin=0.6&autostart=1&preload=1&transparent=1&ui_infos=0&ui_controls=0&ui_watermark=0&ui_watermark_link=0&ui_hint=0&ui_stop=0&ui_ar=0&ui_help=0&ui_settings=0&ui_vr=0&ui_fullscreen=0&ui_annotations=0&ui_loading=0&dnt=1"
+          frameBorder="0"
+          allow="autoplay; fullscreen; xr-spatial-tracking"
+          allowFullScreen
+          style={{ width: 268, height: 268, border: 'none', borderRadius: 20, background: 'transparent', display: 'block' }}
+        />
       </div>
 
       {/* The question + flag chips — Guinea first. */}
