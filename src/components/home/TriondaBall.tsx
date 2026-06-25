@@ -15,7 +15,10 @@ import { tap, click, confirm } from '@/lib/haptics';
  *                   until the iframe reports loaded — never a blank / old SVG.
  *               The inline ball captures pointer events (so you can spin it);
  *               the flag-picker therefore lives on a separate small affordance.
- *   - "pop"   → big centered hero embed inside the flag-picker overlay.
+ *   - "pop"   → big centered STATIC hero ball inside the flag-picker overlay,
+ *               with an orbiting conic beam + a slow spin/breath + a GOAL cheer
+ *               on pick. No iframe (Sketchfab is network-blocked → "content
+ *               is blocked"), so the 3D embed was removed entirely.
  *
  * Flag-picker flow (PRESERVED): a tiny pill / the WcFlagBeam opens a
  * SELF-CONTAINED pop overlay (createPortal → body, z~9998): page blurs+dims,
@@ -27,16 +30,25 @@ import { tap, click, confirm } from '@/lib/haptics';
 
 const WC_TEAM_KEY = 'tivi_wc_team';
 
-// The REAL FIFA TRIONDA 2026 model on Sketchfab — chrome stripped, interactive
-// (drag to rotate), gentle auto-spin. ONE shared param string for both embeds.
-const SKETCHFAB_SRC =
-  'https://sketchfab.com/models/4c577717c59f44a882c48c5d8b5e41f8/embed' +
-  '?autostart=1&autospin=0.3&preload=1&transparent=1' +
-  '&ui_infos=0&ui_controls=0&ui_watermark=0&ui_watermark_link=0' +
-  '&ui_hint=0&ui_stop=0&ui_ar=0&ui_help=0&ui_settings=0&ui_vr=0' +
-  '&ui_fullscreen=0&ui_annotations=0&ui_loading=0&dnt=1';
-
+// The static FIFA TRIONDA 2026 ball render. The Sketchfab interactive embed was
+// removed: it's blocked on the target network ("content is blocked"). The pop
+// now goes fully static + CSS-animated (spin + orbiting beam + cheer).
 const POSTER_SRC = '/trionda-ball.png';
+
+// Goal-celebration crowd ROAR — fired when a team is picked. Lazily created and
+// reused across picks; play() runs inside the pick tap (a user gesture) so the
+// browser autoplay policy allows it.
+//   Source: "Arrowhead Stadium crowd noise" by Kj1595 (Wikimedia Commons),
+//   trimmed to 2.6s. CC BY-SA 4.0 — see CREDITS.md (attribution required).
+let cheerAudio: HTMLAudioElement | null = null;
+function playCheer() {
+  try {
+    if (!cheerAudio) cheerAudio = new Audio('/cheer.mp3');
+    cheerAudio.currentTime = 0;
+    cheerAudio.volume = 0.5;
+    void cheerAudio.play();
+  } catch { /* a cheer is a bonus — never block the pick */ }
+}
 
 // Guinea FIRST — then the rest of the African contenders.
 const AFRICAN_TEAMS: { code: string; flag: string; fr: string; en: string }[] = [
@@ -75,17 +87,10 @@ function usePrefersReducedMotion(): boolean {
   return reduced;
 }
 
-// ── The inline INTERACTIVE ball ─────────────────────────────────────
-// A circular frame that shows the real ball render (`/trionda-ball.png`) as an
-// INSTANT poster, then — only once scrolled into view — mounts the live,
-// drag-to-rotate Sketchfab embed on top. The poster cross-fades out when the
-// iframe finishes loading, so the user never sees a blank.
-//
-// Performance discipline:
-//   • IntersectionObserver gates the iframe: mounts on enter, UNMOUNTS on far
-//     exit (rootMargin generous so it's ready, but freed when out of view).
-//   • Exactly ONE iframe (this component renders at most one).
-//   • The poster <img> is tiny + cached; the iframe is the only heavy element.
+// ── The inline static home ball ─────────────────────────────────────
+// A circular frame showing the real ball render (`/trionda-ball.png`) with a
+// slow, breathing violet ambient halo. Pure <img> — zero iframe, GPU-cheap.
+// Tapping it opens the full pop (the animated hero ball + team picker).
 function StaticTriondaBall({ px }: { px: number }) {
   return (
     <span
@@ -203,8 +208,29 @@ export function TriondaBall({ size = 'icon', px }: TriondaBallProps) {
           0%,100% { box-shadow: 0 0 0 1px rgba(192,38,211,0.30), 0 0 13px rgba(192,38,211,0.28), 0 4px 14px rgba(0,0,0,0.45); }
           50%     { box-shadow: 0 0 0 1px rgba(216,120,255,0.45), 0 0 26px rgba(192,38,211,0.55), 0 4px 16px rgba(0,0,0,0.50); }
         }
+        /* The pop ball: a slow, premium spin + a gentle breathing scale. */
+        @keyframes tri-ball-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes tri-ball-breath { 0%,100% { transform: scale(1); } 50% { transform: scale(1.035); } }
+        /* The orbiting beam ring (same technique as WcFlagBeam). */
+        @keyframes tri-beam-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* GOAL celebration — a joyful bounce + glow pulse on the picked ball. */
+        @keyframes tri-ball-cheer {
+          0%   { transform: scale(1) translateY(0); }
+          18%  { transform: scale(1.18) translateY(-14px); }
+          40%  { transform: scale(0.94) translateY(0); }
+          60%  { transform: scale(1.08) translateY(-6px); }
+          80%  { transform: scale(0.98) translateY(0); }
+          100% { transform: scale(1) translateY(0); }
+        }
+        @keyframes tri-chip-cheer {
+          0%,100% { transform: scale(1.05); }
+          25%     { transform: scale(1.22) translateY(-3px); }
+          55%     { transform: scale(0.98); }
+          75%     { transform: scale(1.12); }
+        }
         @media (prefers-reduced-motion: reduce) {
           [data-tri-ambient] { animation: none !important; }
+          [data-tri-spin], [data-tri-beam], [data-tri-cheer], [data-tri-chip] { animation: none !important; }
         }
       `}</style>
 
@@ -251,6 +277,9 @@ function TriondaPopOverlay({
 }) {
   const [picked, setPicked] = useState<string | null>(() => getWcTeam());
   const [confettiRun, setConfettiRun] = useState(0);
+  // A monotonic counter — bumping it re-triggers the GOAL cheer animation
+  // (changing the React key restarts the CSS keyframe from 0).
+  const [cheer, setCheer] = useState(0);
 
   // Esc closes too (desktop nicety).
   useEffect(() => {
@@ -264,6 +293,8 @@ function TriondaPopOverlay({
     try { localStorage.setItem(WC_TEAM_KEY, code); } catch { /* private mode — fine */ }
     setPicked(code);
     setConfettiRun((r) => r + 1);
+    setCheer((c) => c + 1);
+    playCheer();
     // Let other surfaces (the section flag beam) react to the new pick.
     try { window.dispatchEvent(new CustomEvent('tivi-wc-team', { detail: code })); } catch { /* noop */ }
   }, []);
@@ -320,45 +351,98 @@ function TriondaPopOverlay({
         ✕
       </button>
 
-      {/* The ball pops to center, bigger + spinning. */}
+      {/* The ball pops to center — STATIC render (no iframe → never "blocked").
+          A rotating conic beam orbits it, the ball gently spins + breathes, and
+          on a pick it does a joyful GOAL bounce. */}
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          animation: reduced ? 'none' : 'tri-pop-in 0.42s cubic-bezier(0.16,1,0.3,1) both',
+          position: 'relative',
+          width: 300,
+          height: 300,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           marginBottom: 28,
+          animation: reduced ? 'none' : 'tri-pop-in 0.42s cubic-bezier(0.16,1,0.3,1) both',
         }}
       >
-        {/* The REAL interactive ball — auto-spins at rest, drag to rotate it.
-            The poster render sits behind as an instant fill so it's never blank
-            while the embed loads. ONE iframe, only while this pop is open. */}
+        {/* The orbiting beam — same conic-gradient ring technique as WcFlagBeam,
+            scaled up to circle the hero ball. Sits BEHIND the ball. */}
+        <span
+          data-tri-beam
+          aria-hidden
+          style={{
+            position: 'absolute',
+            width: 296,
+            height: 296,
+            borderRadius: '50%',
+            background:
+              'conic-gradient(from 0deg, transparent 0deg, transparent 230deg, rgba(192,38,211,0.0) 250deg, rgba(192,38,211,0.9) 320deg, rgba(216,120,255,1) 350deg, transparent 360deg)',
+            animation: reduced ? 'none' : 'tri-beam-spin 3.4s linear infinite',
+            filter: 'blur(1px)',
+            willChange: 'transform',
+          }}
+        />
+        {/* Mask the beam's center so only its rim reads as a traveling beam. */}
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            width: 282,
+            height: 282,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle at 38% 30%, #15101f, #05060a)',
+            boxShadow: 'inset 0 0 0 1px rgba(192,38,211,0.22)',
+          }}
+        />
+
+        {/* The static ball render — circular, ~248px, NO iframe. The cheer
+            wrapper re-keys on each pick so the GOAL bounce restarts cleanly. */}
         <div
+          key={`cheer-${cheer}`}
+          data-tri-cheer
           style={{
             position: 'relative',
             width: 248,
             height: 248,
-            borderRadius: 20,
-            overflow: 'hidden',
-            boxShadow: '0 0 0 1px rgba(192,38,211,0.30), 0 18px 44px rgba(0,0,0,0.55)',
-            backgroundImage: `url(${POSTER_SRC})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            borderRadius: '50%',
+            animation: reduced || cheer === 0
+              ? 'none'
+              : 'tri-ball-cheer 0.85s cubic-bezier(0.34,1.56,0.64,1) both',
           }}
         >
-          <iframe
-            title="FIFA TRIONDA Ball World Cup 2026"
-            src={SKETCHFAB_SRC}
-            frameBorder="0"
-            allow="autoplay; fullscreen; xr-spatial-tracking"
-            allowFullScreen
+          {/* Inner layer carries the perpetual spin + breath so it composes
+              cleanly with the (occasional) cheer bounce on the wrapper. */}
+          <div
+            data-tri-spin
             style={{
               position: 'absolute',
               inset: 0,
-              width: '100%',
-              height: '100%',
-              border: 'none',
-              background: 'transparent',
+              borderRadius: '50%',
+              overflow: 'hidden',
+              boxShadow: '0 0 0 1px rgba(192,38,211,0.35), 0 0 30px rgba(192,38,211,0.30), 0 18px 44px rgba(0,0,0,0.55)',
+              animation: reduced
+                ? 'none'
+                : 'tri-ball-spin 24s linear infinite, tri-ball-breath 4.2s ease-in-out infinite',
+              willChange: 'transform',
             }}
-          />
+          >
+            <img
+              src={POSTER_SRC}
+              alt="FIFA TRIONDA Ball World Cup 2026"
+              draggable={false}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                pointerEvents: 'none',
+                userSelect: 'none',
+              }}
+            />
+          </div>
         </div>
       </div>
 
@@ -395,8 +479,11 @@ function TriondaPopOverlay({
             const active = picked === tm.code;
             return (
               <button
-                key={tm.code}
+                // Re-key the active chip on each pick so the cheer keyframe
+                // restarts from 0; inactive chips keep a stable key.
+                key={active ? `${tm.code}-cheer-${cheer}` : tm.code}
                 type="button"
+                data-tri-chip={active ? '' : undefined}
                 onPointerDown={() => tap()}
                 onClick={() => pick(tm.code)}
                 style={{
@@ -418,6 +505,10 @@ function TriondaPopOverlay({
                   boxShadow: active ? '0 0 18px rgba(192,38,211,0.4)' : 'none',
                   transition: 'transform 0.15s ease, background 0.2s ease',
                   transform: active ? 'scale(1.05)' : 'scale(1)',
+                  animation:
+                    active && !reduced && cheer > 0
+                      ? 'tri-chip-cheer 0.6s cubic-bezier(0.34,1.56,0.64,1) both'
+                      : undefined,
                 }}
               >
                 <span style={{ fontSize: 17, lineHeight: 1 }}>{tm.flag}</span>

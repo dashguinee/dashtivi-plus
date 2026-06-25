@@ -3,8 +3,12 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { PlayerControls } from './PlayerControls';
 import { RefreshCw, AlertTriangle, ChevronLeft as ChevLeft, ChevronRight as ChevRight, SkipForward, SkipBack, Tv } from 'lucide-react';
 import { useAdjacentChannels, usePlaylistState, setCurrentChannel, setPlaylist } from '@/lib/playlist';
+import { Heart, Plus, Info, Share2 } from 'lucide-react';
 import { useKeyboard } from '@/hooks/useKeyboard';
 import { useSwipeSurf } from '@/hooks/useSwipeSurf';
+import { useTactileGestures, type TactileAction } from '@/hooks/useTactileGestures';
+import { useFavorites } from '@/hooks/useFavorites';
+import { useWatchLater } from '@/hooks/useMovieShelf';
 import {
   experienceForChannelId,
   adjacentCategory,
@@ -141,6 +145,40 @@ export const VideoPlayer: React.FC<Props> = ({
     onDown: handleSurfDown,
     onDrag: setSurfDragX,
   });
+
+  // ── Long-press → radial on what's playing (Favorite · Watch Later · Details ·
+  //    Share). Same physics/feel as the cards (LIFT-ONLY here: swipe-surf already
+  //    owns L/R = prev/next and U/D = category — we UNIFY, not re-add). The
+  //    tactile engine runs with NO swipe handlers, so a horizontal/vertical drag
+  //    surfs while a still 280ms press lifts the radial menu. ──
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isWatchLater, addWatchLater } = useWatchLater();
+  const playingId = state.channel?.id ?? '';
+  const sharePlaying = useCallback(() => {
+    const nav = typeof navigator !== 'undefined' ? (navigator as any) : null;
+    const title = state.channel?.name ?? 'DASH Tivi+';
+    if (nav?.share) nav.share({ title, text: title }).catch(() => {});
+    else if (nav?.clipboard) nav.clipboard.writeText(title).catch(() => {});
+  }, [state.channel?.name]);
+  const tactileActions: TactileAction[] = [
+    { id: 'favorite', label: 'Favorite', icon: <Heart className="w-5 h-5" fill={isFavorite(playingId) ? 'currentColor' : 'none'} />, color: '#FF5C8A', onFire: () => toggleFavorite(playingId) },
+    { id: 'later', label: 'Watch Later', icon: <Plus className="w-5 h-5" />, color: '#FFC927', onFire: () => addWatchLater(playingId) },
+    { id: 'details', label: 'Details', icon: <Info className="w-5 h-5" />, color: '#C9A8FF', onFire: () => { showControls(); } },
+    { id: 'share', label: 'Share', icon: <Share2 className="w-5 h-5" />, color: '#9AE6B4', onFire: sharePlaying },
+  ];
+  const tactile = useTactileGestures({
+    width: typeof window !== 'undefined' ? Math.min(window.innerWidth, 420) : 360,
+    actions: tactileActions,
+  });
+
+  // Compose surf + lift on the player container: forward each pointer event to
+  // BOTH. They don't collide (drag → surf, still press → lift).
+  const composedPointer = {
+    onPointerDown: (e: React.PointerEvent) => { surfHandlers.onPointerDown(e); tactile.handlers.onPointerDown(e); },
+    onPointerMove: (e: React.PointerEvent) => { surfHandlers.onPointerMove(e); tactile.handlers.onPointerMove(e); },
+    onPointerUp: (e: React.PointerEvent) => { surfHandlers.onPointerUp(e); tactile.handlers.onPointerUp(e); },
+    onPointerCancel: (e: React.PointerEvent) => { surfHandlers.onPointerCancel(e); tactile.handlers.onPointerCancel(e); },
+  };
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
@@ -479,20 +517,26 @@ export const VideoPlayer: React.FC<Props> = ({
 
   return (
     <div
-      ref={containerRef as React.RefObject<HTMLDivElement>}
+      ref={(el) => {
+        (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+        (tactile.surfaceRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+      }}
       className="fixed inset-0 z-[51] flex items-center justify-center"
       onMouseMove={showControls}
       onTouchStart={(e) => { showControls(); handleTouchStart(e); }}
       onTouchEnd={handleTouchEnd}
-      onPointerDown={surfHandlers.onPointerDown}
-      onPointerMove={surfHandlers.onPointerMove}
-      onPointerUp={surfHandlers.onPointerUp}
-      onPointerCancel={surfHandlers.onPointerCancel}
+      onPointerDown={composedPointer.onPointerDown}
+      onPointerMove={composedPointer.onPointerMove}
+      onPointerUp={composedPointer.onPointerUp}
+      onPointerCancel={composedPointer.onPointerCancel}
       onClick={() => {
         if (controlsVisible) showControls();
         else setControlsVisible(true);
       }}
     >
+      {/* Long-press radial menu (Favorite · Watch Later · Details · Share) on the
+          playing surface — the veil + ring render above everything. */}
+      {tactile.overlay}
       {/* Video element lives in App.tsx (persistent, never unmounts).
           It renders at z-50 behind this overlay when full player is active.
           No <video> here — eliminates mount/unmount audio orphaning. */}
