@@ -40,6 +40,7 @@ export interface RawCatalogChannel {
   tested: boolean;
   free?: boolean;      // open-source HLS gem, merged into the collection (green/FREE tag)
   language?: string;   // inferred channel language code — 'FR' | 'EN' | 'AR' (faded pill)
+  cross?: string[];    // extra experiences this channel also belongs to (cross-reference)
 }
 
 interface RawCatalog {
@@ -161,6 +162,11 @@ function buildCatalog(raw: RawCatalog, gems: GemChannel[] = []): Catalog {
 
   for (const ch of channels) {
     (byExperience[ch.experience] ||= []).push(ch);
+    // Cross-reference: a channel that genuinely fits more than one shelf (a French
+    // beIN feed → Sports + Français + World Cup) appears on EACH.
+    for (const extra of (ch.cross || [])) {
+      if (extra !== ch.experience) (byExperience[extra] ||= []).push(ch);
+    }
     byStreamId.set(ch.stream_id, ch);
     if (ch.plays === 'direct' && ch.url) directUrlMap.set(ch.stream_id, ch.url);
   }
