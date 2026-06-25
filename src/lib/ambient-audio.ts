@@ -47,7 +47,7 @@ const HOME_ROTATION = [
 let rotationIndex = Math.floor(Math.random() * HOME_ROTATION.length);
 const AUDIO_URL = HOME_ROTATION[rotationIndex];
 const STORAGE_KEY = 'tivi_ambient_enabled';
-const VOLUME = 0.4;
+const VOLUME = 0.3; // lowered max — it cruises BELOW this via the gentle swing
 
 export function isAmbientEnabled(): boolean {
   try { return localStorage.getItem(STORAGE_KEY) !== 'off'; } catch { return true; }
@@ -60,6 +60,7 @@ export function initAmbient(): void {
   audio.loop = false;
   audio.volume = VOLUME;
   audio.crossOrigin = 'anonymous';
+  startSwing();
 
   let fadeOutStarted = false;
   audio.addEventListener('timeupdate', () => {
@@ -205,6 +206,20 @@ function fadeVolume(from: number, to: number, durationMs: number, onComplete?: (
       if (onComplete) onComplete();
     }
   }, stepMs);
+}
+
+// ── Gentle volume swing — the ambient "cruises" in a mellow wave instead of
+// sitting flat at max. Swings within a ~20% bracket BELOW the max (0.8–1.0 of
+// VOLUME), ~28s per wave. Pauses during fades/mute so it never fights them.
+let swingPhase = Math.PI / 2; // start near the top of the wave
+let swingInterval: ReturnType<typeof setInterval> | null = null;
+function startSwing(): void {
+  if (swingInterval) return;
+  swingInterval = setInterval(() => {
+    if (!audio || !isEnabled || isMutedForStream || audio.paused || activeFadeInterval) return;
+    swingPhase += 0.045; // ~28s full wave — slow, mellow, cruising
+    audio.volume = VOLUME * (0.9 + 0.1 * Math.sin(swingPhase));
+  }, 200);
 }
 
 // ── Audio-reactive pulse — simple amplitude from audio element ───────────
