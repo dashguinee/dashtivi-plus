@@ -69,7 +69,7 @@ export function WorldCupBackdrop() {
         className="absolute left-1/2 top-1/2 h-full w-full select-none object-cover"
         style={{
           transform: 'translate(-50%, -50%) scale(1.12)',
-          opacity: 0.22,
+          opacity: 0.29,
           // Cool it into the page palette so the green pitch doesn't shout.
           filter: 'saturate(0.82) contrast(1.02) brightness(0.92)',
           willChange: 'transform',

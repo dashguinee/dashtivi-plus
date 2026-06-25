@@ -4,26 +4,39 @@ import { useLanguage } from '@/i18n';
 import { tap, click, confirm } from '@/lib/haptics';
 
 /**
- * TriondaBall — a hand-built, crafted SVG of the FIFA World Cup 2026 "TRIONDA"
- * ball. LIGHT approach: pure SVG + CSS-3D, NO Three.js, NO external model.
+ * TriondaBall — the REAL, INTERACTIVE FIFA World Cup 2026 "TRIONDA" ball.
  *
- * The ball is a white sphere with the signature RED, BLUE, GREEN (+ subtle GOLD)
- * ribboned/curved panels meeting at points, soft radial shading and a glossy
- * highlight for a 3D feel. It spins (rotateY) + gently bounces (translateY).
+ *   - "icon"  → small inline INTERACTIVE Sketchfab 3D embed (~64px, circular).
+ *               Drag to rotate / auto-spins. Performance-first:
+ *                 • Exactly ONE iframe, ever.
+ *                 • LAZY — the iframe mounts only when scrolled into view
+ *                   (IntersectionObserver), and unmounts when far off-screen.
+ *                 • An INSTANT poster (`/trionda-ball.png`) shows underneath
+ *                   until the iframe reports loaded — never a blank / old SVG.
+ *               The inline ball captures pointer events (so you can spin it);
+ *               the flag-picker therefore lives on a separate small affordance.
+ *   - "pop"   → big centered hero embed inside the flag-picker overlay.
  *
- * Two sizes via one `size` prop:
- *   - "icon"  → small inline icon (sits in the World Cup pill / beside a title)
- *   - "pop"   → big centered hero ("the pop")
+ * Flag-picker flow (PRESERVED): a tiny pill / the WcFlagBeam opens a
+ * SELF-CONTAINED pop overlay (createPortal → body, z~9998): page blurs+dims,
+ * the ball pops to center, African-team flag picker appears. Pick → confetti
+ * burst, saved to localStorage('tivi_wc_team'). Tap empty space → close.
  *
- * Tapping the icon opens a SELF-CONTAINED pop overlay (createPortal → body,
- * z~9998 — does NOT import VeeCanvas): page blurs+dims, ball pops to center,
- * and an African-team flag picker appears. Pick → confetti burst, saved to
- * localStorage('tivi_wc_team'). Tap empty space → dissolve back to the icon.
- *
- * prefers-reduced-motion: no spin / no bounce / no confetti motion — static.
+ * prefers-reduced-motion: no auto-spin / no confetti motion — still draggable.
  */
 
 const WC_TEAM_KEY = 'tivi_wc_team';
+
+// The REAL FIFA TRIONDA 2026 model on Sketchfab — chrome stripped, interactive
+// (drag to rotate), gentle auto-spin. ONE shared param string for both embeds.
+const SKETCHFAB_SRC =
+  'https://sketchfab.com/models/4c577717c59f44a882c48c5d8b5e41f8/embed' +
+  '?autostart=1&autospin=0.3&preload=1&transparent=1' +
+  '&ui_infos=0&ui_controls=0&ui_watermark=0&ui_watermark_link=0' +
+  '&ui_hint=0&ui_stop=0&ui_ar=0&ui_help=0&ui_settings=0&ui_vr=0' +
+  '&ui_fullscreen=0&ui_annotations=0&ui_loading=0&dnt=1';
+
+const POSTER_SRC = '/trionda-ball.png';
 
 // Guinea FIRST — then the rest of the African contenders.
 const AFRICAN_TEAMS: { code: string; flag: string; fr: string; en: string }[] = [
@@ -62,127 +75,110 @@ function usePrefersReducedMotion(): boolean {
   return reduced;
 }
 
-// ── The crafted SVG sphere ─────────────────────────────────────────
-// White sphere with three signature ribboned panels (red/blue/green) curving in
-// and meeting near the poles, a subtle gold seam, soft shading + a gloss
-// highlight. Drawn in a 0..100 viewBox; scales crisply at any size.
-function TriondaSphere({ px }: { px: number }) {
-  // Stable per-render gradient ids so multiple balls on the page never collide.
-  const id = useRef(`tri-${Math.random().toString(36).slice(2, 8)}`).current;
+// ── The inline INTERACTIVE ball ─────────────────────────────────────
+// A circular frame that shows the real ball render (`/trionda-ball.png`) as an
+// INSTANT poster, then — only once scrolled into view — mounts the live,
+// drag-to-rotate Sketchfab embed on top. The poster cross-fades out when the
+// iframe finishes loading, so the user never sees a blank.
+//
+// Performance discipline:
+//   • IntersectionObserver gates the iframe: mounts on enter, UNMOUNTS on far
+//     exit (rootMargin generous so it's ready, but freed when out of view).
+//   • Exactly ONE iframe (this component renders at most one).
+//   • The poster <img> is tiny + cached; the iframe is the only heavy element.
+function InlineTriondaBall({ px }: { px: number }) {
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  // `mounted` = iframe is in the DOM; `loaded` = iframe finished, fade poster.
+  const [mounted, setMounted] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      // No IO support → just mount it (still a single iframe).
+      setMounted(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        const inView = entries.some((e) => e.isIntersecting);
+        if (inView) {
+          setMounted(true);
+        } else {
+          // Scrolled far away → free the iframe (and re-show poster next time).
+          setMounted(false);
+          setLoaded(false);
+        }
+      },
+      // Generous margin: prepare just before it enters, release once well past.
+      { rootMargin: '200px 0px 200px 0px', threshold: 0.01 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   return (
-    <svg
-      width={px}
-      height={px}
-      viewBox="0 0 100 100"
-      fill="none"
-      style={{ display: 'block', overflow: 'visible' }}
-      aria-hidden
+    <span
+      ref={wrapRef}
+      style={{
+        position: 'relative',
+        width: px,
+        height: px,
+        display: 'inline-block',
+        borderRadius: '50%',
+        overflow: 'hidden',
+        lineHeight: 0,
+        flexShrink: 0,
+        // Premium beIN-purple rim + soft lift, calm.
+        boxShadow:
+          '0 0 0 1px rgba(192,38,211,0.30), 0 4px 14px rgba(0,0,0,0.45)',
+        background: 'radial-gradient(circle at 38% 30%, #1a1426, #0a0e14)',
+      }}
     >
-      <defs>
-        {/* Sphere base — soft white with a lit top-left and a shaded bottom. */}
-        <radialGradient id={`${id}-sphere`} cx="38%" cy="32%" r="78%">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="55%" stopColor="#f3f5f8" />
-          <stop offset="82%" stopColor="#d6dbe2" />
-          <stop offset="100%" stopColor="#aab2bd" />
-        </radialGradient>
-        {/* Glossy highlight blob — the "wet" 3D pop. */}
-        <radialGradient id={`${id}-gloss`} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="rgba(255,255,255,0.95)" />
-          <stop offset="60%" stopColor="rgba(255,255,255,0.25)" />
-          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-        </radialGradient>
-        {/* Signature ribbon gradients — each panel a curved colored ribbon. */}
-        <linearGradient id={`${id}-red`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#ff5a52" />
-          <stop offset="100%" stopColor="#d4192a" />
-        </linearGradient>
-        <linearGradient id={`${id}-blue`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#3aa0ff" />
-          <stop offset="100%" stopColor="#1d4ed8" />
-        </linearGradient>
-        <linearGradient id={`${id}-green`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#3ddc84" />
-          <stop offset="100%" stopColor="#0f9d58" />
-        </linearGradient>
-        {/* Clip everything to the sphere so ribbons curve off its edge. */}
-        <clipPath id={`${id}-clip`}>
-          <circle cx="50" cy="50" r="48" />
-        </clipPath>
-      </defs>
+      {/* INSTANT poster — the real ball render, circular. Always present until
+          the live embed has loaded, then it gently fades out. */}
+      <img
+        src={POSTER_SRC}
+        alt=""
+        aria-hidden
+        draggable={false}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          opacity: loaded ? 0 : 1,
+          transition: 'opacity 0.5s ease',
+          pointerEvents: 'none',
+          userSelect: 'none',
+        }}
+      />
 
-      {/* Base sphere */}
-      <circle cx="50" cy="50" r="48" fill={`url(#${id}-sphere)`} />
-
-      {/* Ribboned panels — three curved sweeps that meet near the top & bottom
-          poles (the TRIONDA "tri" wave), each a colored ribbon with a subtle
-          gold seam alongside. Clipped to the sphere. */}
-      <g clipPath={`url(#${id}-clip)`}>
-        {/* RED ribbon — sweeps top-pole → lower-left */}
-        <path
-          d="M50 4 C 30 24, 18 42, 8 70 C 20 78, 30 80, 40 78 C 44 56, 50 30, 56 14 Z"
-          fill={`url(#${id}-red)`}
-          opacity="0.96"
+      {/* The ONE lazy interactive iframe — only in the DOM while in view. */}
+      {mounted && (
+        <iframe
+          title="FIFA TRIONDA Ball World Cup 2026"
+          src={SKETCHFAB_SRC}
+          frameBorder="0"
+          allow="autoplay; fullscreen; xr-spatial-tracking"
+          allowFullScreen
+          onLoad={() => setLoaded(true)}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            border: 'none',
+            background: 'transparent',
+            // Until loaded, keep it behind the poster (avoids a flash of the
+            // Sketchfab loading state).
+            opacity: loaded ? 1 : 0,
+            transition: 'opacity 0.5s ease',
+          }}
         />
-        {/* BLUE ribbon — sweeps top-pole → lower-right */}
-        <path
-          d="M52 6 C 70 22, 82 40, 92 66 C 80 76, 70 80, 60 78 C 56 54, 52 28, 48 12 Z"
-          fill={`url(#${id}-blue)`}
-          opacity="0.96"
-        />
-        {/* GREEN ribbon — the bottom band joining both poles */}
-        <path
-          d="M10 72 C 26 90, 50 96, 90 70 C 86 84, 66 98, 44 96 C 28 94, 16 86, 8 76 Z"
-          fill={`url(#${id}-green)`}
-          opacity="0.96"
-        />
-        {/* Subtle GOLD seams running along the panel meeting-lines */}
-        <path
-          d="M50 6 C 44 32, 42 56, 40 78"
-          stroke="#f5c451"
-          strokeWidth="1.1"
-          strokeLinecap="round"
-          fill="none"
-          opacity="0.7"
-        />
-        <path
-          d="M50 8 C 53 32, 56 56, 60 78"
-          stroke="#f5c451"
-          strokeWidth="1.1"
-          strokeLinecap="round"
-          fill="none"
-          opacity="0.7"
-        />
-        <path
-          d="M12 73 C 34 89, 60 90, 88 70"
-          stroke="#f5c451"
-          strokeWidth="1"
-          strokeLinecap="round"
-          fill="none"
-          opacity="0.55"
-        />
-
-        {/* Shading veil — darkens lower-right for roundness over the panels */}
-        <circle
-          cx="50"
-          cy="50"
-          r="48"
-          fill="url(#shade-overlay)"
-          style={{ mixBlendMode: 'multiply' }}
-        />
-      </g>
-
-      {/* Shading overlay gradient (outside clip so it reads as form light) */}
-      <radialGradient id="shade-overlay" cx="38%" cy="32%" r="80%">
-        <stop offset="0%" stopColor="rgba(255,255,255,0)" />
-        <stop offset="70%" stopColor="rgba(0,0,0,0)" />
-        <stop offset="100%" stopColor="rgba(10,16,28,0.42)" />
-      </radialGradient>
-
-      {/* Rim + gloss highlight on top for the premium 3D feel */}
-      <circle cx="50" cy="50" r="47.5" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.6" />
-      <ellipse cx="37" cy="30" rx="18" ry="12" fill={`url(#${id}-gloss)`} transform="rotate(-22 37 30)" />
-    </svg>
+      )}
+    </span>
   );
 }
 
@@ -228,88 +224,74 @@ function ConfettiBurst({ run, reduced }: { run: number; reduced: boolean }) {
 }
 
 interface TriondaBallProps {
-  /** "icon" = small inline; "pop" = big centered hero. */
+  /** "icon" = small inline INTERACTIVE embed; "pop" = big centered hero embed. */
   size?: 'icon' | 'pop';
-  /** Pixel diameter override (defaults: icon 22, pop 168). */
+  /** Pixel diameter override (defaults: icon 64, pop 268). */
   px?: number;
-  /** When true (icon only), tapping opens the pop overlay. Default true for icon. */
-  interactive?: boolean;
+  /**
+   * Show a small "pick your team" affordance next to the ball that opens the
+   * flag-picker pop. The inline ball itself = spin-only (it captures pointer
+   * events), so the picker lives on this separate pill. Default true for icon.
+   */
+  showPicker?: boolean;
 }
 
-export function TriondaBall({ size = 'icon', px, interactive }: TriondaBallProps) {
+export function TriondaBall({ size = 'icon', px, showPicker }: TriondaBallProps) {
   const { lang } = useLanguage();
   const reduced = usePrefersReducedMotion();
   const [open, setOpen] = useState(false);
-  const diameter = px ?? (size === 'pop' ? 168 : 22);
-  const canInteract = interactive ?? size === 'icon';
+  const diameter = px ?? (size === 'pop' ? 268 : 64);
+  const withPicker = showPicker ?? size === 'icon';
 
-  const onTap = useCallback(() => {
-    if (!canInteract) return;
+  const openPicker = useCallback(() => {
     click();
     setOpen(true);
-  }, [canInteract]);
-
-  // The animated wrapper — spin (rotateY) + gentle bounce (translateY). Both
-  // transform-only → composited. Frozen under reduced-motion.
-  const ball = (
-    <div
-      style={{
-        width: diameter,
-        height: diameter,
-        perspective: diameter * 4,
-        display: 'inline-block',
-        lineHeight: 0,
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          transformStyle: 'preserve-3d',
-          animation: reduced
-            ? 'none'
-            : `tri-spin ${size === 'pop' ? 5.5 : 7}s linear infinite, tri-bounce ${size === 'pop' ? 2.2 : 2.8}s ease-in-out infinite`,
-          willChange: 'transform',
-          filter: size === 'pop'
-            ? 'drop-shadow(0 18px 28px rgba(0,0,0,0.55))'
-            : 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))',
-        }}
-      >
-        <TriondaSphere px={diameter} />
-      </div>
-    </div>
-  );
+  }, []);
 
   return (
     <>
-      {/* Shared keyframes — registered once is fine (identical defs dedupe). */}
+      {/* Shared keyframes (confetti + overlay) — identical defs dedupe. */}
       <style>{`
-        @keyframes tri-spin   { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
-        @keyframes tri-bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12%); } }
         @keyframes tri-confetti {
           0%   { opacity: 1; transform: translate(0,0) rotate(0deg); }
           100% { opacity: 0; transform: translate(var(--drift), 230px) rotate(var(--rot)); }
         }
         @keyframes tri-pop-in { 0% { opacity: 0; transform: scale(0.6); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes tri-overlay-in { 0% { opacity: 0; } 100% { opacity: 1; } }
-        @media (prefers-reduced-motion: reduce) {
-          .tri-anim { animation: none !important; }
-        }
       `}</style>
 
-      {canInteract ? (
-        <button
-          type="button"
-          onPointerDown={() => tap()}
-          onClick={onTap}
-          aria-label={lang === 'fr' ? 'Ballon TRIONDA — choisir une équipe' : 'TRIONDA ball — pick a team'}
-          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', lineHeight: 0, display: 'inline-flex' }}
-        >
-          {ball}
-        </button>
-      ) : (
-        ball
-      )}
+      {/* The interactive inline ball (spin-only) + the picker affordance. */}
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+        <InlineTriondaBall px={diameter} />
+
+        {withPicker && (
+          <button
+            type="button"
+            onPointerDown={() => tap()}
+            onClick={openPicker}
+            aria-label={lang === 'fr' ? 'Choisir ton équipe' : 'Pick your team'}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+              padding: '4px 9px',
+              borderRadius: 999,
+              cursor: 'pointer',
+              fontSize: 11,
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+              color: 'rgba(255,255,255,0.85)',
+              background:
+                'linear-gradient(180deg, rgba(192,38,211,0.22), rgba(157,78,221,0.12))',
+              border: '1px solid rgba(192,38,211,0.45)',
+              boxShadow: '0 0 12px rgba(192,38,211,0.18)',
+            }}
+          >
+            <span style={{ fontSize: 13, lineHeight: 1 }}>🏴</span>
+            {lang === 'fr' ? 'Ton équipe' : 'Your team'}
+          </button>
+        )}
+      </span>
 
       {open && (
         <TriondaPopOverlay
@@ -382,15 +364,24 @@ function TriondaPopOverlay({
           marginBottom: 28,
         }}
       >
-        {/* The REAL FIFA TRIONDA 2026 model (Sketchfab) — auto-spinning, chrome-stripped,
-            interactive (drag to rotate). Loads only when the pop opens. */}
-        <iframe
-          title="FIFA TRIONDA Ball World Cup 2026"
-          src="https://sketchfab.com/models/4c577717c59f44a882c48c5d8b5e41f8/embed?autospin=0.6&autostart=1&preload=1&transparent=1&ui_infos=0&ui_controls=0&ui_watermark=0&ui_watermark_link=0&ui_hint=0&ui_stop=0&ui_ar=0&ui_help=0&ui_settings=0&ui_vr=0&ui_fullscreen=0&ui_annotations=0&ui_loading=0&dnt=1"
-          frameBorder="0"
-          allow="autoplay; fullscreen; xr-spatial-tracking"
-          allowFullScreen
-          style={{ width: 268, height: 268, border: 'none', borderRadius: 20, background: 'transparent', display: 'block' }}
+        {/* The ball at center — the same real render as the inline poster.
+            We deliberately do NOT mount a SECOND iframe here: there is exactly
+            ONE live Sketchfab iframe on the page (the inline ball), for
+            performance. This is the static hero render for the flag-pick flow. */}
+        <img
+          src={POSTER_SRC}
+          alt="FIFA TRIONDA Ball World Cup 2026"
+          draggable={false}
+          style={{
+            width: 200,
+            height: 200,
+            borderRadius: '50%',
+            objectFit: 'cover',
+            display: 'block',
+            userSelect: 'none',
+            boxShadow:
+              '0 0 0 1px rgba(192,38,211,0.30), 0 18px 40px rgba(0,0,0,0.55)',
+          }}
         />
       </div>
 

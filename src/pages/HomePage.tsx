@@ -479,10 +479,11 @@ const ExperienceRow = React.memo(function ExperienceRow({
       <div className="flex items-center justify-between px-4 mb-3.5">
         <div className="flex items-center gap-2.5 min-w-0">
           {worldCup ? (
-            // The spinning TRIONDA ball replaces the dot/⚽ — tap to open the
-            // African-team picker pop. The picked flag rides an orbiting beam.
+            // The REAL interactive TRIONDA 3D ball (drag to spin) replaces the
+            // dot/⚽. The ball itself = spin-only; its sibling "Your team" pill
+            // opens the African-team picker pop. Picked flag rides an orbiting beam.
             <span className="flex items-center gap-1.5 flex-shrink-0">
-              <TriondaBall size="icon" px={24} />
+              <TriondaBall size="icon" px={64} />
               <WcFlagBeam size={26} />
             </span>
           ) : (

@@ -27,8 +27,8 @@ interface Props {
   onPlay: (ch: Channel) => void;
 }
 
-const SIZE = 48;  // hit area (tap target) — the visual disc inside is smaller
-const DISC = 42;  // visual disc, full size when interacting
+const SIZE = 64;  // hit area (tap target) — bigger so it's easy to find + grab
+const DISC = 56;  // visual disc — large enough to read as a deliberate lit button
 
 export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
   const [open, setOpen] = useState(false);
@@ -120,7 +120,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
   return createPortal(
     <>
       <style>{`
-        @keyframes sw-glow{0%,100%{box-shadow:0 6px 22px rgba(157,78,221,0.35),inset 0 1px 1px rgba(255,255,255,0.22)}50%{box-shadow:0 9px 30px rgba(157,78,221,0.55),inset 0 1px 1px rgba(255,255,255,0.30)}}
+        @keyframes sw-glow{0%,100%{box-shadow:0 10px 28px rgba(157,78,221,0.5),0 0 0 3px rgba(199,125,255,0.22),0 0 20px rgba(157,78,221,0.45),inset 0 1px 1px rgba(255,255,255,0.28)}50%{box-shadow:0 12px 36px rgba(157,78,221,0.65),0 0 0 5px rgba(199,125,255,0.30),0 0 34px rgba(157,78,221,0.72),inset 0 1px 1px rgba(255,255,255,0.36)}}
         @keyframes sw-fade{from{opacity:0}to{opacity:1}}
         @keyframes sw-cheer{0%{opacity:0;transform:translateY(26px) scale(0.94)}60%{opacity:1;transform:translateY(-6px) scale(1.015)}100%{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes sw-beam{0%,100%{opacity:0.55;transform:scaleY(1)}50%{opacity:0.9;transform:scaleY(1.06)}}
@@ -140,7 +140,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
           style={{
             left: pos.x, top: pos.y, width: SIZE, height: SIZE, padding: 0,
             background: 'transparent', border: 'none',
-            opacity: open ? 0 : fade === 2 ? 0.72 : fade === 1 ? 0.88 : 1,
+            opacity: open ? 0 : fade === 2 ? 0.9 : fade === 1 ? 0.96 : 1,
             transition: dragging ? 'none' : 'opacity 1s ease, left .5s cubic-bezier(0.34,1.56,0.64,1), top .5s cubic-bezier(0.34,1.56,0.64,1)',
             pointerEvents: open ? 'none' : 'auto',
             touchAction: 'none', cursor: 'grab', WebkitTapHighlightColor: 'transparent',
@@ -153,13 +153,13 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
               background: 'radial-gradient(circle at 38% 32%, rgba(206,140,255,0.95), rgba(124,58,200,0.92) 68%)',
               border: '1px solid rgba(220,170,255,0.65)',
               backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
-              boxShadow: active ? '0 14px 40px rgba(157,78,221,0.55), 0 0 0 4px rgba(199,125,255,0.18)' : undefined,
-              transform: `scale(${active ? 1 : 0.8})`,
+              boxShadow: active ? '0 18px 48px rgba(157,78,221,0.65), 0 0 0 6px rgba(199,125,255,0.28), 0 0 40px rgba(157,78,221,0.72)' : undefined,
+              transform: `scale(${active ? 1.04 : 0.96})`,
               transition: 'transform .3s cubic-bezier(0.34,1.56,0.64,1), box-shadow .3s',
               animation: active ? 'none' : 'sw-glow 4.5s ease-in-out infinite',
             }}
           >
-            <Search className="w-[18px] h-[18px] text-white/90" style={{ filter: 'drop-shadow(0 0 6px rgba(199,125,255,0.7))' }} />
+            <Search className="w-[24px] h-[24px] text-white" style={{ filter: 'drop-shadow(0 0 7px rgba(199,125,255,0.9))' }} />
           </div>
         </button>
       )}
