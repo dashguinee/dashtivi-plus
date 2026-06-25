@@ -20,6 +20,21 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
+  async componentDidCatch() {
+    // A crash is most often a STALE-CACHE chunk mismatch (a new index.html loaded an
+    // OLD cached JS chunk → module fails). Self-heal ONCE per session: nuke caches +
+    // the service worker, then hard-reload to the fresh build. The sessionStorage guard
+    // prevents an infinite reload loop on a genuine (non-cache) bug.
+    try {
+      if (typeof sessionStorage !== 'undefined' && !sessionStorage.getItem('tivi_eb_healed')) {
+        sessionStorage.setItem('tivi_eb_healed', '1');
+        if ('caches' in window) { const k = await caches.keys(); await Promise.all(k.map((c) => caches.delete(c))); }
+        if ('serviceWorker' in navigator) { const r = await navigator.serviceWorker.getRegistrations(); await Promise.all(r.map((x) => x.unregister())); }
+        window.location.reload();
+      }
+    } catch { /* ignore — fall through to the manual Reconnect UI */ }
+  }
+
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
@@ -50,7 +65,15 @@ export class ErrorBoundary extends Component<Props, State> {
             </p>
 
             <button
-              onClick={() => this.setState({ hasError: false, error: null })}
+              onClick={async () => {
+                // Hard recover — clear caches + SW, then reload to the fresh build
+                // (a plain state-reset would just re-crash if it's a cache mismatch).
+                try {
+                  if ('caches' in window) { const k = await caches.keys(); await Promise.all(k.map((c) => caches.delete(c))); }
+                  if ('serviceWorker' in navigator) { const r = await navigator.serviceWorker.getRegistrations(); await Promise.all(r.map((x) => x.unregister())); }
+                } catch { /* ignore */ }
+                window.location.reload();
+              }}
               className="group relative px-5 py-2.5 rounded-xl text-[12px] font-medium tracking-wide transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
               style={{
                 background: 'linear-gradient(135deg, rgba(157,78,221,0.15) 0%, rgba(157,78,221,0.06) 100%)',
