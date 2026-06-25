@@ -102,10 +102,11 @@ export function getActiveTier(): string {
   return _activeTier;
 }
 
-/** Is a channel visible for the active tier? Full sees all; Starter sees starter-only. */
-function isVisibleForTier(ch: RawCatalogChannel): boolean {
-  if (_activeTier === 'starter') return ch.tier === 'starter';
-  return true; // full / unknown / guest → everything
+/** ONE unified experience — no content tiers. Everyone sees every channel.
+ *  "Plans" are flexible PAYMENT options (weekly/monthly/…), never content walls.
+ *  (Kept as a function so all call-sites stay; it just never restricts now.) */
+function isVisibleForTier(_ch: RawCatalogChannel): boolean {
+  return true;
 }
 
 function streamIdFor(ch: RawCatalogChannel): number {
