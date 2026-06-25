@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, X } from 'lucide-react';
 import { getCatalogSync, buildCatalogUrl, type CatalogChannel } from '@/lib/catalog';
 import { buildLiveUrl } from '@/lib/xtream';
@@ -116,7 +117,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
     wake();
   };
 
-  return (
+  return createPortal(
     <>
       <style>{`
         @keyframes sw-glow{0%,100%{box-shadow:0 6px 22px rgba(157,78,221,0.35),inset 0 1px 1px rgba(255,255,255,0.22)}50%{box-shadow:0 9px 30px rgba(157,78,221,0.55),inset 0 1px 1px rgba(255,255,255,0.30)}}
@@ -135,7 +136,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
           onPointerUp={onUp}
           aria-label="Search channels"
           data-no-ptr
-          className="fixed z-[55] flex items-center justify-center"
+          className="fixed z-[9996] flex items-center justify-center"
           style={{
             left: pos.x, top: pos.y, width: SIZE, height: SIZE, padding: 0,
             background: 'transparent', border: 'none',
@@ -149,8 +150,8 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
             style={{
               width: DISC, height: DISC, borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'radial-gradient(circle at 38% 32%, rgba(220,166,255,0.30), rgba(255,255,255,0.08) 60%)',
-              border: '1px solid rgba(199,125,255,0.42)',
+              background: 'radial-gradient(circle at 38% 32%, rgba(206,140,255,0.95), rgba(124,58,200,0.92) 68%)',
+              border: '1px solid rgba(220,170,255,0.65)',
               backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
               boxShadow: active ? '0 14px 40px rgba(157,78,221,0.55), 0 0 0 4px rgba(199,125,255,0.18)' : undefined,
               transform: `scale(${active ? 1 : 0.8})`,
@@ -166,7 +167,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
       {/* Ambient master search — rises in-page over a blurred world */}
       {open && (
         <div
-          className="fixed inset-0 z-[70] flex flex-col items-center"
+          className="fixed inset-0 z-[9999] flex flex-col items-center"
           style={{ background: 'rgba(6,6,12,0.42)', backdropFilter: 'blur(11px)', WebkitBackdropFilter: 'blur(11px)', animation: 'sw-fade 0.3s ease' }}
           onClick={() => setOpen(false)}
         >
@@ -233,6 +234,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
           </div>
         </div>
       )}
-    </>
+    </>,
+    document.body,
   );
 };
