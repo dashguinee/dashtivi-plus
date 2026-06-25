@@ -9,17 +9,52 @@ interface Props {
   eager?: boolean;
 }
 
-const COLORS = [
-  '#9D4EDD', '#E50914', '#00A8E1', '#FF6B35', '#00D4FF',
-  '#FFD700', '#FF006E', '#7B2CBF', '#00D4FF', '#C77DFF',
-];
+// ── Premium fallback art ─────────────────────────────────────────────
+// A logo-less channel must still read as a designed tile, not a blank.
+// We derive a stable hue from the channel name and render a refined
+// dark gradient + clean initials + top-shine + soft inner border.
 
-function getColor(name: string): string {
+function hashStr(name: string): number {
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return COLORS[Math.abs(hash) % COLORS.length];
+  return Math.abs(hash);
+}
+
+// A curated palette of premium hues (violet-anchored, brand-consistent).
+// Each entry is a hue used to compose a deep, slightly-desaturated gradient.
+const HUES = [266, 280, 248, 210, 318, 232, 292, 200, 340, 256];
+
+function getPlaceholderStyle(name: string): React.CSSProperties {
+  const h = HUES[hashStr(name) % HUES.length];
+  // Deep top-left → near-black bottom-right, with a faint hue lift.
+  return {
+    background:
+      `radial-gradient(120% 120% at 28% 18%, hsl(${h} 52% 26% / 0.95) 0%, hsl(${h} 40% 13% / 0.96) 42%, #07070d 100%)`,
+    border: `1px solid hsl(${h} 60% 60% / 0.16)`,
+    boxShadow: `inset 0 1px 0 hsl(${h} 70% 80% / 0.14), inset 0 0 18px hsl(${h} 60% 40% / 0.10)`,
+    color: `hsl(${h} 30% 92%)`,
+  };
+}
+
+// Pull 1-2 meaningful initials from a (possibly noisy) channel name.
+function getInitials(name: string): string {
+  const cleaned = name
+    .replace(/^(ar:|fr:|en:|us:|uk\s*:|ca\s|\|[a-z]+\|)\s*/i, '')
+    .replace(/['"]+/g, '')
+    .replace(/[-–—]+\s*['"]*\s*(hevc|h\.?26[45]|raw)\b.*$/i, '')
+    .replace(/[^A-Za-z0-9+&\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const words = cleaned.split(' ').filter(Boolean);
+  if (words.length === 0) return name.charAt(0).toUpperCase() || '•';
+  if (words.length === 1) {
+    const w = words[0];
+    return w.slice(0, 2).toUpperCase();
+  }
+  // First letters of first two significant words.
+  return (words[0][0] + words[1][0]).toUpperCase();
 }
 
 // Map channel names to tv-logo GitHub CDN URLs
@@ -471,7 +506,7 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
   const [failed, setFailed] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const letter = name.charAt(0).toUpperCase();
+  const initials = getInitials(name);
 
   // Priority: 1. safeImageUrl (handles dead domains, HTTP proxy)  2. tv-logo CDN  3. Letter avatar
   let safeSrc: string | null = null;
@@ -482,28 +517,42 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
     }
   }
 
-  // Letter fallback (used as placeholder during load AND as final fallback)
-  const letterEl = (
+  // Premium branded placeholder — used during load AND as the final, never-blank
+  // fallback. Stable hue from the name + clean initials + top-shine + inner border,
+  // so a logo-less channel reads as a designed tile, part of the brand system.
+  const initialsSize = size === 'lg' ? '26px' : size === 'md' ? '19px' : '14px';
+  const placeholderEl = (
     <div
-      className={`${sizes[size]} rounded-xl flex items-center justify-center font-bold flex-shrink-0 ${className}`}
-      style={{
-        background: 'linear-gradient(135deg, rgba(157,78,221,0.12) 0%, rgba(10,10,18,0.95) 50%, rgba(157,78,221,0.06) 100%)',
-        border: '1px solid rgba(157,78,221,0.1)',
-        color: 'rgba(157,78,221,0.7)',
-        fontSize: size === 'lg' ? '14px' : size === 'md' ? '11px' : '9px',
-        letterSpacing: '0.05em',
-      }}
+      className={`${sizes[size]} rounded-xl relative overflow-hidden flex items-center justify-center flex-shrink-0 ${className}`}
+      style={getPlaceholderStyle(name)}
     >
-      {letter}
+      {/* Soft top-light / shine sweep */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            'linear-gradient(160deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 22%, transparent 46%)',
+        }}
+      />
+      <span
+        className="relative font-semibold leading-none select-none"
+        style={{
+          fontSize: initialsSize,
+          letterSpacing: '0.02em',
+          textShadow: '0 1px 2px rgba(0,0,0,0.45)',
+        }}
+      >
+        {initials}
+      </span>
     </div>
   );
 
-  if (!safeSrc) return letterEl;
+  if (!safeSrc) return placeholderEl;
 
   return (
     <div className={`${sizes[size]} relative rounded-xl overflow-hidden flex-shrink-0 ${className}`}>
-      {/* Letter always behind — prevents layout shift when image loads/fails */}
-      {letterEl}
+      {/* Placeholder always behind — prevents layout shift when image loads/fails */}
+      {placeholderEl}
       <img
         src={safeSrc}
         alt={name}
