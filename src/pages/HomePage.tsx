@@ -10,6 +10,7 @@ import { FreeHlsShowcaseCard, type FreeHlsChannel } from '@/components/ui/FreeHl
 import { OyeAfricaCard, StationsCard } from '@/components/voyo';
 import { MoviesExploration } from '@/components/home/MoviesExploration';
 import { HeroDeck, type HeroSlide } from '@/components/home/HeroDeck';
+import { WorldCupBackdrop } from '@/components/home/WorldCupBackdrop';
 import {
   getCatalog,
   getCatalogSync,
@@ -218,7 +219,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   if (worldcup.length > 0) {
     heroSlides.push({
       key: 'World Cup',
-      title: 'World Cup',
+      title: '⚽ World Cup',
       accent: EXPERIENCE_ACCENT['World Cup'],
       channels: worldcup,
       onPlay: (ch) => play(ch, worldcup),
@@ -242,6 +243,16 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   return (
     <div className="pt-16 pb-48">
+      {/* ════════════════════════════════════════════════════════════════
+          TOP ZONE — wrapped in a `relative` shell so the World Cup ambient
+          backdrop (a big, faded, football clip with a drifting visor) sits
+          BEHIND the hero deck + WC/Sports lead only. It fades into the dark by
+          the bottom edge and never bleeds into the rest of the page.
+          ════════════════════════════════════════════════════════════════ */}
+      <div className="relative">
+        <WorldCupBackdrop />
+
+        <div className="relative z-10">
       {/* ════════════════════════════════════════════════════════════════
           THE TOP HERO — the magic hello. The strongest live pick auto-plays at
           the very top for EVERYONE, calm, no click ("there it is"). The
@@ -268,6 +279,8 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       {heroSlides.length > 0 && (
         <HeroDeck slides={heroSlides} lang={lang} />
       )}
+        </div>
+      </div>
 
       {/* ── The curated experiences, in experience_order, exact names ─── */}
       <div className="mt-5">
@@ -286,7 +299,13 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
             <React.Fragment key={experience}>
               <ExperienceRow
                 index={idx}
-                title={experience === 'Movies' ? 'Cinéma Live' : experience}
+                title={
+                  experience === 'Movies'
+                    ? 'Cinéma Live'
+                    : experience === 'World Cup'
+                      ? '⚽ World Cup'
+                      : experience
+                }
                 accent={EXPERIENCE_ACCENT[experience] || '#9D4EDD'}
                 channels={channels}
                 onPlay={(ch) => play(ch, channels)}
