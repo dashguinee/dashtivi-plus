@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '@/i18n';
 import { tap, click, confirm } from '@/lib/haptics';
@@ -86,40 +86,10 @@ function usePrefersReducedMotion(): boolean {
 //     exit (rootMargin generous so it's ready, but freed when out of view).
 //   • Exactly ONE iframe (this component renders at most one).
 //   • The poster <img> is tiny + cached; the iframe is the only heavy element.
-function InlineTriondaBall({ px }: { px: number }) {
-  const wrapRef = useRef<HTMLDivElement | null>(null);
-  // `mounted` = iframe is in the DOM; `loaded` = iframe finished, fade poster.
-  const [mounted, setMounted] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el || typeof IntersectionObserver === 'undefined') {
-      // No IO support → just mount it (still a single iframe).
-      setMounted(true);
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        const inView = entries.some((e) => e.isIntersecting);
-        if (inView) {
-          setMounted(true);
-        } else {
-          // Scrolled far away → free the iframe (and re-show poster next time).
-          setMounted(false);
-          setLoaded(false);
-        }
-      },
-      // Generous margin: prepare just before it enters, release once well past.
-      { rootMargin: '200px 0px 200px 0px', threshold: 0.01 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
+function StaticTriondaBall({ px }: { px: number }) {
   return (
     <span
-      ref={wrapRef}
+      data-tri-ambient
       style={{
         position: 'relative',
         width: px,
@@ -129,18 +99,16 @@ function InlineTriondaBall({ px }: { px: number }) {
         overflow: 'hidden',
         lineHeight: 0,
         flexShrink: 0,
-        // Premium beIN-purple rim + soft lift, calm.
-        boxShadow:
-          '0 0 0 1px rgba(192,38,211,0.30), 0 4px 14px rgba(0,0,0,0.45)',
         background: 'radial-gradient(circle at 38% 30%, #1a1426, #0a0e14)',
+        // The ambient light — a slow, breathing violet halo around the ball.
+        animation: 'tri-ambient 3.8s ease-in-out infinite',
       }}
     >
-      {/* INSTANT poster — the real ball render, circular. Always present until
-          the live embed has loaded, then it gently fades out. */}
+      {/* The real ball render, circular — static. Tapping opens the full
+          interactive ball (the pop), where it spins + you can grab it. */}
       <img
         src={POSTER_SRC}
-        alt=""
-        aria-hidden
+        alt="FIFA TRIONDA Ball World Cup 2026"
         draggable={false}
         style={{
           position: 'absolute',
@@ -148,36 +116,10 @@ function InlineTriondaBall({ px }: { px: number }) {
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          opacity: loaded ? 0 : 1,
-          transition: 'opacity 0.5s ease',
           pointerEvents: 'none',
           userSelect: 'none',
         }}
       />
-
-      {/* The ONE lazy interactive iframe — only in the DOM while in view. */}
-      {mounted && (
-        <iframe
-          title="FIFA TRIONDA Ball World Cup 2026"
-          src={SKETCHFAB_SRC}
-          frameBorder="0"
-          allow="autoplay; fullscreen; xr-spatial-tracking"
-          allowFullScreen
-          onLoad={() => setLoaded(true)}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            border: 'none',
-            background: 'transparent',
-            // Until loaded, keep it behind the poster (avoids a flash of the
-            // Sketchfab loading state).
-            opacity: loaded ? 1 : 0,
-            transition: 'opacity 0.5s ease',
-          }}
-        />
-      )}
     </span>
   );
 }
@@ -236,12 +178,11 @@ interface TriondaBallProps {
   showPicker?: boolean;
 }
 
-export function TriondaBall({ size = 'icon', px, showPicker }: TriondaBallProps) {
+export function TriondaBall({ size = 'icon', px }: TriondaBallProps) {
   const { lang } = useLanguage();
   const reduced = usePrefersReducedMotion();
   const [open, setOpen] = useState(false);
   const diameter = px ?? (size === 'pop' ? 268 : 64);
-  const withPicker = showPicker ?? size === 'icon';
 
   const openPicker = useCallback(() => {
     click();
@@ -258,40 +199,34 @@ export function TriondaBall({ size = 'icon', px, showPicker }: TriondaBallProps)
         }
         @keyframes tri-pop-in { 0% { opacity: 0; transform: scale(0.6); } 100% { opacity: 1; transform: scale(1); } }
         @keyframes tri-overlay-in { 0% { opacity: 0; } 100% { opacity: 1; } }
+        @keyframes tri-ambient {
+          0%,100% { box-shadow: 0 0 0 1px rgba(192,38,211,0.30), 0 0 13px rgba(192,38,211,0.28), 0 4px 14px rgba(0,0,0,0.45); }
+          50%     { box-shadow: 0 0 0 1px rgba(216,120,255,0.45), 0 0 26px rgba(192,38,211,0.55), 0 4px 16px rgba(0,0,0,0.50); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          [data-tri-ambient] { animation: none !important; }
+        }
       `}</style>
 
-      {/* The interactive inline ball (spin-only) + the picker affordance. */}
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-        <InlineTriondaBall px={diameter} />
-
-        {withPicker && (
-          <button
-            type="button"
-            onPointerDown={() => tap()}
-            onClick={openPicker}
-            aria-label={lang === 'fr' ? 'Choisir ton équipe' : 'Pick your team'}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 5,
-              padding: '4px 9px',
-              borderRadius: 999,
-              cursor: 'pointer',
-              fontSize: 11,
-              fontWeight: 700,
-              whiteSpace: 'nowrap',
-              color: 'rgba(255,255,255,0.85)',
-              background:
-                'linear-gradient(180deg, rgba(192,38,211,0.22), rgba(157,78,221,0.12))',
-              border: '1px solid rgba(192,38,211,0.45)',
-              boxShadow: '0 0 12px rgba(192,38,211,0.18)',
-            }}
-          >
-            <span style={{ fontSize: 13, lineHeight: 1 }}>🏴</span>
-            {lang === 'fr' ? 'Ton équipe' : 'Your team'}
-          </button>
-        )}
-      </span>
+      {/* The static, ambient-lit ball — tap it to open the FULL interactive
+          ball (it spins + you can grab it) and the team picker. */}
+      <button
+        type="button"
+        onPointerDown={() => tap()}
+        onClick={openPicker}
+        aria-label={lang === 'fr' ? 'Ouvrir le ballon' : 'Open the ball'}
+        style={{
+          display: 'inline-flex',
+          padding: 0,
+          border: 'none',
+          background: 'transparent',
+          cursor: 'pointer',
+          lineHeight: 0,
+          borderRadius: '50%',
+        }}
+      >
+        <StaticTriondaBall px={diameter} />
+      </button>
 
       {open && (
         <TriondaPopOverlay
@@ -356,6 +291,35 @@ function TriondaPopOverlay({
     >
       <ConfettiBurst run={confettiRun} reduced={reduced} />
 
+      {/* Explicit exit — top-right. (Tapping any empty space also closes.) */}
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label={lang === 'fr' ? 'Fermer' : 'Close'}
+        style={{
+          position: 'absolute',
+          top: 'max(14px, env(safe-area-inset-top))',
+          right: 14,
+          width: 38,
+          height: 38,
+          borderRadius: '50%',
+          border: '1px solid rgba(255,255,255,0.18)',
+          background: 'rgba(255,255,255,0.08)',
+          color: '#fff',
+          fontSize: 18,
+          lineHeight: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          zIndex: 2,
+        }}
+      >
+        ✕
+      </button>
+
       {/* The ball pops to center, bigger + spinning. */}
       <div
         onClick={(e) => e.stopPropagation()}
@@ -364,25 +328,38 @@ function TriondaPopOverlay({
           marginBottom: 28,
         }}
       >
-        {/* The ball at center — the same real render as the inline poster.
-            We deliberately do NOT mount a SECOND iframe here: there is exactly
-            ONE live Sketchfab iframe on the page (the inline ball), for
-            performance. This is the static hero render for the flag-pick flow. */}
-        <img
-          src={POSTER_SRC}
-          alt="FIFA TRIONDA Ball World Cup 2026"
-          draggable={false}
+        {/* The REAL interactive ball — auto-spins at rest, drag to rotate it.
+            The poster render sits behind as an instant fill so it's never blank
+            while the embed loads. ONE iframe, only while this pop is open. */}
+        <div
           style={{
-            width: 200,
-            height: 200,
-            borderRadius: '50%',
-            objectFit: 'cover',
-            display: 'block',
-            userSelect: 'none',
-            boxShadow:
-              '0 0 0 1px rgba(192,38,211,0.30), 0 18px 40px rgba(0,0,0,0.55)',
+            position: 'relative',
+            width: 248,
+            height: 248,
+            borderRadius: 20,
+            overflow: 'hidden',
+            boxShadow: '0 0 0 1px rgba(192,38,211,0.30), 0 18px 44px rgba(0,0,0,0.55)',
+            backgroundImage: `url(${POSTER_SRC})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
           }}
-        />
+        >
+          <iframe
+            title="FIFA TRIONDA Ball World Cup 2026"
+            src={SKETCHFAB_SRC}
+            frameBorder="0"
+            allow="autoplay; fullscreen; xr-spatial-tracking"
+            allowFullScreen
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              border: 'none',
+              background: 'transparent',
+            }}
+          />
+        </div>
       </div>
 
       {/* The question + flag chips — Guinea first. */}

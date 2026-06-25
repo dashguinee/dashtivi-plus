@@ -221,7 +221,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   if (worldcup.length > 0) {
     heroSlides.push({
       key: 'World Cup',
-      title: '⚽ World Cup',
+      title: 'World Cup',
       accent: EXPERIENCE_ACCENT['World Cup'],
       channels: worldcup,
       onPlay: (ch) => play(ch, worldcup),
