@@ -513,7 +513,9 @@ const ExperienceRow = React.memo(function ExperienceRow({
           // The FIRST card of each row becomes a LIVE mini-tile (the row's
           // "breathing" beat). The rest stay as static logo cards, unchanged.
           // The live tile is gated/capped internally (in-view + concurrency).
-          const isLiveTile = cardIdx === 0;
+          // Live first-card tiles DISABLED — they crashed on device ("Transmission
+          // lost"). Reverted to static logo cards; re-enable by restoring `cardIdx === 0`.
+          const isLiveTile = false;
           const liveUrl = isLiveTile
             ? (ch.plays === 'direct'
                 ? buildCatalogUrl(ch, credentials)
