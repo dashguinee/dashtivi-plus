@@ -11,6 +11,7 @@ import { OyeAfricaCard, StationsCard } from '@/components/voyo';
 import { MoviesExploration } from '@/components/home/MoviesExploration';
 import { HeroDeck, type HeroSlide } from '@/components/home/HeroDeck';
 import { WorldCupBackdrop } from '@/components/home/WorldCupBackdrop';
+import { TriondaBall, WcFlagBeam } from '@/components/home/TriondaBall';
 import {
   getCatalog,
   getCatalogSync,
@@ -269,7 +270,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
               {lang === 'fr' ? 'À l’instant' : 'Right now'}
             </span>
           </div>
-          <FreeHlsShowcaseCard channel={helloChannel} onSurf={surfHello} />
+          <FreeHlsShowcaseCard channel={helloChannel} onSurf={surfHello} priority />
         </section>
       )}
 
@@ -303,9 +304,10 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                   experience === 'Movies'
                     ? 'Cinéma Live'
                     : experience === 'World Cup'
-                      ? '⚽ World Cup'
+                      ? 'World Cup'
                       : experience
                 }
+                worldCup={experience === 'World Cup'}
                 accent={EXPERIENCE_ACCENT[experience] || '#9D4EDD'}
                 channels={channels}
                 onPlay={(ch) => play(ch, channels)}
@@ -448,6 +450,7 @@ const ExperienceRow = React.memo(function ExperienceRow({
   onSeeAll,
   lang,
   index = 0,
+  worldCup = false,
 }: {
   title: string;
   accent: string;
@@ -456,6 +459,8 @@ const ExperienceRow = React.memo(function ExperienceRow({
   onSeeAll?: () => void;
   lang: Lang;
   index?: number;
+  /** World Cup row — show the spinning TRIONDA ball icon + picked-flag beam. */
+  worldCup?: boolean;
 }) {
   // Small experiences (e.g. Movies = 3) render honestly — bigger cards, no
   // "See all", no padding to fake a fuller row.
@@ -468,10 +473,19 @@ const ExperienceRow = React.memo(function ExperienceRow({
       {/* Header */}
       <div className="flex items-center justify-between px-4 mb-3.5">
         <div className="flex items-center gap-2.5 min-w-0">
-          <span
-            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-            style={{ background: accent, boxShadow: `0 0 6px ${accent}` }}
-          />
+          {worldCup ? (
+            // The spinning TRIONDA ball replaces the dot/⚽ — tap to open the
+            // African-team picker pop. The picked flag rides an orbiting beam.
+            <span className="flex items-center gap-1.5 flex-shrink-0">
+              <TriondaBall size="icon" px={24} />
+              <WcFlagBeam size={26} />
+            </span>
+          ) : (
+            <span
+              className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+              style={{ background: accent, boxShadow: `0 0 6px ${accent}` }}
+            />
+          )}
           <h2 className="text-[19px] font-black tracking-tight text-white truncate">{title}</h2>
           <span className="tivi-count-metal text-[8px] font-bold flex-shrink-0" style={{ letterSpacing: '0.5px' }}>
             {channels.length}
@@ -524,6 +538,14 @@ const ExperienceRow = React.memo(function ExperienceRow({
                 </span>
                 {ch.free && <span className="text-[7px] font-bold text-white/75 tracking-wide">FREE</span>}
               </div>
+
+              {/* Language pill — premium, subtle, faded (top-right) */}
+              {ch.language && (
+                <div className="absolute top-1.5 right-1.5 px-1 py-[1px] rounded-md"
+                  style={{ background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                  <span className="text-[7px] font-bold tracking-[1px] text-white/40">{ch.language}</span>
+                </div>
+              )}
 
               {/* glassy play affordance on hover/press */}
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200"

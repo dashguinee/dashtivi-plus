@@ -39,6 +39,7 @@ export interface RawCatalogChannel {
   url: string | null;  // set for direct channels
   tested: boolean;
   free?: boolean;      // open-source HLS gem, merged into the collection (green/FREE tag)
+  language?: string;   // inferred channel language code — 'FR' | 'EN' | 'AR' (faded pill)
 }
 
 interface RawCatalog {

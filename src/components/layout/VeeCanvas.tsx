@@ -5,24 +5,28 @@ import { Tv, Film, MonitorPlay, Sparkles, Search } from 'lucide-react';
 import { tap } from '@/lib/haptics';
 
 /**
- * VeeCanvas — "Vee's canvas," the founder's hold experience.
+ * VeeCanvas — the founder's FINAL hold experience.
  *
- * Why this exists: the old VeeWheel rendered INSIDE the Navbar's stacking
- * context, so its z-index was capped and other layers painted over it — the
- * founder never actually saw it. This component renders the ENTIRE overlay via
- * createPortal(document.body) so it escapes every parent stacking context and
- * sits at the absolute front (z 10000, above the search pebble 9996 and the
- * island 9997).
+ * THE MODEL (founder, verbatim intent):
+ *   Hold the V → the whole bottom NAV BAR contracts ~15% INTO the chat/voice
+ *   pill, staying in the SAME bottom position (it doesn't fly to center — the
+ *   bar *becomes* Vee). The rest of the page BLURS + DIMS behind it, like a
+ *   window opening over a paused frame. Tap the blurred gap (anywhere outside)
+ *   → the bar morphs back / un-pauses. A pause, a moment.
  *
- * What it is:
- *   - Ambient backdrop that BLURS + dims the whole app (violet veil), fades in.
- *   - Premium glass PILLS float in (Live / Movies / Series / Ask Vee / Search).
- *   - A calm "canvas" centre where Vee greets and will hold messages/links.
- *   - A textured chat-bubble pill at the bottom (Vee's iridescent identity).
- *   - HOLD the bubble → SPEAK (waveform + live transcript, lifted from the
- *     DynamicIsland speech logic). Typing is also allowed.
- *   - Backdrop comes ALIVE (glow pulses/flows) while listening or typing.
- *   - Touch the backdrop → dissolves closed.
+ * Built on VOYO's OYO pattern (replicated, not imported — different repo):
+ *   - The orb IS Vee (breathing AI presence), wearing DASH/Vee's
+ *     pink→violet→blue skin instead of OYO's bronze.
+ *   - The conversation is the canvas — turns float ABOVE the orb, older turns
+ *     fade up into the dream (MAX_VISIBLE = 5).
+ *   - The invocation is the hold; the textured chat-bubble pill anchors the
+ *     bottom — HOLD it → speak, and the backdrop comes ALIVE (pulses).
+ *
+ * Plumbing kept from the prior overlay:
+ *   - createPortal(document.body) so it escapes the Navbar stacking context
+ *     (z 10000, above the search pebble 9996 / island 9997).
+ *   - Speech engine (getUserMedia + webkitSpeechRecognition + waveform).
+ *   - Option pills, touch-to-close, pointer-capture hold + tap-to-type.
  */
 
 export type VeeAction = 'live' | 'movies' | 'series' | 'ask' | 'search';
@@ -34,6 +38,10 @@ const PILLS: { key: VeeAction; icon: React.FC<any>; label: string }[] = [
   { key: 'ask', icon: Sparkles, label: 'Ask Vee' },
   { key: 'search', icon: Search, label: 'Search' },
 ];
+
+type Turn = { id: string; role: 'vee' | 'user'; text: string };
+const MAX_VISIBLE = 5;
+const makeId = () => `t-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' &&
@@ -47,6 +55,9 @@ export const VeeCanvas: React.FC<{
   const navigate = useNavigate();
   const reduced = useRef(prefersReducedMotion());
   const [mounted, setMounted] = useState(false);
+
+  // ── Conversation (OYO-style turn stream) ────────────────────────────────
+  const [turns, setTurns] = useState<Turn[]>([]);
 
   // ── Speak / type state (adapted from DynamicIsland) ─────────────────────
   const [composing, setComposing] = useState(false); // text input shown
@@ -65,9 +76,11 @@ export const VeeCanvas: React.FC<{
   // "alive" = backdrop pulses harder while the founder is speaking or typing.
   const alive = isRecording || composing || text.trim().length > 0;
 
-  // Mount/animate-in cycle — rAF so the fade/scale transition has a frame to run.
+  // Mount/animate-in cycle — rAF so the morph/fade has a frame to run.
   useEffect(() => {
     if (active) {
+      // Seed the conversation with Vee's greeting (only once per invocation).
+      setTurns([{ id: makeId(), role: 'vee', text: "Hey, I'm Vee. What are we watching?" }]);
       const r = requestAnimationFrame(() => setMounted(true));
       return () => cancelAnimationFrame(r);
     }
@@ -140,6 +153,32 @@ export const VeeCanvas: React.FC<{
     setIsRecording(false);
   }, []);
 
+  // When recording ends with a transcript, fold it into the conversation.
+  const commitTranscript = useCallback(() => {
+    const said = transcript.trim();
+    stopRecording();
+    if (said) {
+      setTurns((prev) => [
+        ...prev,
+        { id: makeId(), role: 'user', text: said },
+        { id: makeId(), role: 'vee', text: "Got it — let me pull that up." },
+      ]);
+    }
+    setTranscript('');
+  }, [transcript, stopRecording]);
+
+  const commitText = useCallback(() => {
+    const said = text.trim();
+    if (!said) return;
+    setTurns((prev) => [
+      ...prev,
+      { id: makeId(), role: 'user', text: said },
+      { id: makeId(), role: 'vee', text: "On it — give me a sec." },
+    ]);
+    setText('');
+    setComposing(false);
+  }, [text]);
+
   // Cleanup on unmount / when the canvas closes.
   useEffect(() => {
     if (!active) {
@@ -147,6 +186,7 @@ export const VeeCanvas: React.FC<{
       setComposing(false);
       setText('');
       setTranscript('');
+      setTurns([]);
     }
   }, [active, stopRecording]);
 
@@ -174,7 +214,7 @@ export const VeeCanvas: React.FC<{
   const trans = (delay = 0) =>
     reduced.current
       ? 'opacity 0.18s linear'
-      : `opacity 0.42s cubic-bezier(0.23,1,0.32,1) ${delay}s, transform 0.5s cubic-bezier(0.34,1.4,0.64,1) ${delay}s`;
+      : `opacity 0.42s cubic-bezier(0.23,1,0.32,1) ${delay}s, transform 0.52s cubic-bezier(0.34,1.4,0.64,1) ${delay}s`;
 
   // ── Chat-bubble hold → speak ────────────────────────────────────────────
   const bubbleHoldTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -193,12 +233,20 @@ export const VeeCanvas: React.FC<{
   const onBubbleUp = (e: React.PointerEvent) => {
     e.stopPropagation();
     clearTimeout(bubbleHoldTimer.current);
+    if (isRecording) {
+      // Was speaking → release ends the utterance and folds it into the chat.
+      commitTranscript();
+      return;
+    }
     // Quick tap (no hold) → open the text composer.
-    if (!bubbleHeld.current && !isRecording) {
+    if (!bubbleHeld.current) {
       setComposing((c) => !c);
       setTimeout(() => inputRef.current?.focus(), 60);
     }
   };
+
+  // Only the last MAX_VISIBLE turns render — keeps the DOM light (OYO rule).
+  const visibleTurns = turns.slice(-MAX_VISIBLE);
 
   const overlay = (
     <div
@@ -207,33 +255,34 @@ export const VeeCanvas: React.FC<{
         position: 'fixed',
         inset: 0,
         zIndex: 10000,
+        // BOTTOM-ANCHORED: everything stacks toward the nav-bar position. The
+        // experience grows UP out of the bar, it never centers.
         display: 'flex',
         flexDirection: 'column',
+        justifyContent: 'flex-end',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        // The veil: blur + dim the whole app behind Vee's space.
+        // The veil: blur + dim the whole app behind Vee's space ("paused frame").
         background:
-          'radial-gradient(120% 90% at 50% 18%, rgba(168,85,247,0.20), rgba(10,8,20,0.78) 60%, rgba(6,4,12,0.92))',
+          'radial-gradient(130% 80% at 50% 100%, rgba(168,85,247,0.22), rgba(10,8,20,0.74) 55%, rgba(6,4,12,0.90))',
         backdropFilter: reduced.current ? 'blur(8px)' : `blur(${alive ? 26 : 20}px) saturate(1.15)`,
         WebkitBackdropFilter: reduced.current ? 'blur(8px)' : `blur(${alive ? 26 : 20}px) saturate(1.15)`,
         opacity: mounted ? 1 : 0,
         transition: reduced.current
           ? 'opacity 0.18s linear'
           : 'opacity 0.4s ease, backdrop-filter 0.6s ease, -webkit-backdrop-filter 0.6s ease',
-        paddingTop: 'max(env(safe-area-inset-top), 18px)',
-        paddingBottom: 'max(env(safe-area-inset-bottom), 22px)',
+        paddingBottom: 'max(env(safe-area-inset-bottom), 18px)',
         touchAction: 'none',
         overflow: 'hidden',
       }}
     >
       <style>{`
-        @keyframes vee-aura-drift {
-          0%,100% { transform: translate3d(0,0,0) scale(1); opacity: 0.55; }
-          50%     { transform: translate3d(0,-2%,0) scale(1.08); opacity: 0.85; }
+        @keyframes vee-aura-rise {
+          0%,100% { transform: translate(-50%,0) scale(1); opacity: 0.5; }
+          50%     { transform: translate(-50%,-3%) scale(1.06); opacity: 0.72; }
         }
         @keyframes vee-aura-alive {
-          0%,100% { transform: translate3d(0,0,0) scale(1.02); opacity: 0.8; }
-          50%     { transform: translate3d(0,-3%,0) scale(1.16); opacity: 1; }
+          0%,100% { transform: translate(-50%,0) scale(1.04); opacity: 0.8; }
+          50%     { transform: translate(-50%,-5%) scale(1.18); opacity: 1; }
         }
         @keyframes vee-core-breathe {
           0%,100% { transform: scale(1); box-shadow: 0 8px 40px rgba(168,85,247,0.45), 0 0 60px rgba(255,107,157,0.22); }
@@ -248,28 +297,127 @@ export const VeeCanvas: React.FC<{
         }
       `}</style>
 
-      {/* Living aura — the glow that pulses/flows harder while speaking/typing. */}
+      {/* Living aura — anchored at the BOTTOM (rises from the bar), pulses
+          harder while speaking/typing. */}
       <div
         aria-hidden
         className="vee-anim"
         style={{
           position: 'absolute',
-          top: '-12%',
+          bottom: '-6%',
           left: '50%',
-          width: '140vw',
-          height: '70vh',
+          width: '150vw',
+          height: '62vh',
           transform: 'translateX(-50%)',
           background:
-            'radial-gradient(circle at 50% 40%, rgba(255,138,208,0.30), rgba(168,85,247,0.22) 40%, rgba(59,130,246,0.14) 65%, transparent 78%)',
-          filter: 'blur(40px)',
+            'radial-gradient(circle at 50% 75%, rgba(255,138,208,0.30), rgba(168,85,247,0.22) 40%, rgba(59,130,246,0.14) 65%, transparent 78%)',
+          filter: 'blur(44px)',
           pointerEvents: 'none',
           animation: reduced.current
             ? 'none'
-            : `${alive ? 'vee-aura-alive' : 'vee-aura-drift'} ${alive ? '3.2s' : '7s'} ease-in-out infinite`,
+            : `${alive ? 'vee-aura-alive' : 'vee-aura-rise'} ${alive ? '3.2s' : '7s'} ease-in-out infinite`,
         }}
       />
 
-      {/* ── Option pills float in (top) ───────────────────────────────── */}
+      {/* ── Vee's canvas: conversation stream floating ABOVE the bar (OYO) ── */}
+      <div
+        onPointerDown={(e) => e.stopPropagation()}
+        style={{
+          position: 'relative',
+          zIndex: 2,
+          width: '100%',
+          maxWidth: 440,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-end',
+          alignItems: 'stretch',
+          gap: 8,
+          padding: '0 22px 10px',
+          maxHeight: '52vh',
+          overflow: 'hidden',
+          pointerEvents: 'none',
+        }}
+      >
+        {isRecording ? (
+          // Listening state — waveform + live transcript (DynamicIsland recipe).
+          <div style={{ textAlign: 'center', width: '100%', pointerEvents: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, height: 40 }}>
+              {waveformLevels.map((level, i) => (
+                <div
+                  key={i}
+                  className="vee-anim"
+                  style={{
+                    width: 5,
+                    height: 40,
+                    borderRadius: 999,
+                    transformOrigin: 'center',
+                    transform: `scaleY(${Math.max(0.18, level)})`,
+                    background: 'linear-gradient(180deg, #FF8AD0, #A855F7 55%, #3B82F6)',
+                    transition: 'transform 0.08s linear',
+                    animation: reduced.current ? 'none' : `vee-bar 1.1s ease-in-out ${i * 0.09}s infinite`,
+                  }}
+                />
+              ))}
+            </div>
+            <p style={{ marginTop: 12, color: 'rgba(255,255,255,0.9)', fontSize: 14, minHeight: 20, lineHeight: 1.4 }}>
+              {transcript || 'Listening…'}
+            </p>
+          </div>
+        ) : (
+          // OYO turn stream: Vee centered iridescent text, user right-aligned.
+          // Older turns fade up into the dream.
+          visibleTurns.map((t, idx) => {
+            const fromTop = visibleTurns.length - 1 - idx;
+            const opacity = Math.max(0.3, 1 - fromTop * 0.22);
+            if (t.role === 'vee') {
+              return (
+                <div
+                  key={t.id}
+                  style={{
+                    alignSelf: 'center',
+                    textAlign: 'center',
+                    maxWidth: '90%',
+                    fontFamily: "'Outfit','Inter',system-ui,sans-serif",
+                    fontSize: 17,
+                    fontWeight: 500,
+                    lineHeight: 1.35,
+                    color: '#fdeaf7',
+                    textShadow:
+                      '0 0 22px rgba(168,85,247,0.5), 0 0 8px rgba(255,138,208,0.4), 0 1px 2px rgba(0,0,0,0.6)',
+                    opacity,
+                    transition: 'opacity 480ms ease-out',
+                    pointerEvents: 'auto',
+                  }}
+                >
+                  {t.text}
+                </div>
+              );
+            }
+            return (
+              <div
+                key={t.id}
+                style={{
+                  alignSelf: 'flex-end',
+                  maxWidth: '80%',
+                  textAlign: 'right',
+                  fontFamily: "'Outfit','Inter',system-ui,sans-serif",
+                  fontSize: 14.5,
+                  fontWeight: 400,
+                  color: 'rgba(255,255,255,0.84)',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.6)',
+                  opacity,
+                  transition: 'opacity 480ms ease-out',
+                  pointerEvents: 'auto',
+                }}
+              >
+                {t.text}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* ── Option pills float UP from the bottom bar ───────────────────── */}
       <div
         onPointerDown={(e) => e.stopPropagation()}
         style={{
@@ -277,15 +425,17 @@ export const VeeCanvas: React.FC<{
           zIndex: 2,
           display: 'flex',
           flexWrap: 'wrap',
-          gap: 10,
+          gap: 9,
           justifyContent: 'center',
-          maxWidth: 360,
-          padding: '4px 18px 0',
+          maxWidth: 380,
+          padding: '0 18px 12px',
         }}
       >
         {PILLS.map((p, i) => {
           const Icon = p.icon;
           const hero = p.key === 'ask';
+          // Stagger rises bottom-up: last pill leads (closest to the bar).
+          const rank = PILLS.length - 1 - i;
           return (
             <button
               key={p.key}
@@ -315,8 +465,8 @@ export const VeeCanvas: React.FC<{
                   ? '0 8px 26px rgba(168,85,247,0.5), inset 0 1px 1px rgba(255,255,255,0.4)'
                   : '0 6px 18px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.16)',
                 opacity: mounted ? 1 : 0,
-                transform: mounted ? 'translateY(0) scale(1)' : 'translateY(-14px) scale(0.92)',
-                transition: trans(0.06 + i * 0.05),
+                transform: mounted ? 'translateY(0) scale(1)' : 'translateY(16px) scale(0.92)',
+                transition: trans(0.06 + rank * 0.05),
               }}
             >
               <Icon size={15} color="rgba(255,255,255,0.96)" strokeWidth={1.9} />
@@ -326,182 +476,42 @@ export const VeeCanvas: React.FC<{
         })}
       </div>
 
-      {/* ── Vee's canvas (centre) ─────────────────────────────────────── */}
+      {/* ── The morphed nav-bar: contracts INTO the Vee pill (same position) ─
+          The bottom bar of the page is where the experience lives. It's the
+          orb (Vee, breathing) + an OYO-style input row. The whole thing reads
+          as the nav-bar having collapsed ~15% into the chat/voice surface. */}
       <div
         onPointerDown={(e) => e.stopPropagation()}
         style={{
           position: 'relative',
-          zIndex: 2,
-          flex: 1,
+          zIndex: 3,
           width: '100%',
-          maxWidth: 420,
+          maxWidth: 'calc(28rem - 0px)', // ~max-w-md, matches the real nav bar
+          margin: '0 12px',
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          gap: 18,
-          padding: '0 24px',
+          gap: 10,
+          // Glass bar — same language as Navbar's pill, contracted.
+          background:
+            'linear-gradient(135deg, rgba(157,78,221,0.10) 0%, rgba(10,8,18,0.66) 50%, rgba(157,78,221,0.08) 100%)',
+          border: '1px solid rgba(168,85,247,0.30)',
+          borderRadius: 22,
+          backdropFilter: 'blur(18px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(18px) saturate(150%)',
+          boxShadow: alive
+            ? '0 10px 40px rgba(168,85,247,0.35), 0 0 50px rgba(255,107,157,0.18), inset 0 1px 0 rgba(255,255,255,0.08)'
+            : '0 8px 30px rgba(0,0,0,0.5), 0 0 24px rgba(157,78,221,0.10), inset 0 1px 0 rgba(255,255,255,0.06)',
+          padding: composing && !isRecording ? '8px 8px 8px 14px' : '10px 12px',
+          transition: reduced.current
+            ? 'opacity 0.18s linear'
+            : 'box-shadow 0.5s ease, padding 0.4s cubic-bezier(0.16,1,0.3,1), transform 0.5s cubic-bezier(0.34,1.4,0.64,1), opacity 0.42s ease',
+          // The morph: the bar lifts in from the nav position (15% contract feel
+          // = it starts slightly larger/lower and settles).
           opacity: mounted ? 1 : 0,
-          transform: mounted ? 'scale(1)' : 'scale(0.96)',
-          transition: trans(0.14),
+          transform: mounted ? 'translateY(0) scale(1)' : 'translateY(22px) scale(1.05)',
         }}
       >
-        {/* Vee presence — soft iridescent core */}
-        <div
-          className="vee-anim"
-          aria-hidden
-          style={{
-            width: 84,
-            height: 84,
-            borderRadius: '50%',
-            background:
-              'radial-gradient(circle at 36% 30%, #FF8AD0, #A855F7 52%, #3B82F6)',
-            animation: reduced.current ? 'none' : 'vee-core-breathe 4.2s ease-in-out infinite',
-          }}
-        />
-
-        {!isRecording ? (
-          <div style={{ textAlign: 'center' }}>
-            <p
-              style={{
-                color: 'rgba(255,255,255,0.96)',
-                fontSize: 19,
-                fontWeight: 600,
-                lineHeight: 1.3,
-                fontFamily: "'Outfit','Inter',system-ui,sans-serif",
-                margin: 0,
-              }}
-            >
-              Hey, I&apos;m Vee.
-            </p>
-            <p
-              style={{
-                color: 'rgba(255,255,255,0.6)',
-                fontSize: 13.5,
-                lineHeight: 1.5,
-                margin: '8px 0 0',
-                maxWidth: 280,
-              }}
-            >
-              This is our space. Hold the bubble below to talk, or tap to type —
-              I&apos;ll share picks, links and replies here.
-            </p>
-
-            {/* Message-canvas container — ready, intentionally empty (no fake data). */}
-            <div
-              style={{
-                marginTop: 20,
-                minHeight: 56,
-                borderRadius: 18,
-                border: '1px dashed rgba(255,255,255,0.12)',
-                background: 'rgba(255,255,255,0.03)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '14px 18px',
-              }}
-            >
-              <span style={{ color: 'rgba(255,255,255,0.34)', fontSize: 12, letterSpacing: '0.02em' }}>
-                Vee&apos;s messages will appear here
-              </span>
-            </div>
-          </div>
-        ) : (
-          // Listening state — waveform + live transcript (DynamicIsland recipe).
-          <div style={{ textAlign: 'center', width: '100%' }} onPointerDown={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, height: 44 }}>
-              {waveformLevels.map((level, i) => (
-                <div
-                  key={i}
-                  className="vee-anim"
-                  style={{
-                    width: 5,
-                    height: 44,
-                    borderRadius: 999,
-                    transformOrigin: 'center',
-                    transform: `scaleY(${Math.max(0.18, level)})`,
-                    background:
-                      'linear-gradient(180deg, #FF8AD0, #A855F7 55%, #3B82F6)',
-                    transition: 'transform 0.08s linear',
-                    animation: reduced.current ? 'none' : `vee-bar 1.1s ease-in-out ${i * 0.09}s infinite`,
-                  }}
-                />
-              ))}
-            </div>
-            <p
-              style={{
-                marginTop: 14,
-                color: 'rgba(255,255,255,0.9)',
-                fontSize: 14,
-                minHeight: 20,
-                lineHeight: 1.4,
-                padding: '0 12px',
-              }}
-            >
-              {transcript || 'Listening…'}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* ── Bottom: text composer + textured chat-bubble pill ─────────── */}
-      <div
-        onPointerDown={(e) => e.stopPropagation()}
-        style={{
-          position: 'relative',
-          zIndex: 2,
-          width: '100%',
-          maxWidth: 420,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 14,
-          padding: '0 22px',
-        }}
-      >
-        {(composing && !isRecording) && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              width: '100%',
-              opacity: mounted ? 1 : 0,
-              transition: trans(0),
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            <input
-              ref={inputRef}
-              type="text"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && text.trim()) {
-                  setText('');
-                  setComposing(false);
-                }
-              }}
-              placeholder="Tell Vee what you're after…"
-              style={{
-                flex: 1,
-                height: 44,
-                padding: '0 18px',
-                borderRadius: 999,
-                border: '1px solid rgba(255,255,255,0.16)',
-                background: 'rgba(255,255,255,0.08)',
-                color: '#fff',
-                fontSize: 14,
-                outline: 'none',
-                caretColor: '#FF8AD0',
-                backdropFilter: 'blur(14px)',
-                WebkitBackdropFilter: 'blur(14px)',
-              }}
-            />
-          </div>
-        )}
-
-        {/* Textured chat-bubble pill — soft 3D, Vee gradient. Hold to speak. */}
+        {/* The ORB — Vee herself, breathing. Hold to speak (invocation). */}
         <button
           onPointerDown={onBubbleDown}
           onPointerUp={onBubbleUp}
@@ -509,26 +519,67 @@ export const VeeCanvas: React.FC<{
           aria-label="Vee — tap to type, hold to speak"
           className="vee-anim"
           style={{
-            width: 88,
-            height: 46,
-            borderRadius: 999,
+            flexShrink: 0,
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
             border: 'none',
             cursor: 'pointer',
             touchAction: 'none',
-            background: isRecording
-              ? 'radial-gradient(circle at 50% 30%, #FF8AD0, #A855F7 50%, #3B82F6)'
-              : 'radial-gradient(circle at 35% 28%, #FF8AD0, #A855F7 52%, #3B82F6)',
-            // Physical-button texture: inner highlight + outer drop shadow,
-            // matching the V pebble's `vee-breathe` treatment.
+            background: 'radial-gradient(circle at 35% 28%, #FF8AD0, #A855F7 52%, #3B82F6)',
+            // Physical-button texture: inner highlight + outer drop shadow.
             boxShadow: isRecording
               ? '0 10px 30px rgba(168,85,247,0.65), 0 0 40px rgba(255,107,157,0.4), inset 0 1px 2px rgba(255,255,255,0.55), inset 0 -3px 5px rgba(0,0,0,0.3)'
               : '0 8px 22px rgba(168,85,247,0.5), 0 0 22px rgba(255,107,157,0.25), inset 0 1px 2px rgba(255,255,255,0.55), inset 0 -3px 5px rgba(0,0,0,0.3)',
             animation: reduced.current ? 'none' : 'vee-core-breathe 3.4s ease-in-out infinite',
-            opacity: mounted ? 1 : 0,
-            transform: mounted ? 'translateY(0)' : 'translateY(16px)',
-            transition: trans(0.2),
+            transition: 'box-shadow 0.3s ease',
           }}
         />
+
+        {/* Composer / prompt — the OYO input row, anchored in the bar. */}
+        {composing && !isRecording ? (
+          <input
+            ref={inputRef}
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') commitText(); }}
+            placeholder="Tell Vee what you're after…"
+            style={{
+              flex: 1,
+              height: 40,
+              minWidth: 0,
+              padding: '0 16px',
+              borderRadius: 999,
+              border: '1px solid rgba(255,255,255,0.14)',
+              background: 'rgba(255,255,255,0.06)',
+              color: '#fff',
+              fontSize: 14,
+              fontFamily: "'Outfit','Inter',system-ui,sans-serif",
+              outline: 'none',
+              caretColor: '#FF8AD0',
+            }}
+          />
+        ) : (
+          <span
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              setComposing(true);
+              setTimeout(() => inputRef.current?.focus(), 60);
+            }}
+            style={{
+              flex: 1,
+              color: isRecording ? 'rgba(255,138,208,0.95)' : 'rgba(255,255,255,0.5)',
+              fontSize: 14,
+              fontWeight: 500,
+              fontFamily: "'Outfit','Inter',system-ui,sans-serif",
+              cursor: 'text',
+              transition: 'color 0.3s ease',
+            }}
+          >
+            {isRecording ? 'Listening…' : 'Hold the orb to talk · tap to type'}
+          </span>
+        )}
       </div>
     </div>
   );

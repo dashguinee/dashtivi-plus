@@ -76,6 +76,12 @@ export const TiviModeToggle: React.FC = () => {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           animation: 'vee-breathe 3.4s ease-in-out infinite',
           touchAction: 'none',
+          // While the canvas is open the pebble fades + contracts — the bar
+          // reads as having *collapsed into* the morphed Vee pill above, not
+          // as a separate overlay popping in.
+          opacity: canvasOpen ? 0 : 1,
+          transform: canvasOpen ? 'scale(0.7)' : 'scale(1)',
+          transition: 'opacity 0.32s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1)',
         }}
       >
         <span style={{

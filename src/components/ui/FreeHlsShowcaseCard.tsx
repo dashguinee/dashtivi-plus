@@ -50,6 +50,7 @@ type FocusSetter = (focused: boolean) => void;
 class FocusRegistry {
   private members = new Map<HTMLElement, FocusSetter>();
   private current: HTMLElement | null = null;
+  private priority = new Set<HTMLElement>(); // cards that hold the slot while on-screen
   private raf = 0;
 
   constructor() {
@@ -59,8 +60,9 @@ class FocusRegistry {
     }
   }
 
-  claim(el: HTMLElement, setter: FocusSetter) {
+  claim(el: HTMLElement, setter: FocusSetter, priority = false) {
     this.members.set(el, setter);
+    if (priority) this.priority.add(el); else this.priority.delete(el);
     this.schedule();
   }
 
@@ -68,6 +70,7 @@ class FocusRegistry {
     if (this.members.has(el)) {
       this.members.get(el)?.(false);
       this.members.delete(el);
+      this.priority.delete(el);
       if (this.current === el) this.current = null;
       this.schedule();
     }
@@ -84,6 +87,10 @@ class FocusRegistry {
     let best: HTMLElement | null = null;
     let bestDist = Infinity;
     this.members.forEach((_setter, el) => {
+      // A priority card (the home hero) holds the live slot while it's on-screen;
+      // other cards can only win once no priority card is in view. This stops the
+      // hero from yielding/restarting as you scroll or toggle other videos.
+      if (this.priority.size > 0 && !this.priority.has(el)) return;
       const r = el.getBoundingClientRect();
       const mid = r.top + r.height / 2;
       const dist = Math.abs(mid - centerY);
@@ -112,11 +119,14 @@ const registry = showcaseFocusRegistry;
 export function FreeHlsShowcaseCard({
   channel,
   onSurf,
+  priority = false,
 }: {
   channel: FreeHlsChannel;
   /** Optional new-era remote — swipe the visor to surf to the prev/next free
    *  channel in the pool. Absent → the card behaves exactly as before. */
   onSurf?: (dir: 1 | -1) => void;
+  /** Home hero — holds the live slot while on-screen (won't yield to scroll). */
+  priority?: boolean;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -145,7 +155,7 @@ export function FreeHlsShowcaseCard({
       (entries) => {
         const e = entries[0];
         const visible = e.isIntersecting && e.intersectionRatio >= 0.55;
-        if (visible) registry.claim(el, setFocused);
+        if (visible) registry.claim(el, setFocused, priority);
         else registry.release(el);
       },
       { threshold: [0, 0.55, 0.85, 1], rootMargin: '-6% 0px -6% 0px' }
