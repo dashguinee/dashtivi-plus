@@ -21,6 +21,7 @@ import {
   type CatalogChannel,
 } from '@/lib/catalog';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
+import { LiveFirstCardTile } from '@/components/ui/LiveFirstCardTile';
 import { tap } from '@/lib/haptics';
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { setAmbientSpeed } from '@/lib/ambient-audio';
@@ -310,6 +311,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                 worldCup={experience === 'World Cup'}
                 accent={EXPERIENCE_ACCENT[experience] || '#9D4EDD'}
                 channels={channels}
+                credentials={credentials}
                 onPlay={(ch) => play(ch, channels)}
                 onSeeAll={seeAllId ? () => navigate(`/live/${seeAllId}`) : undefined}
                 lang={lang}
@@ -446,6 +448,7 @@ const ExperienceRow = React.memo(function ExperienceRow({
   title,
   accent,
   channels,
+  credentials,
   onPlay,
   onSeeAll,
   lang,
@@ -455,6 +458,8 @@ const ExperienceRow = React.memo(function ExperienceRow({
   title: string;
   accent: string;
   channels: CatalogChannel[];
+  /** Threaded in so the FIRST card can build its live url exactly like onPlay. */
+  credentials: XtreamCredentials;
   onPlay: (ch: CatalogChannel) => void;
   onSeeAll?: () => void;
   lang: Lang;
@@ -504,7 +509,17 @@ const ExperienceRow = React.memo(function ExperienceRow({
 
       {/* Horizontal channel strip */}
       <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1">
-        {channels.map((ch) => (
+        {channels.map((ch, cardIdx) => {
+          // The FIRST card of each row becomes a LIVE mini-tile (the row's
+          // "breathing" beat). The rest stay as static logo cards, unchanged.
+          // The live tile is gated/capped internally (in-view + concurrency).
+          const isLiveTile = cardIdx === 0;
+          const liveUrl = isLiveTile
+            ? (ch.plays === 'direct'
+                ? buildCatalogUrl(ch, credentials)
+                : buildLiveUrl(credentials, ch.stream_id))
+            : '';
+          return (
           <button
             key={ch.stream_id}
             onPointerDown={() => tap()}
@@ -524,13 +539,24 @@ const ExperienceRow = React.memo(function ExperienceRow({
               }}
             >
               {/* per-experience accent sheen, top-lit */}
-              <div className="absolute inset-x-0 top-0 h-2/3 pointer-events-none"
+              <div className="absolute inset-x-0 top-0 h-2/3 pointer-events-none z-[1]"
                 style={{ background: `radial-gradient(ellipse 85% 100% at 32% 0%, ${accent}26, transparent 72%)` }} />
 
-              <ChannelIcon src={ch.icon} name={ch.name} size="md" />
+              {isLiveTile ? (
+                // First card = LIVE: muted mini-player with the logo as poster.
+                <LiveFirstCardTile
+                  url={liveUrl}
+                  logo={ch.icon}
+                  name={ch.name}
+                  width={cardW}
+                  height={cardH}
+                />
+              ) : (
+                <ChannelIcon src={ch.icon} name={ch.name} size="md" />
+              )}
 
               {/* LIVE dot — breathing on the shared rhythm */}
-              <div className="absolute top-1.5 left-1.5 flex items-center gap-1 px-1.5 py-0.5 rounded-full"
+              <div className="absolute top-1.5 left-1.5 z-[2] flex items-center gap-1 px-1.5 py-0.5 rounded-full"
                 style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}>
                 <span className="relative flex h-1.5 w-1.5">
                   <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-70 ${ch.free ? 'bg-green-400' : 'bg-red-400'}`} />
@@ -541,14 +567,14 @@ const ExperienceRow = React.memo(function ExperienceRow({
 
               {/* Language pill — premium, subtle, faded (top-right) */}
               {ch.language && (
-                <div className="absolute top-1.5 right-1.5 px-1 py-[1px] rounded-md"
+                <div className="absolute top-1.5 right-1.5 z-[2] px-1 py-[1px] rounded-md"
                   style={{ background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.10)' }}>
                   <span className="text-[7px] font-bold tracking-[1px] text-white/40">{ch.language}</span>
                 </div>
               )}
 
               {/* glassy play affordance on hover/press */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200"
+              <div className="absolute inset-0 z-[3] flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200"
                 style={{ background: 'rgba(0,0,0,0.42)' }}>
                 <div className="w-9 h-9 rounded-full flex items-center justify-center"
                   style={{ background: 'rgba(255,255,255,0.16)', border: '1px solid rgba(255,255,255,0.32)', backdropFilter: 'blur(6px)' }}>
@@ -561,7 +587,8 @@ const ExperienceRow = React.memo(function ExperienceRow({
               {cleanName(ch.name)}
             </p>
           </button>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
