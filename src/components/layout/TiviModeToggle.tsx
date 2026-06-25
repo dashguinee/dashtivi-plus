@@ -27,9 +27,11 @@ export const TiviModeToggle: React.FC = () => {
   const [canvasOpen, setCanvasOpen] = useState(false);
 
   const openCanvas = useCallback(() => {
-    held.current = true;
-    tap();
-    setCanvasOpen(true);
+    // Vee HOLD DISABLED for now — the canvas was rendering black on device.
+    // Tap-cycle (Live/Movies/Series) only. Re-enable by restoring:
+    //   held.current = true; tap(); setCanvasOpen(true);
+    // (setCanvasOpen is still used by VeeCanvas's onClose, so no dead code.)
+    void setCanvasOpen;
   }, []);
 
   const onDown = useCallback((e: React.PointerEvent) => {

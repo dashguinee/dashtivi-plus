@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tivi-cache-v1782372954098';
+const CACHE_NAME = 'tivi-cache-v1782380490591';
 
 // --- INSTALL ---
 self.addEventListener('install', () => {
