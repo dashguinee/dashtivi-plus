@@ -90,10 +90,17 @@ function UpdateButton() {
         if (data.version && data.version !== APP_VERSION) {
           if (data.force) {
             setForceUpdate(true);
-            // Clear caches then reload
+            // Clear caches AND unregister the SW so the reload can't be served a
+            // stale shell — the #1 reason updates didn't reach the device.
             if ('caches' in window) {
               const keys = await caches.keys();
               await Promise.all(keys.map(k => caches.delete(k)));
+            }
+            if ('serviceWorker' in navigator) {
+              try {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                await Promise.all(regs.map((r) => r.unregister()));
+              } catch { /* ignore */ }
             }
             window.location.reload();
           } else {
@@ -105,7 +112,17 @@ function UpdateButton() {
 
     checkVersion();
     const interval = setInterval(() => { if (active) checkVersion(); }, 2 * 60 * 1000);
-    return () => { active = false; clearInterval(interval); window.removeEventListener('tivi-update-available', swHandler); };
+    // Also check the instant the app returns to foreground — a backgrounded PWA
+    // throttles the timer, so this is what catches it the moment you reopen it.
+    const onVisible = () => { if (active && document.visibilityState === 'visible') checkVersion(); };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+    return () => {
+      active = false; clearInterval(interval);
+      window.removeEventListener('tivi-update-available', swHandler);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+    };
   }, []);
 
   if (forceUpdate) {
