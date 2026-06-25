@@ -1,10 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Play, Heart, Plus, Info, Share2 } from 'lucide-react';
 import { createHlsPlayer, type HlsInstance } from '@/lib/hls';
 import { useSwipeSurf } from '@/hooks/useSwipeSurf';
-import { useTactileGestures, type TactileAction } from '@/hooks/useTactileGestures';
-import { useFavorites } from '@/hooks/useFavorites';
-import { useWatchLater } from '@/hooks/useMovieShelf';
 
 /* ════════════════════════════════════════════════════════════════
    FREE-HLS SHOWCASE CARD — the "alive gift".
@@ -28,8 +24,10 @@ const GREEN = '#22C55E';
 // universal green — "Made in Hollywood" et al read as movie magic, not sports.
 const GOLD = '#FFC927';
 
-/** Derive a card's signature accent. Cinema/movie gems → gold; rest → green. */
-function accentFor(ch: { name: string; district?: string }): string {
+/** Derive a card's signature accent. Cinema gems → gold; EVERY other FREE channel
+ *  → green (the universal free-gift contour). Premium beIN wears purple elsewhere
+ *  (the hero deck) — but anything FREE, including free beIN, is green here. */
+export function accentFor(ch: { name: string; district?: string }): string {
   if (/hollywood|movie|cinema|cinéma|film/i.test(ch.name)) return GOLD;
   if (ch.district && /movie|cinema|cinéma|film/i.test(ch.district)) return GOLD;
   return GREEN;
@@ -124,7 +122,6 @@ export function FreeHlsShowcaseCard({
   channel,
   onSurf,
   priority = false,
-  onDetails,
 }: {
   channel: FreeHlsChannel;
   /** Optional new-era remote — swipe the visor to surf to the prev/next free
@@ -132,8 +129,6 @@ export function FreeHlsShowcaseCard({
   onSurf?: (dir: 1 | -1) => void;
   /** Home hero — holds the live slot while on-screen (won't yield to scroll). */
   priority?: boolean;
-  /** Long-press → Details. Falls back to fullscreen when omitted. */
-  onDetails?: () => void;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -213,43 +208,6 @@ export function FreeHlsShowcaseCard({
     else if (anyV.webkitRequestFullscreen) anyV.webkitRequestFullscreen();
   }, []);
 
-  // ── Long-press → radial menu (Play · Favorite · Watch Later · Details · Share).
-  //    A hero is NOT swiped-away; surf owns L/R, so the tactile engine here runs
-  //    LIFT-ONLY (no swipe handlers, no 1:1 body drag) — same physics/feel as the
-  //    poster cards. Self-wires the shelf stores off the channel. ──
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const { isWatchLater, addWatchLater } = useWatchLater();
-  const favId = `freehls:${channel.id}`;
-  const shareChannel = useCallback(() => {
-    const nav = typeof navigator !== 'undefined' ? (navigator as any) : null;
-    if (nav?.share) nav.share({ title: channel.name, text: channel.name }).catch(() => {});
-    else if (nav?.clipboard) nav.clipboard.writeText(channel.name).catch(() => {});
-  }, [channel.name]);
-
-  const heroAccent = accentFor(channel);
-  const tactileActions: TactileAction[] = [
-    { id: 'play', label: 'Play', icon: <Play className="w-5 h-5" fill="currentColor" />, color: heroAccent, onFire: () => goFullscreen() },
-    { id: 'favorite', label: 'Favorite', icon: <Heart className="w-5 h-5" fill={isFavorite(favId) ? 'currentColor' : 'none'} />, color: '#FF5C8A', onFire: () => toggleFavorite(favId) },
-    { id: 'later', label: 'Watch Later', icon: <Plus className="w-5 h-5" />, color: '#FFC927', onFire: () => addWatchLater(favId) },
-    { id: 'details', label: 'Details', icon: <Info className="w-5 h-5" />, color: '#C9A8FF', onFire: () => (onDetails ? onDetails() : goFullscreen()) },
-    { id: 'share', label: 'Share', icon: <Share2 className="w-5 h-5" />, color: '#9AE6B4', onFire: shareChannel },
-  ];
-  const tactile = useTactileGestures({
-    width: 320,                 // ring radius basis (landscape card); no body drag applied
-    actions: tactileActions,
-    onActiveChange: undefined,
-  });
-
-  // Compose surf + lift on the same surface: forward each pointer event to BOTH.
-  // Surf only fires on a committed horizontal drag; lift only on a still 280ms
-  // press — they don't collide. The lift's veil/ring render above the card.
-  const composedHandlers = {
-    onPointerDown: (e: React.PointerEvent) => { surfHandlers.onPointerDown(e); tactile.handlers.onPointerDown(e); },
-    onPointerMove: (e: React.PointerEvent) => { surfHandlers.onPointerMove(e); tactile.handlers.onPointerMove(e); },
-    onPointerUp: (e: React.PointerEvent) => { surfHandlers.onPointerUp(e); tactile.handlers.onPointerUp(e); },
-    onPointerCancel: (e: React.PointerEvent) => { surfHandlers.onPointerCancel(e); tactile.handlers.onPointerCancel(e); },
-  };
-
   const showLogo = !logoFailed && !!channel.logo;
 
   // Signature accent — gold for cinema gems, green otherwise. Drives the glow,
@@ -263,33 +221,23 @@ export function FreeHlsShowcaseCard({
 
   return (
     <div className="px-4">
-      {tactile.overlay}
       <div
-        ref={(el) => {
-          (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
-          (tactile.surfaceRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
-        }}
+        ref={cardRef}
         className="freehls-card relative w-full aspect-video rounded-2xl overflow-hidden"
         data-focused={focused ? 'true' : 'false'}
-        onPointerDown={composedHandlers.onPointerDown}
-        onPointerMove={composedHandlers.onPointerMove}
-        onPointerUp={composedHandlers.onPointerUp}
-        onPointerCancel={composedHandlers.onPointerCancel}
+        onPointerDown={surfHandlers.onPointerDown}
+        onPointerMove={surfHandlers.onPointerMove}
+        onPointerUp={surfHandlers.onPointerUp}
+        onPointerCancel={surfHandlers.onPointerCancel}
         style={{
           ['--freehls-accent' as string]: accent,
           ['--freehls-accent-rgb' as string]: accentRgb,
-          zIndex: tactile.lifted ? 70 : undefined,
-          boxShadow: tactile.lifted
-            ? `0 28px 60px rgba(8,4,16,0.7), 0 0 0 1px ${accent}88, 0 0 44px ${accent}66`
-            : focused
+          boxShadow: focused
             ? `0 12px 44px ${accent}33, 0 0 0 1px ${accent}66`
             : `0 5px 22px ${accent}1f, 0 0 0 1px ${accent}2e`,
-          transition: tactile.lifted
-            ? 'transform 0.22s cubic-bezier(0.34,1.26,0.4,1), box-shadow 0.22s ease'
-            : `transform 0.6s ${EASE}, box-shadow 0.6s ${EASE}, opacity 0.6s ${EASE}`,
-          transform: tactile.lifted ? 'scale(1.06)' : focused ? 'scale(1)' : 'scale(0.975)',
+          transition: `transform 0.6s ${EASE}, box-shadow 0.6s ${EASE}, opacity 0.6s ${EASE}`,
+          transform: focused ? 'scale(1)' : 'scale(0.975)',
           opacity: focused ? 1 : 0.9,
-          touchAction: 'pan-y',
         }}
       >
         {/* accent wash (gold for cinema, green otherwise) */}
