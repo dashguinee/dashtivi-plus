@@ -336,6 +336,15 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                   />
                 </div>
               )}
+              {/* Breathing beat — an INTENTIONAL mental-reset after every 2
+                  collections (restrained hairline + air), NOT the accidental
+                  wide cache-gap. Skips the idx-3 slot (FeaturedDestination is
+                  already its own beat there). */}
+              {idx % 2 === 1 && idx !== 3 && (
+                <div className="h-9 flex items-center justify-center" aria-hidden>
+                  <div className="w-8 h-px rounded-full bg-white/[0.07]" />
+                </div>
+              )}
             </React.Fragment>
           );
         })}
