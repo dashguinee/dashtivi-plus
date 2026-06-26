@@ -223,7 +223,6 @@ function TrailerExploreCard({
 
   const trailerKey = tmdb?.y || null;
   const backdrop = tmdb?.p ? `https://image.tmdb.org/t/p/w780${tmdb.p}` : (movie.stream_icon || '');
-  const year = parseYear(movie.name);
   const cleanTitle = movie.name.replace(/\s*\(\d{4}\)\s*$/, '');
   const genres = (tmdb?.g || []).map((id) => TMDB_GENRES[id]).filter(Boolean).slice(0, 2);
 
@@ -340,7 +339,6 @@ function TrailerExploreCard({
                   {tmdb.r.toFixed(1)}
                 </span>
               ) : null}
-              {year ? <span className="text-[11px] text-white/45 font-medium">{year}</span> : null}
               {genres.map((g) => (
                 <span key={g} className="px-2 py-0.5 rounded-full bg-white/10 text-[9px] text-white/55 font-medium">{g}</span>
               ))}

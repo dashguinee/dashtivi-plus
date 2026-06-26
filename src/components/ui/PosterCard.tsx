@@ -67,7 +67,7 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
   // TMDB poster fallback — uses poster_path from enrichment
   const tmdbPoster = tmdbData?.p ? `https://image.tmdb.org/t/p/w342${tmdbData.p}` : null;
   const hasPoster = (safePoster && !imgFailed) || (tmdbPoster && !tmdbFailed);
-  const { clean: cleanTitle, year } = parseTitle(title);
+  const { clean: cleanTitle } = parseTitle(title);
 
   const displayRating = tmdbData?.r ? tmdbData.r.toFixed(1) : rating;
   const hasRating = displayRating && parseFloat(displayRating) > 0;
@@ -121,7 +121,6 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
               style={{ background: 'linear-gradient(135deg, rgba(157,78,221,0.12) 0%, rgba(10,10,18,0.95) 50%, rgba(157,78,221,0.06) 100%)', border: '1px solid rgba(157,78,221,0.08)' }}>
               <span className="text-white/80 text-center text-[11px] font-semibold line-clamp-3 leading-tight"
                 style={{ textShadow: '0 0 8px rgba(157,78,221,0.3)' }}>{cleanTitle}</span>
-              {year && <span className="mt-1.5 text-[9px] text-white/25 font-medium">{year}</span>}
             </div>
           )}
           {hasPoster && <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />}
@@ -202,9 +201,6 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
           >
             {cleanTitle}
           </span>
-          {year && (
-            <span className="mt-1.5 text-[9px] text-white/25 font-medium">{year}</span>
-          )}
         </div>
       )}
 
@@ -249,7 +245,6 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
           )}
           <h3 className="text-[11px] font-semibold text-white/90 line-clamp-2 leading-tight">{cleanTitle}</h3>
           <div className="flex items-center gap-2 mt-0.5">
-            {year && <span className="text-[9px] text-white/35">{year}</span>}
             {runtime && (
               <span className="flex items-center gap-0.5 text-[9px] text-white/30">
                 <Clock className="w-2.5 h-2.5" />

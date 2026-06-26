@@ -551,8 +551,12 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
 
   return (
     <div className={`${sizes[size]} relative rounded-xl overflow-hidden flex-shrink-0 ${className}`}>
-      {/* Placeholder always behind — prevents layout shift when image loads/fails */}
-      {placeholderEl}
+      {/* Placeholder behind — sizes the tile (no layout shift) but FADES OUT the
+          instant the icon paints, so the letters never show through the logo.
+          Stays fully visible if the image fails (never blank). */}
+      <div className={`transition-opacity duration-300 ${loaded ? 'opacity-0' : 'opacity-100'}`}>
+        {placeholderEl}
+      </div>
       <img
         src={safeSrc}
         alt={name}
