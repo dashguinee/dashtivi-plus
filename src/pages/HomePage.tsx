@@ -7,9 +7,8 @@ import type { XtreamCredentials } from '@/lib/xtream';
 import { buildLiveUrl } from '@/lib/xtream';
 import { useShowcaseTier } from '@/hooks/useShowcaseTier';
 import { FreeHlsShowcaseCard, type FreeHlsChannel } from '@/components/ui/FreeHlsShowcaseCard';
-import { OyeAfricaCard, StationsCard, useOpenVoyo } from '@/components/voyo';
+import { OyeAfricaCard, StationsCard } from '@/components/voyo';
 import { MoviesExploration } from '@/components/home/MoviesExploration';
-import { FeaturedDestination } from '@/components/home/FeaturedDestination';
 import { HeroDeck, type HeroSlide } from '@/components/home/HeroDeck';
 import { WorldCupBackdrop } from '@/components/home/WorldCupBackdrop';
 import { TriondaBall, WcFlagBeam } from '@/components/home/TriondaBall';
@@ -108,7 +107,6 @@ interface FreeHlsData {
 export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const { lang } = useLanguage();
   const navigate = useNavigate();
-  const openVoyoStations = useOpenVoyo('stations');
   const [catalog, setCatalog] = useState<Catalog | null>(getCatalogSync());
   const [freeHls, setFreeHls] = useState<FreeHlsData | null>(null);
 
@@ -181,6 +179,14 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
     }
     return map;
   }, [isFree, freeHls, helloChannel]);
+
+  // The mid-feed cinema beat — the "Made in Hollywood" live video card, surfaced
+  // for EVERYONE (the free pool loads for all; only the grid below is gated).
+  // Tapping the frame goes to Movies.
+  const hollywoodFeature = useMemo<FreeHlsChannel | null>(() => {
+    if (!freeHls || freeHls.channels.length === 0) return null;
+    return freeHls.channels.find((c) => c.id === 'free-2339' || /hollywood/i.test(c.name)) || null;
+  }, [freeHls]);
 
   // ── Play a channel, with the full row as playlist context (next/prev) ──
   const play = useCallback((ch: CatalogChannel, row: CatalogChannel[]) => {
@@ -329,20 +335,17 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
               {/* ── The "Featured Destination" gateway — ONE curated district at a
                   time (see `featured` below), tapping THROUGH to it. Anchored to the
                   3rd RENDERED row (rpos), so empty collections can't skip it. ── */}
-              {rpos === 2 && (
-                /* No `reveal` here — it's conditionally mounted, so the global
-                   reveal-on-scroll observer never catches it and it'd stay at
-                   opacity:0. The card has its own entrance animation anyway. */
-                <div className="px-4 mb-9">
-                  <FeaturedDestination
-                    catalog={catalog}
-                    lang={lang}
-                    navigate={navigate}
-                    openVoyo={openVoyoStations}
-                    /* Curated daily — ONE feature at a time (our role). Swap the
-                       name to rotate the push: Hollywood · France 24 · Disney ·
-                       World Cup · VOYO. Today: Hollywood. */
-                    featured="Hollywood"
+              {rpos === 2 && hollywoodFeature && (
+                /* The mid-feed cinema beat — the live "Made in Hollywood" VIDEO
+                   card auto-plays when it scrolls on-screen; tap the frame →
+                   Movies. (No `reveal` wrapper: it's conditionally mounted, so
+                   the global reveal observer never catches it; the card animates
+                   itself.) */
+                <div className="mb-9">
+                  <FreeHlsShowcaseCard
+                    channel={hollywoodFeature}
+                    bare
+                    onClick={() => navigate('/movies')}
                   />
                 </div>
               )}

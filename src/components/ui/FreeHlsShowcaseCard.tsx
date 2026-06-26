@@ -122,6 +122,8 @@ export function FreeHlsShowcaseCard({
   channel,
   onSurf,
   priority = false,
+  onClick,
+  bare = false,
 }: {
   channel: FreeHlsChannel;
   /** Optional new-era remote — swipe the visor to surf to the prev/next free
@@ -129,6 +131,11 @@ export function FreeHlsShowcaseCard({
   onSurf?: (dir: 1 | -1) => void;
   /** Home hero — holds the live slot while on-screen (won't yield to scroll). */
   priority?: boolean;
+  /** When set, a tap on the frame runs this (e.g. navigate to Movies) instead of
+   *  going fullscreen — turns the card into a video "featured destination". */
+  onClick?: () => void;
+  /** Strip the FREE pill chrome — "just the video". */
+  bare?: boolean;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -225,6 +232,7 @@ export function FreeHlsShowcaseCard({
         ref={cardRef}
         className="freehls-card relative w-full aspect-video rounded-2xl overflow-hidden"
         data-focused={focused ? 'true' : 'false'}
+        onClick={onClick}
         onPointerDown={surfHandlers.onPointerDown}
         onPointerMove={surfHandlers.onPointerMove}
         onPointerUp={surfHandlers.onPointerUp}
@@ -265,7 +273,7 @@ export function FreeHlsShowcaseCard({
             playsInline
             autoPlay
             onPlaying={() => setPlaying(true)}
-            onClick={goFullscreen}
+            onClick={(e) => { if (onClick) { e.stopPropagation(); onClick(); } else { goFullscreen(); } }}
           />
         )}
 
@@ -287,13 +295,15 @@ export function FreeHlsShowcaseCard({
           )}
         </div>
 
-        {/* FREE tag — top-left, calm green pill */}
-        <div className="absolute top-3 left-3">
-          <span className="freehls-free-tag">
-            <span className="freehls-free-dot" />
-            FREE
-          </span>
-        </div>
+        {/* FREE tag — top-left, calm green pill (hidden when bare) */}
+        {!bare && (
+          <div className="absolute top-3 left-3">
+            <span className="freehls-free-tag">
+              <span className="freehls-free-dot" />
+              FREE
+            </span>
+          </div>
+        )}
 
         {/* warming / on-air / resting states — bottom-left */}
         {focused && !playing && !errored && (
