@@ -27,8 +27,8 @@ interface Props {
   onPlay: (ch: Channel) => void;
 }
 
-const SIZE = 64;  // hit area (tap target) — bigger so it's easy to find + grab
-const DISC = 56;  // visual disc — large enough to read as a deliberate lit button
+const SIZE = 50;  // hit area (tap target) — comfortable but not bulky
+const DISC = 40;  // visual disc — lit, deliberate, lighter on screen
 
 export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
   const [open, setOpen] = useState(false);
@@ -91,7 +91,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
   // an edge → dismiss.
   const onDown = (e: React.PointerEvent) => {
     if (!pos) return;
-    wake(); tap();
+    wake();
     setPressing(true);
     e.currentTarget.setPointerCapture?.(e.pointerId);
     start.current = { px: e.clientX, py: e.clientY, x0: pos.x, y0: pos.y, moved: false };
@@ -111,7 +111,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
     const s = start.current; start.current = null;
     setDragging(false); setPressing(false);
     if (!s) return;
-    if (!s.moved) { setOpen(true); return; }
+    if (!s.moved) { tap(); setOpen(true); return; }
     // Stays exactly where you drop it — always fully on-screen (onMove clamps to the
     // viewport), so it can never dock off-screen or get lost again.
     wake();
@@ -120,7 +120,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
   return createPortal(
     <>
       <style>{`
-        @keyframes sw-glow{0%,100%{box-shadow:0 10px 28px rgba(157,78,221,0.5),0 0 0 3px rgba(199,125,255,0.22),0 0 20px rgba(157,78,221,0.45),inset 0 1px 1px rgba(255,255,255,0.28)}50%{box-shadow:0 12px 36px rgba(157,78,221,0.65),0 0 0 5px rgba(199,125,255,0.30),0 0 34px rgba(157,78,221,0.72),inset 0 1px 1px rgba(255,255,255,0.36)}}
+        @keyframes sw-halo{0%,100%{opacity:0.4;transform:scale(0.96)}50%{opacity:0.8;transform:scale(1.04)}}
         @keyframes sw-fade{from{opacity:0}to{opacity:1}}
         @keyframes sw-cheer{0%{opacity:0;transform:translateY(26px) scale(0.94)}60%{opacity:1;transform:translateY(-6px) scale(1.015)}100%{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes sw-beam{0%,100%{opacity:0.55;transform:scaleY(1)}50%{opacity:0.9;transform:scaleY(1.06)}}
@@ -146,20 +146,31 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
             touchAction: 'none', cursor: 'grab', WebkitTapHighlightColor: 'transparent',
           }}
         >
+          {/* cheap breathing halo — opacity+transform only (GPU-composited), no box-shadow repaint */}
+          <span
+            aria-hidden
+            style={{
+              position: 'absolute', width: DISC + 18, height: DISC + 18, borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(157,78,221,0.6), rgba(157,78,221,0) 70%)',
+              animation: active ? 'none' : 'sw-halo 4.5s ease-in-out infinite',
+              pointerEvents: 'none',
+            }}
+          />
           <div
             style={{
+              position: 'relative',
               width: DISC, height: DISC, borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: 'radial-gradient(circle at 38% 32%, rgba(206,140,255,0.95), rgba(124,58,200,0.92) 68%)',
               border: '1px solid rgba(220,170,255,0.65)',
-              backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
-              boxShadow: active ? '0 18px 48px rgba(157,78,221,0.65), 0 0 0 6px rgba(199,125,255,0.28), 0 0 40px rgba(157,78,221,0.72)' : undefined,
+              boxShadow: active
+                ? '0 16px 42px rgba(157,78,221,0.6), 0 0 0 5px rgba(199,125,255,0.26), 0 0 34px rgba(157,78,221,0.66)'
+                : '0 8px 22px rgba(157,78,221,0.45), 0 0 16px rgba(157,78,221,0.38), inset 0 1px 1px rgba(255,255,255,0.28)',
               transform: `scale(${active ? 1.04 : 0.96})`,
               transition: 'transform .3s cubic-bezier(0.34,1.56,0.64,1), box-shadow .3s',
-              animation: active ? 'none' : 'sw-glow 4.5s ease-in-out infinite',
             }}
           >
-            <Search className="w-[24px] h-[24px] text-white" style={{ filter: 'drop-shadow(0 0 7px rgba(199,125,255,0.9))' }} />
+            <Search className="w-[18px] h-[18px] text-white" style={{ filter: 'drop-shadow(0 0 6px rgba(199,125,255,0.85))' }} />
           </div>
         </button>
       )}
@@ -180,7 +191,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
             }}
           />
           <div
-            className="relative w-[88vw] max-w-[440px] mt-[15vh] rounded-3xl overflow-hidden"
+            className="relative w-[84vw] max-w-[360px] mt-[16vh] rounded-3xl overflow-hidden"
             style={{
               background: 'rgba(20,18,30,0.74)', border: '1px solid rgba(199,125,255,0.22)',
               backdropFilter: 'blur(30px)', WebkitBackdropFilter: 'blur(30px)',

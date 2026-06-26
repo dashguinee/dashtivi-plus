@@ -16,8 +16,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Radio } from 'lucide-react';
 import { useOpenVoyo } from './VoyoSurface';
 
-const GREEN = '#007749';
-const GOLD = '#FFB612';
+// VOYO is violet, not yellow/green. These two drive the whole card; keep the
+// bronze metallic (VOYO's signature) but swap the SA green/gold for VOYO purple.
+const GREEN = '#7C3AED'; // deep violet (base / depth)  — was SA green #007749
+const GOLD = '#C77DFF';  // lit lavender (accent / glow) — was SA gold #FFB612
 
 interface StationsCardProps {
   className?: string;
