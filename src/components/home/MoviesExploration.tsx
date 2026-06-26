@@ -248,6 +248,15 @@ function TrailerExploreCard({
     if (!focused) setTrailerReady(false);
   }, [focused]);
 
+  // Hold the calm poster for 5s AFTER the trailer is ready — the muted video
+  // plays underneath the whole time, then the poster fades to reveal it.
+  const [revealVideo, setRevealVideo] = useState(false);
+  useEffect(() => {
+    if (!trailerReady) { setRevealVideo(false); return; }
+    const t = setTimeout(() => setRevealVideo(true), 5000);
+    return () => clearTimeout(t);
+  }, [trailerReady]);
+
   const showTrailer = focused && !!trailerKey;
 
   return (
@@ -271,7 +280,7 @@ function TrailerExploreCard({
           alt={cleanTitle}
           loading="lazy"
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ opacity: showTrailer && trailerReady ? 0 : 1, transition: `opacity 0.7s ${EASE}` }}
+          style={{ opacity: showTrailer && revealVideo ? 0 : 1, transition: `opacity 0.7s ${EASE}` }}
         />
       )}
       <div
@@ -287,7 +296,7 @@ function TrailerExploreCard({
           className="absolute inset-0 w-full h-full pointer-events-none"
           style={{
             border: 0,
-            opacity: trailerReady ? 1 : 0,
+            opacity: revealVideo ? 1 : 0,
             transition: `opacity 0.7s ${EASE}`,
             // YouTube embeds letterbox 16:9 already; scale a touch to bleed edges.
             transform: 'scale(1.02)',
@@ -306,24 +315,13 @@ function TrailerExploreCard({
           className="absolute inset-0 pointer-events-none"
           style={{
             background: 'linear-gradient(to top, rgba(18,9,32,0.94) 0%, rgba(157,78,221,0.11) 12%, rgba(157,78,221,0.07) 50%, rgba(157,78,221,0.10) 84%, rgba(14,7,26,0.82) 100%)',
-            opacity: trailerReady ? 1 : 0,
+            opacity: revealVideo ? 1 : 0,
             transition: `opacity 0.7s ${EASE}`,
           }}
         />
       )}
 
-      {/* TRAILER tag — top-left, calm purple pill. */}
-      {trailerKey && (
-        <div className="absolute top-3 left-3">
-          <span
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-widest uppercase"
-            style={{ background: 'rgba(157,78,221,0.16)', border: '1px solid rgba(157,78,221,0.4)', color: '#D8B4FF' }}
-          >
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: ACCENT, boxShadow: `0 0 6px ${ACCENT}` }} />
-            {showTrailer && trailerReady ? 'Trailer' : 'Preview'}
-          </span>
-        </div>
-      )}
+      {/* (Trailer / Preview tag removed per design — let the art speak.) */}
 
       {/* Title + meta + play — bottom (tap anywhere opens the detail modal). */}
       <button onClick={onOpen} className="absolute inset-0 text-left" aria-label={`Open ${cleanTitle}`}>

@@ -178,8 +178,8 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
       {/* Ambient master search — rises in-page over a blurred world */}
       {open && (
         <div
-          className="fixed inset-0 z-[9999] flex flex-col items-center"
-          style={{ background: 'rgba(6,6,12,0.42)', backdropFilter: 'blur(11px)', WebkitBackdropFilter: 'blur(11px)', animation: 'sw-fade 0.3s ease' }}
+          className="fixed inset-0 z-[10050] flex flex-col items-center"
+          style={{ background: 'rgba(6,6,12,0.62)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', animation: 'sw-fade 0.3s ease' }}
           onClick={() => setOpen(false)}
         >
           <div

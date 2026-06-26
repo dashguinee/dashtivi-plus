@@ -333,6 +333,10 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                     lang={lang}
                     navigate={navigate}
                     openVoyo={openVoyoStations}
+                    /* Curated daily — ONE feature at a time (our role). Swap the
+                       name to rotate the push: Hollywood · France 24 · Disney ·
+                       World Cup · VOYO. Today: Hollywood. */
+                    featured="Hollywood"
                   />
                 </div>
               )}

@@ -65,6 +65,7 @@ export function FeaturedDestination({
   lang,
   navigate,
   openVoyo,
+  featured,
   rotateMs = 5000,
 }: {
   catalog: Catalog;
@@ -73,7 +74,9 @@ export function FeaturedDestination({
   navigate: (to: string) => void;
   /** Open VOYO (e.g. useOpenVoyo('stations')). */
   openVoyo?: () => void;
-  /** Rotation cadence (default 5s). */
+  /** Curated single-feature: show ONLY this destination (by name), no rotation. */
+  featured?: string;
+  /** Rotation cadence (default 5s) — only used when not curating a single feature. */
   rotateMs?: number;
 }) {
   // The district roster. Channels resolve from catalog.byExperience; a
@@ -136,10 +139,15 @@ export function FeaturedDestination({
 
     // Keep VOYO (special action) always; drop channel-backed districts with
     // no resolvable channel.
-    return specs
-      .map(resolve)
-      .filter((d) => d.voyo || d.channel != null);
-  }, [catalog, lang, navigate, openVoyo]);
+    const resolved = specs.map(resolve).filter((d) => d.voyo || d.channel != null);
+    // Curated single-feature: when a `featured` name is set, show ONLY that one
+    // (length 1 → rotation auto-disables). We curate this daily — part of the role.
+    if (featured) {
+      const one = resolved.find((d) => d.name === featured);
+      if (one) return [one];
+    }
+    return resolved;
+  }, [catalog, lang, navigate, openVoyo, featured]);
 
   const [idx, setIdx] = useState(0);
   const rootRef = useRef<HTMLButtonElement>(null);
