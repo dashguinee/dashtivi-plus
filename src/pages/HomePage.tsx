@@ -287,9 +287,14 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
       {/* ── The curated experiences, in experience_order, exact names ─── */}
       <div className="mt-5">
-        {catalog.experienceOrder.map((experience, idx) => {
+        {(() => {
+          let rendered = 0;
+          return catalog.experienceOrder.map((experience, idx) => {
           const channels = catalog.byExperience[experience] || [];
           if (channels.length === 0) return null;
+          // Rendered position (skips empty collections) — anchors the featured
+          // beat + breathers robustly, no matter which raw slots are empty.
+          const rpos = rendered++;
           // /live/:experienceId page exists for these curator ids. World Cup
           // has no dedicated page, so its "See all" lands on Sports (which
           // also surfaces the WC feeds).
@@ -321,12 +326,10 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                   <FreeHlsShowcaseCard channel={woven} />
                 </div>
               )}
-              {/* ── The rotating "Featured Destination" gateway — replaces the
-                  old static Hollywood beat. It cycles DASH districts (Hollywood,
-                  France 24, Disney, World Cup, VOYO) every 5s with a crossfade,
-                  and tapping the whole card taps THROUGH to that district.
-                  Mid-feed, after the 3rd row (old afterRow:3 slot). ── */}
-              {idx === 3 && (
+              {/* ── The "Featured Destination" gateway — ONE curated district at a
+                  time (see `featured` below), tapping THROUGH to it. Anchored to the
+                  3rd RENDERED row (rpos), so empty collections can't skip it. ── */}
+              {rpos === 2 && (
                 <div className="px-4 mb-9 reveal">
                   <FeaturedDestination
                     catalog={catalog}
@@ -344,14 +347,15 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                   collections (restrained hairline + air), NOT the accidental
                   wide cache-gap. Skips the idx-3 slot (FeaturedDestination is
                   already its own beat there). */}
-              {idx % 2 === 1 && idx !== 3 && (
+              {rpos % 2 === 1 && (
                 <div className="h-9 flex items-center justify-center" aria-hidden>
                   <div className="w-8 h-px rounded-full bg-white/[0.07]" />
                 </div>
               )}
             </React.Fragment>
           );
-        })}
+          });
+        })()}
       </div>
 
       {/* ════════════════════════════════════════════════════════════════
