@@ -27,7 +27,6 @@ import type { Channel } from '@/types';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useScrollAmbient } from '@/hooks/useScrollAmbient';
 import { DynamicIsland } from '@/components/ui/DynamicIsland';
-import { PushBell } from '@/components/ui/PushBell';
 import { Crown, X } from 'lucide-react';
 import { SurfaceProvider, useSurfaces, useSurfacePortalTarget } from '@/components/system/SurfaceStack';
 import { useBackGuard } from '@/hooks/useBackGuard';
@@ -111,7 +110,7 @@ function UpdateButton() {
     }
 
     checkVersion();
-    const interval = setInterval(() => { if (active) checkVersion(); }, 2 * 60 * 1000);
+    const interval = setInterval(() => { if (active) checkVersion(); }, 15 * 60 * 1000);
     // Also check the instant the app returns to foreground — a backgrounded PWA
     // throttles the timer, so this is what catches it the moment you reopen it.
     const onVisible = () => { if (active && document.visibilityState === 'visible') checkVersion(); };
@@ -142,13 +141,7 @@ function UpdateButton() {
 
   return (
     <button
-      onClick={async () => {
-        if ('caches' in window) {
-          const keys = await caches.keys();
-          await Promise.all(keys.map(k => caches.delete(k)));
-        }
-        window.location.reload();
-      }}
+      onClick={() => window.location.reload()}
       className="fixed bottom-20 right-4 z-[9998] flex items-center gap-2 px-4 py-2.5 rounded-full
                  bg-primary/15 border border-primary/30 backdrop-blur-md
                  shadow-lg shadow-primary/20
@@ -420,10 +413,11 @@ function AppContent({ guestMode, onRequestCode }: { guestMode?: boolean; onReque
       {!showFullPlayer && <div id="merge-breath" aria-hidden="true" />}
       <div className="relative z-10">
         <ScrollToTop />
-        {/* Cross-app notification pill + push opt-in */}
+        {/* ONE pill up there — the Dynamic Island. The standalone purple
+            "Turn on alerts" pill is gone; the alerts opt-in re-homes inside the
+            island next. */}
         <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[9997] pointer-events-auto flex items-center gap-2">
           <DynamicIsland appCode="tivi" guestMode={guestMode} />
-          <PushBell appCode="tivi" />
         </div>
         <Header onLogout={logout} />
         <Navbar />

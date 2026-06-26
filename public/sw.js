@@ -1,4 +1,9 @@
-const CACHE_NAME = 'tivi-cache-v1782438829969';
+// STABLE cache name — NOT regenerated per build. The cache now PERSISTS across
+// deploys: HTML + JSON are network-first (always fresh), hashed /assets/ chunks
+// are immutable (new names = new entries, unchanged = cache hit), logos/images
+// are cached forever. So a deploy only re-downloads what actually changed —
+// blazing + data-saving. Bump this string ONLY for a deliberate hard cache reset.
+const CACHE_NAME = 'tivi-cache-stable-1';
 
 // --- INSTALL ---
 self.addEventListener('install', () => {

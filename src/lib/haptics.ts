@@ -1,136 +1,47 @@
 /**
- * DashTivi+ Haptic System — Maybach Edition
+ * DashTivi+ Haptic System — Feedback, not dominance.
  *
- * Progressive enhancement:
- *   Chrome Android 120+ → VibrationActuator (amplitude control 0.0-1.0)
- *   Other Android       → navigator.vibrate (binary on/off)
- *   iOS/Desktop         → silent no-op
+ * Philosophy: a haptic is a *confirmation* of a real button press, never an
+ * ambient texture. Scrolling and browsing are completely vibration-free.
  *
- * With VibrationActuator we get REAL intensity control:
- *   scroll tick = 0.05 magnitude (ghost-level)
- *   tap = 0.12
- *   click = 0.20
- *   confirm = two pulses at 0.08 and 0.15
+ *   tap / light / select  ≈ 6ms   (gentle tick)
+ *   click                 ≈ 8ms
+ *   heavy / confirm       ≈ 12ms  (heaviest allowed — still a tick, not a thud)
  *
- * Fallback keeps the proven Maybach patterns.
+ * No patterns/arrays (those rumble). No scroll-boundary haptics at all.
+ * Unsupported (iOS/Desktop) → silent no-op.
  */
 
 const V = typeof navigator !== 'undefined' && 'vibrate' in navigator;
 
-// VibrationActuator — Chrome Android 120+ amplitude control
-const actuator: any = typeof navigator !== 'undefined' && (navigator as any).vibrationActuator || null;
-const hasActuator = !!actuator?.playEffect;
-
-function pulse(duration: number, strong: number, weak: number) {
-  if (hasActuator) {
-    actuator.playEffect('dual-rumble', { duration, strongMagnitude: strong, weakMagnitude: weak }).catch(() => {});
-  } else if (V) {
-    navigator.vibrate(duration);
-  }
+/** Single short, soft tick. No-op silently if unsupported. */
+function tick(ms: number) {
+  if (V) navigator.vibrate(ms);
 }
 
 // ── Interaction vocabulary ───────────────────────────────────────
+// Short + soft. Discrete confirmations only — callable from every site.
 
 /** Tap — nav press, tab switch. */
-export function tap() { pulse(4, 0.12, 0.06); }
+export function tap() { tick(6); }
+
+/** Light — same gentle tick as tap. */
+export function light() { tick(6); }
+
+/** Select — list/segment pick. */
+export function select() { tick(6); }
 
 /** Click — modal open, detail sheet, play. */
-export function click() { pulse(8, 0.20, 0.10); }
+export function click() { tick(8); }
 
 /** Confirm — success, refresh done. */
-export function confirm() {
-  if (hasActuator) {
-    actuator.playEffect('dual-rumble', { duration: 5, strongMagnitude: 0.08, weakMagnitude: 0.04 }).catch(() => {});
-    setTimeout(() => actuator.playEffect('dual-rumble', { duration: 7, strongMagnitude: 0.15, weakMagnitude: 0.08 }).catch(() => {}), 65);
-  } else if (V) {
-    navigator.vibrate([4, 60, 6]);
-  }
-}
+export function confirm() { tick(12); }
 
-/** Heavy — error, destructive. */
-export function heavy() {
-  if (hasActuator) {
-    actuator.playEffect('dual-rumble', { duration: 8, strongMagnitude: 0.25, weakMagnitude: 0.12 }).catch(() => {});
-    setTimeout(() => actuator.playEffect('dual-rumble', { duration: 8, strongMagnitude: 0.25, weakMagnitude: 0.12 }).catch(() => {}), 40);
-  } else if (V) {
-    navigator.vibrate([6, 30, 6]);
-  }
-}
+/** Heavy — error, destructive. The heaviest we allow: still a tick. */
+export function heavy() { tick(12); }
 
-// ── Scroll haptics — velocity-aware ──────────────────────────────
-
-// Two scroll feels:
-//   "crisp" — single 1ms tick, precise, for regular rows
-//   "lush"  — spread flutter [1,2,1], warmer, for VEE/Exclusive/highlight rows
-function scrollTick(style: 'crisp' | 'lush', intensity: number) {
-  if (hasActuator) {
-    const mag = style === 'lush' ? intensity * 1.3 : intensity;
-    actuator.playEffect('dual-rumble', { duration: style === 'lush' ? 5 : 3, strongMagnitude: mag, weakMagnitude: mag * 0.5 }).catch(() => {});
-  } else if (V) {
-    if (style === 'lush') {
-      navigator.vibrate([1, 2, 1]);
-    } else {
-      navigator.vibrate(1);
-    }
-  }
-}
-
-export function initScrollHaptics() {
-  if (!V && !hasActuator) return;
-
-  const tracked = new WeakSet<Element>();
-
-  function attach(el: Element) {
-    if (tracked.has(el)) return;
-    tracked.add(el);
-
-    const htmlEl = el as HTMLElement;
-    const style: 'crisp' | 'lush' = htmlEl.dataset.haptic === 'lush' ? 'lush' : 'crisp';
-    let cardW = 0;
-    let lastSlot = -1;
-    let lastScrollLeft = 0;
-    let lastScrollTime = 0;
-    let flingCount = 0;
-
-    el.addEventListener('scroll', () => {
-      if (!cardW) {
-        const first = htmlEl.firstElementChild as HTMLElement | null;
-        if (!first) return;
-        cardW = first.offsetWidth + 12;
-      }
-
-      const now = performance.now();
-      const dx = Math.abs(htmlEl.scrollLeft - lastScrollLeft);
-      const dt = now - lastScrollTime;
-      lastScrollLeft = htmlEl.scrollLeft;
-      lastScrollTime = now;
-
-      const velocity = dt > 0 ? dx / dt : 0;
-      const slot = Math.round(htmlEl.scrollLeft / cardW);
-      if (slot === lastSlot) return;
-      const moved = lastSlot !== -1;
-      lastSlot = slot;
-      if (!moved) return;
-
-      if (velocity > 1.5) {
-        flingCount++;
-        if (flingCount % 3 === 0) scrollTick(style, 0.03);
-      } else {
-        scrollTick(style, 0.05);
-        flingCount = 0;
-      }
-    }, { passive: true });
-  }
-
-  document.querySelectorAll('.scrollbar-hide').forEach(attach);
-
-  new MutationObserver((mutations) => {
-    for (const m of mutations) {
-      for (const node of m.addedNodes) {
-        if (!(node instanceof Element)) continue;
-        if (node.classList?.contains('scrollbar-hide')) attach(node);
-        node.querySelectorAll?.('.scrollbar-hide').forEach(attach);
-      }
-    }
-  }).observe(document.body, { childList: true, subtree: true });
-}
+// ── Scroll haptics — NEUTRALIZED ─────────────────────────────────
+// Was firing a vibration on every card boundary while scrolling, which
+// dominated the feel. Scrolling is now silky/silent. Kept as an exported
+// no-op so the App.tsx call still resolves.
+export function initScrollHaptics() { /* intentionally a no-op */ }
