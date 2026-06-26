@@ -438,7 +438,7 @@ function AppContent({ guestMode, onRequestCode }: { guestMode?: boolean; onReque
         </div>
         <Header onLogout={logout} />
         <Navbar />
-        {credentials && <SearchWidget credentials={credentials} onPlay={handlePlayChannel} />}
+        {(credentials || guestMode) && <SearchWidget credentials={credentials} onPlay={handlePlayChannel} />}
         <main className="pb-20 lg:pb-0 lg:pl-[72px] safe-bottom-content">
           <ErrorBoundary>
             <Suspense fallback={<div className="pt-20 px-4 space-y-6 animate-pulse"><div className="h-[22vh] rounded-2xl bg-white/[0.02]" /><div className="flex gap-2">{[1,2,3,4].map(i=><div key={i} className="h-8 w-16 rounded-full bg-white/[0.03]" />)}</div><div className="space-y-4">{[1,2,3].map(i=><div key={i} className="h-32 rounded-xl bg-white/[0.02]" />)}</div></div>}>

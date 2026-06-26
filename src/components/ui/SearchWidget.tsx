@@ -24,7 +24,9 @@ function toChannel(ch: CatalogChannel, creds: XtreamCredentials): Channel {
  * The nav search-pill opens the same modal via window.openTiviSearch.
  */
 interface Props {
-  credentials: XtreamCredentials;
+  // Nullable: guest mode (no active package) has no creds, but search must still
+  // render — the play handler (onPlay) guest-gates premium plays anyway.
+  credentials: XtreamCredentials | null;
   onPlay: (ch: Channel) => void;
 }
 
@@ -32,6 +34,9 @@ const SIZE = 54;  // hit area (tap target) — +7%, comfortable but not bulky
 const DISC = 43;  // visual disc — +7%, lit, deliberate
 
 export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
+  // Guests have no creds — fall back to empties so result URLs build without
+  // crashing; onPlay guest-gates premium plays (free still plays).
+  const creds = credentials ?? { username: '', password: '' };
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
   const [dim, setDim] = useState(false); // false = awake (1.0) · true = rested (~0.55)
@@ -275,7 +280,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
                 {results.map((c) => (
                   <button
                     key={c.id}
-                    onClick={() => { tap(); if (results.length > 1) setPlaylist(results.map((r) => toChannel(r, credentials))); onPlay(toChannel(c, credentials)); setOpen(false); }}
+                    onClick={() => { tap(); if (results.length > 1) setPlaylist(results.map((r) => toChannel(r, creds))); onPlay(toChannel(c, creds)); setOpen(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-left active:bg-white/[0.06] transition-colors"
                   >
                     <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
