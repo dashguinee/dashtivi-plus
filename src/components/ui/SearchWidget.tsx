@@ -42,6 +42,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
   const [dim, setDim] = useState(false); // false = awake (1.0) · true = rested (~0.55)
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [nearClose, setNearClose] = useState(false); // pebble hovering the bottom dismiss-X
   const [pressing, setPressing] = useState(false);
   const [hidden, setHidden] = useState(false);
   const docked = useSearchDocked();
@@ -118,13 +119,20 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
     // offX/offY = where inside the hit-area the finger landed, in element space.
     start.current = { px: e.clientX, py: e.clientY, offX: e.clientX - pos.x, offY: e.clientY - pos.y, moved: false };
   };
+  // The bottom dismiss-X target — a generous bottom-centre patch.
+  const inCloseZone = (px: number, py: number) => {
+    const cx = px + SIZE / 2, cy = py + SIZE / 2;
+    return cy > window.innerHeight - 168 && Math.abs(cx - window.innerWidth / 2) < 110;
+  };
   const onMove = (e: React.PointerEvent) => {
     const s = start.current; if (!s) return;
     const dx = e.clientX - s.px, dy = e.clientY - s.py;
     if (!s.moved && Math.hypot(dx, dy) > TAP_SLOP) { s.moved = true; setDragging(true); }
     if (s.moved) {
       // Anchor the same grab point under the finger → no jump on pickup.
-      setPos({ x: clampX(e.clientX - s.offX), y: clampY(e.clientY - s.offY) });
+      const nx = clampX(e.clientX - s.offX), ny = clampY(e.clientY - s.offY);
+      setPos({ x: nx, y: ny });
+      setNearClose(inCloseZone(nx, ny));
     }
   };
   const onUp = (e: React.PointerEvent) => {
@@ -133,15 +141,10 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
     setDragging(false); setPressing(false);
     if (!s) return;
     if (!s.moved) { tap(); setOpen(true); return; }
-    // Dragged: stays where dropped, already clamped fully on-screen.
+    // Dropped on the bottom X → dock into the header. Else stays where dropped.
+    if (nearClose) { tap(); setNearClose(false); setSearchDocked(true); return; }
+    setNearClose(false);
     wake();
-  };
-
-  // Close → dock into the header (session-only; refresh brings the pebble back).
-  const onClose = (e: React.PointerEvent | React.MouseEvent) => {
-    e.stopPropagation();
-    tap();
-    setSearchDocked(true);
   };
 
   return createPortal(
@@ -201,28 +204,28 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
           >
             <Search className="w-[18px] h-[18px] text-white" style={{ filter: 'drop-shadow(0 0 6px rgba(199,125,255,0.85))' }} />
           </div>
-          {/* Close → dock. A tiny circle at the top-right, revealed on wake (not dim).
-              Its own pointer handlers stop the drag/tap logic from firing. */}
-          <span
-            role="button"
-            aria-label="Dock search to header"
-            onPointerDown={(e) => e.stopPropagation()}
-            onPointerUp={onClose}
-            style={{
-              position: 'absolute', top: 2, right: 2, width: 18, height: 18, borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(10,8,16,0.82)', border: '1px solid rgba(220,170,255,0.5)',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-              opacity: active || !dim ? 1 : 0,
-              transform: `scale(${active || !dim ? 1 : 0.6})`,
-              transition: 'opacity .25s ease, transform .25s cubic-bezier(0.34,1.56,0.64,1)',
-              pointerEvents: active || !dim ? 'auto' : 'none',
-              touchAction: 'none',
-            }}
-          >
-            <X className="w-[11px] h-[11px] text-white/85" />
-          </span>
         </button>
+      )}
+
+      {/* Drag-to-dismiss target — a bottom-centre X that fades in WHILE dragging.
+          Drop the pebble on it → docks search into the header. (Replaces the tiny
+          attached ×.) Lives just under the pebble (z below it). */}
+      {dragging && !docked && (
+        <div
+          aria-hidden
+          className="fixed left-1/2 z-[9995] flex items-center justify-center"
+          style={{
+            bottom: 92, width: 64, height: 64, borderRadius: '50%',
+            transform: `translateX(-50%) scale(${nearClose ? 1.18 : 1})`,
+            background: nearClose ? 'rgba(214,40,64,0.92)' : 'rgba(16,12,24,0.72)',
+            border: `1px solid ${nearClose ? 'rgba(255,150,160,0.85)' : 'rgba(199,125,255,0.4)'}`,
+            boxShadow: nearClose ? '0 0 34px rgba(214,40,64,0.6)' : '0 6px 20px rgba(0,0,0,0.5)',
+            backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+            transition: 'transform .2s cubic-bezier(0.34,1.56,0.64,1), background .2s, box-shadow .2s, border-color .2s',
+          }}
+        >
+          <X className="text-white/90" style={{ width: nearClose ? 26 : 22, height: nearClose ? 26 : 22 }} />
+        </div>
       )}
 
       {/* Ambient master search — rises in-page over a blurred world */}
