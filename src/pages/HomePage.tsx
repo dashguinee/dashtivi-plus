@@ -7,9 +7,9 @@ import type { XtreamCredentials } from '@/lib/xtream';
 import { buildLiveUrl } from '@/lib/xtream';
 import { useShowcaseTier } from '@/hooks/useShowcaseTier';
 import { FreeHlsShowcaseCard, type FreeHlsChannel } from '@/components/ui/FreeHlsShowcaseCard';
-import { OyeAfricaCard, StationsCard } from '@/components/voyo';
+import { OyeAfricaCard, StationsCard, useOpenVoyo } from '@/components/voyo';
 import { MoviesExploration } from '@/components/home/MoviesExploration';
-import { CategoryHero } from '@/components/home/CategoryHero';
+import { FeaturedDestination } from '@/components/home/FeaturedDestination';
 import { HeroDeck, type HeroSlide } from '@/components/home/HeroDeck';
 import { WorldCupBackdrop } from '@/components/home/WorldCupBackdrop';
 import { TriondaBall, WcFlagBeam } from '@/components/home/TriondaBall';
@@ -108,6 +108,7 @@ interface FreeHlsData {
 export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   const { lang } = useLanguage();
   const navigate = useNavigate();
+  const openVoyoStations = useOpenVoyo('stations');
   const [catalog, setCatalog] = useState<Catalog | null>(getCatalogSync());
   const [freeHls, setFreeHls] = useState<FreeHlsData | null>(null);
 
@@ -320,21 +321,18 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                   <FreeHlsShowcaseCard channel={woven} />
                 </div>
               )}
-              {/* ── The recognizable "Hollywood" balance beat — a single live
-                  cinema hero pinned to Hollywood (no rotation). It's a quiet
-                  invitation: tapping the whole hero NAVIGATES to the Movies
-                  page (not play). Mid-feed, after the 3rd row, matching the
-                  old afterRow:3 showcase vibe. ── */}
-              {idx === 3 && (catalog.byExperience['Movies'] || []).length > 0 && (
+              {/* ── The rotating "Featured Destination" gateway — replaces the
+                  old static Hollywood beat. It cycles DASH districts (Hollywood,
+                  France 24, Disney, World Cup, VOYO) every 5s with a crossfade,
+                  and tapping the whole card taps THROUGH to that district.
+                  Mid-feed, after the 3rd row (old afterRow:3 slot). ── */}
+              {idx === 3 && (
                 <div className="px-4 mb-9 reveal">
-                  <CategoryHero
-                    title="Cinéma Live"
-                    accent="#E8B53A"
-                    channels={catalog.byExperience['Movies']}
+                  <FeaturedDestination
+                    catalog={catalog}
                     lang={lang}
-                    lead={/hollywood/i}
-                    rotateMs={2_000_000_000}
-                    onPlay={() => navigate('/movies')}
+                    navigate={navigate}
+                    openVoyo={openVoyoStations}
                   />
                 </div>
               )}

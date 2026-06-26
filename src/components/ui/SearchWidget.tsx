@@ -27,8 +27,8 @@ interface Props {
   onPlay: (ch: Channel) => void;
 }
 
-const SIZE = 50;  // hit area (tap target) — comfortable but not bulky
-const DISC = 40;  // visual disc — lit, deliberate, lighter on screen
+const SIZE = 54;  // hit area (tap target) — +7%, comfortable but not bulky
+const DISC = 43;  // visual disc — +7%, lit, deliberate
 
 export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
   const [open, setOpen] = useState(false);

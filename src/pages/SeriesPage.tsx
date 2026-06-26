@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { Play, X, Download, Search, SlidersHorizontal, Star } from 'lucide-react';
+import { Play, X, Search, SlidersHorizontal, Star } from 'lucide-react';
 import type { XtreamCredentials, SeriesItem, SeriesInfo, Episode } from '@/lib/xtream';
 import { getSeries, getSeriesInfo, buildSeriesUrl, buildVodFallbackUrl, getTmdbMap, getSeriesByCategory, seriesDbToItem, searchSeries } from '@/lib/xtream';
 import { tap, click as hapticClick } from '@/lib/haptics';
@@ -12,6 +12,7 @@ import { CosmicClose } from '@/components/ui/CosmicClose';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { NeonGate, RowCountBadge, cardScaleStyle } from '@/components/ui/NeonGate';
+import { SeriesExplorer } from '@/components/ui/SeriesExplorer';
 import { SERIES_TABS, GENRE_FILTERS, SORT_MODES, VEE_SERIES_COLLECTIONS, type SortMode, type VeeSeriesCollection } from '@/lib/series-collections';
 import { t, useLanguage } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
@@ -111,6 +112,12 @@ function parseYear(name: string): number {
   return m ? parseInt(m[1], 10) : 0;
 }
 
+// In-memory cache for fetched series info — reopening a series is instant
+// (xtream.ts also persists to localStorage; this avoids the JSON.parse round-trip
+// within a session and survives genre/tab churn). Capped to bound memory.
+const seriesInfoMemCache = new Map<number, SeriesInfo>();
+const SERIES_INFO_CACHE_MAX = 40;
+
 // ── Component ────────────────────────────────────────────────────
 
 interface Props {
@@ -166,7 +173,6 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // Series episode picker modal
   const [selectedSeries, setSelectedSeries] = useState<SeriesItem | null>(null);
   const [seriesInfo, setSeriesInfo] = useState<SeriesInfo | null>(null);
-  const [activeSeason, setActiveSeason] = useState<string>('');
   const [loadingInfo, setLoadingInfo] = useState(false);
   const [episodesUnavailable, setEpisodesUnavailable] = useState(false);
 
@@ -446,9 +452,18 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     async (series: SeriesItem) => {
       hapticClick();
       setSelectedSeries(series);
+      setEpisodesUnavailable(false);
+
+      // Instant reopen — serve from the in-memory cache, no spinner, no fetch.
+      const cached = seriesInfoMemCache.get(series.series_id);
+      if (cached) {
+        setSeriesInfo(cached);
+        setLoadingInfo(false);
+        return;
+      }
+
       setLoadingInfo(true);
       setSeriesInfo(null);
-      setEpisodesUnavailable(false);
       // Race-safe timeout — tied to THIS request, not global loading state
       let timedOut = false;
       const timeout = setTimeout(() => {
@@ -457,12 +472,17 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         setLoadingInfo(false);
       }, 15000);
       try {
+        // Lazy fetch on demand — seasons/episodes only when a series is opened.
         const info = await getSeriesInfo(credentials, series.series_id);
         clearTimeout(timeout);
         if (timedOut) return; // Timeout already fired, don't overwrite
+        // Cache it (bounded — evict oldest when full).
+        if (seriesInfoMemCache.size >= SERIES_INFO_CACHE_MAX) {
+          const firstKey = seriesInfoMemCache.keys().next().value;
+          if (firstKey !== undefined) seriesInfoMemCache.delete(firstKey);
+        }
+        seriesInfoMemCache.set(series.series_id, info);
         setSeriesInfo(info);
-        const seasonKeys = Object.keys(info.episodes || {});
-        if (seasonKeys.length > 0) setActiveSeason(seasonKeys[0]);
         setLoadingInfo(false);
       } catch {
         clearTimeout(timeout);
@@ -494,7 +514,6 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const closeEpisodeModal = useCallback(() => {
     setSelectedSeries(null);
     setSeriesInfo(null);
-    setActiveSeason('');
     setEpisodesUnavailable(false);
   }, []);
 
@@ -516,9 +535,6 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   // Swipe-down to dismiss the rising surface (feels more natural than a tap).
   const sheetTouch = useRef<{ y: number; t: number } | null>(null);
-
-  const seasons = seriesInfo ? Object.keys(seriesInfo.episodes || {}) : [];
-  const episodes = seriesInfo && activeSeason ? seriesInfo.episodes[activeSeason] || [] : [];
 
   // ── Handlers ─────────────────────────────────────────────────
 
@@ -940,81 +956,16 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               <div className="flex items-center justify-center py-12 text-text-muted text-sm">
                 {t(lang, 'episodesUnavailable')}
               </div>
-            ) : (
-              <div className="p-4 overflow-y-auto max-h-[50vh]">
-                {/* Season tabs */}
-                {seasons.length > 1 && (
-                  <div className="flex gap-2 mb-4 overflow-x-auto scrollbar-hide">
-                    {seasons.map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => setActiveSeason(s)}
-                        className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                          activeSeason === s
-                            ? 'bg-primary text-white'
-                            : 'bg-white/5 text-text-secondary hover:bg-white/10'
-                        }`}
-                      >
-                        {t(lang, 'season')} {s}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Episodes */}
-                <div className="space-y-2">
-                  {episodes.map((ep) => (
-                    <div
-                      key={ep.id}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-primary/20 transition-[background-color,border-color] duration-300 text-left group"
-                    >
-                      <button
-                        onClick={() => handlePlayEpisode(ep)}
-                        className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors"
-                      >
-                        <Play className="w-4 h-4 text-primary-light ml-0.5" />
-                      </button>
-                      <button
-                        onClick={() => handlePlayEpisode(ep)}
-                        className="flex-1 min-w-0 text-left"
-                      >
-                        <p className="text-sm font-medium text-white truncate">
-                          {ep.title || `${t(lang, 'episode')} ${ep.episode_num}`}
-                        </p>
-                        <p className="text-xs text-text-muted">
-                          S{ep.season} E{ep.episode_num} &middot; {ep.container_extension?.toUpperCase() || 'MP4'}
-                        </p>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const url = buildSeriesUrl(credentials, ep.id, ep.container_extension || 'mp4');
-                          const a = document.createElement('a');
-                          a.href = url;
-                          const seriesName = (selectedSeries?.name || 'series').replace(/[^a-zA-Z0-9\s\-_.()]/g, '').replace(/\s+/g, '_').substring(0, 60);
-                          const epName = (ep.title || `E${ep.episode_num}`).replace(/[^a-zA-Z0-9\s\-_.()]/g, '').replace(/\s+/g, '_').substring(0, 40);
-                          a.download = `${seriesName}_S${ep.season}_${epName}.${ep.container_extension || 'mp4'}`;
-                          a.target = '_blank';
-                          a.rel = 'noopener noreferrer';
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
-                        }}
-                        className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 hover:bg-white/10 transition-colors"
-                        title={t(lang, 'download')}
-                      >
-                        <Download className="w-4 h-4 text-text-secondary" />
-                      </button>
-                    </div>
-                  ))}
-                  {episodes.length === 0 && (
-                    <p className="text-sm text-text-muted text-center py-4">
-                      {t(lang, 'noEpisodes')}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
+            ) : seriesInfo ? (
+              /* ── DRILL-DOWN EXPLORER: series → seasons (shelf) → episodes → play ── */
+              <SeriesExplorer
+                series={selectedSeries}
+                info={seriesInfo}
+                tmdbData={tmdbMap[`s:${selectedSeries.series_id}`]}
+                credentials={credentials}
+                onPlayEpisode={handlePlayEpisode}
+              />
+            ) : null}
           </div>
         </div>
       )}

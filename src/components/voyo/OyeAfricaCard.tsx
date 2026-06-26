@@ -91,16 +91,20 @@ export function OyeAfricaCard({ className = '' }: OyeAfricaCardProps) {
 
         <div className="min-w-0 flex-1">
           <div
-            className="inline-block px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-widest mb-1.5"
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-widest mb-1.5"
             style={{
-              // VOYO brand pill = VOYO violet (the card stays African gold/green).
-              background: 'rgba(157,78,221,0.22)',
-              border: '1px solid rgba(157,78,221,0.6)',
-              color: '#C77DFF',
-              letterSpacing: '0.14em',
+              // Live on-air badge (not a VOYO brand pill) — in the card's African gold.
+              background: `${GOLD}1f`,
+              border: `1px solid ${GOLD}55`,
+              color: GOLD,
+              letterSpacing: '0.12em',
             }}
           >
-            VOYO
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: GOLD }} />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: GOLD }} />
+            </span>
+            VOYO ON AIR
           </div>
           <h3
             className="font-bold text-white text-lg leading-tight tracking-tight line-clamp-2"
