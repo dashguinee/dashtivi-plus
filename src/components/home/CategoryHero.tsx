@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Play, ChevronRight } from 'lucide-react';
 import { t } from '@/i18n';
 import type { Lang } from '@/i18n';
@@ -48,6 +49,8 @@ export function CategoryHero({
   lang,
   onPlay,
   onSeeAll,
+  rotateMs = 90000,
+  lead,
 }: {
   /** Display title (e.g. "World Cup", "Cinéma Live"). */
   title: string;
@@ -55,12 +58,60 @@ export function CategoryHero({
   accent: string;
   channels: CatalogChannel[];
   lang: Lang;
-  /** Play the featured (first) channel, with the row as playlist context. */
+  /** Play the CURRENT featured channel, with the row as playlist context. */
   onPlay: (ch: CatalogChannel) => void;
   /** Optional "See all" → category page. */
   onSeeAll?: () => void;
+  /** Auto-advance cadence in ms (default 90s — battery-light). */
+  rotateMs?: number;
+  /** Preferred channel to show FIRST (matched by name). */
+  lead?: RegExp;
 }) {
-  const featured = channels[0];
+  // Reorder ONCE: pin the lead-matching channel to index 0, stable otherwise.
+  const ordered = useMemo(() => {
+    if (!lead) return channels;
+    const i = channels.findIndex((c) => lead.test(c.name));
+    if (i <= 0) return channels;
+    const picked = channels[i];
+    return [picked, ...channels.slice(0, i), ...channels.slice(i + 1)];
+  }, [channels, lead]);
+
+  const [idx, setIdx] = useState(0);
+  const rootRef = useRef<HTMLButtonElement>(null);
+
+  // Auto-rotation — cheap: one interval, paused when tab is hidden OR the hero
+  // is scrolled off-screen (IntersectionObserver). No work when < 2 channels.
+  useEffect(() => {
+    if (ordered.length < 2) return;
+    const el = rootRef.current;
+    let timer: ReturnType<typeof setInterval> | null = null;
+    let visible = true;
+
+    const tick = () => {
+      if (!document.hidden && visible) setIdx((i) => (i + 1) % ordered.length);
+    };
+    const start = () => {
+      if (timer == null) timer = setInterval(tick, rotateMs);
+    };
+    const stop = () => {
+      if (timer != null) { clearInterval(timer); timer = null; }
+    };
+
+    let observer: IntersectionObserver | null = null;
+    if (el && typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver(([entry]) => {
+        visible = entry.isIntersecting;
+        if (visible) start(); else stop();
+      });
+      observer.observe(el);
+    } else {
+      start();
+    }
+
+    return () => { stop(); observer?.disconnect(); };
+  }, [ordered.length, rotateMs]);
+
+  const featured = ordered[idx % ordered.length] || ordered[0];
   if (!featured) return null;
 
   const a = rgb(accent);
@@ -70,6 +121,7 @@ export function CategoryHero({
 
   return (
     <button
+      ref={rootRef}
       onPointerDown={() => tap()}
       onClick={() => onPlay(featured)}
       className="relative w-full overflow-hidden rounded-2xl text-left active:scale-[0.99] transition-transform duration-200 group"
@@ -91,6 +143,7 @@ export function CategoryHero({
           0%,100% { box-shadow: 0 0 22px rgba(${a},0.45); transform: scale(1); }
           50%     { box-shadow: 0 0 34px rgba(${a},0.70); transform: scale(1.06); }
         }
+        @keyframes hero-marquee-in-${uid} { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
 
       {/* SIGNATURE — slow accent light-sweep, continuous */}
@@ -144,23 +197,30 @@ export function CategoryHero({
         </span>
       )}
 
-      {/* Marquee channel — bottom */}
+      {/* Marquee channel — bottom. The icon+name+count crossfade (one-shot
+          fade-in, keyed on the featured channel) as auto-rotation advances. */}
       <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end gap-4">
         <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden"
-          style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(${a},0.25)` }}
+          key={featured.stream_id}
+          className="flex items-end gap-4 flex-1 min-w-0"
+          style={{ animation: `hero-marquee-in-${uid} 0.5s ease-out` }}
         >
-          <ChannelIcon src={featured.icon} name={featured.name} size="md" eager className="!w-14 !h-14" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-[23px] leading-tight font-black text-white tracking-tight line-clamp-2">
-            {cleanName(featured.name)}
-          </h1>
-          <p className="text-[12px] text-white/45 mt-0.5">
-            {lang === 'fr'
-              ? `${channels.length} chaîne${channels.length !== 1 ? 's' : ''} en direct`
-              : `${channels.length} channel${channels.length !== 1 ? 's' : ''} live now`}
-          </p>
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden"
+            style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(${a},0.25)` }}
+          >
+            <ChannelIcon src={featured.icon} name={featured.name} size="md" eager className="!w-14 !h-14" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-[23px] leading-tight font-black text-white tracking-tight line-clamp-2">
+              {cleanName(featured.name)}
+            </h1>
+            <p className="text-[12px] text-white/45 mt-0.5">
+              {lang === 'fr'
+                ? `${ordered.length} chaîne${ordered.length !== 1 ? 's' : ''} en direct`
+                : `${ordered.length} channel${ordered.length !== 1 ? 's' : ''} live now`}
+            </p>
+          </div>
         </div>
         {/* Big play target */}
         <div

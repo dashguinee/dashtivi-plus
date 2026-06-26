@@ -3,7 +3,10 @@ import { Download, Search, X, SlidersHorizontal, Moon, TrendingUp, Coffee, Rabbi
 import { getActiveMomentPacks, getMomentPackResults } from '@/lib/moment-packs';
 import type { MomentPack } from '@/lib/moment-packs';
 import type { XtreamCredentials, VodStream } from '@/lib/xtream';
-import { getVodStreams, buildVodUrl, getTmdbMap, getVodByCategory, vodDbToStream, searchVod } from '@/lib/xtream';
+import { getVodStreams, buildVodUrl, getTmdbMap, getVodByCategory, vodDbToStream, searchVod, buildLiveUrl } from '@/lib/xtream';
+import { getCatalog, getCatalogSync, type Catalog, type CatalogChannel } from '@/lib/catalog';
+import { CategoryHero } from '@/components/home/CategoryHero';
+import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { tap } from '@/lib/haptics';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { TMDB_GENRES } from '@/lib/tmdb-map.generated';
@@ -158,6 +161,9 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // Detail + TMDB
   const [detailMovie, setDetailMovie] = useState<VodStream | null>(null);
   const [tmdbMap, setTmdbMap] = useState<Record<string, TmdbEntry>>({});
+  // Curated catalog — for the live "Cinéma Live" hero (catalog.byExperience['Movies']).
+  // Sync-primed if already warm, else loaded lazily (a bonus card; silent on failure).
+  const [catalog, setCatalog] = useState<Catalog | null>(getCatalogSync());
   // Personalization seed: remember what you open (localStorage, per-device) → "For You" row.
   const [recent, setRecent] = useState<VodStream[]>(() => {
     try { return JSON.parse(localStorage.getItem('tivi_recent_movies') || '[]'); } catch { return []; }
@@ -186,6 +192,14 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // ── Effects ──────────────────────────────────────────────────
 
   useEffect(() => { getTmdbMap().then(m => m && setTmdbMap(m.TMDB_MAP)); }, []);
+
+  // Load the curated catalog once (live cinema-TV hero). No-op when warm.
+  useEffect(() => {
+    if (catalog) return;
+    let mounted = true;
+    getCatalog().then(c => { if (mounted) setCatalog(c); }).catch(() => { /* bonus */ });
+    return () => { mounted = false; };
+  }, [catalog]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
@@ -443,6 +457,36 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     return candidates[0] || null;
   }, [movies, tmdbMap, hasTmdb]);
 
+  // ── Live cinema TV — the curated Movies experience channels (HBO, Sky
+  //    Cinema…). This is the LIVE-TV hero, distinct from the VOD grid below. ──
+  const liveCinema = useMemo<CatalogChannel[]>(() => {
+    if (!catalog) return [];
+    return catalog.byExperience['Movies'] || [];
+  }, [catalog]);
+
+  // Play a live cinema channel through the live (proxy) seam — NOT the VOD
+  // player. Mirrors ExperienceHomePage's live-play path (buildLiveUrl + onPlay).
+  const playLiveCinema = useCallback((ch: CatalogChannel) => {
+    if (liveCinema.length > 1) {
+      setPlaylist(liveCinema.map((c) => ({
+        id: `live-${c.stream_id}`,
+        name: c.name.replace(/\s+/g, ' ').trim(),
+        url: buildLiveUrl(credentials, c.stream_id),
+        logo: c.icon,
+        category: 'live' as const,
+      })));
+    }
+    const channel: Channel = {
+      id: `live-${ch.stream_id}`,
+      name: ch.name.replace(/\s+/g, ' ').trim(),
+      url: buildLiveUrl(credentials, ch.stream_id),
+      logo: ch.icon,
+      category: 'live',
+    };
+    setCurrentChannel(channel.id);
+    onPlay(channel);
+  }, [liveCinema, credentials, onPlay]);
+
   // ── Handlers ─────────────────────────────────────────────────
 
   const handleParentChange = useCallback((id: string) => {
@@ -529,6 +573,22 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         <div className="pt-16 pb-5 px-5">
           <h1 className="text-[22px] font-semibold text-white/85 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.02em' }}>Cinema</h1>
           <div className="w-16 h-[2px] rounded-full mt-2" style={{ background: 'linear-gradient(90deg, rgba(245,158,11,0.5) 0%, rgba(245,158,11,0.15) 60%, transparent 100%)' }} />
+        </div>
+      )}
+
+      {/* ── Cinéma Live — auto-rotating live cinema-TV hero (HBO, Sky Cinema…).
+          A LIVE channel, distinct from the VOD billboard above. Sits two slots
+          below the floating cards, before the movie rows/grid. ── */}
+      {!isSearching && liveCinema.length > 0 && (
+        <div className="px-4 pt-4 reveal">
+          <CategoryHero
+            title="Cinéma Live"
+            accent="#E8B53A"
+            channels={liveCinema}
+            lang={lang}
+            onPlay={playLiveCinema}
+            lead={/hollywood/i}
+          />
         </div>
       )}
 

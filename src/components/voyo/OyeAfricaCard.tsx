@@ -93,9 +93,10 @@ export function OyeAfricaCard({ className = '' }: OyeAfricaCardProps) {
           <div
             className="inline-block px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-widest mb-1.5"
             style={{
-              background: `${GREEN}33`,
-              border: `1px solid ${GREEN}77`,
-              color: GOLD,
+              // VOYO brand pill = VOYO violet (the card stays African gold/green).
+              background: 'rgba(157,78,221,0.22)',
+              border: '1px solid rgba(157,78,221,0.6)',
+              color: '#C77DFF',
               letterSpacing: '0.14em',
             }}
           >

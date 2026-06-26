@@ -36,7 +36,8 @@ import { ChannelIcon, ChannelBadge } from '@/components/ui/ChannelIcon';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useSmartSticky } from '@/hooks/useSmartSticky';
 import { NbaShowcase } from '@/components/home/NbaShowcase';
-import { getCatalog, getCatalogSync, type Catalog, type CatalogChannel } from '@/lib/catalog';
+import { CategoryHero } from '@/components/home/CategoryHero';
+import { getCatalog, getCatalogSync, curatorIdToDisplay, EXPERIENCE_ACCENT, type Catalog, type CatalogChannel } from '@/lib/catalog';
 
 import type { Channel } from '@/types';
 
@@ -504,10 +505,10 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
     }
   }, [experienceId, navigate]);
 
-  // Load the curated catalog once (Sports uses it for the NBA showcase). Cheap
-  // no-op when already warm; silent on failure (NBA card is a bonus).
+  // Load the curated catalog once (Sports NBA showcase + the CategoryHero on every
+  // district). Cheap no-op when already warm; silent on failure (both are bonuses).
   useEffect(() => {
-    if (config?.id !== 'sports' || catalog) return;
+    if (!config || catalog) return;
     let mounted = true;
     getCatalog().then((c) => { if (mounted) setCatalog(c); }).catch(() => { /* bonus */ });
     return () => { mounted = false; };
@@ -734,6 +735,43 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
     onPlay(channel);
   }, [nbaChannels, credentials, onPlay]);
 
+  // ── CategoryHero — one cinematic auto-rotating hero per district, scoped to
+  // THIS experience's curated channels (catalog.byExperience[displayName]).
+  const heroDisplayName = config ? curatorIdToDisplay(config.curatorId) : null;
+  const heroChannels = useMemo<CatalogChannel[]>(() => {
+    if (!catalog || !heroDisplayName) return [];
+    return catalog.byExperience[heroDisplayName] || [];
+  }, [catalog, heroDisplayName]);
+
+  // Preferred first channel per district (else stable catalog order).
+  const heroLead = config?.id === 'sports'
+    ? /sky\s*sports\s*news/i
+    : config?.id === 'news'
+      ? /france\s*24/i
+      : undefined;
+
+  // Play a hero catalog channel through the same proxy seam, full row as playlist.
+  const playHero = useCallback((ch: CatalogChannel) => {
+    if (heroChannels.length > 1) {
+      setPlaylist(heroChannels.map((c) => ({
+        id: `live-${c.stream_id}`,
+        name: c.name.replace(/\s+/g, ' ').trim(),
+        url: buildLiveUrl(credentials, c.stream_id),
+        logo: c.icon,
+        category: 'live' as const,
+      })));
+    }
+    const channel: Channel = {
+      id: `live-${ch.stream_id}`,
+      name: ch.name.replace(/\s+/g, ' ').trim(),
+      url: buildLiveUrl(credentials, ch.stream_id),
+      logo: ch.icon,
+      category: 'live',
+    };
+    setCurrentChannel(channel.id);
+    onPlay(channel);
+  }, [heroChannels, credentials, onPlay]);
+
   // Group quality variants for the main grid (memoized to avoid re-compute on every render)
   const deduped = useMemo(() => {
     const grouped = groupChannelsByQuality(searchFiltered);
@@ -846,6 +884,22 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
         </div>
       ) : (
         <>
+          {/* ── Category Hero — one cinematic auto-rotating hero, scoped to this
+              district's curated channels. Covers News, Kids, Sports & every
+              other experience from a single insertion. ── */}
+          {heroChannels.length > 0 && !searchQuery && (
+            <div className="px-4 mt-4 mb-2 reveal">
+              <CategoryHero
+                title={config.name}
+                accent={EXPERIENCE_ACCENT[heroDisplayName || ''] || config.accentColor}
+                channels={heroChannels}
+                lang={lang}
+                onPlay={playHero}
+                lead={heroLead}
+              />
+            </div>
+          )}
+
           {/* ── Sports Arena (fixtures, standings — only for sports experience) ── */}
           {config.id === 'sports' && !searchQuery && (
             <React.Suspense fallback={<div className="mx-4 mt-4 space-y-3"><div className="h-10 rounded-xl bg-white/[0.03] animate-pulse" /><div className="h-40 rounded-2xl bg-white/[0.02] animate-pulse" /><div className="h-32 rounded-xl bg-white/[0.02] animate-pulse" /></div>}>
