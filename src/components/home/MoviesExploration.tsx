@@ -13,12 +13,9 @@ import {
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import { TMDB_GENRES } from '@/lib/tmdb-map.generated';
 import { PosterCard } from '@/components/ui/PosterCard';
-import { TactilePosterCard } from '@/components/ui/TactilePosterCard';
 import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
 import { showcaseFocusRegistry } from '@/components/ui/FreeHlsShowcaseCard';
 import { tap } from '@/lib/haptics';
-import { useFavorites } from '@/hooks/useFavorites';
-import { useWatchLater, useHidden } from '@/hooks/useMovieShelf';
 import type { Channel } from '@/types';
 
 /* ════════════════════════════════════════════════════════════════════
@@ -65,16 +62,6 @@ export const MoviesExploration: React.FC<Props> = ({ credentials, onPlay, featur
   const [movies, setMovies] = useState<VodStream[]>([]);
   const [tmdbMap, setTmdbMap] = useState<Record<string, TmdbEntry>>({});
   const [detailMovie, setDetailMovie] = useState<VodStream | null>(null);
-
-  // Shelf stores wired to the tactile gestures (favorite = real; later/hide = local stubs).
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const { isWatchLater, addWatchLater } = useWatchLater();
-  const { hide } = useHidden();
-
-  // CLUSTER DRIFT — index of the poster currently being handled. The others in
-  // the floating strip gently drift/parallax away (suspended-in-space) and
-  // settle back on release. One signal drives the whole cluster.
-  const [activeStreamId, setActiveStreamId] = useState<number | null>(null);
 
   // Load TMDB map + the trailer-rich pool (Supabase-first, silent on failure —
   // exploration is a bonus beat; if it can't load, the section just hides).
@@ -177,76 +164,21 @@ export const MoviesExploration: React.FC<Props> = ({ credentials, onPlay, featur
         ))}
       </div>
 
-      {/* Discovery strip — a FLOATING POSTER CLUSTER. Each poster is a physical
-          object you handle: drag 1:1, swipe to hide/save, long-press to lift it
-          off the table into a radial action menu. When one is grabbed the rest
-          drift away (cluster drift). Motion as identity. */}
+      {/* Discovery strip — a simple horizontal scroll of posters. Tap a poster
+          to open its detail. */}
       {stripItems.length > 0 && (
         <div className="flex gap-3.5 overflow-x-auto scrollbar-hide px-4 pt-4 pb-1 items-end">
-          {stripItems.map((m, idx) => {
-            const id = `vod-${m.stream_id}`;
-            const handled = activeStreamId === m.stream_id;
-            const anotherHandled = activeStreamId !== null && !handled;
-            const activeIdx = anotherHandled
-              ? stripItems.findIndex((s) => s.stream_id === activeStreamId)
-              : -1;
-            // Drift AWAY from the handled card; farther neighbours drift more,
-            // sink + dim + scale-down — "suspended in space" around the held one.
-            const dist = activeIdx >= 0 ? idx - activeIdx : 0;
-            const driftX = anotherHandled ? Math.sign(dist) * Math.min(Math.abs(dist), 4) * 9 : 0;
-            const driftY = anotherHandled ? 8 : 0;
-            const driftScale = anotherHandled ? 0.93 : 1;
-            const driftOpacity = anotherHandled ? 0.5 : 1;
-            return (
-              <div
-                key={m.stream_id}
-                className="flex-shrink-0"
-                style={{
-                  width: 118,
-                  transform: `translate3d(${driftX}px, ${driftY}px, 0) scale(${driftScale})`,
-                  opacity: driftOpacity,
-                  transition: 'transform 0.5s cubic-bezier(0.34,1.26,0.4,1), opacity 0.5s ease',
-                  zIndex: handled ? 30 : 1,
-                }}
-              >
-                <TactilePosterCard
-                  width={118}
-                  isFavorite={isFavorite(id)}
-                  isWatchLater={isWatchLater(id)}
-                  onActiveChange={(active) => setActiveStreamId(active ? m.stream_id : null)}
-                  labels={{
-                    later: lang === 'fr' ? '＋ À regarder' : '＋ Watch Later',
-                    hidden: lang === 'fr' ? 'Masqué' : 'Hidden',
-                  }}
-                  actions={{
-                    onPlay: () => { tap(); openMovie(m); },
-                    onWatchLater: () => addWatchLater(id),
-                    onFavorite: () => toggleFavorite(id),
-                    onTrailer: () => { tap(); setDetailMovie(m); },
-                    onDetails: () => { tap(); setDetailMovie(m); },
-                    onShare: () => {
-                      const title = m.name.replace(/\s*\(\d{4}\)\s*$/, '');
-                      // Native share if available; otherwise stub (clipboard).
-                      if (typeof navigator !== 'undefined' && (navigator as any).share) {
-                        (navigator as any).share({ title, text: title }).catch(() => {});
-                      } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
-                        navigator.clipboard.writeText(title).catch(() => {});
-                      }
-                    },
-                    onHide: () => hide(id),
-                  }}
-                >
-                  <PosterCard
-                    title={m.name}
-                    poster={m.stream_icon}
-                    rating={m.rating}
-                    tmdbData={tmdbMap[`m:${m.stream_id}`]}
-                    onClick={() => { tap(); setDetailMovie(m); }}
-                  />
-                </TactilePosterCard>
-              </div>
-            );
-          })}
+          {stripItems.map((m) => (
+            <div key={m.stream_id} className="flex-shrink-0" style={{ width: 118 }}>
+              <PosterCard
+                title={m.name}
+                poster={m.stream_icon}
+                rating={m.rating}
+                tmdbData={tmdbMap[`m:${m.stream_id}`]}
+                onClick={() => { tap(); setDetailMovie(m); }}
+              />
+            </div>
+          ))}
         </div>
       )}
 
