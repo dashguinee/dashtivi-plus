@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Tv, LogOut, Volume2, VolumeX } from 'lucide-react';
+import { Tv, LogOut, Volume2, VolumeX, Search } from 'lucide-react';
 import { toggleAmbient, isAmbientEnabled } from '@/lib/ambient-audio';
 import { LangToggle } from '@/components/ui/LangToggle';
 import { useLanguage } from '@/i18n';
+import { useSearchDocked } from '@/lib/searchDock';
 
 interface Props {
   onLogout?: () => void;
@@ -15,6 +16,8 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
   const location = useLocation();
   const isHome = location.pathname === '/';
   const [ambientOn, setAmbientOn] = useState(() => isAmbientEnabled());
+  // When the floating pebble is docked, the header carries the search icon.
+  const searchDocked = useSearchDocked();
 
   // ── Scroll-aware hide: down = hide, up = show ──────────────
   const [headerHidden, setHeaderHidden] = useState(false);
@@ -139,6 +142,16 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
               </svg>
             )}
           </button>
+          {searchDocked && (
+            <button
+              onClick={() => (window as any).openTiviSearch?.()}
+              className="w-9 h-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+              aria-label="Search"
+              title="Search"
+            >
+              <Search className="w-[18px] h-[18px] text-text-secondary" />
+            </button>
+          )}
           <LangToggle />
           {onLogout && (
             <button

@@ -8,6 +8,7 @@ import type { Channel } from '@/types';
 import { setPlaylist } from '@/lib/playlist';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { tap } from '@/lib/haptics';
+import { useSearchDocked, setSearchDocked } from '@/lib/searchDock';
 
 function toChannel(ch: CatalogChannel, creds: XtreamCredentials): Channel {
   const url = ch.plays === 'direct' ? buildCatalogUrl(ch, creds) : buildLiveUrl(creds, ch.stream_id);
@@ -33,15 +34,16 @@ const DISC = 43;  // visual disc — +7%, lit, deliberate
 export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
-  const [fade, setFade] = useState(0); // 0 awake · 1 dim (4s) · 2 deep (45s)
+  const [dim, setDim] = useState(false); // false = awake (1.0) · true = rested (~0.55)
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [dragging, setDragging] = useState(false);
   const [pressing, setPressing] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const docked = useSearchDocked();
   const inputRef = useRef<HTMLInputElement>(null);
-  const start = useRef<{ px: number; py: number; x0: number; y0: number; moved: boolean } | null>(null);
+  // grab offset (offX/offY) keeps the pebble under the finger — no teleport on pickup.
+  const start = useRef<{ px: number; py: number; offX: number; offY: number; moved: boolean } | null>(null);
   const dimT = useRef<ReturnType<typeof setTimeout>>();
-  const deepT = useRef<ReturnType<typeof setTimeout>>();
   const active = dragging || pressing;
 
   const results = useMemo(() => {
@@ -59,19 +61,27 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
     setPos({ x, y });
   }, [pos]);
 
-  // Two-stage idle fade — any touch wakes it back to full.
+  // Single-stage rest fade — any interaction wakes it back to full, then after
+  // ~4s of stillness it eases to the transparent rest opacity.
   const wake = useCallback(() => {
-    setFade(0);
-    clearTimeout(dimT.current); clearTimeout(deepT.current);
-    dimT.current = setTimeout(() => setFade(1), 4000);
-    deepT.current = setTimeout(() => setFade(2), 45000);
+    setDim(false);
+    clearTimeout(dimT.current);
+    dimT.current = setTimeout(() => setDim(true), 4000);
   }, []);
 
   useEffect(() => {
-    if (open) { clearTimeout(dimT.current); clearTimeout(deepT.current); const t = setTimeout(() => inputRef.current?.focus(), 110); return () => clearTimeout(t); }
+    if (open) { clearTimeout(dimT.current); const t = setTimeout(() => inputRef.current?.focus(), 110); return () => clearTimeout(t); }
     setQ(''); wake();
-    return () => { clearTimeout(dimT.current); clearTimeout(deepT.current); };
+    return () => { clearTimeout(dimT.current); };
   }, [open, wake]);
+
+  // Any page scroll wakes the pebble (it's part of "any interaction").
+  useEffect(() => {
+    if (docked || hidden) return;
+    const onScroll = () => wake();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [docked, hidden, wake]);
 
   useEffect(() => {
     if (!open) return;
@@ -80,41 +90,53 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  // Global opener — the nav search-pill opens the same modal, and re-summons the
-  // pebble if it was swiped away.
+  // Global opener — the header search-icon (when docked) and any caller open the
+  // same modal. Does NOT un-dock: the pebble only returns on refresh.
   useEffect(() => {
     (window as any).openTiviSearch = () => { setHidden(false); setOpen(true); };
     return () => { (window as any).openTiviSearch = undefined; };
   }, []);
 
-  // Drag to reposition (haptic on pickup); a still press is a tap → open; swipe to
-  // an edge → dismiss.
+  // ── Hardened drag ──────────────────────────────────────────────
+  // pointer capture + a tap-vs-drag threshold (>6px = drag). Grab offset is
+  // preserved so the disc never teleports under the finger; the final position
+  // is clamped fully inside the viewport.
+  const TAP_SLOP = 6;
+  const clampX = (x: number) => Math.max(6, Math.min(window.innerWidth - SIZE - 6, x));
+  const clampY = (y: number) => Math.max(70, Math.min(window.innerHeight - SIZE - 88, y));
+
   const onDown = (e: React.PointerEvent) => {
     if (!pos) return;
     wake();
     setPressing(true);
     e.currentTarget.setPointerCapture?.(e.pointerId);
-    start.current = { px: e.clientX, py: e.clientY, x0: pos.x, y0: pos.y, moved: false };
+    // offX/offY = where inside the hit-area the finger landed, in element space.
+    start.current = { px: e.clientX, py: e.clientY, offX: e.clientX - pos.x, offY: e.clientY - pos.y, moved: false };
   };
   const onMove = (e: React.PointerEvent) => {
     const s = start.current; if (!s) return;
     const dx = e.clientX - s.px, dy = e.clientY - s.py;
-    if (!s.moved && Math.hypot(dx, dy) > 5) { s.moved = true; setDragging(true); }
+    if (!s.moved && Math.hypot(dx, dy) > TAP_SLOP) { s.moved = true; setDragging(true); }
     if (s.moved) {
-      setPos({
-        x: Math.max(6, Math.min(window.innerWidth - SIZE - 6, s.x0 + dx)),
-        y: Math.max(70, Math.min(window.innerHeight - SIZE - 88, s.y0 + dy)),
-      });
+      // Anchor the same grab point under the finger → no jump on pickup.
+      setPos({ x: clampX(e.clientX - s.offX), y: clampY(e.clientY - s.offY) });
     }
   };
-  const onUp = () => {
+  const onUp = (e: React.PointerEvent) => {
     const s = start.current; start.current = null;
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
     setDragging(false); setPressing(false);
     if (!s) return;
     if (!s.moved) { tap(); setOpen(true); return; }
-    // Stays exactly where you drop it — always fully on-screen (onMove clamps to the
-    // viewport), so it can never dock off-screen or get lost again.
+    // Dragged: stays where dropped, already clamped fully on-screen.
     wake();
+  };
+
+  // Close → dock into the header (session-only; refresh brings the pebble back).
+  const onClose = (e: React.PointerEvent | React.MouseEvent) => {
+    e.stopPropagation();
+    tap();
+    setSearchDocked(true);
   };
 
   return createPortal(
@@ -128,20 +150,22 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
         .sw-shimmer-text{background:linear-gradient(100deg,#E8B53A 0%,#FFF6CE 26%,#FFD700 50%,#FFF6CE 74%,#E8B53A 100%);background-size:240% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:sw-shimmer 2.6s linear infinite}
       `}</style>
 
-      {/* Lit, draggable pebble — large hit area, smaller visual disc at rest */}
-      {pos && !hidden && (
+      {/* Lit, draggable pebble — large hit area, smaller visual disc at rest.
+          When docked, no pebble renders (the header carries the search icon). */}
+      {pos && !hidden && !docked && (
         <button
           onPointerDown={onDown}
           onPointerMove={onMove}
           onPointerUp={onUp}
+          onPointerCancel={onUp}
           aria-label="Search channels"
           data-no-ptr
           className="fixed z-[9996] flex items-center justify-center"
           style={{
             left: pos.x, top: pos.y, width: SIZE, height: SIZE, padding: 0,
             background: 'transparent', border: 'none',
-            opacity: open ? 0 : fade === 2 ? 0.9 : fade === 1 ? 0.96 : 1,
-            transition: dragging ? 'none' : 'opacity 1s ease, left .5s cubic-bezier(0.34,1.56,0.64,1), top .5s cubic-bezier(0.34,1.56,0.64,1)',
+            opacity: open ? 0 : (dim && !active) ? 0.55 : 1,
+            transition: dragging ? 'none' : 'opacity 1.1s ease, left .5s cubic-bezier(0.34,1.56,0.64,1), top .5s cubic-bezier(0.34,1.56,0.64,1)',
             pointerEvents: open ? 'none' : 'auto',
             touchAction: 'none', cursor: 'grab', WebkitTapHighlightColor: 'transparent',
           }}
@@ -172,6 +196,27 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
           >
             <Search className="w-[18px] h-[18px] text-white" style={{ filter: 'drop-shadow(0 0 6px rgba(199,125,255,0.85))' }} />
           </div>
+          {/* Close → dock. A tiny circle at the top-right, revealed on wake (not dim).
+              Its own pointer handlers stop the drag/tap logic from firing. */}
+          <span
+            role="button"
+            aria-label="Dock search to header"
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerUp={onClose}
+            style={{
+              position: 'absolute', top: 2, right: 2, width: 18, height: 18, borderRadius: '50%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(10,8,16,0.82)', border: '1px solid rgba(220,170,255,0.5)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+              opacity: active || !dim ? 1 : 0,
+              transform: `scale(${active || !dim ? 1 : 0.6})`,
+              transition: 'opacity .25s ease, transform .25s cubic-bezier(0.34,1.56,0.64,1)',
+              pointerEvents: active || !dim ? 'auto' : 'none',
+              touchAction: 'none',
+            }}
+          >
+            <X className="w-[11px] h-[11px] text-white/85" />
+          </span>
         </button>
       )}
 
