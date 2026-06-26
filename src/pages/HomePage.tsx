@@ -330,7 +330,10 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                   time (see `featured` below), tapping THROUGH to it. Anchored to the
                   3rd RENDERED row (rpos), so empty collections can't skip it. ── */}
               {rpos === 2 && (
-                <div className="px-4 mb-9 reveal">
+                /* No `reveal` here — it's conditionally mounted, so the global
+                   reveal-on-scroll observer never catches it and it'd stay at
+                   opacity:0. The card has its own entrance animation anyway. */
+                <div className="px-4 mb-9">
                   <FeaturedDestination
                     catalog={catalog}
                     lang={lang}
