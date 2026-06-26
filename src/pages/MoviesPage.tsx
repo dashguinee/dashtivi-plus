@@ -5,7 +5,7 @@ import type { MomentPack } from '@/lib/moment-packs';
 import type { XtreamCredentials, VodStream } from '@/lib/xtream';
 import { getVodStreams, buildVodUrl, getTmdbMap, getVodByCategory, vodDbToStream, searchVod, buildLiveUrl } from '@/lib/xtream';
 import { getCatalog, getCatalogSync, type Catalog, type CatalogChannel } from '@/lib/catalog';
-import { CategoryHero } from '@/components/home/CategoryHero';
+import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { tap } from '@/lib/haptics';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
@@ -576,20 +576,62 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         </div>
       )}
 
-      {/* ── Cinéma Live — auto-rotating live cinema-TV hero (HBO, Sky Cinema…).
-          A LIVE channel, distinct from the VOD billboard above. Sits two slots
-          below the floating cards, before the movie rows/grid. ── */}
+      {/* ── Cinéma en direct — a simple horizontal ROW of the live cinema-TV
+          channels (HBO, Sky Cinema…). LIVE channels, distinct from the VOD
+          billboard above. Sits below the floating cards, before the grid.
+          Each tile plays through the live (proxy) seam (playLiveCinema). ── */}
       {!isSearching && liveCinema.length > 0 && (
-        <div className="px-4 pt-4 reveal">
-          <CategoryHero
-            title="Cinéma Live"
-            accent="#E8B53A"
-            channels={liveCinema}
-            lang={lang}
-            onPlay={playLiveCinema}
-            lead={/hollywood/i}
-          />
-        </div>
+        <section className="px-4 pt-5 pb-1 reveal">
+          <div className="flex items-center gap-2.5 mb-3.5">
+            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#E8B53A', boxShadow: '0 0 6px #E8B53A' }} />
+            <h2 className="text-[19px] font-black tracking-tight text-white">Cinéma en direct</h2>
+            <span className="tivi-count-metal text-[8px] font-bold flex-shrink-0" style={{ letterSpacing: '0.5px' }}>
+              {liveCinema.length}
+            </span>
+          </div>
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
+            {liveCinema.map((ch) => (
+              <button
+                key={ch.stream_id}
+                onPointerDown={() => tap()}
+                onClick={() => playLiveCinema(ch)}
+                className="flex-shrink-0 group"
+                style={{ width: 130 }}
+              >
+                <div
+                  className="relative rounded-2xl flex items-center justify-center overflow-hidden transition-transform duration-200 ease-out group-hover:scale-[1.04] group-active:scale-[0.95]"
+                  style={{
+                    width: 130,
+                    height: 96,
+                    background: 'linear-gradient(157deg, rgba(255,255,255,0.085) 0%, rgba(255,255,255,0.025) 50%, rgba(255,255,255,0.012) 100%)',
+                    boxShadow: '0 4px 14px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1px rgba(255,255,255,0.045)',
+                  }}
+                >
+                  <div className="absolute inset-x-0 top-0 h-2/3 pointer-events-none z-[1]"
+                    style={{ background: 'radial-gradient(ellipse 85% 100% at 32% 0%, #E8B53A26, transparent 72%)' }} />
+                  <ChannelIcon src={ch.icon} name={ch.name} size="md" />
+                  <div className="absolute top-1.5 left-1.5 z-[2] flex items-center gap-1 px-1.5 py-0.5 rounded-full"
+                    style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}>
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-70 bg-red-400" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-red-400" style={{ boxShadow: '0 0 5px rgba(248,113,113,0.9)' }} />
+                    </span>
+                  </div>
+                  <div className="absolute inset-0 z-[3] flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200"
+                    style={{ background: 'rgba(0,0,0,0.42)' }}>
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center"
+                      style={{ background: 'rgba(255,255,255,0.16)', border: '1px solid rgba(255,255,255,0.32)', backdropFilter: 'blur(6px)' }}>
+                      <Play className="w-3.5 h-3.5 text-white ml-0.5" fill="white" />
+                    </div>
+                  </div>
+                </div>
+                <p className="text-[10.5px] leading-tight text-white/60 text-center mt-1.5 px-0.5 line-clamp-2 font-medium tracking-tight group-hover:text-white/90 transition-colors">
+                  {ch.name.replace(/\s+/g, ' ').trim()}
+                </p>
+              </button>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* ── Smart sticky — hides on sustained scroll, peeks back after 2s idle ── */}

@@ -9,6 +9,7 @@ import { useShowcaseTier } from '@/hooks/useShowcaseTier';
 import { FreeHlsShowcaseCard, type FreeHlsChannel } from '@/components/ui/FreeHlsShowcaseCard';
 import { OyeAfricaCard, StationsCard } from '@/components/voyo';
 import { MoviesExploration } from '@/components/home/MoviesExploration';
+import { CategoryHero } from '@/components/home/CategoryHero';
 import { HeroDeck, type HeroSlide } from '@/components/home/HeroDeck';
 import { WorldCupBackdrop } from '@/components/home/WorldCupBackdrop';
 import { TriondaBall, WcFlagBeam } from '@/components/home/TriondaBall';
@@ -317,6 +318,24 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
               {woven && (
                 <div className="mb-9">
                   <FreeHlsShowcaseCard channel={woven} />
+                </div>
+              )}
+              {/* ── The recognizable "Hollywood" balance beat — a single live
+                  cinema hero pinned to Hollywood (no rotation). It's a quiet
+                  invitation: tapping the whole hero NAVIGATES to the Movies
+                  page (not play). Mid-feed, after the 3rd row, matching the
+                  old afterRow:3 showcase vibe. ── */}
+              {idx === 3 && (catalog.byExperience['Movies'] || []).length > 0 && (
+                <div className="px-4 mb-9 reveal">
+                  <CategoryHero
+                    title="Cinéma Live"
+                    accent="#E8B53A"
+                    channels={catalog.byExperience['Movies']}
+                    lang={lang}
+                    lead={/hollywood/i}
+                    rotateMs={2_000_000_000}
+                    onPlay={() => navigate('/movies')}
+                  />
                 </div>
               )}
             </React.Fragment>
