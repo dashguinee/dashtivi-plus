@@ -261,11 +261,24 @@ export function usePlayer() {
           video.src = url;
           video.play().catch(() => {});
 
-          // Connection timeout — VOD gets 15s (large files), live gets 8s
-          const timeout = (isVod || url.includes('?url=')) ? 15000 : 8000;
+          // Connection timeout — VOD gets 15s (large files), live gets 7s.
+          const timeout = (isVod || url.includes('?url=')) ? 15000 : 7000;
           connectionTimeout = setTimeout(() => {
             if (!connectionResolved && !video.readyState && destroyRef.current) {
-              video.onerror?.(new Event('timeout'));
+              // Zero data after the window = the stream is never coming. The common
+              // cause for a LIVE channel is NO ACTIVE PACKAGE — the proxy accepts the
+              // request but the panel returns nothing. Don't spin on retries: the
+              // player is already open, so just tell the member the real reason.
+              if (snapshotTimerRef.current) { clearTimeout(snapshotTimerRef.current); snapshotTimerRef.current = undefined; }
+              setSwitchSnapshot(null);
+              markDead(channel.id, 'no data');
+              setState((prev) => ({
+                ...prev,
+                isLoading: false,
+                error: isLive
+                  ? 'No active package for this channel — please upgrade ⚡'
+                  : 'Connection timed out — tap to retry',
+              }));
             }
           }, timeout);
 
@@ -323,7 +336,9 @@ export function usePlayer() {
               const idMatch = url.match(/[?&]id=(\d+)/);
               if (idMatch) onStreamFail(parseInt(idMatch[1]));
               markDead(channel.id, 'Stream error');
-              setState((prev) => ({ ...prev, error: 'Stream unavailable — tap Reconnect', isLoading: false }));
+              setState((prev) => ({ ...prev, error: isLive
+                ? 'No active package for this channel — please upgrade ⚡'
+                : 'Stream unavailable — tap Reconnect', isLoading: false }));
             } else {
               clearTimeout(connectionTimeout);
               if (snapshotTimerRef.current) { clearTimeout(snapshotTimerRef.current); snapshotTimerRef.current = undefined; }

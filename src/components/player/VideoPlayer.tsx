@@ -185,7 +185,9 @@ export const VideoPlayer: React.FC<Props> = ({
   const autoRetryRef = useRef(0);
   const autoRetryTimerRef = useRef<ReturnType<typeof setTimeout>>();
   useEffect(() => {
-    if (state.error && !state.error.includes('Retry') && !state.isPlaying && state.channel) {
+    // "No active package" is a definitive state — don't auto-retry it (no pass = it
+    // will never connect); show the reason and let the member act.
+    if (state.error && !state.error.includes('Retry') && !state.error.includes('package') && !state.isPlaying && state.channel) {
       if (autoRetryRef.current < 3) {
         const delay = [3000, 6000, 10000][autoRetryRef.current] || 10000;
         autoRetryTimerRef.current = setTimeout(() => {
@@ -664,7 +666,7 @@ export const VideoPlayer: React.FC<Props> = ({
       {/* Unified reconnection flow — seamless between inner retries and outer retries */}
       {state.error && !state.isPlaying && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#060609]/90 z-40">
-          {state.error.includes('Retry') || autoRetryRef.current < 3 ? (
+          {state.error.includes('Retry') || (autoRetryRef.current < 3 && !state.error.includes('package')) ? (
             <div className="text-center">
               <p className="text-[12px] text-white/25 font-light tracking-wide">Reconnecting</p>
               <div className="mt-3 mx-auto w-8 h-[2px] rounded-full overflow-hidden bg-white/5">
@@ -678,13 +680,15 @@ export const VideoPlayer: React.FC<Props> = ({
               </div>
               <p className="text-sm text-white/40">{state.error || 'Unable to connect — tap to try again'}</p>
               <div className="flex items-center gap-2.5">
-                <button
-                  onClick={() => { autoRetryRef.current = 0; state.channel && onRetry(state.channel); }}
-                  className="flex items-center gap-2 px-5 py-3 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors active:scale-95"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Reconnect
-                </button>
+                {!state.error.includes('package') && (
+                  <button
+                    onClick={() => { autoRetryRef.current = 0; state.channel && onRetry(state.channel); }}
+                    className="flex items-center gap-2 px-5 py-3 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors active:scale-95"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Reconnect
+                  </button>
+                )}
                 {/* Never trap the viewer in a broken stream — give a way out. */}
                 <button
                   onClick={() => (onBack || onClose)()}
