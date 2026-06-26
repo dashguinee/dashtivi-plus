@@ -29,34 +29,72 @@ export const CosmicBackground: React.FC = () => {
 
   // Mobile-safe ambient response: the backdrop drifts with scroll (parallax depth),
   // intensifies while moving, and settles when you pause. The place responds to you.
+  //
+  // PERF: This rAF is purely scroll-reactive — at rest (boost ~0, no scroll) it has
+  // nothing to do. It now only runs while there is settling work to do, and re-arms
+  // on scroll. Idle = zero rAF. Honors reduced-motion + tab visibility.
   useEffect(() => {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      // Static state — apply scroll-position transform once, no loop.
+      if (glowRef.current) {
+        const y = window.scrollY || 0;
+        glowRef.current.style.transform = `translate3d(0, ${-(y * 0.06)}px, 0)`;
+        glowRef.current.style.opacity = '0.6';
+      }
+      return;
+    }
+
     let raf = 0, target = 0, boost = 0, idle: ReturnType<typeof setTimeout>;
+    const EPS = 0.001;
+
     const tick = () => {
+      if (document.hidden) { raf = 0; return; } // never animate offscreen
       boost += (target - boost) * 0.07;
       const y = window.scrollY || 0;
       if (glowRef.current) {
         glowRef.current.style.transform = `translate3d(0, ${-(y * 0.06) - boost * 14}px, 0)`;
         glowRef.current.style.opacity = String(0.6 + boost * 0.4);
       }
+      // Stop the loop once settled — nothing more to converge toward.
+      if (target === 0 && boost < EPS) { boost = 0; raf = 0; return; }
       raf = requestAnimationFrame(tick);
     };
-    const onScroll = () => { target = 1; clearTimeout(idle); idle = setTimeout(() => { target = 0; }, 550); };
+    const ensureRunning = () => { if (!raf && !document.hidden) raf = requestAnimationFrame(tick); };
+    const onScroll = () => {
+      target = 1;
+      clearTimeout(idle);
+      idle = setTimeout(() => { target = 0; ensureRunning(); }, 550);
+      ensureRunning();
+    };
+    const onVisible = () => { if (!document.hidden && target !== 0) ensureRunning(); };
     window.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('visibilitychange', onVisible);
+    // Prime once so the initial scroll offset is applied.
     raf = requestAnimationFrame(tick);
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('scroll', onScroll); clearTimeout(idle); };
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', onScroll);
+      document.removeEventListener('visibilitychange', onVisible);
+      clearTimeout(idle);
+    };
   }, []);
 
   useEffect(() => {
     // Skip star canvas on mobile — too subtle to notice, saves GPU
     if (window.innerWidth < 768) return;
+    // Reduced motion → render a single static frame, no loop at all.
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let animId: number;
+    let animId = 0;
     let visible = true;
+    let lastFrame = 0;
+    const FRAME_MS = 1000 / 30; // decorative star field — 30fps is plenty
     let stars: { x: number; y: number; r: number; speed: number; opacity: number; pulse: number }[] = [];
 
     const resize = () => {
@@ -78,10 +116,27 @@ export const CosmicBackground: React.FC = () => {
       }));
     };
 
-    const draw = (time: number) => {
-      if (document.hidden || !visible) { animId = requestAnimationFrame(draw); return; }
+    // Render exactly one static frame (used for reduced-motion + as the
+    // last visible frame when we stop the loop, so the look never blanks).
+    const renderStatic = (time: number) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const star of stars) {
+        const flicker = star.opacity * (0.7 + 0.3 * Math.sin(star.pulse + time * 0.001));
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(200, 180, 255, ${flicker})`;
+        ctx.fill();
+      }
+    };
 
+    const draw = (time: number) => {
+      // Fully stop the loop when offscreen/hidden — no rAF churn at all.
+      if (document.hidden || !visible) { animId = 0; return; }
+      // Throttle to ~30fps via a time accumulator.
+      if (time - lastFrame < FRAME_MS) { animId = requestAnimationFrame(draw); return; }
+      lastFrame = time;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (const star of stars) {
         star.y -= star.speed;
         star.pulse += 0.008;
@@ -100,20 +155,33 @@ export const CosmicBackground: React.FC = () => {
       animId = requestAnimationFrame(draw);
     };
 
-    // Pause canvas when scrolled past (not visible)
+    const ensureRunning = () => {
+      if (reduce) return;
+      if (!animId && visible && !document.hidden) { lastFrame = 0; animId = requestAnimationFrame(draw); }
+    };
+
+    // Pause canvas when scrolled past (not visible). Re-arm the loop on re-entry.
     const observer = new IntersectionObserver(
-      ([entry]) => { visible = entry.isIntersecting; },
+      ([entry]) => { visible = entry.isIntersecting; if (visible) ensureRunning(); },
       { threshold: 0 }
     );
     if (containerRef.current) observer.observe(containerRef.current);
 
+    const onVisible = () => { if (!document.hidden) ensureRunning(); };
+    document.addEventListener('visibilitychange', onVisible);
+
     resize();
-    animId = requestAnimationFrame(draw);
+    if (reduce) {
+      renderStatic(0); // static star field, no animation
+    } else {
+      animId = requestAnimationFrame(draw);
+    }
     window.addEventListener('resize', resize);
 
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', resize);
+      document.removeEventListener('visibilitychange', onVisible);
       observer.disconnect();
     };
   }, []);

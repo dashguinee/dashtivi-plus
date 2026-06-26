@@ -211,15 +211,33 @@ function fadeVolume(from: number, to: number, durationMs: number, onComplete?: (
 // ── Gentle volume swing — the ambient "cruises" in a mellow wave instead of
 // sitting flat at max. Swings within a ~20% bracket BELOW the max (0.8–1.0 of
 // VOLUME), ~28s per wave. Pauses during fades/mute so it never fights them.
+//
+// PERF: This is a 200ms timer that only does work while audio is actually
+// playing. When the tab is hidden the audio element is throttled/paused by the
+// browser anyway, so we tear the timer down entirely on `visibilitychange` and
+// re-arm it when the tab returns — zero background timer churn when idle.
 let swingPhase = Math.PI / 2; // start near the top of the wave
 let swingInterval: ReturnType<typeof setInterval> | null = null;
+let swingVisibilityBound = false;
+function swingTick(): void {
+  if (!audio || !isEnabled || isMutedForStream || audio.paused || activeFadeInterval) return;
+  swingPhase += 0.045; // ~28s full wave — slow, mellow, cruising
+  audio.volume = VOLUME * (0.9 + 0.1 * Math.sin(swingPhase));
+}
 function startSwing(): void {
+  if (typeof document !== 'undefined' && document.hidden) return; // don't run offscreen
   if (swingInterval) return;
-  swingInterval = setInterval(() => {
-    if (!audio || !isEnabled || isMutedForStream || audio.paused || activeFadeInterval) return;
-    swingPhase += 0.045; // ~28s full wave — slow, mellow, cruising
-    audio.volume = VOLUME * (0.9 + 0.1 * Math.sin(swingPhase));
-  }, 200);
+  swingInterval = setInterval(swingTick, 200);
+}
+function stopSwing(): void {
+  if (swingInterval) { clearInterval(swingInterval); swingInterval = null; }
+}
+if (typeof document !== 'undefined' && !swingVisibilityBound) {
+  swingVisibilityBound = true;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopSwing();
+    else if (audio && isEnabled && !isMutedForStream) startSwing();
+  });
 }
 
 // ── Audio-reactive pulse — simple amplitude from audio element ───────────

@@ -108,6 +108,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // --- LOGO / IMAGE CDNs: cache-first REGARDLESS of origin. Channel logos come
+  // from external CDNs (tv-logo GitHub, etc.) and were re-downloading on every
+  // mount/scroll because the same-origin gate below skipped them. They're
+  // immutable art — cache once. Kills the "frenetic reload" + saves data.
+  if (
+    url.includes('raw.githubusercontent.com') ||
+    /\.(png|webp|svg|jpg|jpeg|ico|gif)(\?|$)/i.test(url)
+  ) {
+    event.respondWith(cacheFirstThenNetwork(request));
+    return;
+  }
+
   try {
     // --- HTML / NAVIGATION: network-first with cache fallback ---
     if (request.mode === 'navigate') {

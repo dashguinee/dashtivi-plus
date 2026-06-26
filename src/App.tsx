@@ -67,6 +67,23 @@ const ExplorePage = lazyRetry(() => import('@/pages/ExplorePage').then((m) => ({
 const NbaPage = lazyRetry(() => import('@/pages/NbaPage').then((m) => ({ default: m.NbaPage })));
 const TestChannelsPage = lazyRetry(() => import('@/pages/TestChannelsPage'));
 
+// SNAPPY NAV: warm the main route chunks on idle (after the home is interactive),
+// so shifting Home → Movies → Series → Live is INSTANT — the chunk is already in
+// memory, no Suspense flash. Runs once, only when the browser is idle, so it never
+// competes with the first paint. Cheap (the chunks are tiny + then cached by the SW).
+(() => {
+  const warm = () => {
+    import('@/pages/MoviesPage');
+    import('@/pages/SeriesPage');
+    import('@/pages/LiveTVPage');
+    import('@/pages/ExperienceHomePage');
+  };
+  if (typeof window === 'undefined') return;
+  const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void }).requestIdleCallback;
+  if (ric) ric(warm, { timeout: 4000 });
+  else setTimeout(warm, 2500);
+})();
+
 // Build-time version stamp — compared against remote version.json
 const APP_VERSION = __APP_VERSION__;
 
