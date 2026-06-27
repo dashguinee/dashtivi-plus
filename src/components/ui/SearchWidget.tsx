@@ -50,6 +50,10 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
   // grab offset (offX/offY) keeps the pebble under the finger — no teleport on pickup.
   const start = useRef<{ px: number; py: number; offX: number; offY: number; moved: boolean } | null>(null);
   const dimT = useRef<ReturnType<typeof setTimeout>>();
+  // The tap that OPENS the modal fires a trailing synthetic click; once the pebble
+  // goes pointer-events:none it falls through to the backdrop and would instantly
+  // close it ("fighting to show"). Ignore backdrop-close for a beat after opening.
+  const suppressCloseRef = useRef(0);
   const active = dragging || pressing;
 
   const results = useMemo(() => {
@@ -99,7 +103,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
   // Global opener — the header search-icon (when docked) and any caller open the
   // same modal. Does NOT un-dock: the pebble only returns on refresh.
   useEffect(() => {
-    (window as any).openTiviSearch = () => { setHidden(false); setOpen(true); };
+    (window as any).openTiviSearch = () => { setHidden(false); suppressCloseRef.current = Date.now() + 350; setOpen(true); };
     return () => { (window as any).openTiviSearch = undefined; };
   }, []);
 
@@ -140,7 +144,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
     e.currentTarget.releasePointerCapture?.(e.pointerId);
     setDragging(false); setPressing(false);
     if (!s) return;
-    if (!s.moved) { tap(); setOpen(true); return; }
+    if (!s.moved) { tap(); suppressCloseRef.current = Date.now() + 350; setOpen(true); return; }
     // Dropped on the bottom X → dock into the header. Else stays where dropped.
     if (nearClose) { tap(); setNearClose(false); setSearchDocked(true); return; }
     setNearClose(false);
@@ -233,7 +237,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
         <div
           className="fixed inset-0 z-[10050] flex flex-col items-center"
           style={{ background: 'rgba(6,6,12,0.62)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', animation: 'sw-fade 0.3s ease' }}
-          onClick={() => setOpen(false)}
+          onClick={() => { if (Date.now() < suppressCloseRef.current) return; setOpen(false); }}
         >
           <div
             className="absolute pointer-events-none"
