@@ -65,6 +65,48 @@ export const PlayerControls: React.FC<Props> = ({
   const category = state.channel?.category?.toLowerCase() ?? '';
   const isVod = category === 'movie' || category === 'series';
 
+  // ── VOD scrubbing (Bug #3) ────────────────────────────────────────────────
+  // The progress bar now supports DRAG-to-scrub, not just click. While dragging
+  // we show a live preview (scrubPct) and commit the seek on release — one
+  // onSeek call, which works for BOTH seam shapes (direct mp4 → video.currentTime,
+  // remux /vod? → server-side &start). A plain tap still seeks to that point.
+  const barRef = useRef<HTMLDivElement>(null);
+  const [scrubPct, setScrubPct] = useState<number | null>(null);
+  const scrubbingRef = useRef(false);
+
+  const pctFromEvent = (clientX: number): number => {
+    const el = barRef.current;
+    if (!el) return 0;
+    const rect = el.getBoundingClientRect();
+    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+  };
+
+  const onBarPointerDown = (e: React.PointerEvent) => {
+    if (!onSeek || state.duration <= 0) return;
+    e.stopPropagation();
+    scrubbingRef.current = true;
+    try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch { /* no-op */ }
+    setScrubPct(pctFromEvent(e.clientX));
+  };
+  const onBarPointerMove = (e: React.PointerEvent) => {
+    if (!scrubbingRef.current) return;
+    e.stopPropagation();
+    setScrubPct(pctFromEvent(e.clientX));
+  };
+  const onBarPointerUp = (e: React.PointerEvent) => {
+    if (!scrubbingRef.current) return;
+    e.stopPropagation();
+    scrubbingRef.current = false;
+    const pct = pctFromEvent(e.clientX);
+    setScrubPct(null);
+    try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* no-op */ }
+    if (onSeek && state.duration > 0) onSeek(pct * state.duration);
+  };
+
+  const fillPct = scrubPct != null
+    ? scrubPct * 100
+    : (state.duration > 0 ? Math.min(100, (state.currentTime / state.duration) * 100) : 0);
+
   return (
     <div
       className={`absolute inset-0 flex flex-col justify-between transition-opacity duration-200 ${
@@ -131,28 +173,24 @@ export const PlayerControls: React.FC<Props> = ({
         {isVod && state.duration > 0 ? (
           <div className="flex items-center gap-3 mb-4">
             <span className="text-[11px] text-white/60 font-mono min-w-[3.5rem] text-right">
-              {formatTime(state.currentTime)}
+              {formatTime(scrubPct != null ? scrubPct * state.duration : state.currentTime)}
             </span>
             <div
-              className="relative flex-1 h-2 bg-white/10 rounded-full cursor-pointer group py-2"
-              onClick={(e) => {
-                if (!onSeek) return;
-                // Seek works for all VOD formats — both direct proxy (/?url=) and FFmpeg remux (/vod?)
-                // The browser handles range requests for direct, and the remux endpoint supports seeking
-                // via the video element's currentTime assignment
-                const rect = e.currentTarget.getBoundingClientRect();
-                const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-                onSeek(pct * state.duration);
-              }}
+              ref={barRef}
+              className="relative flex-1 h-2 bg-white/10 rounded-full cursor-pointer group py-2 touch-none"
+              onPointerDown={onBarPointerDown}
+              onPointerMove={onBarPointerMove}
+              onPointerUp={onBarPointerUp}
+              onPointerCancel={onBarPointerUp}
             >
               <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-1 bg-white/10 rounded-full" />
               <div
-                className="absolute top-1/2 -translate-y-1/2 left-0 h-1 bg-primary rounded-full transition-[width] duration-100"
-                style={{ width: `${Math.min(100, (state.currentTime / state.duration) * 100)}%` }}
+                className={`absolute top-1/2 -translate-y-1/2 left-0 h-1 bg-primary rounded-full ${scrubPct == null ? 'transition-[width] duration-100' : ''}`}
+                style={{ width: `${fillPct}%` }}
               />
               <div
-                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 group-active:opacity-100 group-active:w-6 group-active:h-6 transition-[opacity,width,height] duration-300"
-                style={{ left: `calc(${Math.min(100, (state.currentTime / state.duration) * 100)}% - 8px)` }}
+                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg transition-[opacity,width,height] duration-300 ${scrubPct != null ? 'opacity-100 w-6 h-6' : 'opacity-0 group-hover:opacity-100 group-active:opacity-100 group-active:w-6 group-active:h-6'}`}
+                style={{ left: `calc(${fillPct}% - 8px)` }}
               />
             </div>
             <span className="text-[11px] text-white/60 font-mono min-w-[3.5rem]">

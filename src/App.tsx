@@ -202,13 +202,17 @@ function MergeTransition({ children }: { children: React.ReactNode }) {
   return <div key={pathname} className="merge-infuse">{children}</div>;
 }
 
-function AppContent({ guestMode, onRequestCode }: { guestMode?: boolean; onRequestCode?: (code: string) => Promise<unknown> }) {
+function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolean; onRequestCode?: (code: string) => Promise<unknown>; onLogout?: () => void }) {
   const { credentials, logout, tier } = useAuth();
+  // Sign-out must reset the AUTH-GATING state (the one in AppRouter), not just this
+  // component's own useAuth copy — otherwise the screen only flips on a manual
+  // refresh. Prefer the threaded gating logout; fall back to local for safety.
+  const handleLogout = useCallback(() => { (onLogout || logout)(); }, [onLogout, logout]);
   const { t } = useLanguage();
   // STATIC CATALOG: tier-gate channels (Full sees all, Starter sees starter-only).
   useEffect(() => { setActiveTier(guestMode ? 'starter' : tier); }, [tier, guestMode]);
   const player = usePlayer();
-  const { addToHistory } = useWatchHistory();
+  const { addToHistory, getResume, updateDuration } = useWatchHistory();
   const ambientStartedRef = React.useRef(false);
 
   // The full-screen player now mounts as a RISING SURFACE over the persistent
@@ -254,14 +258,35 @@ function AppContent({ guestMode, onRequestCode }: { guestMode?: boolean; onReque
       muteAmbient();
       // Remember exactly where the world is scrolled before the player rises.
       if (!surfaces.has(PLAYER_SURFACE_ID)) worldScrollRef.current = window.scrollY;
-      player.playChannel(channel).catch(() => {});
+      // Smart-resume — for movies/series, hand the saved position to the player so
+      // it picks up where the member left off (0 = start; near-finished = start).
+      const resumeFrom = isVod ? getResume(channel.id) : 0;
+      player.playChannel(channel, resumeFrom).catch(() => {});
       addToHistory(channel);
       setCurrentChannel(channel.id);
       // Rise the player surface over the world (no-op if already up).
       surfaces.push({ id: PLAYER_SURFACE_ID, portal: true });
     },
-    [player, addToHistory, guestMode, surfaces]
+    [player, addToHistory, getResume, guestMode, surfaces]
   );
+
+  // Smart-resume — persist VOD playback position as it plays, so reopening a
+  // title resumes and the Keep Watching row stays current. ontimeupdate already
+  // throttles to ~1/s in usePlayer; we additionally guard to ~every 5s of progress
+  // to keep localStorage writes (and re-renders) cheap.
+  const lastSavedRef = React.useRef(0);
+  useEffect(() => {
+    const ch = player.state.channel;
+    if (!ch) return;
+    const isVod = ch.category === 'movie' || ch.category === 'series';
+    if (!isVod) return;
+    const ct = player.state.currentTime;
+    const dur = player.state.duration;
+    if (ct <= 5 || dur <= 0) return;
+    if (Math.abs(ct - lastSavedRef.current) < 5) return;
+    lastSavedRef.current = ct;
+    updateDuration(ch.id, dur, ct, dur);
+  }, [player.state.currentTime, player.state.channel, player.state.duration, updateDuration]);
 
   const handleCodeSubmit = async () => {
     if (onRequestCode && codeInput.trim()) {
@@ -451,7 +476,7 @@ function AppContent({ guestMode, onRequestCode }: { guestMode?: boolean; onReque
         <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[9997] pointer-events-auto flex items-center gap-2">
           <DynamicIsland appCode="tivi" guestMode={guestMode} />
         </div>
-        <Header onLogout={logout} />
+        <Header onLogout={handleLogout} />
         <Navbar />
         {(credentials || guestMode) && <SearchWidget credentials={credentials} onPlay={handlePlayChannel} />}
         <main className="pb-20 lg:pb-0 lg:pl-[72px] safe-bottom-content">
@@ -646,13 +671,13 @@ function AppContent({ guestMode, onRequestCode }: { guestMode?: boolean; onReque
   );
 }
 
-function AuthedApp({ credentials, guestMode, onRequestCode }: { credentials: { username: string; password: string } | null; guestMode?: boolean; onRequestCode?: (code: string) => Promise<unknown> }) {
+function AuthedApp({ credentials, guestMode, onRequestCode, onLogout }: { credentials: { username: string; password: string } | null; guestMode?: boolean; onRequestCode?: (code: string) => Promise<unknown>; onLogout?: () => void }) {
   useEffect(() => {
     if (credentials) {
       preloadApiData((import.meta.env.VITE_PROXY_URL || 'https://stream.zionsynapse.online').trim(), credentials.username, credentials.password);
     }
   }, [credentials]);
-  return <AppContent guestMode={guestMode} onRequestCode={onRequestCode} />;
+  return <AppContent guestMode={guestMode} onRequestCode={onRequestCode} onLogout={onLogout} />;
 }
 
 function AppRouter() {
@@ -715,6 +740,9 @@ function AppRouter() {
              (tier 'guest', no creds) — gate premium like a free user. */
           guestMode={auth.tier === 'guest'}
           onRequestCode={auth.login}
+          /* Instant sign-out: this is the auth-gating instance, so calling it
+             flips isAuthenticated → drops to login with no refresh. */
+          onLogout={auth.logout}
         />
       )}
     </>

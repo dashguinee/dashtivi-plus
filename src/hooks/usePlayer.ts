@@ -47,6 +47,7 @@ export function usePlayer() {
   const userMutedRef = useRef(false); // Tracks explicit user mute — respected across channel switches
   const wasPiPRef = useRef(false); // User intent: was in PiP — re-request after source swap
   const switchingPiPRef = useRef(false); // True while a channel switch drops PiP (suppresses intent-clear)
+  const pendingSeekRef = useRef(0); // Smart-resume: seconds to seek to once a direct-VOD stream is ready (0 = none)
 
   // Capture the current video frame to a data URL so we can overlay it (blurred)
   // during the black gap of a channel switch. Returns null on failure (e.g. tainted
@@ -97,9 +98,11 @@ export function usePlayer() {
   }, []);
 
   const playChannel = useCallback(
-    async (channel: Channel) => {
+    async (channel: Channel, resumeFrom: number = 0) => {
       // Disconnect previous Web Audio boost chain before setting up new stream
       disconnectBoost();
+      // Smart-resume: clear any stale pending direct-VOD seek from a prior play.
+      pendingSeekRef.current = 0;
 
       // If we're currently in PiP, the imminent src swap will auto-drop it. Flag this
       // so the leave listener doesn't treat it as a user-intent change — we re-request
@@ -213,6 +216,21 @@ export function usePlayer() {
             } catch {}
           } else if (mode !== 'auto' && mode !== 'source') {
             url += '&q=' + mode;
+          }
+        }
+
+        // ── Smart-resume — seek the new VOD stream to the saved position ──
+        // Two seam shapes, mirroring the `seek()` helper:
+        //   • remux (/vod?) — server-side seek: begin the stream at &start=N.
+        //     remuxOffset (parsed below from the URL) then keeps the clock right.
+        //   • direct (/movie|series/…) — client seek: stash N and apply it via
+        //     video.currentTime once the element can play (pendingSeekRef).
+        const isVodContent = channel.category === 'movie' || channel.category === 'series';
+        if (isVodContent && resumeFrom > 1) {
+          if (isVod) {
+            url = url.replace(/&start=\d+/, '') + '&start=' + Math.floor(resumeFrom);
+          } else {
+            pendingSeekRef.current = resumeFrom;
           }
         }
 
@@ -385,6 +403,19 @@ export function usePlayer() {
         video.oncanplay = () => {
           if (isStale()) return;
           connectionResolved = true;
+          // Smart-resume for direct VOD: apply the saved position once, now that
+          // the element can actually seek. Remux VOD already started at &start=.
+          if (pendingSeekRef.current > 1) {
+            const target = pendingSeekRef.current;
+            pendingSeekRef.current = 0;
+            try {
+              if (isFinite(video.duration) && video.duration > 0) {
+                video.currentTime = Math.min(target, video.duration - 5);
+              } else {
+                video.currentTime = target;
+              }
+            } catch { /* seek not ready — skip resume rather than break playback */ }
+          }
           setState((prev) => ({ ...prev, isLoading: false }));
         };
         video.onplaying = () => {

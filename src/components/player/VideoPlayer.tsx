@@ -89,6 +89,21 @@ export const VideoPlayer: React.FC<Props> = ({
   const [seekDirection, setSeekDirection] = useState<'forward' | 'backward'>('forward');
 
   const isVod = detectVod(state);
+  // ── Live continuity (Bug #1) ──────────────────────────────────────────────
+  // The player chrome (channel carousel, edge arrows, corner hints, SmartMatch,
+  // landscape genre bar, EPG) used to gate on `url.includes('/live?')`. Premium
+  // channels proxy through a `/live?` endpoint, but FREE channels are direct
+  // HLS `.m3u8` URLs with no `/live?` — so all that chrome silently vanished on
+  // free streams ("hls player has no buttons"). A live stream is simply anything
+  // that isn't VOD: key the chrome off that so free/HLS gets the SAME control set.
+  const isLiveStream = !isVod;
+
+  // ── Channel-suggestion grid auto-fade (Bug #2) ───────────────────────────
+  // The suggestions conveyor (ChannelCarousel) lingers ~15s after the last
+  // interaction, then fades to leave the clean minimal HLS look. Any tap/move
+  // re-shows it (wired through showControls below) and resets the 15s timer.
+  const [suggestionsVisible, setSuggestionsVisible] = useState(true);
+  const suggestTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const lastTapRef = useRef<{ x: number; t: number }>({ x: 0, t: 0 });
   const tapStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -351,14 +366,23 @@ export const VideoPlayer: React.FC<Props> = ({
     }
   }, [state.isLoading, state.channel?.id]);
 
+  // Re-show the suggestions grid and restart its 15s idle fade. Lives outside the
+  // controls' switch-cooldown guard so a tap always brings the grid back.
+  const pokeSuggestions = useCallback(() => {
+    setSuggestionsVisible(true);
+    if (suggestTimerRef.current) clearTimeout(suggestTimerRef.current);
+    suggestTimerRef.current = setTimeout(() => setSuggestionsVisible(false), 15000);
+  }, []);
+
   const showControls = useCallback(() => {
+    pokeSuggestions(); // grid follows its own 15s lifecycle, re-shown on any interaction
     if (switchCooldownRef.current) return; // During live switch cooldown, don't flash controls
     setControlsVisible(true);
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     hideTimerRef.current = setTimeout(() => {
       if (isPlayingRef.current) setControlsVisible(false);
     }, 4500);
-  }, []);
+  }, [pokeSuggestions]);
 
   // Live TV: hide controls on channel switch, reveal gently after 2s
   // VOD: show controls when paused
@@ -470,10 +494,11 @@ export const VideoPlayer: React.FC<Props> = ({
     setSubsOn(newState);
   }, [subsOn, videoRef]);
 
-  // Cleanup timer
+  // Cleanup timers
   useEffect(() => {
     return () => {
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      if (suggestTimerRef.current) clearTimeout(suggestTimerRef.current);
     };
   }, []);
 
@@ -710,17 +735,18 @@ export const VideoPlayer: React.FC<Props> = ({
         <SmartMatchOverlay
           channel={state.channel}
           visible={controlsVisible || switchingChannel}
-          isLive={!!state.channel?.url?.includes('/live?')}
+          isLive={isLiveStream}
           onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
         />
       )}
 
-      {/* Channel carousel — concave arc conveyor belt (live only, hidden for VOD) */}
-      {/* Stays visible during channel switch so user can keep browsing */}
+      {/* Channel carousel = the channel-SUGGESTION grid. Rides its own 15s idle
+          fade (Bug #2): lingers after the controls hide, then fades to the clean
+          minimal look; any tap/move re-shows it. Still shows through a switch. */}
       {!isVod && (
         <ChannelCarousel
-          visible={controlsVisible || switchingChannel}
-          isLive={!!state.channel?.url?.includes('/live?')}
+          visible={suggestionsVisible || switchingChannel}
+          isLive={isLiveStream}
           onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
         />
       )}
@@ -736,7 +762,7 @@ export const VideoPlayer: React.FC<Props> = ({
       {!isVod && (
         <ChannelArrows
           controlsVisible={controlsVisible}
-          isLive={!!state.channel?.url?.includes('/live?')}
+          isLive={isLiveStream}
           onRetry={onRetry}
           showControls={showControls}
         />
@@ -746,7 +772,7 @@ export const VideoPlayer: React.FC<Props> = ({
       {!isVod && (
         <ChannelHints
           visible={controlsVisible}
-          isLive={!!state.channel?.url?.includes('/live?')}
+          isLive={isLiveStream}
           onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
         />
       )}
@@ -756,7 +782,7 @@ export const VideoPlayer: React.FC<Props> = ({
         <LandscapeGenreBar
           visible={controlsVisible}
           isFullscreen={state.isFullscreen}
-          isLive={!!state.channel?.url?.includes('/live?')}
+          isLive={isLiveStream}
           onGenreSwitch={onGenreSwitch}
         />
       )}
@@ -765,7 +791,7 @@ export const VideoPlayer: React.FC<Props> = ({
       <EpgWidget
         streamId={state.channel?.id ? parseInt(state.channel.id.replace(/^live-/, ''), 10) || null : null}
         visible={controlsVisible}
-        isLive={!!state.channel?.url?.includes('/live?')}
+        isLive={isLiveStream}
       />
 
       {/* Controls overlay — hidden during cinema intro and post-cinema blackout */}

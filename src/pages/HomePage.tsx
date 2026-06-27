@@ -25,6 +25,7 @@ import { FreePill } from '@/components/ui/FreePill';
 import { tap } from '@/lib/haptics';
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { setAmbientSpeed } from '@/lib/ambient-audio';
+import { useWatchHistory, isInProgress, resumePosition } from '@/hooks/useWatchHistory';
 import type { Channel } from '@/types';
 
 /**
@@ -333,6 +334,10 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                   <FreeHlsShowcaseCard channel={woven} />
                 </div>
               )}
+              {/* Keep Watching — woven MID-FEED after the 2nd rendered row.
+                  In-progress movies/series, tap resumes (#4). Renders nothing
+                  when there's nothing to resume, so the slot stays clean. */}
+              {rpos === 1 && <KeepWatchingRow onPlay={onPlay} lang={lang} />}
               {/* ── The "Featured Destination" gateway — ONE curated district at a
                   time (see `featured` below), tapping THROUGH to it. Anchored to the
                   3rd RENDERED row (rpos), so empty collections can't skip it. ── */}
@@ -481,6 +486,98 @@ function GiraLoopSentinel() {
   );
 }
 
+// ── Keep Watching ───────────────────────────────────────────────────
+// In-progress movies/series with a saved position (not finished). Tapping a
+// card resumes from where the member left off (the player reads the same watch
+// history via getResume). Reuses the row grammar; portrait-leaning poster cards
+// with a thin progress bar. Renders null when there's nothing to resume.
+function KeepWatchingRow({ onPlay, lang }: { onPlay: (ch: Channel) => void; lang: Lang }) {
+  const { history } = useWatchHistory();
+  const items = useMemo(
+    () => history.filter((e) => isInProgress(e) && !!e.url).slice(0, 14),
+    [history]
+  );
+  if (items.length === 0) return null;
+
+  const accent = '#9D4EDD';
+  const cardW = 150;
+  const cardH = 96;
+
+  return (
+    <section className="mb-9">
+      <div className="flex items-center justify-between px-4 mb-3.5">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: accent, boxShadow: `0 0 6px ${accent}` }} />
+          <h2 className="text-[19px] font-black tracking-tight text-white truncate">
+            {lang === 'fr' ? 'Reprendre' : 'Keep Watching'}
+          </h2>
+          <span className="tivi-count-metal text-[8px] font-bold flex-shrink-0" style={{ letterSpacing: '0.5px' }}>
+            {items.length}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1">
+        {items.map((e) => {
+          const total = e.totalDuration ?? 0;
+          const pos = resumePosition(e);
+          const pct = total > 0 ? Math.min(100, Math.max(3, (pos / total) * 100)) : 0;
+          return (
+            <button
+              key={e.channelId}
+              onPointerDown={() => tap()}
+              onClick={() =>
+                onPlay({
+                  id: e.channelId,
+                  name: e.name || '',
+                  url: e.url || '',
+                  logo: e.logo,
+                  category: e.category,
+                  knownDuration: e.totalDuration,
+                })
+              }
+              className="flex-shrink-0 group"
+              style={{ width: cardW }}
+            >
+              <div
+                className="relative rounded-2xl overflow-hidden transition-transform duration-200 ease-out group-hover:scale-[1.04] group-active:scale-[0.95]"
+                style={{
+                  width: cardW,
+                  height: cardH,
+                  background: 'linear-gradient(157deg, rgba(255,255,255,0.085) 0%, rgba(255,255,255,0.025) 50%, rgba(255,255,255,0.012) 100%)',
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1px rgba(255,255,255,0.045)',
+                }}
+              >
+                {e.logo && (
+                  <img src={e.logo} alt="" className="absolute inset-0 w-full h-full object-cover opacity-90" loading="lazy" />
+                )}
+                <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 40%, rgba(6,6,9,0.85) 100%)` }} />
+
+                {/* Resume affordance on hover/press */}
+                <div className="absolute inset-0 z-[3] flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200"
+                  style={{ background: 'rgba(0,0,0,0.42)' }}>
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center"
+                    style={{ background: 'rgba(255,255,255,0.16)', border: '1px solid rgba(255,255,255,0.32)', backdropFilter: 'blur(6px)' }}>
+                    <Play className="w-3.5 h-3.5 text-white ml-0.5" fill="white" />
+                  </div>
+                </div>
+
+                {/* Resume progress bar */}
+                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/15 z-[2]">
+                  <div className="h-full rounded-r-full" style={{ width: `${pct}%`, background: accent, boxShadow: `0 0 6px ${accent}` }} />
+                </div>
+              </div>
+              <p className="text-[10.5px] leading-tight text-white/60 text-center mt-1.5 px-0.5 line-clamp-2 font-medium tracking-tight group-hover:text-white/90 transition-colors">
+                {cleanName(e.name || '')}
+              </p>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 // ── Experience row ──────────────────────────────────────────────────
 
 const ExperienceRow = React.memo(function ExperienceRow({
@@ -508,6 +605,37 @@ const ExperienceRow = React.memo(function ExperienceRow({
   const isSmall = channels.length <= 4;
   const cardW = isSmall ? 158 : 130;
   const cardH = isSmall ? 112 : 96;
+
+  // ── Continuous reveal (Bug #6) ────────────────────────────────────────────
+  // No "Load More" text. A long row starts partly rolled out; a soft portal-beam
+  // end-cap sits at the row's tail. Scrolling into it auto-reveals the next batch
+  // (the beam pulses while more remain). Once everything's out, the beam becomes
+  // a gentle "carry-on" affordance that taps THROUGH to the full experience — so
+  // reaching the end never dead-ends.
+  const INITIAL = 12;
+  const STEP = 12;
+  const [shown, setShown] = useState(() => Math.min(channels.length, INITIAL));
+  const hasMore = shown < channels.length;
+  const stripRef = useRef<HTMLDivElement>(null);
+  const beamRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const root = stripRef.current;
+    const target = beamRef.current;
+    if (!root || !target) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && shown < channels.length) {
+          setShown((s) => Math.min(channels.length, s + STEP));
+        }
+      },
+      { root, threshold: 0.6, rootMargin: '0px 240px 0px 0px' }
+    );
+    io.observe(target);
+    return () => io.disconnect();
+  }, [shown, channels.length]);
+
+  const visibleChannels = channels.slice(0, shown);
 
   return (
     <section className="mb-9" style={{ animation: 'row-in 0.55s cubic-bezier(0.16,1,0.3,1) both', animationDelay: `${Math.min(index, 9) * 65}ms` }}>
@@ -545,8 +673,8 @@ const ExperienceRow = React.memo(function ExperienceRow({
       </div>
 
       {/* Horizontal channel strip */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1">
-        {channels.map((ch) => {
+      <div ref={stripRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1">
+        {visibleChannels.map((ch) => {
           return (
           <button
             key={ch.stream_id}
@@ -612,7 +740,43 @@ const ExperienceRow = React.memo(function ExperienceRow({
           </button>
           );
         })}
+
+        {/* ── Portal-beam end-cap (Bug #6) — no "Load More" text. ──
+            • more left → a soft purple beam that pulses; scrolling into it
+              auto-reveals the next batch (the IntersectionObserver above).
+            • all out → a gentle carry-on chevron that taps THROUGH to the full
+              experience, so the row never dead-ends. */}
+        {(hasMore || onSeeAll) && (
+          <div
+            ref={beamRef}
+            onClick={() => { if (!hasMore && onSeeAll) onSeeAll(); }}
+            className={`flex-shrink-0 flex items-center justify-center ${!hasMore && onSeeAll ? 'cursor-pointer group' : ''}`}
+            style={{ width: hasMore ? 64 : 84, height: cardH }}
+            aria-hidden={hasMore}
+          >
+            <div className="relative h-full flex items-center">
+              {/* vertical portal beam */}
+              <div
+                className="w-[3px] rounded-full"
+                style={{
+                  height: '62%',
+                  background: `linear-gradient(180deg, transparent, ${accent}, transparent)`,
+                  boxShadow: `0 0 12px ${accent}`,
+                  animation: hasMore ? 'beam-pulse 1.3s ease-in-out infinite' : 'none',
+                  opacity: hasMore ? 1 : 0.55,
+                }}
+              />
+              {!hasMore && onSeeAll && (
+                <ChevronRight
+                  className="w-5 h-5 ml-2 text-white/40 group-hover:text-white/80 group-hover:translate-x-0.5 transition-[color,transform] duration-200"
+                  style={{ filter: `drop-shadow(0 0 5px ${accent}80)` }}
+                />
+              )}
+            </div>
+          </div>
+        )}
       </div>
+      <style>{`@keyframes beam-pulse { 0%,100% { opacity:0.45; transform:scaleY(0.85); } 50% { opacity:1; transform:scaleY(1.12); } }`}</style>
     </section>
   );
 });
