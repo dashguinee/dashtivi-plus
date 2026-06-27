@@ -1,7 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import { Download, Search, X, SlidersHorizontal, Moon, TrendingUp, Coffee, Rabbit, Heart, Users, Zap, Brain, Play, Plus, Star } from 'lucide-react';
-import { getActiveMomentPacks, getMomentPackResults } from '@/lib/moment-packs';
-import type { MomentPack } from '@/lib/moment-packs';
+import { Download, Search, X, SlidersHorizontal, Play, Plus, Star, Sparkles } from 'lucide-react';
 import type { XtreamCredentials, VodStream } from '@/lib/xtream';
 import { getVodStreams, buildVodUrl, getTmdbMap, getVodByCategory, vodDbToStream, searchVod, buildLiveUrl } from '@/lib/xtream';
 import { getCatalog, getCatalogSync, type Catalog, type CatalogChannel } from '@/lib/catalog';
@@ -16,30 +14,27 @@ import { MoviesTrailerSpace } from '@/components/home/MoviesTrailerSpace';
 import { FloatingMoviesShowcase } from '@/components/home/FloatingMoviesShowcase';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { NeonGate, RowCountBadge, cardScaleStyle } from '@/components/ui/NeonGate';
-import { MOVIE_TABS, GENRE_FILTERS, SORT_MODES, VEE_MOVIE_COLLECTIONS, type SortMode, type VeeMovieCollection } from '@/lib/movie-collections';
+import { RowCountBadge } from '@/components/ui/NeonGate';
+import { MOVIE_TABS, GENRE_FILTERS, SORT_MODES, type SortMode } from '@/lib/movie-collections';
+import { MOMENT_PACKS } from '@/lib/moment-packs';
 import { t, useLanguage } from '@/i18n';
 import { useSmartSticky } from '@/hooks/useSmartSticky';
+import { useWatchHistory, isInProgress, resumePosition } from '@/hooks/useWatchHistory';
+import { useLikes } from '@/lib/likes';
+import { getItem } from '@/lib/storage';
+import {
+  buildAffinity, isColdStart,
+  recommendFor, becauseYouWatched, trendingNow, genreCollections, moodRows,
+  hiddenGems, dashCurated, fromFavorites, searchRerank, heroResolver,
+  type RankedRow, type RecSignals, type HeroPick,
+} from '@/lib/recommendations';
 import type { TranslationKey } from '@/i18n';
-import type { Channel } from '@/types';
+import type { Channel, WatchHistoryEntry } from '@/types';
 
-// ── Moment pack icon map (Lucide components by name) ─────────────
-const MOMENT_ICON_MAP: Record<string, React.ReactNode> = {
-  Moon: <Moon className="w-3.5 h-3.5" />,
-  TrendingUp: <TrendingUp className="w-3.5 h-3.5" />,
-  Coffee: <Coffee className="w-3.5 h-3.5" />,
-  Rabbit: <Rabbit className="w-3.5 h-3.5" />,
-  Heart: <Heart className="w-3.5 h-3.5" />,
-  Users: <Users className="w-3.5 h-3.5" />,
-  Zap: <Zap className="w-3.5 h-3.5" />,
-  Brain: <Brain className="w-3.5 h-3.5" />,
-};
+// ── Static maps ──────────────────────────────────────────────────
 
 const SORT_NAME_MAP: Record<string, TranslationKey> = {
-  'Smart': 'sortSmart',
-  'Top Rated': 'sortTopRated',
-  'Newest': 'sortNewest',
-  'A-Z': 'sortAZ',
+  'Smart': 'sortSmart', 'Top Rated': 'sortTopRated', 'Newest': 'sortNewest', 'A-Z': 'sortAZ',
 };
 
 const GENRE_NAME_MAP: Record<string, TranslationKey> = {
@@ -52,73 +47,67 @@ const GENRE_NAME_MAP: Record<string, TranslationKey> = {
 };
 
 const TAB_NAME_MAP: Record<string, TranslationKey> = {
-  'New & Hot': 'tabNewHot',
-  'Hollywood': 'tabHollywood',
-  'Bollywood': 'tabBollywood',
-  'International': 'tabInternational',
+  'New & Hot': 'tabNewHot', 'Hollywood': 'tabHollywood',
+  'Bollywood': 'tabBollywood', 'International': 'tabInternational',
 };
 
-// ── Mood-aware glow per moment pack (warm mornings, cool nights, hot binge).
-// Stays inside the quiet-luxury palette — the glow whispers context in the
-// row title/icon only, never tints the cards themselves. ──────────────
+// ── Warm-luxury palette ──────────────────────────────────────────
+// Candle-warm cinema lounge, NOT Netflix-cold-black. Molten gold/amber accent used
+// sparingly; African spotlight gets a terracotta/clay underglow that feels "home".
+const GOLD = '#E8B04B';
+const GOLD_DEEP = '#C8862F';
+const TERRACOTTA = '#C9763B';
+
+// Per-pack mood glow (kept from the prior mood language) → used as the row accent so the
+// glow still whispers context in the row dot, never tints the cards themselves.
 const MOMENT_MOOD: Record<string, string> = {
-  'before-sleep': '#6366F1',   // calm deep violet-blue
-  'late-night': '#7C3AED',     // night violet
-  'quick-lunch': '#D97706',    // warm amber (midday)
-  'everyone-watching': '#9D4EDD',
-  'in-your-feelings': '#C084FC',
-  'family-time': '#F59E0B',    // warm gold
-  'adrenaline': '#EF4444',     // hot red (binge/action)
-  'mind-benders': '#8B5CF6',
+  'before-sleep': '#6366F1', 'late-night': '#7C3AED', 'quick-lunch': '#D97706',
+  'everyone-watching': '#9D4EDD', 'in-your-feelings': '#C084FC', 'family-time': '#F59E0B',
+  'adrenaline': '#EF4444', 'mind-benders': '#8B5CF6',
 };
 const moodColor = (id: string) => MOMENT_MOOD[id] || '#9D4EDD';
 
-// ── Scoring ──────────────────────────────────────────────────────
+// French editorial flavour for the auto genre rows (title stays the genre, this is the
+// human-warm subtitle that signals "curated", not "computed").
+const GENRE_TAGLINES: Record<number, string> = {
+  28: 'Action qui cogne', 35: 'De quoi rire un bon coup', 53: 'Tension à couper le souffle',
+  18: 'Des histoires qui marquent', 878: 'Voyages au-delà du réel', 27: 'Frissons garantis',
+  10749: 'Pour les grands romantiques', 12: 'Grandes aventures', 16: "L'animation a son public",
+  80: 'Le crime ne paie pas', 9648: 'À résoudre vous-même', 14: 'Pure fantaisie',
+  10751: 'Pour toute la famille', 36: "L'Histoire en grand", 10752: 'Au cœur du combat',
+};
 
-function getTrendingScore(movie: VodStream, tmdbMap: Record<string, TmdbEntry>): number {
-  const tmdb = tmdbMap[`m:${movie.stream_id}`];
-  if (!tmdb) return 0;
-
-  // Rating: 40% weight (normalized 0-1)
-  const ratingScore = Math.min((tmdb.r || 0) / 10, 1);
-
-  // Freshness: 30% weight — year from title or added timestamp
-  let freshnessScore = 0.2;
-  if (movie.added) {
-    const addedTs = parseInt(movie.added, 10);
-    if (addedTs > 0) {
-      const daysAgo = (Date.now() / 1000 - addedTs) / 86400;
-      if (daysAgo < 7) freshnessScore = 1.0;
-      else if (daysAgo < 30) freshnessScore = 0.85;
-      else if (daysAgo < 90) freshnessScore = 0.65;
-      else if (daysAgo < 365) freshnessScore = 0.4;
-    }
-  } else {
-    const yearMatch = movie.name.match(/\((\d{4})\)/);
-    if (yearMatch) {
-      const year = parseInt(yearMatch[1], 10);
-      if (year >= 2026) freshnessScore = 1.0;
-      else if (year === 2025) freshnessScore = 0.85;
-      else if (year === 2024) freshnessScore = 0.7;
-      else if (year === 2023) freshnessScore = 0.5;
-    }
-  }
-
-  // Popularity indicator: 20% — has trailer + has poster + genre breadth
-  const hasTrailer = tmdb.y ? 0.4 : 0;
-  const hasPoster = tmdb.p ? 0.3 : 0;
-  const genreBreadth = Math.min((tmdb.g?.length || 0) / 4, 1) * 0.3;
-  const popularityScore = hasTrailer + hasPoster + genreBreadth;
-
-  // Genre diversity bonus: 10% — reward movies that span multiple genres
-  const diversityScore = Math.min((tmdb.g?.length || 0) / 3, 1);
-
-  return ratingScore * 0.4 + freshnessScore * 0.3 + popularityScore * 0.2 + diversityScore * 0.1;
-}
+// African / Nollywood VOD category (the brand row — Afrikaans/African/Nollywood bucket).
+const AFRICAN_CATEGORY_ID = '580';
 
 function parseYear(name: string): number {
   const m = name.match(/\((\d{4})\)/);
   return m ? parseInt(m[1], 10) : 0;
+}
+
+/** Warm accent per ladder row, by driver/identity. Top-10 rows ignore this (stay red). */
+function rowAccent(row: RankedRow): string {
+  if (row.id === 'african-spotlight') return TERRACOTTA;
+  if (row.id.startsWith('mood-')) return moodColor(row.id.slice(5));
+  switch (row.driver) {
+    case 'dash-curated':
+    case 'gem-of-the-day': return GOLD;
+    case 'for-you': return '#E0A94A';
+    case 'genre': return '#D9A441';
+    case 'because-you-watched':
+    case 'from-favorites': return '#C98F4A';
+    default: return '#9D4EDD';
+  }
+}
+
+/** Editorial rows wear the warm display face + heavier title (curated-by-humans). */
+function isEditorialRow(row: RankedRow): boolean {
+  return (
+    row.id === 'african-spotlight' ||
+    row.driver === 'dash-curated' ||
+    row.driver === 'gem-of-the-day' ||
+    row.driver === 'because-you-watched'
+  );
 }
 
 // ── Component ────────────────────────────────────────────────────
@@ -146,9 +135,14 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   // Data
   const [movies, setMovies] = useState<VodStream[]>([]);
+  const [gemSet, setGemSet] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [moviesError, setMoviesError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
+
+  // African / Nollywood spotlight pool — fetched once, independent of the active subtab,
+  // so "La Maison du Cinéma Africain" stays pinned in the top third on every tab.
+  const [africanPool, setAfricanPool] = useState<VodStream[]>([]);
 
   // Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -161,10 +155,14 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // Detail + TMDB
   const [detailMovie, setDetailMovie] = useState<VodStream | null>(null);
   const [tmdbMap, setTmdbMap] = useState<Record<string, TmdbEntry>>({});
-  // Curated catalog — for the live "Cinéma Live" hero (catalog.byExperience['Movies']).
-  // Sync-primed if already warm, else loaded lazily (a bonus card; silent on failure).
   const [catalog, setCatalog] = useState<Catalog | null>(getCatalogSync());
-  // Personalization seed: remember what you open (localStorage, per-device) → "For You" row.
+
+  // ── Personalization signals (reactive) ───────────────────────
+  // Likes + watch history drive the affinity model; a heart toggle anywhere re-ranks the
+  // whole ladder live (that instant feedback IS the "alive" feeling). Recent opens are the
+  // ×1 seed. recentSeries/downloads are read once (non-reactive — fine for the movie page).
+  const likes = useLikes();
+  const { history } = useWatchHistory();
   const [recent, setRecent] = useState<VodStream[]>(() => {
     try { return JSON.parse(localStorage.getItem('tivi_recent_movies') || '[]'); } catch { return []; }
   });
@@ -176,6 +174,14 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       return next;
     });
   }, [detailMovie]);
+
+  const signals: RecSignals = useMemo(() => ({
+    history,
+    likes,
+    recentMovies: recent,
+    recentSeries: getItem('recent_series', []),
+    downloads: getItem('downloads', []),
+  }), [history, likes, recent]);
 
   // ── Derived ──────────────────────────────────────────────────
 
@@ -189,11 +195,23 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const isSearching = debouncedQuery.trim().length > 0;
   const hasTmdb = Object.keys(tmdbMap).length > 0;
 
+  // Affinity model — rebuilt when the catalog map or any signal changes.
+  const affinity = useMemo(() => buildAffinity(tmdbMap, signals), [tmdbMap, signals]);
+  const cold = isColdStart(affinity);
+
+  // Translated mood-pack labels (UI owns i18n; the rec lib stays language-agnostic).
+  const packLabels = useMemo(() => {
+    const m: Record<string, { name: string; tagline: string }> = {};
+    for (const p of MOMENT_PACKS) {
+      m[p.id] = { name: t(lang, p.nameKey as TranslationKey), tagline: t(lang, p.descKey as TranslationKey) };
+    }
+    return m;
+  }, [lang]);
+
   // ── Effects ──────────────────────────────────────────────────
 
   useEffect(() => { getTmdbMap().then(m => m && setTmdbMap(m.TMDB_MAP)); }, []);
 
-  // Load the curated catalog once (live cinema-TV hero). No-op when warm.
   useEffect(() => {
     if (catalog) return;
     let mounted = true;
@@ -201,17 +219,30 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     return () => { mounted = false; };
   }, [catalog]);
 
+  // African spotlight pool — one fetch, silent on failure (the row just won't render).
+  useEffect(() => {
+    let mounted = true;
+    getVodByCategory(AFRICAN_CATEGORY_ID, 200).then(rows => {
+      if (!mounted) return;
+      const seen = new Set<number>();
+      const out: VodStream[] = [];
+      for (const r of rows) {
+        if (seen.has(r.id)) continue;
+        seen.add(r.id);
+        out.push(vodDbToStream(r));
+      }
+      setAfricanPool(out);
+    }).catch(() => { /* spotlight is a bonus */ });
+    return () => { mounted = false; };
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Reset displayLimit when navigation changes
-  useEffect(() => {
-    setDisplayLimit(PAGE_SIZE);
-  }, [activeParent, activeSubtab, activeGenre]);
+  useEffect(() => { setDisplayLimit(PAGE_SIZE); }, [activeParent, activeSubtab, activeGenre]);
 
-  // Parent change → reset subtab, genre, scroll
   useEffect(() => {
     const parent = MOVIE_TABS.find(t => t.id === activeParent);
     if (parent) {
@@ -223,31 +254,35 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     }
   }, [activeParent]);
 
-  // Fetch movies for subtab
+  // Fetch movies for subtab — Supabase-first (captures is_gem), Xtream fallback.
   useEffect(() => {
     let mounted = true;
     const catIds = currentSubtab.categoryIds;
-    if (!catIds.length) { setMovies([]); setLoading(false); return; }
+    if (!catIds.length) { setMovies([]); setGemSet(new Set()); setLoading(false); return; }
 
     async function load() {
       setLoading(true);
       setMoviesError(false);
       try {
-        // Supabase-first: try DB, fall back to Xtream API
         const sbResults = await Promise.allSettled(catIds.map(id => getVodByCategory(id)));
         const sbMerged: VodStream[] = [];
+        const gems = new Set<number>();
         const seen = new Set<number>();
         for (const r of sbResults) {
           if (r.status === 'fulfilled' && r.value.length > 0) {
             for (const m of r.value) {
-              if (!seen.has(m.id)) { seen.add(m.id); sbMerged.push(vodDbToStream(m)); }
+              if (seen.has(m.id)) continue;
+              seen.add(m.id);
+              sbMerged.push(vodDbToStream(m));
+              if (m.gem) gems.add(m.id);
             }
           }
         }
         if (sbMerged.length > 0) {
-          if (mounted) setMovies(sbMerged);
+          if (mounted) { setMovies(sbMerged); setGemSet(gems); }
         } else {
-          // Fallback to Xtream API
+          // Fallback to Xtream API (no is_gem signal — dashCurated will rating-cut).
+          if (mounted) setGemSet(new Set());
           if (catIds.length === 1) {
             const result = await getVodStreams(credentials, catIds[0]);
             if (mounted) setMovies(result);
@@ -266,7 +301,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           }
         }
       } catch {
-        if (mounted) { setMovies([]); setMoviesError(true); }
+        if (mounted) { setMovies([]); setGemSet(new Set()); setMoviesError(true); }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -275,7 +310,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     return () => { mounted = false; };
   }, [credentials, currentSubtab, retryKey]);
 
-  // Search
+  // Search (unchanged plumbing — owner boundary; the ladder layer only adds a context strip)
   useEffect(() => {
     if (!debouncedQuery.trim()) { setSearchResults([]); return; }
     let mounted = true;
@@ -290,7 +325,6 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           const filtered = movies.filter(m => m.name.toLowerCase().includes(q));
           if (mounted) { setSearchResults(filtered.slice(0, LIMIT)); setSearchTruncated(filtered.length > LIMIT); }
         } else {
-          // Supabase search — scoped to current category
           const catIds = currentSubtab.categoryIds;
           const sbResults = await searchVod(q, LIMIT, catIds.length > 0 ? catIds : undefined);
           if (sbResults.length > 0) {
@@ -298,7 +332,6 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
             if (mounted) setSearchLoading(false);
             return;
           }
-          // Fallback to Xtream category search
           const results = await Promise.allSettled(
             currentParent.searchCategoryIds.map(id => getVodStreams(credentials, id).catch(() => [] as VodStream[]))
           );
@@ -319,39 +352,32 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     return () => { mounted = false; };
   }, [debouncedQuery, credentials, movies, currentParent, currentSubtab]);
 
-  // ── Genre filter + Sort (the smart layer) ────────────────────
+  // ── Genre filter + Sort (the deep-browse floor) ──────────────
 
   const filteredAndSorted = useMemo(() => {
     const source = isSearching ? searchResults : movies;
-
-    // Step 1: Genre filter (TMDB-powered)
     let filtered = source;
     if (activeGenre !== 0 && hasTmdb) {
-      filtered = source.filter(m => {
-        const tmdb = tmdbMap[`m:${m.stream_id}`];
-        return tmdb?.g?.includes(activeGenre);
-      });
+      filtered = source.filter(m => tmdbMap[`m:${m.stream_id}`]?.g?.includes(activeGenre));
     }
-
-    // Step 2: Sort
     if (!hasTmdb || sortMode === 'name') {
       if (sortMode === 'name') return [...filtered].sort((a, b) => a.name.localeCompare(b.name));
       return filtered;
     }
-
     if (sortMode === 'rating') {
       return [...filtered].sort((a, b) => (tmdbMap[`m:${b.stream_id}`]?.r || 0) - (tmdbMap[`m:${a.stream_id}`]?.r || 0));
     }
     if (sortMode === 'newest') {
       return [...filtered].sort((a, b) => parseYear(b.name) - parseYear(a.name));
     }
-    // smart: pre-compute scores once, then sort by lookup (not O(n log n) function calls)
+    // smart: trend-ranked
     const scoreMap = new Map<number, number>();
-    for (const m of filtered) scoreMap.set(m.stream_id, getTrendingScore(m, tmdbMap));
+    for (const m of filtered) {
+      const e = tmdbMap[`m:${m.stream_id}`];
+      scoreMap.set(m.stream_id, e ? (e.r ?? 0) / 10 + (parseYear(m.name) >= 2024 ? 0.3 : 0) : 0);
+    }
     return [...filtered].sort((a, b) => (scoreMap.get(b.stream_id) || 0) - (scoreMap.get(a.stream_id) || 0));
   }, [movies, searchResults, isSearching, activeGenre, sortMode, tmdbMap, hasTmdb]);
-
-  // ── Genre counts (how many movies per genre in current view) ──
 
   const genreCounts = useMemo(() => {
     if (!hasTmdb) return {};
@@ -359,129 +385,135 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     const counts: Record<number, number> = {};
     for (const m of source) {
       const tmdb = tmdbMap[`m:${m.stream_id}`];
-      if (tmdb?.g) {
-        for (const g of tmdb.g) counts[g] = (counts[g] || 0) + 1;
-      }
+      if (tmdb?.g) for (const g of tmdb.g) counts[g] = (counts[g] || 0) + 1;
     }
     return counts;
   }, [movies, searchResults, isSearching, tmdbMap, hasTmdb]);
 
-  // Only show genre filters that have content
   const activeGenreFilters = useMemo(() =>
-    GENRE_FILTERS.filter(g => g.id === 0 || (genreCounts[g.id] || 0) > 0),
-    [genreCounts]);
+    GENRE_FILTERS.filter(g => g.id === 0 || (genreCounts[g.id] || 0) > 0), [genreCounts]);
 
-  // ── Trending row ─────────────────────────────────────────────
+  // ── Lookup: resolve a clicked rec-row id back to its VodStream ──
+  const movieById = useMemo(() => {
+    const m = new Map<number, VodStream>();
+    for (const v of movies) m.set(v.stream_id, v);
+    for (const v of africanPool) if (!m.has(v.stream_id)) m.set(v.stream_id, v);
+    for (const v of searchResults) if (!m.has(v.stream_id)) m.set(v.stream_id, v);
+    return m;
+  }, [movies, africanPool, searchResults]);
 
-  const trendingMovies = useMemo(() => {
-    if (!['new', 'hollywood'].includes(activeParent) || !hasTmdb) return [];
-    return movies
-      .map(m => ({ movie: m, score: getTrendingScore(m, tmdbMap) }))
-      .filter(s => s.score > 0.5)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 25)
-      .map(s => s.movie);
-  }, [movies, tmdbMap, activeParent, hasTmdb]);
+  const openDetail = useCallback((id: number) => {
+    const mv = movieById.get(id);
+    if (mv) setDetailMovie(mv);
+  }, [movieById]);
 
-  // ── Moment pack rows (New & Hot only) ────────────────────────
-
-  const momentRows = useMemo(() => {
-    if (activeParent !== 'new' || !hasTmdb || movies.length === 0) return [];
-    const hour = new Date().getHours();
-    const activePacks = getActiveMomentPacks(hour);
-
-    return activePacks
-      .map(pack => {
-        const streamKeys = getMomentPackResults(pack, tmdbMap, 12);
-        // Resolve stream keys to VodStream objects
-        const items = streamKeys
-          .map(key => {
-            const streamId = parseInt(key.replace('m:', ''), 10);
-            return movies.find(m => m.stream_id === streamId);
-          })
-          .filter((m): m is VodStream => m !== undefined);
-        return items.length >= 4 ? { pack, items } : null;
-      })
-      .filter((row): row is { pack: MomentPack; items: VodStream[] } => row !== null);
-  }, [movies, tmdbMap, activeParent, hasTmdb]);
-
-  // ── VEE intelligence rows ────────────────────────────────────
-
-  const veeCollectionRows = useMemo(() => {
+  // ── The recommendation ladder — intent-on-top, breadth-below ──
+  // Every row names its driver in recommendations.ts and self-suppresses below 4 items, so
+  // we never render an empty row. African/Nollywood is pinned in the top third either way.
+  const ladder = useMemo<RankedRow[]>(() => {
     if (!hasTmdb || movies.length === 0) return [];
-    const currentHour = new Date().getHours();
-    return VEE_MOVIE_COLLECTIONS
-      .filter(col => {
-        // Time-aware visibility
-        if (col.visibleAfterHour !== undefined && currentHour < col.visibleAfterHour) return false;
-        // Parent tab filter
-        return !col.parentTabs || col.parentTabs.length === 0 || col.parentTabs.includes(activeParent);
-      })
-      .map(col => {
-        let pool: VodStream[];
-        if (col.categoryIds && col.categoryIds.length > 0) {
-          // Category-based collection: filter by category_id
-          const catSet = new Set(col.categoryIds);
-          pool = movies.filter(m => catSet.has(m.category_id));
-        } else {
-          pool = movies.filter(m => col.filter(m, tmdbMap[`m:${m.stream_id}`] || null));
-        }
-        const sorted = [...pool].sort((a, b) => col.sort(a, b, tmdbMap));
-        const items = sorted.slice(0, col.limit).map(m => ({
-          id: m.stream_id,
-          name: m.name,
-          poster: m.stream_icon,
-          rating: m.rating,
-          tmdbKey: `m:${m.stream_id}`,
-        }));
-        return items.length >= 3 ? { collection: col, items } : null;
-      })
-      .filter(Boolean) as { collection: VeeMovieCollection; items: { id: number; name: string; poster: string; rating?: string; tmdbKey: string }[] }[];
-  }, [movies, tmdbMap, hasTmdb, activeParent]);
 
-  // ── Hero billboard — pick highest-rated recent movie with backdrop ──
+    const because = becauseYouWatched(movies, 'movie', tmdbMap, affinity, { maxRows: 2 }, signals);
+    const pourVous = recommendFor(movies, 'movie', tmdbMap, affinity, {}, signals);
+    const trending = trendingNow(movies, 'movie', tmdbMap, { isTop10: true });
 
-  const heroMovie = useMemo(() => {
+    // African spotlight: trend-ranked over the dedicated 580 pool, re-labelled as the brand row.
+    let african: RankedRow | null = null;
+    if (africanPool.length > 0) {
+      const r = trendingNow(africanPool, 'movie', tmdbMap, { limit: 24 });
+      if (r) african = { ...r, id: 'african-spotlight', name: 'La Maison du Cinéma Africain', tagline: 'Nollywood, francophone, afro — la maison de la culture', driver: 'genre' };
+    }
+
+    const moods = moodRows(movies, 'movie', tmdbMap, affinity, { maxRows: 3, packLabels });
+    const genres = genreCollections(movies, 'movie', tmdbMap, affinity, {
+      genreLabels: TMDB_GENRES, taglines: GENRE_TAGLINES, maxRows: 3,
+    });
+    const pepites = dashCurated(movies, 'movie', tmdbMap, { gemSet: gemSet.size ? gemSet : undefined });
+    const gem = hiddenGems(movies, 'movie', tmdbMap, { salt: 'movie' });
+    const favs = fromFavorites(movies, 'movie', tmdbMap, {}, signals);
+
+    const rows: RankedRow[] = [];
+    if (cold) {
+      // Cold start: no personal rows — open on the brand + breadth so the page is never bare.
+      for (const r of [african, trending, pepites, ...moods, ...genres, gem]) if (r) rows.push(r);
+    } else {
+      // Warmed up: recency of intent on top, breadth below, African pinned in the top third.
+      for (const r of [...because, pourVous, trending, african, favs, ...moods, ...genres, pepites, gem]) {
+        if (r) rows.push(r);
+      }
+    }
+    // De-dup row ids (a seed title could collide) — keep first.
+    const seen = new Set<string>();
+    return rows.filter(r => (seen.has(r.id) ? false : (seen.add(r.id), true)));
+  }, [movies, africanPool, tmdbMap, affinity, signals, gemSet, packLabels, cold, hasTmdb]);
+
+  // ── Genre-active context rows (design §4 — context is never fully lost) ──
+  const genreContextRows = useMemo<RankedRow[]>(() => {
+    if (activeGenre === 0 || !hasTmdb || isSearching) return [];
+    const pool = movies.filter(m => tmdbMap[`m:${m.stream_id}`]?.g?.includes(activeGenre));
+    if (pool.length < 4) return [];
+    const label = genreLabel(activeGenre, lang);
+    const out: RankedRow[] = [];
+    const tr = trendingNow(pool, 'movie', tmdbMap, { limit: 18 });
+    if (tr) out.push({ ...tr, id: `genre-ctx-trending`, name: `${t(lang, 'trendingNow')} · ${label}`, tagline: '' });
+    const gem = dashCurated(pool, 'movie', tmdbMap, { gemSet: gemSet.size ? gemSet : undefined });
+    if (gem) out.push({ ...gem, id: `genre-ctx-gem`, name: `Pépites · ${label}`, tagline: '' });
+    return out;
+  }, [activeGenre, movies, tmdbMap, gemSet, hasTmdb, isSearching, lang]);
+
+  // ── Search context strip (design §4) ──
+  const searchContextRow = useMemo<RankedRow | null>(() => {
+    if (!isSearching || !hasTmdb || searchResults.length < 4) return null;
+    return searchRerank(searchResults, 'movie', tmdbMap, affinity, { limit: 18 });
+  }, [isSearching, hasTmdb, searchResults, tmdbMap, affinity]);
+
+  // ── Continue Watching (row 0) — in-progress movies/series, resume on tap ──
+  const keepWatching = useMemo<WatchHistoryEntry[]>(
+    () => history.filter(e => isInProgress(e) && !!e.url).slice(0, 14),
+    [history]);
+
+  // ── Hero resolver (3-tier: resume → affinity → editorial) ──
+  const heroPick = useMemo<HeroPick | null>(() => {
     if (!hasTmdb || movies.length === 0) return null;
-    // Find highest-rated recent item with a TMDB backdrop
-    const candidates = movies
-      .map(m => {
-        const tmdb = tmdbMap[`m:${m.stream_id}`];
-        if (!tmdb?.p || !tmdb.r) return null;
-        const year = parseYear(m.name);
-        if (year < 2023) return null;
-        return { movie: m, tmdb, score: tmdb.r + (year >= 2025 ? 2 : year >= 2024 ? 1 : 0) };
-      })
-      .filter(Boolean) as { movie: VodStream; tmdb: TmdbEntry; score: number }[];
-    candidates.sort((a, b) => b.score - a.score);
-    return candidates[0] || null;
-  }, [movies, tmdbMap, hasTmdb]);
+    return heroResolver(movies, 'movie', tmdbMap, affinity, { candidateCount: 3 }, signals);
+  }, [movies, tmdbMap, affinity, signals, hasTmdb]);
 
-  // ── Live cinema TV — the curated Movies experience channels (HBO, Sky
-  //    Cinema…). This is the LIVE-TV hero, distinct from the VOD grid below. ──
-  const liveCinema = useMemo<CatalogChannel[]>(() => {
-    if (!catalog) return [];
-    return catalog.byExperience['Movies'] || [];
-  }, [catalog]);
+  // Soft 8s rotation among the firing tier's candidates (resume tier has one → no rotation).
+  const [heroIdx, setHeroIdx] = useState(0);
+  const heroKey = heroPick ? `${heroPick.tier}:${(heroPick.item as VodStream).stream_id}` : '';
+  useEffect(() => { setHeroIdx(0); }, [heroKey]);
+  useEffect(() => {
+    const n = heroPick?.candidates.length ?? 0;
+    if (n <= 1) return;
+    const iv = setInterval(() => setHeroIdx(i => (i + 1) % n), 8000);
+    return () => clearInterval(iv);
+  }, [heroPick]);
 
-  // Play a live cinema channel through the live (proxy) seam — NOT the VOD
-  // player. Mirrors ExperienceHomePage's live-play path (buildLiveUrl + onPlay).
+  // kind is 'movie' here, so every candidate is a VodStream.
+  const heroItem = heroPick ? (heroPick.candidates[heroIdx % heroPick.candidates.length] as VodStream) : null;
+  const heroEntry = heroItem ? tmdbMap[`m:${heroItem.stream_id}`] : null;
+
+  const resumePct = useMemo(() => {
+    if (heroPick?.tier !== 'resume' || !heroItem) return 0;
+    const e = history.find(h => h.channelId === `vod-${heroItem.stream_id}` || h.channelId === `movie-${heroItem.stream_id}`);
+    if (!e || !e.totalDuration) return 0;
+    return Math.min(100, Math.max(2, ((e.currentTime ?? 0) / e.totalDuration) * 100));
+  }, [heroPick, heroItem, history]);
+
+  // ── Live cinema (unchanged) ──
+  const liveCinema = useMemo<CatalogChannel[]>(() =>
+    catalog ? (catalog.byExperience['Movies'] || []) : [], [catalog]);
+
   const playLiveCinema = useCallback((ch: CatalogChannel) => {
     if (liveCinema.length > 1) {
       setPlaylist(liveCinema.map((c) => ({
-        id: `live-${c.stream_id}`,
-        name: c.name.replace(/\s+/g, ' ').trim(),
-        url: buildLiveUrl(credentials, c.stream_id),
-        logo: c.icon,
-        category: 'live' as const,
+        id: `live-${c.stream_id}`, name: c.name.replace(/\s+/g, ' ').trim(),
+        url: buildLiveUrl(credentials, c.stream_id), logo: c.icon, category: 'live' as const,
       })));
     }
     const channel: Channel = {
-      id: `live-${ch.stream_id}`,
-      name: ch.name.replace(/\s+/g, ' ').trim(),
-      url: buildLiveUrl(credentials, ch.stream_id),
-      logo: ch.icon,
-      category: 'live',
+      id: `live-${ch.stream_id}`, name: ch.name.replace(/\s+/g, ' ').trim(),
+      url: buildLiveUrl(credentials, ch.stream_id), logo: ch.icon, category: 'live',
     };
     setCurrentChannel(channel.id);
     onPlay(channel);
@@ -496,18 +528,31 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     setDebouncedQuery('');
   }, []);
 
+  // Resume a Continue-Watching / hero-resume title — the player reads the same watch
+  // history (getResume on channelId) and seeks automatically, so we just hand it the channel.
+  const playResume = useCallback((e: WatchHistoryEntry) => {
+    onPlay({ id: e.channelId, name: e.name || '', url: e.url || '', logo: e.logo, category: e.category, knownDuration: e.totalDuration });
+  }, [onPlay]);
+
+  const playHeroResume = useCallback(() => {
+    if (!heroItem) return;
+    const url = buildVodUrl(credentials, heroItem.stream_id, heroItem.container_extension || 'mp4');
+    onPlay({ id: `vod-${heroItem.stream_id}`, name: heroItem.name, url, logo: heroItem.stream_icon, category: 'movie' });
+  }, [heroItem, credentials, onPlay]);
+
   const displayLoading = isSearching ? searchLoading : loading;
+
+  // Hero copy per tier
+  const heroBadge = heroPick?.tier === 'resume'
+    ? (lang === 'fr' ? 'Reprendre' : 'Resume')
+    : heroPick?.tier === 'affinity'
+      ? (lang === 'fr' ? 'Choisi pour vous' : 'Picked for you')
+      : (lang === 'fr' ? "À l'affiche" : 'Now showing');
 
   // ── Render ───────────────────────────────────────────────────
 
   return (
     <div className="pb-32" style={{ paddingTop: 'max(4rem, calc(3.5rem + env(safe-area-inset-top, 0px)))' }}>
-      {/* ── Floating-movies showcase — the cinema materializing in the dark.
-          The entry to the Movies media space: a full-bleed dark stage where a
-          handful of posters drift at different depths; tap one → its trailer
-          (ContentDetailModal). Reuses the already-loaded VOD pool. Below it the
-          hero + grid continue, so the scroll flows showcase → grid with no break.
-          Hidden while searching (search owns the view). ── */}
       {!isSearching && (
         <FloatingMoviesShowcase
           credentials={credentials}
@@ -517,35 +562,53 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         />
       )}
 
-      {/* ── Hero Billboard ── */}
-      {heroMovie ? (
-        <div className="relative overflow-hidden" style={{ height: 'clamp(160px, 35vh, 280px)' }}>
-          {/* Backdrop image */}
+      {/* ── Hero Billboard — dynamic 3-tier resolver (resume → affinity → editorial) ── */}
+      {heroItem && heroEntry?.p ? (
+        <div className="relative overflow-hidden" style={{ height: 'clamp(170px, 36vh, 300px)' }}>
+          {/* Backdrop — candle-warm cross-dissolve on rotation */}
           <div
+            key={heroItem.stream_id}
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: `url(https://image.tmdb.org/t/p/w1280${heroMovie.tmdb.p})`,
-              backgroundAttachment: 'scroll',
+              backgroundImage: `url(https://image.tmdb.org/t/p/w1280${heroEntry.p})`,
               transform: 'scale(1.05)',
+              animation: 'vee-card-in 1.4s cubic-bezier(0.16,1,0.3,1) both',
             }}
           />
-          {/* Gradient overlays */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#060609] via-[#060609]/60 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#060609]/80 via-transparent to-transparent" />
+          {/* Warm vignette — brown-black, left-to-dark so the title floats on warmth */}
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #161210 2%, rgba(22,18,16,0.55) 38%, transparent 78%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(22,18,16,0.82) 0%, rgba(22,18,16,0.25) 42%, transparent 70%)' }} />
           {/* Content — bottom left */}
           <div className="absolute bottom-0 left-0 right-0 p-5 pb-6">
-            <h1 className="text-[24px] md:text-[32px] font-black text-white tracking-tight leading-tight line-clamp-2 mb-2">
-              {heroMovie.movie.name.replace(/\s*\(\d{4}\)\s*$/, '')}
+            <span className="inline-flex items-center gap-1.5 mb-2 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide"
+              style={{ background: `${GOLD}1f`, color: GOLD, border: `1px solid ${GOLD}33` }}>
+              {heroPick?.tier !== 'resume' && <Sparkles className="w-3 h-3" />}
+              {heroBadge}
+            </span>
+            <h1 className="text-[24px] md:text-[32px] font-black text-white tracking-tight leading-tight line-clamp-2 mb-2"
+              style={{ fontFamily: "'Outfit', sans-serif", textShadow: '0 2px 18px rgba(0,0,0,0.5)' }}>
+              {heroItem.name.replace(/\s*\(\d{4}\)\s*$/, '')}
             </h1>
+
+            {/* Gold hairline — doubles as the resume progress bar on the resume tier */}
+            <div className="h-[2px] rounded-full mb-3 overflow-hidden" style={{ width: heroPick?.tier === 'resume' ? '180px' : '56px', background: 'rgba(255,255,255,0.12)' }}>
+              <div className="h-full rounded-full" style={{
+                width: heroPick?.tier === 'resume' ? `${resumePct}%` : '100%',
+                background: `linear-gradient(90deg, ${GOLD}, ${GOLD_DEEP})`,
+                boxShadow: `0 0 8px ${GOLD}66`,
+              }} />
+            </div>
+
             <div className="flex items-center gap-2 mb-3 flex-wrap">
-              {heroMovie.tmdb.r > 0 && (
-                <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-yellow-500/20 text-yellow-400 text-[11px] font-bold">
-                  <Star className="w-3 h-3 fill-yellow-400" />
-                  {heroMovie.tmdb.r.toFixed(1)}
+              {(heroEntry.r ?? 0) > 0 && (
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold"
+                  style={{ background: `${GOLD}26`, color: GOLD }}>
+                  <Star className="w-3 h-3" style={{ fill: GOLD }} />
+                  {heroEntry.r!.toFixed(1)}
                 </span>
               )}
-              {(() => { const ym = heroMovie.movie.name.match(/\((\d{4})\)/); return ym ? <span className="text-[11px] text-white/50 font-medium">{ym[1]}</span> : null; })()}
-              {heroMovie.tmdb.g?.slice(0, 3).map(gid => (
+              {(() => { const ym = heroItem.name.match(/\((\d{4})\)/); return ym ? <span className="text-[11px] text-white/50 font-medium">{ym[1]}</span> : null; })()}
+              {heroEntry.g?.slice(0, 3).map(gid => (
                 <span key={gid} className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] text-white/60 font-medium">
                   {TMDB_GENRES[gid] || ''}
                 </span>
@@ -553,15 +616,15 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setDetailMovie(heroMovie.movie)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white"
-                style={{ background: 'linear-gradient(135deg, #9D4EDD, #7B2FBE)' }}
+                onClick={() => { tap(); heroPick?.tier === 'resume' ? playHeroResume() : setDetailMovie(heroItem); }}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-transform active:scale-95"
+                style={{ background: `linear-gradient(135deg, ${GOLD}, ${GOLD_DEEP})`, color: '#1a130a', boxShadow: `0 6px 20px ${GOLD_DEEP}44` }}
               >
-                <Play className="w-4 h-4 fill-white" />
-                Play
+                <Play className="w-4 h-4" style={{ fill: '#1a130a' }} />
+                {heroPick?.tier === 'resume' ? (lang === 'fr' ? 'Reprendre' : 'Resume') : (lang === 'fr' ? 'Lecture' : 'Play')}
               </button>
               <button
-                onClick={() => setDetailMovie(heroMovie.movie)}
+                onClick={() => { tap(); setDetailMovie(heroItem); }}
                 className="flex items-center justify-center w-10 h-10 rounded-full border border-white/20 bg-white/5 hover:bg-white/10 transition-colors"
               >
                 <Plus className="w-4 h-4 text-white/80" />
@@ -571,19 +634,16 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         </div>
       ) : (
         <div className="pt-16 pb-5 px-5">
-          <h1 className="text-[22px] font-semibold text-white/85 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.02em' }}>Cinema</h1>
-          <div className="w-16 h-[2px] rounded-full mt-2" style={{ background: 'linear-gradient(90deg, rgba(245,158,11,0.5) 0%, rgba(245,158,11,0.15) 60%, transparent 100%)' }} />
+          <h1 className="text-[22px] font-semibold text-white/85 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.02em' }}>Cinéma</h1>
+          <div className="w-16 h-[2px] rounded-full mt-2" style={{ background: `linear-gradient(90deg, ${GOLD}88 0%, ${GOLD}26 60%, transparent 100%)` }} />
         </div>
       )}
 
-      {/* ── Cinéma en direct — a simple horizontal ROW of the live cinema-TV
-          channels (HBO, Sky Cinema…). LIVE channels, distinct from the VOD
-          billboard above. Sits below the floating cards, before the grid.
-          Each tile plays through the live (proxy) seam (playLiveCinema). ── */}
+      {/* ── Cinéma en direct (live cinema-TV channels) ── */}
       {!isSearching && liveCinema.length > 0 && (
-        <section className="px-4 pt-5 pb-1 reveal">
+        <section className="px-4 pt-5 pb-1 row-tier-standard">
           <div className="flex items-center gap-2.5 mb-3.5">
-            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#E8B53A', boxShadow: '0 0 6px #E8B53A' }} />
+            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: GOLD, boxShadow: `0 0 6px ${GOLD}` }} />
             <h2 className="text-[19px] font-black tracking-tight text-white">Cinéma en direct</h2>
             <span className="tivi-count-metal text-[8px] font-bold flex-shrink-0" style={{ letterSpacing: '0.5px' }}>
               {liveCinema.length}
@@ -601,14 +661,13 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 <div
                   className="relative rounded-2xl flex items-center justify-center overflow-hidden transition-transform duration-200 ease-out group-hover:scale-[1.04] group-active:scale-[0.95]"
                   style={{
-                    width: 130,
-                    height: 96,
+                    width: 130, height: 96,
                     background: 'linear-gradient(157deg, rgba(255,255,255,0.085) 0%, rgba(255,255,255,0.025) 50%, rgba(255,255,255,0.012) 100%)',
                     boxShadow: '0 4px 14px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1px rgba(255,255,255,0.045)',
                   }}
                 >
                   <div className="absolute inset-x-0 top-0 h-2/3 pointer-events-none z-[1]"
-                    style={{ background: 'radial-gradient(ellipse 85% 100% at 32% 0%, #E8B53A26, transparent 72%)' }} />
+                    style={{ background: `radial-gradient(ellipse 85% 100% at 32% 0%, ${GOLD}26, transparent 72%)` }} />
                   <ChannelIcon src={ch.icon} name={ch.name} size="md" />
                   <div className="absolute top-1.5 left-1.5 z-[2] flex items-center gap-1 px-1.5 py-0.5 rounded-full"
                     style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}>
@@ -634,9 +693,8 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         </section>
       )}
 
-      {/* ── Smart sticky — hides on sustained scroll, peeks back after 2s idle ── */}
+      {/* ── Smart sticky header (search + tabs + genre pills) ── */}
       <div className={stickyClass} style={stickyStyle}>
-        {/* Search */}
         <div className="px-4 pt-4 pb-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none" />
@@ -659,21 +717,20 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
         {!isSearching && (
           <>
-            {/* Parent tabs */}
             <div className="flex gap-1.5 overflow-x-auto scrollbar-hide px-4 pb-2">
               {MOVIE_TABS.map(tab => (
                 <button key={tab.id} onClick={() => handleParentChange(tab.id)}
                   className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-[13px] font-semibold transition-[color,background-color,border-color] duration-300 ${
                     activeParent === tab.id
-                      ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                      ? 'text-[#1a130a]'
                       : 'bg-white/[0.04] text-white/40 hover:bg-white/[0.08] hover:text-white/60'
-                  }`}>
+                  }`}
+                  style={activeParent === tab.id ? { background: `linear-gradient(135deg, ${GOLD}, ${GOLD_DEEP})`, boxShadow: `0 4px 14px ${GOLD_DEEP}33` } : undefined}>
                   {TAB_NAME_MAP[tab.name] ? t(lang, TAB_NAME_MAP[tab.name]) : tab.name}
                 </button>
               ))}
             </div>
 
-            {/* Subtabs */}
             {currentParent.subtabs.length > 1 && (
               <div ref={subtabScrollRef} className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-2 pt-0.5">
                 {currentParent.subtabs.map(sub => (
@@ -689,29 +746,24 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               </div>
             )}
 
-            {/* Genre filter pills (TMDB-powered) — only show when we have content */}
             {!loading && movies.length > 0 && activeGenreFilters.length > 2 && (
               <div ref={genreScrollRef} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide px-4 pb-2.5 pt-0.5">
                 {activeGenreFilters.map(g => (
                   <button key={g.id} onClick={() => setActiveGenre(g.id)}
                     className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 min-h-[34px] rounded-lg text-[12px] font-medium transition-colors duration-300 ${
-                      activeGenre === g.id
-                        ? 'bg-primary/20 text-primary-light border border-primary/30'
-                        : 'text-white/25 hover:text-white/45'
-                    }`}>
+                      activeGenre === g.id ? '' : 'text-white/25 hover:text-white/45'
+                    }`}
+                    style={activeGenre === g.id ? { background: `${GOLD}22`, color: GOLD, border: `1px solid ${GOLD}40` } : undefined}>
                     {GENRE_NAME_MAP[g.name] ? t(lang, GENRE_NAME_MAP[g.name]) : g.name}
                     {g.id !== 0 && genreCounts[g.id] && (
                       <span className="text-[9px] opacity-50">{genreCounts[g.id]}</span>
                     )}
                   </button>
                 ))}
-
-                {/* Sort toggle */}
                 <div className="flex-shrink-0 ml-auto pl-2 border-l border-white/5">
                   <button onClick={() => {
                     const modes: SortMode[] = ['smart', 'rating', 'newest', 'name'];
-                    const next = modes[(modes.indexOf(sortMode) + 1) % modes.length];
-                    setSortMode(next);
+                    setSortMode(modes[(modes.indexOf(sortMode) + 1) % modes.length]);
                   }}
                     className="flex items-center gap-1 px-3 py-1.5 min-h-[34px] rounded-lg text-[12px] text-white/35 hover:text-white/60 transition-colors">
                     <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -732,119 +784,134 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         )}
       </div>
 
-      {/* ── For You — personalized from what you've opened (localStorage). A
-          remembered relationship: title breathes, the most-recent watch pulses. ── */}
-      {!isSearching && !loading && recent.length > 0 && (
-        <section className="px-4 pt-6 pb-3">
-          <h2 className="text-[19px] font-black text-white/90 mb-1 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#9D4EDD', boxShadow: '0 0 8px #9D4EDD, 0 0 14px rgba(157,78,221,0.4)' }} />
-            For You
-            <RowCountBadge count={recent.length} label="movies" />
-          </h2>
-          <p className="text-[11px] text-white/30 mb-3 ml-3.5">{lang === 'fr' ? 'Repris là où vous étiez' : 'Recently watched'}</p>
-          <div className="flex gap-4 overflow-x-auto scrollbar-hide scroll-fade pb-2 items-end">
-            {recent.map((m, i) => (
-              <div key={m.stream_id} className="flex-shrink-0" style={{ width: 'clamp(116px, 32vw, 140px)' }}>
-                <div className="relative" style={i === 0 ? { boxShadow: '0 0 0 1.5px rgba(157,78,221,0.45), 0 6px 22px rgba(157,78,221,0.18)', borderRadius: '0.75rem' } : undefined}>
-                  <PosterCard title={m.name} poster={m.stream_icon} rating={m.rating}
-                    tmdbData={tmdbMap[`m:${m.stream_id}`]} onClick={() => setDetailMovie(m)} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+      {/* ── SEARCH MODE — keep a curated context strip, then the result grid ── */}
+      {isSearching && searchContextRow && (
+        <div className="pt-4 pb-1 row-tier-featured">
+          <VeeCollectionRow
+            name={lang === 'fr' ? 'Recommandé pour cette recherche' : 'Recommended for this search'}
+            tagline={searchContextRow.tagline}
+            items={searchContextRow.items}
+            tmdbMap={tmdbMap}
+            cardWidth={116}
+            accent={GOLD}
+            countLabel={t(lang, 'moviesLabel')}
+            onItemClick={openDetail}
+          />
+        </div>
       )}
 
-      {/* ── Trending row ── */}
-      {!isSearching && !loading && activeGenre === 0 && trendingMovies.length >= 5 && (
-        <section className="px-4 pt-6 pb-3 row-tier-hero reveal">
-          <h2 className="text-[19px] font-black text-white/90 mb-3 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-            {t(lang, 'trendingNow')}
-            <RowCountBadge count={trendingMovies.length} label="movies" />
-          </h2>
-          <div className="flex gap-4 overflow-x-auto scrollbar-hide scroll-fade pb-2 items-end">
-            {trendingMovies.map((m, i) => (
-              <div key={m.stream_id} className="flex-shrink-0" style={{ width: 'clamp(116px, 32vw, 140px)', animation: i < 12 ? `vee-card-in 0.9s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms both` : undefined }}>
-                <PosterCard title={m.name} poster={m.stream_icon} rating={m.rating}
-                  tmdbData={tmdbMap[`m:${m.stream_id}`]} onClick={() => setDetailMovie(m)} />
+      {/* ── BROWSE MODE — Continue Watching + the living ladder ── */}
+      {!isSearching && !loading && activeGenre === 0 && (
+        <>
+          {/* Row 0 — Reprendre (Keep Watching) */}
+          {keepWatching.length > 0 && (
+            <section className="px-4 pt-6 pb-2 row-tier-hero">
+              <div className="flex items-center gap-2.5 mb-3.5">
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: GOLD, boxShadow: `0 0 7px ${GOLD}` }} />
+                <h2 className="text-[19px] font-black tracking-tight text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                  {lang === 'fr' ? 'Reprendre' : 'Keep Watching'}
+                </h2>
+                <RowCountBadge count={keepWatching.length} label={t(lang, 'moviesLabel')} />
               </div>
-            ))}
-            <NeonGate navigateTo="/movies" />
-          </div>
-        </section>
-      )}
-
-      {/* ── Moment pack rows ── */}
-      {!isSearching && activeGenre === 0 && momentRows.length > 0 && (
-        <div className="py-5">
-          {momentRows.map(({ pack, items }, rowIdx) => {
-            const mood = moodColor(pack.id);
-            return (
-            <section key={pack.id} className={`${rowIdx === 0 ? 'row-tier-featured' : 'row-tier-standard'} reveal`}>
-              <div className="px-4 mb-2">
-                <h3 className={`${rowIdx === 0 ? 'text-[17px]' : 'text-[15px]'} font-semibold text-white/65 flex items-center gap-1.5`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                  <span style={{ color: mood, filter: `drop-shadow(0 0 6px ${mood}88)` }}>{MOMENT_ICON_MAP[pack.icon]}</span>
-                  {t(lang, pack.nameKey as TranslationKey)}
-                  <RowCountBadge count={items.length} label="movies" />
-                </h3>
-              </div>
-              <div className="flex gap-3.5 overflow-x-auto scrollbar-hide scroll-fade px-4 pb-2 items-end">
-                {items.map((m, i) => (
-                  <div key={m.stream_id} className="flex-shrink-0" style={{ width: 'clamp(100px, 28vw, 116px)', animation: i < 12 ? `vee-card-in 0.9s cubic-bezier(0.16,1,0.3,1) ${i * 120}ms both` : undefined }}>
-                    <PosterCard title={m.name} poster={m.stream_icon} rating={m.rating}
-                      tmdbData={tmdbMap[`m:${m.stream_id}`]} onClick={() => setDetailMovie(m)} />
-                  </div>
-                ))}
-                <NeonGate navigateTo="/movies" />
+              <div className="flex gap-3 overflow-x-auto scrollbar-hide scroll-fade pb-1">
+                {keepWatching.map(e => {
+                  const total = e.totalDuration ?? 0;
+                  const pos = resumePosition(e);
+                  const pct = total > 0 ? Math.min(100, Math.max(3, (pos / total) * 100)) : 0;
+                  return (
+                    <button key={e.channelId} onPointerDown={() => tap()} onClick={() => playResume(e)}
+                      className="flex-shrink-0 group" style={{ width: 150 }}>
+                      <div className="relative rounded-2xl overflow-hidden transition-transform duration-200 ease-out group-hover:scale-[1.04] group-active:scale-[0.95]"
+                        style={{ width: 150, height: 96, background: 'linear-gradient(157deg, rgba(255,255,255,0.085) 0%, rgba(255,255,255,0.025) 50%, rgba(255,255,255,0.012) 100%)', boxShadow: '0 4px 14px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1px rgba(255,255,255,0.045)' }}>
+                        {e.logo && <img src={e.logo} alt="" className="absolute inset-0 w-full h-full object-cover opacity-90" loading="lazy" />}
+                        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, transparent 40%, rgba(22,18,16,0.88) 100%)' }} />
+                        <div className="absolute inset-0 z-[3] flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200"
+                          style={{ background: 'rgba(0,0,0,0.42)' }}>
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center"
+                            style={{ background: 'rgba(255,255,255,0.16)', border: '1px solid rgba(255,255,255,0.32)', backdropFilter: 'blur(6px)' }}>
+                            <Play className="w-3.5 h-3.5 text-white ml-0.5" fill="white" />
+                          </div>
+                        </div>
+                        {/* Gold resume progress bar */}
+                        <div className="absolute bottom-0 left-0 right-0 h-[3px]" style={{ background: 'rgba(255,255,255,0.12)' }}>
+                          <div className="h-full" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${GOLD}, ${GOLD_DEEP})`, boxShadow: `0 0 6px ${GOLD}88` }} />
+                        </div>
+                      </div>
+                      <p className="text-[10.5px] leading-tight text-white/60 text-center mt-1.5 px-0.5 line-clamp-2 font-medium tracking-tight group-hover:text-white/90 transition-colors">
+                        {(e.name || '').replace(/\s*\(\d{4}\)\s*$/, '')}
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
             </section>
-            );
-          })}
-        </div>
+          )}
+
+          {/* The recommendation ladder — every row through VeeCollectionRow + PosterCard */}
+          {ladder.length > 0 && (
+            <div className="py-3">
+              {ladder.map((row, i) => {
+                const tierClass = i === 0 ? 'row-tier-hero' : i <= 2 ? 'row-tier-featured' : 'row-tier-standard';
+                const cardWidth = i === 0 ? 140 : i <= 2 ? 120 : 108;
+                const editorial = isEditorialRow(row);
+                return (
+                  <section key={row.id} className={`${tierClass} reveal mb-1`}
+                    style={row.id === 'african-spotlight'
+                      ? { background: `radial-gradient(120% 80% at 0% 0%, ${TERRACOTTA}10, transparent 60%)` }
+                      : undefined}>
+                    <VeeCollectionRow
+                      name={row.name}
+                      tagline={row.tagline}
+                      items={row.isTop10 ? row.items.slice(0, 10) : row.items}
+                      tmdbMap={tmdbMap}
+                      isTop10={!!row.isTop10}
+                      cardWidth={cardWidth}
+                      navigateTo="/movies"
+                      countLabel={t(lang, 'moviesLabel')}
+                      accent={rowAccent(row)}
+                      editorial={editorial}
+                      onItemClick={openDetail}
+                    />
+                  </section>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
 
-      {/* ── VEE Intelligence rows — with breathing hierarchy ── */}
-      {!isSearching && !loading && activeGenre === 0 && veeCollectionRows.length > 0 && (
-        <div className="py-5">
-          {veeCollectionRows.map(({ collection, items }, rowIndex) => {
-            const tierClass = rowIndex === 0 ? 'row-tier-hero' : rowIndex <= 2 ? 'row-tier-featured' : 'row-tier-standard';
-            const cardWidth = rowIndex === 0 ? 140 : rowIndex <= 2 ? 120 : 108;
-            return (
-              <React.Fragment key={collection.id}>
-                <section className={`${tierClass} reveal`}>
+      {/* ── GENRE-ACTIVE — context rows + filter indicator (context never fully lost) ── */}
+      {!isSearching && activeGenre !== 0 && !loading && (
+        <>
+          {genreContextRows.length > 0 && (
+            <div className="pt-4 pb-1">
+              {genreContextRows.map((row, i) => (
+                <section key={row.id} className={`${i === 0 ? 'row-tier-featured' : 'row-tier-standard'} reveal mb-1`}>
                   <VeeCollectionRow
-                    name={collection.name}
-                    tagline=""
-                    items={rowIndex === 0 ? items.slice(0, 10) : items}
+                    name={row.name}
+                    tagline={row.tagline}
+                    items={row.isTop10 ? row.items.slice(0, 10) : row.items}
                     tmdbMap={tmdbMap}
-                    isTop10={rowIndex === 0}
-                    cardWidth={cardWidth}
-                    navigateTo="/movies"
-                    countLabel="movies"
-                    onItemClick={(id) => {
-                      const movie = movies.find(m => m.stream_id === id);
-                      if (movie) setDetailMovie(movie);
-                    }}
+                    isTop10={!!row.isTop10}
+                    cardWidth={116}
+                    accent={row.driver === 'dash-curated' ? GOLD : '#D9A441'}
+                    countLabel={t(lang, 'moviesLabel')}
+                    onItemClick={openDetail}
                   />
                 </section>
-              </React.Fragment>
-            );
-          })}
-        </div>
+              ))}
+            </div>
+          )}
+          <div className="px-5 pt-4 pb-2 flex items-center gap-2">
+            <span className="text-xs text-white/30">
+              {filteredAndSorted.length} {genreLabel(activeGenre, lang)} {t(lang, 'moviesLabel')}
+            </span>
+            <button onClick={() => setActiveGenre(0)} className="text-[10px]" style={{ color: `${GOLD}aa` }}>{t(lang, 'clearFilter')}</button>
+          </div>
+        </>
       )}
 
-      {/* ── Active filter indicator ── */}
-      {activeGenre !== 0 && !loading && (
-        <div className="px-5 pt-4 pb-2 flex items-center gap-2">
-          <span className="text-xs text-white/30">
-            {filteredAndSorted.length} {(() => { const gn = GENRE_FILTERS.find(g => g.id === activeGenre)?.name; return gn && GENRE_NAME_MAP[gn] ? t(lang, GENRE_NAME_MAP[gn]) : gn; })()} {t(lang, 'moviesLabel')}
-          </span>
-          <button onClick={() => setActiveGenre(0)} className="text-[10px] text-primary/60 hover:text-primary">{t(lang, 'clearFilter')}</button>
-        </div>
-      )}
-
-      {/* ── Movie grid ── */}
+      {/* ── Movie grid (the deep-browse floor) ── */}
       {displayLoading ? (
         <div className="flex items-center justify-center py-24">
           <LoadingSpinner size="lg" text={isSearching ? t(lang, 'searchingEllipsis') : t(lang, 'loading')} />
@@ -854,15 +921,11 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           <p className="text-text-muted text-sm">{t(lang, 'unableToLoadRetry')}</p>
           <button onClick={() => { setMoviesError(false); setLoading(true); setRetryKey(k => k + 1); }}
             className="group px-5 py-2.5 rounded-xl text-[12px] font-medium tracking-wide transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-            style={{
-              background: 'linear-gradient(135deg, rgba(157,78,221,0.15) 0%, rgba(157,78,221,0.06) 100%)',
-              border: '1px solid rgba(157,78,221,0.25)',
-              color: 'rgba(157,78,221,0.85)',
-            }}>{t(lang, 'retry')}</button>
+            style={{ background: `linear-gradient(135deg, ${GOLD}26 0%, ${GOLD}0d 100%)`, border: `1px solid ${GOLD}40`, color: GOLD }}>{t(lang, 'retry')}</button>
         </div>
       ) : filteredAndSorted.length === 0 ? (
         isSearching || activeGenre !== 0 ? (
-          <EmptyState icon="film" title={isSearching ? t(lang, 'noMoviesMatch') : t(lang, 'noMoviesGenre')} subtitle="Try a different search or genre" action={{ label: isSearching ? 'Clear search' : 'Show all genres', onClick: () => { setSearchQuery(''); setActiveGenre(0); } }} />
+          <EmptyState icon="film" title={isSearching ? t(lang, 'noMoviesMatch') : t(lang, 'noMoviesGenre')} subtitle={lang === 'fr' ? 'Essayez une autre recherche ou un autre genre' : 'Try a different search or genre'} action={{ label: isSearching ? 'Clear search' : 'Show all genres', onClick: () => { setSearchQuery(''); setActiveGenre(0); } }} />
         ) : (
           <div className="flex flex-col items-center justify-center py-24 text-text-muted text-sm gap-2">
             {t(lang, 'noMoviesInCategory')}
@@ -870,12 +933,20 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         )
       ) : (
         <>
+          {/* Grid header — only when there's a curated ladder above, to mark the floor */}
+          {!isSearching && activeGenre === 0 && ladder.length > 0 && (
+            <div className="px-5 pt-6 pb-1 flex items-center gap-2.5">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.3)' }} />
+              <h2 className="text-[15px] font-semibold text-white/55" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                {lang === 'fr' ? 'Tout le catalogue' : 'Browse all'}
+              </h2>
+            </div>
+          )}
           <div className="grid grid-cols-2 min-[500px]:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5">
             {(isSearching ? filteredAndSorted : filteredAndSorted.slice(0, displayLimit)).map(movie => (
               <div key={movie.stream_id} className="relative group/card cv-grid-cell">
                 <PosterCard title={movie.name} poster={movie.stream_icon} rating={movie.rating}
                   tmdbData={tmdbMap[`m:${movie.stream_id}`]} onClick={() => setDetailMovie(movie)} />
-                {/* Download — secondary, subtle. Quiet on the poster, not a primary CTA. */}
                 <button onClick={e => {
                     e.stopPropagation();
                     const url = buildVodUrl(credentials, movie.stream_id, movie.container_extension || 'mp4');
@@ -888,7 +959,6 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
-                    // Record to the Library "My Downloads" store
                     import('@/lib/downloads').then(({ recordDownload }) => {
                       recordDownload({ title: movie.name, poster: movie.stream_icon, url, type: 'movie' });
                     });
@@ -906,21 +976,18 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               <button
                 onClick={() => setDisplayLimit(prev => prev + PAGE_SIZE)}
                 className="group w-full relative overflow-hidden rounded-2xl py-3.5 transition-all duration-300 hover:scale-[1.005] active:scale-[0.995]"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(157,78,221,0.13) 0%, rgba(157,78,221,0.05) 100%)',
-                  border: '1px solid rgba(157,78,221,0.22)',
-                }}
+                style={{ background: `linear-gradient(135deg, ${GOLD}1f 0%, ${GOLD}0a 100%)`, border: `1px solid ${GOLD}33` }}
               >
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(157,78,221,0.08) 50%, transparent 100%)' }}
+                  style={{ background: `linear-gradient(90deg, transparent 0%, ${GOLD}14 50%, transparent 100%)` }}
                 />
                 <div className="relative flex flex-col items-center justify-center gap-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-semibold tracking-[0.15em] uppercase" style={{ color: 'rgba(201,160,255,0.9)' }}>
+                    <span className="text-[11px] font-semibold tracking-[0.15em] uppercase" style={{ color: GOLD }}>
                       {t(lang, 'showMore')}
                     </span>
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="animate-bounce" style={{ animationDuration: '1.8s' }}>
-                      <path d="M6 2v8M2 6l4 4 4-4" stroke="rgba(201,160,255,0.7)" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M6 2v8M2 6l4 4 4-4" stroke={GOLD} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
                   <span className="text-[9px] font-mono" style={{ color: 'rgba(255,255,255,0.35)' }}>
@@ -933,10 +1000,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         </>
       )}
 
-      {/* ── Trailer SPACE (Phase B) ── reuses ContentDetailModal's trailer
-          playback, wrapped in the 4-direction navigator. Pool = what's on
-          screen (filtered/sorted) so L/R neighbours match the current context;
-          U/D jump genre rows. Exit breathes back to this grid. ── */}
+      {/* ── Trailer SPACE ── */}
       {detailMovie && (
         <MoviesTrailerSpace
           credentials={credentials}
@@ -950,3 +1014,11 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     </div>
   );
 };
+
+// ── Helpers ──────────────────────────────────────────────────────
+
+function genreLabel(id: number, lang: 'fr' | 'en'): string {
+  const g = GENRE_FILTERS.find(x => x.id === id);
+  if (g && GENRE_NAME_MAP[g.name]) return t(lang, GENRE_NAME_MAP[g.name]);
+  return TMDB_GENRES[id] || g?.name || '';
+}

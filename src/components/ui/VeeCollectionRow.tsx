@@ -28,6 +28,12 @@ interface VeeCollectionRowProps {
   navigateTo?: string;
   /** Count label for the badge (e.g., "movies", "series") */
   countLabel?: string;
+  /** Warm-luxury accent (hex) for the row dot + glow. Defaults to the house purple.
+   *  Ignored for Top-10 rows (those stay editorial red). Additive — omit for legacy look. */
+  accent?: string;
+  /** Editorial row (curated-by-humans): warmer, heavier title in the display serif-ish
+   *  face. Utility rows leave this off for the clean computed look. */
+  editorial?: boolean;
 }
 
 export const VeeCollectionRow: React.FC<VeeCollectionRowProps> = React.memo(({
@@ -40,28 +46,36 @@ export const VeeCollectionRow: React.FC<VeeCollectionRowProps> = React.memo(({
   cardWidth,
   navigateTo,
   countLabel = 'titles',
+  accent,
+  editorial = false,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   if (items.length < 3) return null;
 
+  // Dot + glow: Top-10 keeps editorial red; otherwise honour the warm accent (gold /
+  // terracotta on editorial rows), falling back to the house purple for utility rows.
+  const dotBg = isTop10
+    ? 'linear-gradient(135deg, #E50914, #B20710)'
+    : accent
+      ? `linear-gradient(135deg, ${accent}, ${accent}99)`
+      : 'linear-gradient(135deg, #9D4EDD, #7B2FBE)';
+  const dotGlow = isTop10
+    ? '0 0 6px rgba(229,9,20,0.5)'
+    : accent
+      ? `0 0 7px ${accent}66`
+      : '0 0 4px rgba(157,78,221,0.4)';
+
   return (
     <section>
       <div className="px-4 mb-2">
         <h3
-          className="text-[15px] font-semibold text-white/60 flex items-center gap-1.5"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          className={`flex items-center gap-1.5 ${editorial ? 'text-[16px] font-bold text-white/75' : 'text-[15px] font-semibold text-white/60'}`}
+          style={{ fontFamily: editorial ? "'Outfit', sans-serif" : "'Space Grotesk', sans-serif", letterSpacing: editorial ? '-0.01em' : undefined }}
         >
           <span
             className="w-1.5 h-1.5 rounded-full"
-            style={{
-              background: isTop10
-                ? 'linear-gradient(135deg, #E50914, #B20710)'
-                : 'linear-gradient(135deg, #9D4EDD, #7B2FBE)',
-              boxShadow: isTop10
-                ? '0 0 6px rgba(229,9,20,0.5)'
-                : '0 0 4px rgba(157,78,221,0.4)',
-            }}
+            style={{ background: dotBg, boxShadow: dotGlow }}
           />
           {name}
           <RowCountBadge count={items.length} label={countLabel} />
