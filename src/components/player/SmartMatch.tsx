@@ -32,8 +32,10 @@ function normalizeChannelName(name: string): string {
   n = n.replace(/\s*(HD|FHD|UHD|4K|SD)\s*$/gi, '');
   n = n.replace(/\s*(HD|FHD|UHD|4K|SD)\s*$/gi, '');
   n = n.replace(/\s+/g, ' ').trim();
-  // Remove trailing S (for "MAIN EVENTS" vs "MAIN EVENT")
-  n = n.replace(/S\s*$/i, '');
+  // Remove trailing S ONLY within the known "EVENTS" token ("MAIN EVENTS" vs "MAIN EVENT").
+  // Do NOT strip a trailing S from arbitrary names — that collapses unrelated channels
+  // ("STAR MOVIES"→"STAR MOVIE", "MTV HITS"→"MTV HIT") into false quality variants.
+  n = n.replace(/\bEVENTS\s*$/i, 'EVENT');
   return n;
 }
 

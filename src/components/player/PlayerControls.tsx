@@ -113,8 +113,16 @@ export const PlayerControls: React.FC<Props> = ({
         visible ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}
     >
-      {/* Top gradient + info */}
-      <div className="player-top-gradient p-4 flex items-start justify-between">
+      {/* Top gradient + info — safe-area insets so Back/X clear the notch / Dynamic
+          Island in the installed PWA (viewport-fit=cover), incl. landscape side-notch. */}
+      <div
+        className="player-top-gradient p-4 flex items-start justify-between"
+        style={{
+          paddingTop: 'max(1rem, env(safe-area-inset-top))',
+          paddingLeft: 'max(1rem, env(safe-area-inset-left))',
+          paddingRight: 'max(1rem, env(safe-area-inset-right))',
+        }}
+      >
         <div className="flex items-center gap-3">
           {onBack && (
             <button
@@ -228,7 +236,17 @@ export const PlayerControls: React.FC<Props> = ({
               onMouseLeave={() => setShowVolume(false)}
             >
               <button
-                onClick={onToggleMute}
+                onClick={() => {
+                  // Touch devices have no hover, so the slider would never open and
+                  // volume between 0 and 1 would be unreachable. On a no-hover pointer,
+                  // tapping the speaker toggles the slider open (drag to 0 = mute);
+                  // on hover-capable devices keep the original mute-on-tap behaviour.
+                  if (typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches) {
+                    setShowVolume((v) => !v);
+                  } else {
+                    onToggleMute();
+                  }
+                }}
                 className="w-11 h-11 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
                 aria-label={state.isMuted ? 'Unmute' : 'Mute'}
               >

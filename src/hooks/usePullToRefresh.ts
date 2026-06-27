@@ -4,15 +4,31 @@ import { tap, confirm as hapticConfirm } from '@/lib/haptics';
 const THRESHOLD = 80;   // px of pull before triggering
 const MAX_PULL = 120;   // max visual distance
 
-export function usePullToRefresh() {
+export function usePullToRefresh(options?: { enabled?: boolean }) {
+  // Gate PTR OFF while the full-screen player is open: in the player a downward
+  // swipe is the vertical category-surf gesture, which otherwise satisfies PTR and
+  // hard-reloads the page mid-stream. Caller passes enabled={!showFullPlayer}.
+  const enabled = options?.enabled ?? true;
   const [pulling, setPulling] = useState(false);
   const [pullY, setPullY] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const startY = useRef(0);
   const startX = useRef(0);
   const active = useRef(false);
+  // Mirror pullY/refreshing into refs so the touch handlers read the latest value
+  // WITHOUT the listeners being torn down + re-added on every touchmove frame
+  // (the old [pullY] dep churned add/removeEventListener — jank on low-end Android).
+  const pullYRef = useRef(0);
+  const refreshingRef = useRef(false);
+
+  function applyPullY(y: number) {
+    pullYRef.current = y;
+    setPullY(y);
+  }
 
   useEffect(() => {
+    if (!enabled) return;
+
     function onTouchStart(e: TouchEvent) {
       if (window.scrollY > 5) return;
       // The floating search pebble (and anything marked data-no-ptr) must NOT
@@ -24,33 +40,34 @@ export function usePullToRefresh() {
     }
 
     function onTouchMove(e: TouchEvent) {
-      if (!active.current || refreshing) return;
+      if (!active.current || refreshingRef.current) return;
       const dy = e.touches[0].clientY - startY.current;
       const dx = Math.abs(e.touches[0].clientX - startX.current);
       // Horizontal-dominant gesture → skip (channel row scrolling)
       if (Math.abs(dy) < dx * 0.5) return;
-      if (dy < 0) { active.current = false; setPulling(false); setPullY(0); return; }
+      if (dy < 0) { active.current = false; setPulling(false); applyPullY(0); return; }
       if (dy > 10) {
         const newY = Math.min(dy * 0.5, MAX_PULL);
         // Tick when crossing the threshold
-        if (newY >= THRESHOLD * 0.5 && pullY < THRESHOLD * 0.5) tap();
+        if (newY >= THRESHOLD * 0.5 && pullYRef.current < THRESHOLD * 0.5) tap();
         setPulling(true);
-        setPullY(newY);
+        applyPullY(newY);
       }
     }
 
     function onTouchEnd() {
       if (!active.current) return;
       active.current = false;
-      if (pullY >= THRESHOLD * 0.5) {
+      if (pullYRef.current >= THRESHOLD * 0.5) {
         hapticConfirm();
+        refreshingRef.current = true;
         setRefreshing(true);
-        setPullY(THRESHOLD * 0.4);
+        applyPullY(THRESHOLD * 0.4);
         // Reload the page
         setTimeout(() => window.location.reload(), 300);
       } else {
         setPulling(false);
-        setPullY(0);
+        applyPullY(0);
       }
     }
 
@@ -62,7 +79,7 @@ export function usePullToRefresh() {
       document.removeEventListener('touchmove', onTouchMove);
       document.removeEventListener('touchend', onTouchEnd);
     };
-  }, [pullY, refreshing]);
+  }, [enabled]);
 
   return { pulling, pullY, refreshing };
 }

@@ -414,7 +414,9 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
     return () => { running = false; };
   }, []);
 
-  const ptr = usePullToRefresh();
+  // Disable pull-to-refresh while the full player is open — a downward category-surf
+  // swipe in the player must not hard-reload the page mid-stream.
+  const ptr = usePullToRefresh({ enabled: !showFullPlayer });
   useScrollAmbient();
 
   if (!credentials && !guestMode) return null;

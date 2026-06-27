@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useSyncExternalStore } from 'react';
 import { getItem, setItem, removeItem } from '@/lib/storage';
 import type { XtreamCredentials } from '@/lib/xtream';
 
@@ -175,71 +175,99 @@ const UNAUTHENTICATED: AuthState = {
   isLoading: false,
 };
 
-export function useAuth() {
-  // Start in loading state if there's a stored code to re-validate
-  const initialLoading = loadStoredCode() !== null;
-  const [state, setState] = useState<AuthState>({ ...UNAUTHENTICATED, isLoading: initialLoading });
-  const checkIntervalRef = useRef<ReturnType<typeof setInterval>>();
+// ── Module-level singleton store ─────────────────────────────────────
+// Previously useAuth() was instantiated independently by 5+ components, each
+// running its own re-validation RPC on load AND its own 30-min interval. Those
+// copies could DIVERGE: a transient network error in one copy resolves it to
+// UNAUTHENTICATED (credentials=null) while another stays authenticated → either
+// a blank app (`!credentials` gate) or proxy URLs built with empty u=&p= → 401s.
+// We hoist auth to a single module-level store: ONE validation, ONE interval,
+// all consumers read the same snapshot via useSyncExternalStore.
 
-  // #26 — On app load, re-fetch credentials from Supabase if a stored code exists.
-  // Credentials (user/pass) are never kept in localStorage — only the code.
-  useEffect(() => {
-    const stored = loadStoredCode();
-    if (!stored) {
-      setState({ ...UNAUTHENTICATED, isLoading: false });
-      return;
-    }
+let authState: AuthState = {
+  ...UNAUTHENTICATED,
+  // Start in loading state if there's a stored code to re-validate (first-load gate).
+  isLoading: loadStoredCode() !== null,
+};
 
-    // PIN method — re-validate DASH ID + PIN via login_with_pin so the
-    // secret xtream creds (never persisted) come back fresh. Guests have
-    // no creds but a valid id+pin → restore guest-authenticated state.
-    if (stored.method === 'pin' && stored.pin) {
-      const pinTimeout = new Promise<PinResult>((resolve) =>
-        setTimeout(() => resolve({ ok: false, reason: 'network' }), 6000)
-      );
-      Promise.race([lookupPin(stored.code, stored.pin), pinTimeout]).then((result) => {
-        if (result.ok) {
-          const d = result.data;
-          const isGuest = d.guest === true;
-          setState({
-            isAuthenticated: true,
-            credentials: isGuest ? null : { username: d.username || '', password: d.password || '' },
-            tier: isGuest ? 'guest' : (d.tier || ''),
-            code: stored.code,
-            coreId: d.core_id || stored.coreId || stored.code,
-            customerName: d.name || '',
-            expires: isGuest ? '' : (d.expires_at || ''),
-            isLoading: false,
-          });
-          setItem(AUTH_KEY, {
-            method: 'pin',
-            code: stored.code,
-            pin: stored.pin,
-            coreId: d.core_id || stored.code,
-            tier: isGuest ? 'guest' : (d.tier || ''),
-            expires: isGuest ? '' : (d.expires_at || ''),
-            customerName: d.name || '',
-            guest: isGuest,
-          } satisfies StoredAuth);
-        } else {
-          removeItem(AUTH_KEY);
-          setState({ ...UNAUTHENTICATED, isLoading: false });
-        }
-      }).catch(() => {
+const listeners = new Set<() => void>();
+
+function emit() {
+  for (const l of listeners) l();
+}
+
+function setAuthState(next: AuthState) {
+  authState = next;
+  emit();
+}
+
+function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => { listeners.delete(listener); };
+}
+
+function getSnapshot(): AuthState {
+  return authState;
+}
+
+// One-time bootstrap: re-validate the stored session ONCE and install the single
+// app-lifetime expiry interval. Guarded so repeated useAuth() mounts can't re-run it.
+let bootstrapped = false;
+function ensureBootstrap() {
+  if (bootstrapped) return;
+  bootstrapped = true;
+
+  const stored = loadStoredCode();
+  if (!stored) {
+    setAuthState({ ...UNAUTHENTICATED, isLoading: false });
+  } else if (stored.method === 'pin' && stored.pin) {
+    // PIN method — re-validate DASH ID + PIN via login_with_pin so the secret
+    // xtream creds (never persisted) come back fresh. Guests have no creds but a
+    // valid id+pin → restore guest-authenticated state.
+    const pinTimeout = new Promise<PinResult>((resolve) =>
+      setTimeout(() => resolve({ ok: false, reason: 'network' }), 6000)
+    );
+    Promise.race([lookupPin(stored.code, stored.pin), pinTimeout]).then((result) => {
+      if (result.ok) {
+        const d = result.data;
+        const isGuest = d.guest === true;
+        setAuthState({
+          isAuthenticated: true,
+          credentials: isGuest ? null : { username: d.username || '', password: d.password || '' },
+          tier: isGuest ? 'guest' : (d.tier || ''),
+          code: stored.code,
+          coreId: d.core_id || stored.coreId || stored.code,
+          customerName: d.name || '',
+          expires: isGuest ? '' : (d.expires_at || ''),
+          isLoading: false,
+        });
+        setItem(AUTH_KEY, {
+          method: 'pin',
+          code: stored.code,
+          pin: stored.pin,
+          coreId: d.core_id || stored.code,
+          tier: isGuest ? 'guest' : (d.tier || ''),
+          expires: isGuest ? '' : (d.expires_at || ''),
+          customerName: d.name || '',
+          guest: isGuest,
+        } satisfies StoredAuth);
+      } else {
         removeItem(AUTH_KEY);
-        setState({ ...UNAUTHENTICATED, isLoading: false });
-      });
-      return;
-    }
-
+        setAuthState({ ...UNAUTHENTICATED, isLoading: false });
+      }
+    }).catch(() => {
+      removeItem(AUTH_KEY);
+      setAuthState({ ...UNAUTHENTICATED, isLoading: false });
+    });
+  } else {
     // Legacy access-code method (DASH-XXXX).
-    // Race lookup against a 6s timeout — never hang on loading screen
+    // Race lookup against a 6s timeout — never hang on loading screen.
     const timeout = new Promise<LookupResult>((resolve) =>
       setTimeout(() => resolve({ ok: false, reason: 'network' }), 6000)
     );
     Promise.race([lookupCode(stored.code), timeout]).then((result) => {
       if (result.ok) {
-        setState({
+        setAuthState({
           isAuthenticated: true,
           credentials: { username: result.row.user_xtream, password: result.row.pass_xtream },
           tier: result.row.tier,
@@ -261,149 +289,155 @@ export function useAuth() {
       } else {
         // Code expired or unreachable — clear session
         removeItem(AUTH_KEY);
-        setState({ ...UNAUTHENTICATED, isLoading: false });
+        setAuthState({ ...UNAUTHENTICATED, isLoading: false });
       }
     }).catch(() => {
       // Safety net — never hang on loading screen
       removeItem(AUTH_KEY);
-      setState({ ...UNAUTHENTICATED, isLoading: false });
+      setAuthState({ ...UNAUTHENTICATED, isLoading: false });
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }
 
-  // Periodic auth check — verify code hasn't expired mid-session (every 30 min)
-  useEffect(() => {
-    if (!state.isAuthenticated) return;
-    checkIntervalRef.current = setInterval(() => {
-      const stored = getItem<StoredAuth | null>(AUTH_KEY, null);
-      if (!stored || new Date(stored.expires) < new Date()) {
-        setState({ ...UNAUTHENTICATED, isLoading: false });
-        removeItem(AUTH_KEY);
-      }
-    }, 30 * 60 * 1000);
-    return () => { if (checkIntervalRef.current) clearInterval(checkIntervalRef.current); };
-  }, [state.isAuthenticated]);
-
-  const login = useCallback(async (code: string): Promise<{ success: boolean; error?: string }> => {
-    // Rate limiting — block rapid brute force
-    const delay = getLoginDelay();
-    if (delay > 0) {
-      return { success: false, error: `Too many attempts. Wait ${Math.ceil(delay / 1000)}s` };
+  // ONE periodic check for the whole app — verify the code hasn't expired mid-session.
+  setInterval(() => {
+    if (!authState.isAuthenticated) return;
+    const s = getItem<StoredAuth | null>(AUTH_KEY, null);
+    if (!s || new Date(s.expires) < new Date()) {
+      setAuthState({ ...UNAUTHENTICATED, isLoading: false });
+      removeItem(AUTH_KEY);
     }
+  }, 30 * 60 * 1000);
+}
 
-    const upper = code.trim().toUpperCase();
+async function login(code: string): Promise<{ success: boolean; error?: string }> {
+  // Rate limiting — block rapid brute force
+  const delay = getLoginDelay();
+  if (delay > 0) {
+    return { success: false, error: `Too many attempts. Wait ${Math.ceil(delay / 1000)}s` };
+  }
 
-    // #25 — lookupCode now returns a typed result distinguishing not_found / expired / network
-    const result = await lookupCode(upper);
+  const upper = code.trim().toUpperCase();
 
-    if (!result.ok) {
-      recordFail();
-      if (result.reason === 'expired') {
-        return { success: false, error: 'Access code expired — contact support' };
-      }
-      if (result.reason === 'network') {
-        return { success: false, error: 'Connection error — check your internet' };
-      }
-      return { success: false, error: 'Invalid access code' };
+  // #25 — lookupCode now returns a typed result distinguishing not_found / expired / network
+  const result = await lookupCode(upper);
+
+  if (!result.ok) {
+    recordFail();
+    if (result.reason === 'expired') {
+      return { success: false, error: 'Access code expired — contact support' };
     }
-
-    clearFails();
-
-    // #26 — Store only non-sensitive fields; credentials stay in memory only
-    const stored: StoredAuth = {
-      method: 'code',
-      code: upper,
-      coreId: upper,
-      tier: result.row.tier,
-      expires: result.row.expires_at,
-      customerName: result.row.customer_name || '',
-    };
-    setItem(AUTH_KEY, stored);
-
-    setState({
-      isAuthenticated: true,
-      credentials: { username: result.row.user_xtream, password: result.row.pass_xtream },
-      tier: result.row.tier,
-      code: upper,
-      coreId: upper,
-      customerName: result.row.customer_name || '',
-      expires: result.row.expires_at,
-      isLoading: false,
-    });
-
-    return { success: true };
-  }, []);
-
-  // ── loginWithPin — DASH ID + PIN (primary gate) ──────────────────
-  const loginWithPin = useCallback(
-    async (id: string, pin: string): Promise<{ success: boolean; guest?: boolean; error?: string }> => {
-      // Reuse the same brute-force backoff as the legacy path.
-      const delay = getLoginDelay();
-      if (delay > 0) {
-        return { success: false, error: `Too many attempts. Wait ${Math.ceil(delay / 1000)}s` };
-      }
-
-      const upperId = id.trim().toUpperCase();
-      const cleanPin = pin.trim();
-      if (!upperId || !cleanPin) {
-        return { success: false, error: 'Enter your DASH ID and PIN' };
-      }
-
-      const result = await lookupPin(upperId, cleanPin);
-
-      if (!result.ok) {
-        if (result.reason === 'network') {
-          return { success: false, error: 'Connection error — check your internet' };
-        }
-        recordFail();
-        return { success: false, error: 'Invalid DASH ID or PIN' };
-      }
-
-      clearFails();
-      const d = result.data;
-      const isGuest = d.guest === true;
-      const coreId = d.core_id || upperId;
-
-      const stored: StoredAuth = {
-        method: 'pin',
-        code: upperId,
-        pin: cleanPin,
-        coreId,
-        tier: isGuest ? 'guest' : (d.tier || ''),
-        expires: isGuest ? '' : (d.expires_at || ''),
-        customerName: d.name || '',
-        guest: isGuest,
-      };
-      setItem(AUTH_KEY, stored);
-
-      setState({
-        isAuthenticated: true,
-        credentials: isGuest ? null : { username: d.username || '', password: d.password || '' },
-        tier: isGuest ? 'guest' : (d.tier || ''),
-        code: upperId,
-        coreId,
-        customerName: d.name || '',
-        expires: isGuest ? '' : (d.expires_at || ''),
-        isLoading: false,
-      });
-
-      return { success: true, guest: isGuest };
-    },
-    []
-  );
-
-  const logout = useCallback(() => {
-    removeItem(AUTH_KEY);
-    clearFails();
-    // Clear all caches on logout
-    const keys = Object.keys(localStorage);
-    for (const key of keys) {
-      if (key.startsWith('xtream_') || key.startsWith('tivi_')) {
-        localStorage.removeItem(key);
-      }
+    if (result.reason === 'network') {
+      return { success: false, error: 'Connection error — check your internet' };
     }
-    setState({ ...UNAUTHENTICATED, isLoading: false });
-  }, []);
+    return { success: false, error: 'Invalid access code' };
+  }
+
+  clearFails();
+
+  // #26 — Store only non-sensitive fields; credentials stay in memory only
+  const stored: StoredAuth = {
+    method: 'code',
+    code: upper,
+    coreId: upper,
+    tier: result.row.tier,
+    expires: result.row.expires_at,
+    customerName: result.row.customer_name || '',
+  };
+  setItem(AUTH_KEY, stored);
+
+  setAuthState({
+    isAuthenticated: true,
+    credentials: { username: result.row.user_xtream, password: result.row.pass_xtream },
+    tier: result.row.tier,
+    code: upper,
+    coreId: upper,
+    customerName: result.row.customer_name || '',
+    expires: result.row.expires_at,
+    isLoading: false,
+  });
+
+  return { success: true };
+}
+
+// ── loginWithPin — DASH ID + PIN (primary gate) ──────────────────
+async function loginWithPin(
+  id: string,
+  pin: string
+): Promise<{ success: boolean; guest?: boolean; error?: string }> {
+  // Reuse the same brute-force backoff as the legacy path.
+  const delay = getLoginDelay();
+  if (delay > 0) {
+    return { success: false, error: `Too many attempts. Wait ${Math.ceil(delay / 1000)}s` };
+  }
+
+  const upperId = id.trim().toUpperCase();
+  const cleanPin = pin.trim();
+  if (!upperId || !cleanPin) {
+    return { success: false, error: 'Enter your DASH ID and PIN' };
+  }
+
+  const result = await lookupPin(upperId, cleanPin);
+
+  if (!result.ok) {
+    if (result.reason === 'network') {
+      return { success: false, error: 'Connection error — check your internet' };
+    }
+    recordFail();
+    return { success: false, error: 'Invalid DASH ID or PIN' };
+  }
+
+  clearFails();
+  const d = result.data;
+  const isGuest = d.guest === true;
+  const coreId = d.core_id || upperId;
+
+  const stored: StoredAuth = {
+    method: 'pin',
+    code: upperId,
+    pin: cleanPin,
+    coreId,
+    tier: isGuest ? 'guest' : (d.tier || ''),
+    expires: isGuest ? '' : (d.expires_at || ''),
+    customerName: d.name || '',
+    guest: isGuest,
+  };
+  setItem(AUTH_KEY, stored);
+
+  setAuthState({
+    isAuthenticated: true,
+    credentials: isGuest ? null : { username: d.username || '', password: d.password || '' },
+    tier: isGuest ? 'guest' : (d.tier || ''),
+    code: upperId,
+    coreId,
+    customerName: d.name || '',
+    expires: isGuest ? '' : (d.expires_at || ''),
+    isLoading: false,
+  });
+
+  return { success: true, guest: isGuest };
+}
+
+function logout() {
+  removeItem(AUTH_KEY);
+  clearFails();
+  // Clear ONLY transient xtream_* API caches + the auth/credential keys above.
+  // PRESERVE user data with no DB mirror (tivi_likes / tivi_downloads /
+  // tivi_watch_history) — wiping those on sign-out permanently destroyed the
+  // member's Library + Keep Watching.
+  const keys = Object.keys(localStorage);
+  for (const key of keys) {
+    if (key.startsWith('xtream_')) {
+      localStorage.removeItem(key);
+    }
+  }
+  setAuthState({ ...UNAUTHENTICATED, isLoading: false });
+}
+
+export function useAuth() {
+  // Kick off the single bootstrap (idempotent) the first time any component
+  // reads auth, then subscribe all consumers to the one shared snapshot.
+  ensureBootstrap();
+  const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
   return {
     isAuthenticated: state.isAuthenticated,

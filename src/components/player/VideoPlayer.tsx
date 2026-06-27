@@ -508,6 +508,9 @@ export const VideoPlayer: React.FC<Props> = ({
     <div
       ref={containerRef as React.RefObject<HTMLDivElement>}
       className="fixed inset-0 z-[51] flex items-center justify-center"
+      // touch-action: manipulation disables iOS double-tap-to-zoom so the VOD
+      // double-tap seek gesture can't accidentally zoom the layout. Pan + pinch stay.
+      style={{ touchAction: 'manipulation' }}
       onMouseMove={showControls}
       onTouchStart={(e) => { showControls(); handleTouchStart(e); }}
       onTouchEnd={handleTouchEnd}
@@ -594,8 +597,10 @@ export const VideoPlayer: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Cinema intro — VOD only, runs independently of loading state */}
-      {showCinemaIntro && (
+      {/* Cinema intro — VOD only, runs independently of loading state.
+          Suppressed on error: the full-screen z-[55] skip layer below would otherwise sit
+          on top of the error/Reconnect overlay (z-40) and eat the recovery tap. */}
+      {showCinemaIntro && !state.error && (
         <>
           <DashCinemaLoader title={state.channel?.name} />
           {/* Tap-to-skip — tap anywhere dismisses the cinema intro early and lets

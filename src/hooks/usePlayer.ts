@@ -193,6 +193,9 @@ export function usePlayer() {
             if (video) break;
           }
           if (!video) return;
+          // A rapid second tap during the mount-wait await may have superseded us —
+          // bail so the stale invocation can't proceed to set src / install handlers.
+          if (gen !== playGeneration.current) return;
         }
 
         let url = channel.url;
@@ -282,6 +285,11 @@ export function usePlayer() {
               probe.body?.cancel();
             } catch { /* timeout or network — let video element try anyway */ }
           }
+          // A rapid second tap aborts our probe (AbortError caught above) and starts a
+          // newer play. Without this guard the stale invocation falls through and clobbers
+          // video.src + installs dead onerror/oncanplay/onplaying handlers (all early-return
+          // via isStale()) → frozen frame stuck until the connect timeout. Mirror the HLS bail.
+          if (isStale()) return;
           setStreamLimit(null);
           video.volume = 0;
           video.src = url;
