@@ -52,6 +52,8 @@ const TeamCrest: React.FC<{ logo: string; name: string }> = ({ logo, name }) => 
       alt={name}
       className="w-9 h-9 rounded-full object-contain"
       onError={() => setFailed(true)}
+      loading="lazy"
+      decoding="async"
     />
   );
 };

@@ -347,7 +347,14 @@ function AppContent({ guestMode, onRequestCode }: { guestMode?: boolean; onReque
     initAudioReactive();
     let running = true;
     let isVisible = false;
-    const animate = () => {
+    // PERF: --pulse drives a slow (~0.2Hz) CSS breathing on card glow + the luminance
+    // band, document-wide. Writing it at 60fps forced a full-document style recalc every
+    // frame even at rest. Throttle to ~20fps (imperceptible for so slow an effect) and
+    // skip redundant writes so a settled pulse costs zero invalidation. Same look.
+    const PULSE_MS = 1000 / 20;
+    let lastWrite = 0;
+    let lastPulse = -1;
+    const animate = (now: number) => {
       if (!running) return;
       if (document.hidden) { requestAnimationFrame(animate); return; }
       const el = blobsRef.current;
@@ -360,13 +367,20 @@ function AppContent({ guestMode, onRequestCode }: { guestMode?: boolean; onReque
           el.style.opacity = '0';
           isVisible = false;
         }
-        // Audio pulse — drives blob scale + goggle lens breathing
-        const pulse = getAmbientPulse();
-        if (isVisible) {
-          el.style.transform = `translateX(-50%) scale(${1.0 + pulse * 0.03})`;
+        if (now - lastWrite >= PULSE_MS) {
+          lastWrite = now;
+          // Audio pulse — drives blob scale + goggle lens breathing
+          const pulse = getAmbientPulse();
+          if (isVisible) {
+            el.style.transform = `translateX(-50%) scale(${(1.0 + pulse * 0.03).toFixed(4)})`;
+          }
+          // Broadcast pulse as CSS variable — goggle lens + card glow breathe with music.
+          // Only write on meaningful change to avoid needless document-wide recalc.
+          if (Math.abs(pulse - lastPulse) > 0.004) {
+            lastPulse = pulse;
+            document.documentElement.style.setProperty('--pulse', pulse.toFixed(3));
+          }
         }
-        // Broadcast pulse as CSS variable — goggle lens + card glow breathe with music
-        document.documentElement.style.setProperty('--pulse', pulse.toFixed(3));
       }
       requestAnimationFrame(animate);
     };

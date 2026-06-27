@@ -131,11 +131,11 @@ const ResultCard: React.FC<{ match: Fixture; index: number; replayChannels: Broa
         <div className="flex items-center gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 mb-1">
-              <img src={match.homeTeam.logo} alt="" className="w-5 h-5 rounded-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <img src={match.homeTeam.logo} alt="" loading="lazy" decoding="async" className="w-5 h-5 rounded-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               <span className="text-[11px] text-white/70 truncate">{match.homeTeam.shortName}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <img src={match.awayTeam.logo} alt="" className="w-5 h-5 rounded-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <img src={match.awayTeam.logo} alt="" loading="lazy" decoding="async" className="w-5 h-5 rounded-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               <span className="text-[11px] text-white/70 truncate">{match.awayTeam.shortName}</span>
             </div>
           </div>
