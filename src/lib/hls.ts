@@ -97,20 +97,31 @@ export async function createHlsPlayer(
     abrEwmaSlowVoD: 6.0,
     abrBandWidthUpFactor: 0.7,
     abrBandWidthFactor: 0.8,
-    maxBufferLength: 45,
+    // ── Pre-buffer: deeper cushion so transient network dips don't surface as stalls.
+    // Soft target 60s (was 45); hard ceiling kept at 120s to bound memory on low-end
+    // Android (the SL market). backBufferLength trimmed to 12 to claw that headroom back.
+    maxBufferLength: 60,
     maxMaxBufferLength: 120,
-    backBufferLength: 20,
+    backBufferLength: 12,
     maxBufferHole: 1.5,
     maxStarvationDelay: 4,
     maxLoadingDelay: 2,
+    // ── Auto-heal small stalls: let hls.js nudge the playhead more before giving up.
+    nudgeMaxRetry: 8,            // was default 3 — recover micro-stalls instead of freezing
+    nudgeOffset: 0.2,
+    highBufferWatchdogPeriod: 1, // was default 2s — detect a stall sooner
+    // ── Live cushion (free .m3u8 live): a few segments of slack > chasing the edge.
+    liveSyncDuration: 6,
+    liveMaxLatencyDuration: 18,
+    // ── Retries: more attempts on weak networks before the stream is declared dead.
     manifestLoadingTimeOut: 15000,
-    manifestLoadingMaxRetry: 4,
+    manifestLoadingMaxRetry: 6,  // was 4
     manifestLoadingRetryDelay: 1000,
     fragLoadingTimeOut: 20000,
-    fragLoadingMaxRetry: 6,
+    fragLoadingMaxRetry: 8,      // was 6
     fragLoadingRetryDelay: 1000,
     levelLoadingTimeOut: 15000,
-    levelLoadingMaxRetry: 4,
+    levelLoadingMaxRetry: 6,     // was 4
     levelLoadingRetryDelay: 1000,
   });
 
@@ -129,12 +140,22 @@ export async function createHlsPlayer(
 
   hls.on(Hls.Events.ERROR, (_event: any, data: any) => {
     if (destroyed) return;
-    if (!data.fatal) return;
+
+    // ── Fast non-fatal recovery: a buffer stall should NOT freeze the picture.
+    // Kick the loader (and nudge the playhead past a tiny gap) immediately instead
+    // of waiting for it to escalate to a fatal error.
+    if (!data.fatal) {
+      if (data.details === Hls.ErrorDetails.BUFFER_STALLED_ERROR) {
+        try { hls.startLoad(); } catch { /* loader may be mid-teardown */ }
+      }
+      return;
+    }
 
     switch (data.type) {
       case Hls.ErrorTypes.NETWORK_ERROR:
         if (retryCount < 6) {
-          const delay = Math.min(Math.pow(2, retryCount) * 1000, 30000);
+          // First retry is near-instant (300ms), then exponential backoff capped at 30s.
+          const delay = retryCount === 0 ? 300 : Math.min(Math.pow(2, retryCount) * 1000, 30000);
           retryCount++;
           setTimeout(() => { if (!destroyed) hls.startLoad(); }, delay);
         } else {

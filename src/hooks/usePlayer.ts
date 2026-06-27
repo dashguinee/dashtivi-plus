@@ -531,10 +531,12 @@ export function usePlayer() {
             // Bound total tier oscillation (was 4 — trimmed to reduce thrash)
             const MAX_SWITCHES = 3;
             let bufferStalls: number[] = [];
-            const STALL_WINDOW = 45000;
-            // Require 3 stalls (was 2) in-window before dropping a tier — avoids twitchy
-            // downgrades on a single transient buffer hiccup
-            const STALL_THRESHOLD = 3;
+            // Tighter window so only genuinely clustered stalls count toward a step-down.
+            const STALL_WINDOW = 30000;
+            // Drop a tier after just 2 in-window stalls — a buffering stall should trigger
+            // a FAST quality step-down + recovery rather than a long freeze. Still bounded
+            // by MAX_SWITCHES (3) so working playback never thrashes.
+            const STALL_THRESHOLD = 2;
             let recoveryCheck: ReturnType<typeof setInterval> | null = null;
             let recoveryStarted = 0;
             const RECOVERY_DELAY = 90000;

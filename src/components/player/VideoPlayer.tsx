@@ -83,8 +83,10 @@ export const VideoPlayer: React.FC<Props> = ({
 }) => {
   const [controlsVisible, setControlsVisible] = useState(true);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  const switchCooldownRef = useRef(false); // suppresses controls flash on live channel switch
-  const prevChannelIdRef = useRef<string | null>(null);
+  // Mirrors state.isSwitching so timers/callbacks can read it without re-binding.
+  // Controls STAY visible + sharp through a switch — we only auto-hide while
+  // actively watching (never DURING the switch transition).
+  const isSwitchingRef = useRef(false);
   const [seekIndicator, setSeekIndicator] = useState(false);
   const [seekDirection, setSeekDirection] = useState<'forward' | 'backward'>('forward');
 
@@ -218,18 +220,18 @@ export const VideoPlayer: React.FC<Props> = ({
   const [subsOn, setSubsOn] = useState(false);
   const [subsUnavailable, setSubsUnavailable] = useState(false);
 
-  // Live TV: suppress controls on channel switch — let stream settle first
-  // But keep carousel/recommendations visible for continuous browsing
-  const [switchingChannel, setSwitchingChannel] = useState(false);
+  // Live TV channel switch: keep the header controls AND the carousel/recommendations
+  // visible for continuous browsing. The switch transition no longer hides or blurs
+  // the controls — they stay sharp on top. `state.isSwitching` is the canonical
+  // signal (set the instant the user taps in usePlayer); mirror it to a ref and
+  // pin the controls up the moment a switch begins.
   useEffect(() => {
-    const id = state.channel?.id ?? null;
-    if (id && id !== prevChannelIdRef.current && prevChannelIdRef.current !== null && !isVod) {
-      switchCooldownRef.current = true;
-      setSwitchingChannel(true);
-      setControlsVisible(false);
+    isSwitchingRef.current = state.isSwitching;
+    if (state.isSwitching && !isVod) {
+      setControlsVisible(true);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current); // no idle-hide mid-switch
     }
-    prevChannelIdRef.current = id;
-  }, [state.channel?.id, isVod]);
+  }, [state.isSwitching, isVod]);
 
   // Cinema intro — shows until video is READY (not a fixed timer)
   const [showCinemaIntro, setShowCinemaIntro] = useState(false);
@@ -378,37 +380,32 @@ export const VideoPlayer: React.FC<Props> = ({
 
   const showControls = useCallback(() => {
     pokeSuggestions(); // grid follows its own 15s lifecycle, re-shown on any interaction
-    if (switchCooldownRef.current) return; // During live switch cooldown, don't flash controls
     setControlsVisible(true);
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     hideTimerRef.current = setTimeout(() => {
-      if (isPlayingRef.current) setControlsVisible(false);
+      // Auto-hide only while actively watching — never mid-switch (controls must
+      // stay sharp on top through the whole transition).
+      if (isPlayingRef.current && !isSwitchingRef.current) setControlsVisible(false);
     }, 4500);
   }, [pokeSuggestions]);
 
-  // Live TV: hide controls on channel switch, reveal gently after 2s
-  // VOD: show controls when paused
+  // Controls lifecycle:
+  //  • paused / VOD-paused → show controls (unless cinema/blackout owns the screen)
+  //  • live switch in progress → keep controls visible + SHARP, no auto-hide
+  //  • normal watching (incl. the moment a switch resolves) → show then auto-hide
   useEffect(() => {
     if (!state.isPlaying) {
-      if (!switchCooldownRef.current && !showCinemaIntro && !postCinemaBlackout) {
+      if (!showCinemaIntro && !postCinemaBlackout) {
         setControlsVisible(true);
         if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
       }
-    } else if (!isVod && switchCooldownRef.current) {
-      // Live channel just started playing — wait 2s, then gently show, then auto-hide
-      setSwitchingChannel(false);
-      setControlsVisible(false);
-      hideTimerRef.current = setTimeout(() => {
-        switchCooldownRef.current = false;
-        setControlsVisible(true);
-        hideTimerRef.current = setTimeout(() => setControlsVisible(false), 3000);
-      }, 2000);
+    } else if (!isVod && state.isSwitching) {
+      setControlsVisible(true);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     } else {
-      switchCooldownRef.current = false;
-      setSwitchingChannel(false);
       showControls();
     }
-  }, [state.isPlaying, showControls, isVod]);
+  }, [state.isPlaying, state.isSwitching, showControls, isVod]);
 
   // Keyboard controls — extracted to useKeyboard hook
   const handleNextChannel = useCallback(() => {
@@ -651,50 +648,59 @@ export const VideoPlayer: React.FC<Props> = ({
         <div className="absolute inset-0 z-40 bg-[#060609]" />
       )}
 
-      {/* Transition loader — thin animated bar + blurred frozen frame + pulsing connecting
-          card. ONLY for a deliberate channel SWITCH / first-play (state.isSwitching), never
-          for a plain rebuffer of the current channel — that keeps controls sharp + visible. */}
+      {/* ── Channel SWITCH transition ──────────────────────────────────────
+          Re-layered so the header controls stay SHARP on top of the blur. The
+          loved flow is intact: frozen-frame snapshot (in App.tsx, z-50) + the
+          250ms fade + generation guard + the instant connecting card. ONLY for a
+          deliberate SWITCH / first-play (state.isSwitching) — a plain rebuffer of
+          the current channel keeps controls sharp with no blur (handled below).
+          Final z-order inside this overlay:
+            blur (z-20, BELOW controls) → controls (z-30, sharp) → beam + card
+            (z-45, on top). Every switch layer is pointer-events-none so it can
+            never eat a tap on the controls / arrows / Flow button. */}
       {state.isSwitching && !state.error && !showCinemaIntro && !postCinemaBlackout && (
-        <div className="absolute inset-0 z-40 flex items-center justify-center">
-          {/* Blur overlay on frozen frame */}
-          <div className="absolute inset-0 bg-black/35 transition-opacity duration-300"
+        <>
+          {/* Blur overlay on the frozen frame — sits BELOW the controls layer. */}
+          <div className="absolute inset-0 z-20 bg-black/35 transition-opacity duration-300 pointer-events-none"
                style={{ backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} />
-          {/* Thin beam at top */}
-          <div className="absolute top-0 left-0 right-0 h-[2px] z-50">
-            <div className="h-full"
-              style={{
-                background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.7), rgba(157,78,221,0.9), rgba(157,78,221,0.7), transparent)',
-                backgroundSize: '200% 100%',
-                animation: 'dash-beam 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              }}
-            />
-          </div>
-          {/* Calm premium "connecting" — reassures on weak networks (buffering = the #1 SL pain).
-              Throttled: full logo+name block shows only the first few channels per
-              session; after that just the thin top beam signals the switch. */}
-          {showConnectCard && (
-            <div className="relative z-50 flex flex-col items-center gap-3.5">
-              <div className="relative w-16 h-16">
-                <div className="absolute inset-0 rounded-2xl" style={{ animation: 'connect-pulse 1.7s ease-in-out infinite' }} />
-                <div className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center"
-                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(157,78,221,0.32)' }}>
-                  {state.channel?.logo
-                    ? <img src={state.channel.logo} alt="" className="w-full h-full object-contain p-1.5" />
-                    : <Tv className="w-7 h-7 text-white/40" />}
-                </div>
-              </div>
-              <p className="text-[13px] text-white/85 font-medium tracking-wide max-w-xs text-center line-clamp-1 px-4">
-                {state.channel?.name || '…'}
-              </p>
-              {/* Reassurance on weak networks (buffering = #1 SL pain) — appears
-                  after a beat so a fast connect never shows it. */}
-              <p className="text-[11px] text-white/40 text-center -mt-1.5"
-                 style={{ animation: 'fade-in 0.6s ease-out 2s both' }}>
-                Slow connection? Check your network.
-              </p>
+          {/* Beam + connecting card — ABOVE the controls (top of the stack). */}
+          <div className="absolute inset-0 z-[45] flex items-center justify-center pointer-events-none">
+            {/* Thin beam at top */}
+            <div className="absolute top-0 left-0 right-0 h-[2px]">
+              <div className="h-full"
+                style={{
+                  background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.7), rgba(157,78,221,0.9), rgba(157,78,221,0.7), transparent)',
+                  backgroundSize: '200% 100%',
+                  animation: 'dash-beam 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                }}
+              />
             </div>
-          )}
-        </div>
+            {/* Calm premium "connecting" — reassures on weak networks (buffering = the #1
+                SL pain). Throttled: full logo+name block shows only the first few channels
+                per session; after that just the thin top beam signals the switch. */}
+            {showConnectCard && (
+              <div className="relative flex flex-col items-center gap-3.5">
+                <div className="relative w-16 h-16">
+                  <div className="absolute inset-0 rounded-2xl" style={{ animation: 'connect-pulse 1.7s ease-in-out infinite' }} />
+                  <div className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center"
+                    style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(157,78,221,0.32)' }}>
+                    {state.channel?.logo
+                      ? <img src={state.channel.logo} alt="" className="w-full h-full object-contain p-1.5" />
+                      : <Tv className="w-7 h-7 text-white/40" />}
+                  </div>
+                </div>
+                <p className="text-[13px] text-white/85 font-medium tracking-wide max-w-xs text-center line-clamp-1 px-4">
+                  {state.channel?.name || '…'}
+                </p>
+                {/* Reassurance on weak networks — appears after a beat so a fast connect never shows it. */}
+                <p className="text-[11px] text-white/40 text-center -mt-1.5"
+                   style={{ animation: 'fade-in 0.6s ease-out 2s both' }}>
+                  Slow connection? Check your network.
+                </p>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       {/* Plain rebuffer of the CURRENT channel (not a switch) — the stream stalled
@@ -702,7 +708,7 @@ export const VideoPlayer: React.FC<Props> = ({
           no control-hide. Just a subtle top-center spinner so the viewer knows it's
           working. pointer-events-none so it never eats a tap on the controls. */}
       {state.isLoading && !state.isSwitching && state.isPlaying && !state.error && !showCinemaIntro && !postCinemaBlackout && (
-        <div className="absolute top-[64px] left-1/2 -translate-x-1/2 z-30 pointer-events-none"
+        <div className="absolute top-[64px] left-1/2 -translate-x-1/2 z-[35] pointer-events-none"
              style={{ animation: 'fade-in 0.4s ease-out 0.5s both' }}>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full"
                style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(157,78,221,0.2)' }}>
@@ -758,7 +764,7 @@ export const VideoPlayer: React.FC<Props> = ({
       {!isVod && (
         <SmartMatchOverlay
           channel={state.channel}
-          visible={controlsVisible || switchingChannel}
+          visible={controlsVisible || state.isSwitching}
           isLive={isLiveStream}
           onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
         />
@@ -769,7 +775,7 @@ export const VideoPlayer: React.FC<Props> = ({
           minimal look; any tap/move re-shows it. Still shows through a switch. */}
       {!isVod && (
         <ChannelCarousel
-          visible={suggestionsVisible || switchingChannel}
+          visible={suggestionsVisible || state.isSwitching}
           isLive={isLiveStream}
           onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
         />
@@ -818,24 +824,29 @@ export const VideoPlayer: React.FC<Props> = ({
         isLive={isLiveStream}
       />
 
-      {/* Controls overlay — hidden during cinema intro and post-cinema blackout */}
+      {/* Controls overlay — hidden during cinema intro and post-cinema blackout.
+          Wrapped at z-30 so it renders SHARP above the switch blur (z-20) while the
+          beam + connecting card (z-45) stay on top. This is the layer that must
+          never blur during a switch — next/prev, Flow button + options live here. */}
       {!showCinemaIntro && !postCinemaBlackout && (
-        <PlayerControls
-          state={state}
-          onTogglePlay={onTogglePlay}
-          onToggleMute={onToggleMute}
-          onVolumeChange={onVolumeChange}
-          onToggleFullscreen={onToggleFullscreen}
-          onTogglePiP={onTogglePiP}
-          onQualityChange={onQualityChange}
-          onClose={onClose}
-          onBack={onBack}
-          onSeek={onSeek}
-          visible={controlsVisible}
-          hasSubs={hasSubs}
-          subsOn={subsOn}
-          onToggleSubs={toggleSubs}
-        />
+        <div className="absolute inset-0 z-30">
+          <PlayerControls
+            state={state}
+            onTogglePlay={onTogglePlay}
+            onToggleMute={onToggleMute}
+            onVolumeChange={onVolumeChange}
+            onToggleFullscreen={onToggleFullscreen}
+            onTogglePiP={onTogglePiP}
+            onQualityChange={onQualityChange}
+            onClose={onClose}
+            onBack={onBack}
+            onSeek={onSeek}
+            visible={controlsVisible}
+            hasSubs={hasSubs}
+            subsOn={subsOn}
+            onToggleSubs={toggleSubs}
+          />
+        </div>
       )}
     </div>
   );
