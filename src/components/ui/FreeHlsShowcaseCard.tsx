@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { createHlsPlayer, type HlsInstance } from '@/lib/hls';
 import { useSwipeSurf } from '@/hooks/useSwipeSurf';
+import { muteAmbient, unmuteAmbient } from '@/lib/ambient-audio';
 
 /* ════════════════════════════════════════════════════════════════
    FREE-HLS SHOWCASE CARD — the "alive gift".
@@ -204,6 +205,46 @@ export function FreeHlsShowcaseCard({
     try { hlsRef.current?.destroy(); } catch { /* noop */ }
     hlsRef.current = null;
   }, []);
+
+  // Going NATIVE-fullscreen turns this inline preview into a REAL watch surface
+  // — and this path bypasses the full player's ambient fade entirely, so without
+  // this the Afro-soul ambient would leak/drone OVER the stream. On enter we duck
+  // the ambient down smoothly + give the fullscreen view its own sound; on exit
+  // we silence the preview again and bring the ambient back up. `wasFsRef` makes
+  // sure we only react to OUR card's enter/exit (the global `fullscreenchange`
+  // also fires when the full player goes fullscreen — we must not un-duck then).
+  const wasFsRef = useRef(false);
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const onFsChange = () => {
+      const fsEl = document.fullscreenElement || (document as unknown as { webkitFullscreenElement?: Element }).webkitFullscreenElement;
+      if (fsEl === v) {
+        wasFsRef.current = true;
+        muteAmbient();
+        v.muted = false;
+      } else if (wasFsRef.current) {
+        wasFsRef.current = false;
+        v.muted = true;
+        unmuteAmbient();
+      }
+    };
+    // iOS native fullscreen fires its own pair (the muted/object-fullscreen path).
+    const onWebkitBegin = () => { wasFsRef.current = true; muteAmbient(); v.muted = false; };
+    const onWebkitEnd = () => { wasFsRef.current = false; v.muted = true; unmuteAmbient(); };
+    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener('webkitfullscreenchange', onFsChange as EventListener);
+    v.addEventListener('webkitbeginfullscreen', onWebkitBegin as EventListener);
+    v.addEventListener('webkitendfullscreen', onWebkitEnd as EventListener);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFsChange);
+      document.removeEventListener('webkitfullscreenchange', onFsChange as EventListener);
+      v.removeEventListener('webkitbeginfullscreen', onWebkitBegin as EventListener);
+      v.removeEventListener('webkitendfullscreen', onWebkitEnd as EventListener);
+      // If we unmount while still fullscreen, make sure the ambient comes back.
+      if (wasFsRef.current) { wasFsRef.current = false; unmuteAmbient(); }
+    };
+  }, [focused]);
 
   // Rotate-to-fullscreen on the focused card (tap the video).
   const goFullscreen = useCallback(() => {

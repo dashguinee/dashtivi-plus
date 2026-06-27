@@ -159,6 +159,9 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
         @keyframes sw-cheer{0%{opacity:0;transform:translateY(26px) scale(0.94)}60%{opacity:1;transform:translateY(-6px) scale(1.015)}100%{opacity:1;transform:translateY(0) scale(1)}}
         @keyframes sw-beam{0%,100%{opacity:0.55;transform:scaleY(1)}50%{opacity:0.9;transform:scaleY(1.06)}}
         @keyframes sw-shimmer{from{background-position:200% 0}to{background-position:-40% 0}}
+        @keyframes sw-bloom-a{0%{transform:translate(-13%,-6%) scale(0.92);opacity:0.55}50%{transform:translate(14%,9%) scale(1.3);opacity:1}100%{transform:translate(-13%,-6%) scale(0.92);opacity:0.55}}
+        @keyframes sw-bloom-b{0%{transform:translate(10%,7%) scale(1.18);opacity:1}50%{transform:translate(-12%,-9%) scale(0.84);opacity:0.5}100%{transform:translate(10%,7%) scale(1.18);opacity:1}}
+        @keyframes sw-bloom-c{0%{transform:translate(4%,-9%) scale(0.88);opacity:0.7}50%{transform:translate(-9%,12%) scale(1.32);opacity:1}100%{transform:translate(4%,-9%) scale(0.88);opacity:0.7}}
         .sw-shimmer-text{background:linear-gradient(100deg,#E8B53A 0%,#FFF6CE 26%,#FFD700 50%,#FFF6CE 74%,#E8B53A 100%);background-size:240% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:sw-shimmer 2.6s linear infinite}
       `}</style>
 
@@ -239,6 +242,22 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
           style={{ background: 'rgba(6,6,12,0.62)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', animation: 'sw-fade 0.3s ease' }}
           onClick={() => { if (Date.now() < suppressCloseRef.current) return; setOpen(false); }}
         >
+          {/* Soft top-fade so the wordmark reads cleanly over the blurred world */}
+          <div
+            aria-hidden
+            className="absolute top-0 left-0 right-0 pointer-events-none"
+            style={{ height: 110, zIndex: 1, background: 'linear-gradient(to bottom, rgba(6,6,12,0.78), rgba(6,6,12,0.32) 55%, transparent)' }}
+          />
+          {/* DashTiVi+ wordmark, top-left — situates the member inside DASH search */}
+          <div
+            aria-hidden
+            className="absolute left-0 top-0 pointer-events-none select-none"
+            style={{ zIndex: 2, paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)', paddingLeft: 20, opacity: 0.92 }}
+          >
+            <span className="text-[19px] font-black tracking-tight text-white uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>DASH</span>
+            <span className="text-[14px] font-light tracking-wide text-white/45" style={{ fontFamily: "'Outfit', sans-serif", marginLeft: '1px' }}>ti<span className="font-semibold" style={{ color: '#C77DFF' }}>V</span>i</span>
+            <span className="text-[11px] font-bold ml-0.5" style={{ color: '#FFD700' }}>+</span>
+          </div>
           <div
             className="absolute pointer-events-none"
             style={{
@@ -257,9 +276,36 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3 px-4 py-3.5">
-              <Search className="w-5 h-5 flex-shrink-0" style={{ color: 'rgba(255,215,0,0.55)' }} />
-              <div className="relative flex-1 min-w-0">
+            <div className="relative flex items-center gap-3 px-4 py-3.5">
+              {/* Organic ambient glow — 3 drifting/breathing radial blooms at
+                  different speeds + phases so it shifts alive (not a robotic sweep).
+                  Blooms + brightens the moment the member starts typing. */}
+              <div
+                aria-hidden
+                className="absolute pointer-events-none overflow-visible"
+                style={{
+                  left: 8, right: 8, top: 2, bottom: 2, zIndex: 0,
+                  opacity: q ? 1 : 0.58,
+                  filter: q ? 'blur(15px)' : 'blur(9px)',
+                  transition: 'opacity 0.5s ease, filter 0.5s ease',
+                }}
+              >
+                <span style={{ position: 'absolute', inset: 0, background: 'radial-gradient(50% 120% at 22% 50%, rgba(157,78,221,0.95), transparent 70%)', animation: 'sw-bloom-a 5.6s ease-in-out -1.3s infinite' }} />
+                <span style={{ position: 'absolute', inset: 0, background: 'radial-gradient(48% 120% at 70% 45%, rgba(255,215,0,0.82), transparent 70%)', animation: 'sw-bloom-b 7.3s ease-in-out -3.7s infinite' }} />
+                <span style={{ position: 'absolute', inset: 0, background: 'radial-gradient(46% 120% at 48% 60%, rgba(199,125,255,0.88), transparent 72%)', animation: 'sw-bloom-c 6.2s ease-in-out -2.2s infinite' }} />
+              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="relative flex-shrink-0" aria-hidden style={{ zIndex: 1, filter: 'drop-shadow(0 0 4px rgba(255,215,0,0.45))' }}>
+                <defs>
+                  <linearGradient id="sw-mag-gold" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+                    <stop offset="0" stopColor="#FFE9A8" />
+                    <stop offset="0.5" stopColor="#FFD700" />
+                    <stop offset="1" stopColor="#E0A93A" />
+                  </linearGradient>
+                </defs>
+                <circle cx="10.5" cy="10.5" r="6.75" stroke="url(#sw-mag-gold)" strokeWidth="1.6" />
+                <line x1="15.4" y1="15.4" x2="20.5" y2="20.5" stroke="url(#sw-mag-gold)" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+              <div className="relative flex-1 min-w-0" style={{ zIndex: 1 }}>
                 <input
                   ref={inputRef}
                   value={q}
@@ -278,7 +324,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
                   </span>
                 )}
               </div>
-              <button onClick={() => { tap(); setOpen(false); }} aria-label="Close search" className="w-7 h-7 rounded-full flex items-center justify-center active:scale-90 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.08)' }}>
+              <button onClick={() => { tap(); setOpen(false); }} aria-label="Close search" className="relative w-7 h-7 rounded-full flex items-center justify-center active:scale-90 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.08)', zIndex: 1 }}>
                 <X className="w-4 h-4 text-white/70" />
               </button>
             </div>

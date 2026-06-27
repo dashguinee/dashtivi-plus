@@ -554,7 +554,10 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
           visible={!showFullPlayer && !!player.state.channel} />
         {/* Single persistent <video> element — NEVER unmounted.
             Full player mode: fills screen behind VideoPlayer controls overlay.
-            Mini/hidden mode: 1x1 offscreen, keeps playing (no orphaned audio).
+            Mini mode: becomes the small picture-in-picture rectangle (bottom-right),
+            still playing — the MiniPlayer card renders its chrome on top (z-[41]) of
+            this video (z-40), both sharing the exact same fixed box so they align.
+            Hidden mode (no channel): not rendered.
             createMediaElementSource only works once per element — this stays alive forever. */}
         <video
           ref={player.videoRef as React.RefObject<HTMLVideoElement>}
@@ -563,7 +566,7 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
                 player.state.isLoading && !player.state.isPlaying ? 'blur-sm scale-[1.01]' : ''
               }`
             : player.state.channel
-              ? 'fixed -top-[9999px] -left-[9999px] w-1 h-1'
+              ? 'fixed bottom-20 lg:bottom-4 right-4 z-40 w-72 sm:w-80 aspect-video rounded-2xl object-cover bg-black'
               : 'hidden'
           }
           crossOrigin="anonymous"
