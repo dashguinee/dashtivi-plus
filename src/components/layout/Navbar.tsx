@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Tv, Users } from 'lucide-react';
+import { Home, Tv, Users, Library } from 'lucide-react';
 import { useLanguage } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
 import { tap } from '@/lib/haptics';
@@ -20,6 +20,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { path: '/', labelKey: 'navHome', icon: Home },
   { path: '/live', labelKey: 'navLiveTV', icon: Tv, isLive: true },
+  { path: '/library', labelKey: 'navLibrary', icon: Library },
   { path: '/hub', labelKey: 'navHub', icon: Users },
 ];
 

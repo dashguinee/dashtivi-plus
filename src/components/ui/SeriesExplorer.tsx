@@ -226,7 +226,12 @@ export const SeriesExplorer: React.FC<Props> = ({ series, info, tmdbData, creden
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-  }, [credentials, series.name]);
+    // Record to the Library "My Downloads" store
+    const epTitle = `${series.name.replace(/\s*\(\d{4}\)\s*$/, '')} · S${ep.season}E${ep.episode_num}`;
+    import('@/lib/downloads').then(({ recordDownload }) => {
+      recordDownload({ title: epTitle, poster: seriesCover ?? undefined, url, type: 'episode' });
+    });
+  }, [credentials, series.name, seriesCover]);
 
   const yearMatch = series.name.match(/\((\d{4})\)/);
   const cleanName = series.name.replace(/\s*\(\d{4}\)\s*$/, '');

@@ -65,6 +65,7 @@ const PlatformsPage = lazyRetry(() => import('@/pages/PlatformsPage').then((m) =
 const ExperienceHomePage = lazyRetry(() => import('@/pages/ExperienceHomePage').then((m) => ({ default: m.ExperienceHomePage })));
 const ExplorePage = lazyRetry(() => import('@/pages/ExplorePage').then((m) => ({ default: m.ExplorePage })));
 const NbaPage = lazyRetry(() => import('@/pages/NbaPage').then((m) => ({ default: m.NbaPage })));
+const LibraryPage = lazyRetry(() => import('@/pages/LibraryPage').then((m) => ({ default: m.LibraryPage })));
 const TestChannelsPage = lazyRetry(() => import('@/pages/TestChannelsPage'));
 
 // SNAPPY NAV: warm the main route chunks on idle (after the home is interactive),
@@ -466,6 +467,7 @@ function AppContent({ guestMode, onRequestCode }: { guestMode?: boolean; onReque
                   <Route path="/series" element={<ErrorBoundary><SeriesPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/french" element={<ErrorBoundary><FrenchPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/hub" element={<ErrorBoundary><DaHubPage /></ErrorBoundary>} />
+                  <Route path="/library" element={<ErrorBoundary><LibraryPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/explore" element={<ErrorBoundary><ExplorePage /></ErrorBoundary>} />
                   {/* /streamore retired — Stream+ is now the continuation of the ONE
                       home canvas (woven free + village), not a separate page/tab.

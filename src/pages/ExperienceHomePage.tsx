@@ -33,6 +33,7 @@ import type { SportType } from '@/lib/collections';
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { setAmbientSpeed, setAmbientExperience } from '@/lib/ambient-audio';
 import { ChannelIcon, ChannelBadge } from '@/components/ui/ChannelIcon';
+import { FreePill } from '@/components/ui/FreePill';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useSmartSticky } from '@/hooks/useSmartSticky';
 import { NbaShowcase } from '@/components/home/NbaShowcase';
@@ -1050,6 +1051,11 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
                   >
                     <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" />
                     <ChannelBadge streamId={stream.stream_id} compact />
+                    {stream.category_id === 'free' && (
+                      <div className="absolute bottom-1 left-1 z-[2]">
+                        <FreePill />
+                      </div>
+                    )}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-xl">
                       <Play className="w-4 h-4 text-white" />
                     </div>

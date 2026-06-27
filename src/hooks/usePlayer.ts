@@ -45,6 +45,8 @@ export function usePlayer() {
   const snapshotTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined); // Safety: auto-clears frozen-frame overlay if stream never renders
   const playGeneration = useRef(0); // Guards against stale handlers from rapid channel switches
   const userMutedRef = useRef(false); // Tracks explicit user mute — respected across channel switches
+  const wasPiPRef = useRef(false); // User intent: was in PiP — re-request after source swap
+  const switchingPiPRef = useRef(false); // True while a channel switch drops PiP (suppresses intent-clear)
 
   // Capture the current video frame to a data URL so we can overlay it (blurred)
   // during the black gap of a channel switch. Returns null on failure (e.g. tainted
@@ -98,6 +100,11 @@ export function usePlayer() {
     async (channel: Channel) => {
       // Disconnect previous Web Audio boost chain before setting up new stream
       disconnectBoost();
+
+      // If we're currently in PiP, the imminent src swap will auto-drop it. Flag this
+      // so the leave listener doesn't treat it as a user-intent change — we re-request
+      // PiP once the new source is playing (onplaying).
+      switchingPiPRef.current = !!document.pictureInPictureElement;
 
       // Abort any previous pre-flight fetch
       if (abortRef.current) abortRef.current.abort();
@@ -392,6 +399,22 @@ export function usePlayer() {
           // Connect audio presence EQ (warmth, body, clarity — always on)
           connectBoost(video);
           setState((prev) => ({ ...prev, isPlaying: true, isLoading: false, error: null }));
+
+          // Best-effort: if the user was in PiP and the source just changed (PiP dropped
+          // when video.src was reassigned), re-enter PiP now that the new stream paints.
+          if (
+            wasPiPRef.current &&
+            (document as Document).pictureInPictureEnabled &&
+            !document.pictureInPictureElement &&
+            typeof video.requestPictureInPicture === 'function'
+          ) {
+            video.requestPictureInPicture()
+              .then(() => setState((prev) => ({ ...prev, isPiP: true })))
+              .catch(() => {})
+              .finally(() => { switchingPiPRef.current = false; });
+          } else {
+            switchingPiPRef.current = false;
+          }
           // Unmute now that new source is playing (was muted during source switch to prevent audio leak)
           // Respect user's explicit mute preference
           if (!userMutedRef.current) {
@@ -652,14 +675,69 @@ export function usePlayer() {
   }, []);
 
   const toggleFullscreen = useCallback(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    const container = containerRef.current as (HTMLDivElement & {
+      webkitRequestFullscreen?: () => Promise<void> | void;
+      mozRequestFullScreen?: () => Promise<void> | void;
+    }) | null;
+    const video = videoRef.current as (HTMLVideoElement & {
+      webkitEnterFullscreen?: () => void;
+      webkitExitFullscreen?: () => void;
+      webkitDisplayingFullscreen?: boolean;
+    }) | null;
+    const doc = document as Document & {
+      webkitFullscreenElement?: Element;
+      mozFullScreenElement?: Element;
+      webkitExitFullscreen?: () => Promise<void> | void;
+      mozCancelFullScreen?: () => Promise<void> | void;
+    };
 
-    if (document.fullscreenElement) {
-      document.exitFullscreen();
+    const fsElement = doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement;
+    const iosVideoFs = !!(video && video.webkitDisplayingFullscreen);
+
+    // ── Exit path ──
+    if (fsElement || iosVideoFs) {
+      if (doc.exitFullscreen) doc.exitFullscreen().catch(() => {});
+      else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+      else if (doc.mozCancelFullScreen) doc.mozCancelFullScreen();
+      else if (video?.webkitExitFullscreen) video.webkitExitFullscreen();
       setState((prev) => ({ ...prev, isFullscreen: false }));
-    } else {
-      container.requestFullscreen().catch(() => {});
+      return;
+    }
+
+    // ── Enter path ──
+    // iOS Safari (iPhone) can ONLY fullscreen the <video> element itself — the
+    // container's requestFullscreen is absent or no-ops. Feature-detect first, then
+    // guard with an iOS check, then fall back to video.webkitEnterFullscreen.
+    const isIOS = /iP(hone|od|ad)/.test(navigator.platform) ||
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.userAgent.includes('Mac') && 'ontouchend' in document); // iPadOS reports as Mac
+    const containerReq = container && (
+      container.requestFullscreen || container.webkitRequestFullscreen || container.mozRequestFullScreen
+    );
+
+    if (containerReq && !isIOS) {
+      // Standard / prefixed fullscreen on the container (keeps our overlay controls).
+      try {
+        const r = containerReq.call(container);
+        if (r && typeof (r as Promise<void>).then === 'function') (r as Promise<void>).catch(() => {});
+      } catch { /* fall through silently */ }
+      setState((prev) => ({ ...prev, isFullscreen: true }));
+    } else if (video?.webkitEnterFullscreen) {
+      // iOS path — native fullscreen on the actual <video>. It owns its own exit
+      // button; reflect the exit back into our state.
+      try { video.webkitEnterFullscreen(); } catch { /* ignore */ }
+      const onEnd = () => {
+        setState((prev) => ({ ...prev, isFullscreen: false }));
+        video.removeEventListener('webkitendfullscreen', onEnd);
+      };
+      video.addEventListener('webkitendfullscreen', onEnd);
+      setState((prev) => ({ ...prev, isFullscreen: true }));
+    } else if (containerReq) {
+      // No iOS video API but a (prefixed) container API exists — use it.
+      try {
+        const r = containerReq.call(container);
+        if (r && typeof (r as Promise<void>).then === 'function') (r as Promise<void>).catch(() => {});
+      } catch { /* ignore */ }
       setState((prev) => ({ ...prev, isFullscreen: true }));
     }
   }, []);
@@ -667,17 +745,24 @@ export function usePlayer() {
   const togglePiP = useCallback(async () => {
     const video = videoRef.current;
     if (!video) return;
+    // Never throw on unsupported — guard both the document flag and the element method.
+    if (!document.pictureInPictureEnabled || typeof video.requestPictureInPicture !== 'function') {
+      return;
+    }
 
     try {
       if (document.pictureInPictureElement) {
+        wasPiPRef.current = false; // explicit user exit — don't auto-re-enter on next switch
         await document.exitPictureInPicture();
         setState((prev) => ({ ...prev, isPiP: false }));
       } else {
         await video.requestPictureInPicture();
+        wasPiPRef.current = true; // remember intent across channel switches
         setState((prev) => ({ ...prev, isPiP: true }));
       }
     } catch {
-      // PiP not supported
+      // Rejected (not ready / disabled) — keep state consistent with reality.
+      setState((prev) => ({ ...prev, isPiP: !!document.pictureInPictureElement }));
     }
   }, []);
 
@@ -711,6 +796,8 @@ export function usePlayer() {
 
   const stop = useCallback(() => {
     cleanup();
+    wasPiPRef.current = false;
+    switchingPiPRef.current = false;
     if (snapshotTimerRef.current) { clearTimeout(snapshotTimerRef.current); snapshotTimerRef.current = undefined; }
     setSwitchSnapshot(null);
     const video = videoRef.current;
@@ -740,13 +827,21 @@ export function usePlayer() {
   // Cleanup on unmount
   useEffect(() => cleanup, [cleanup]);
 
-  // Fullscreen change listener
+  // Fullscreen change listener (standard + webkit/moz prefixed)
   useEffect(() => {
+    const doc = document as Document & { webkitFullscreenElement?: Element; mozFullScreenElement?: Element };
     const handler = () => {
-      setState((prev) => ({ ...prev, isFullscreen: !!document.fullscreenElement }));
+      const fs = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement);
+      setState((prev) => ({ ...prev, isFullscreen: fs }));
     };
     document.addEventListener('fullscreenchange', handler);
-    return () => document.removeEventListener('fullscreenchange', handler);
+    document.addEventListener('webkitfullscreenchange', handler);
+    document.addEventListener('mozfullscreenchange', handler);
+    return () => {
+      document.removeEventListener('fullscreenchange', handler);
+      document.removeEventListener('webkitfullscreenchange', handler);
+      document.removeEventListener('mozfullscreenchange', handler);
+    };
   }, []);
 
   // PiP change listener
@@ -754,7 +849,12 @@ export function usePlayer() {
     const video = videoRef.current;
     if (!video) return;
     const enter = () => setState((prev) => ({ ...prev, isPiP: true }));
-    const leave = () => setState((prev) => ({ ...prev, isPiP: false }));
+    const leave = () => {
+      setState((prev) => ({ ...prev, isPiP: false }));
+      // A leave fired NOT during a channel switch = the user (or the PiP window's own
+      // close button) ended it. Clear the re-enter intent. A switch-driven drop keeps it.
+      if (!switchingPiPRef.current) wasPiPRef.current = false;
+    };
     video.addEventListener('enterpictureinpicture', enter);
     video.addEventListener('leavepictureinpicture', leave);
     return () => {

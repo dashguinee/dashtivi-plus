@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback, useState, useRef } from 'react';
-import { Play, Star, Clock } from 'lucide-react';
+import { Play, Star, Clock, Heart } from 'lucide-react';
+import { toggleLike, useIsLiked } from '@/lib/likes';
 import { CosmicClose } from './CosmicClose';
 import { t, useLanguage } from '@/i18n';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
@@ -52,9 +53,13 @@ function getBackdropUrl(poster?: string, tmdbPoster?: string): string | null {
 }
 
 export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
-  streamId, name, poster, rating, type, tmdbData, credentials, onPlay, onClose,
+  streamId, name, poster, rating, categoryId, type, tmdbData, credentials, onPlay, onClose,
 }) => {
   const { lang } = useLanguage();
+
+  // ── Like state (Library "Likes" — localStorage tivi_likes) ──
+  const likeId = `${type}-${streamId}`;
+  const liked = useIsLiked(likeId);
 
   // Layered back: system/browser BACK recedes this detail sheet (pops the top
   // layer) instead of leaving the app. The component only renders when its
@@ -245,19 +250,39 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
         </>
       )}
 
-      <button
-        onClick={() => onPlay(knownDurationSeconds)}
-        className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-bold text-base transition-all active:scale-[0.98]"
-        style={{
-          // Color law: GOLD = premium/pride/exclusive. Watching premium content
-          // is the proudest action in the app — it shines, it doesn't whisper.
-          background: 'linear-gradient(135deg, rgba(255,215,0,0.95), rgba(255,183,0,0.95))',
-          color: '#1a1505',
-          boxShadow: '0 10px 30px rgba(255,215,0,0.22)',
-        }}
-      >
-        <Play className="w-5 h-5 fill-current" />{t(lang, 'playNow')}
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => onPlay(knownDurationSeconds)}
+          className="flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-bold text-base transition-all active:scale-[0.98]"
+          style={{
+            // Color law: GOLD = premium/pride/exclusive. Watching premium content
+            // is the proudest action in the app — it shines, it doesn't whisper.
+            background: 'linear-gradient(135deg, rgba(255,215,0,0.95), rgba(255,183,0,0.95))',
+            color: '#1a1505',
+            boxShadow: '0 10px 30px rgba(255,215,0,0.22)',
+          }}
+        >
+          <Play className="w-5 h-5 fill-current" />{t(lang, 'playNow')}
+        </button>
+        {/* Like — heart toggle writes to the Library "Likes" store */}
+        <button
+          onClick={() => { hapticClick(); toggleLike({ id: likeId, title: name, poster, type, categoryId }); }}
+          aria-label={liked ? 'Unlike' : 'Like'}
+          aria-pressed={liked}
+          className="flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-all active:scale-90"
+          style={{
+            background: liked ? 'rgba(157,78,221,0.18)' : 'rgba(255,255,255,0.06)',
+            border: `1px solid ${liked ? 'rgba(157,78,221,0.5)' : 'rgba(255,255,255,0.12)'}`,
+          }}
+        >
+          <Heart
+            className="w-5 h-5 transition-colors"
+            style={{ color: liked ? '#C77DFF' : 'rgba(255,255,255,0.6)' }}
+            fill={liked ? '#C77DFF' : 'none'}
+            strokeWidth={1.8}
+          />
+        </button>
+      </div>
     </>
   );
 

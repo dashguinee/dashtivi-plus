@@ -875,7 +875,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               <div key={movie.stream_id} className="relative group/card">
                 <PosterCard title={movie.name} poster={movie.stream_icon} rating={movie.rating}
                   tmdbData={tmdbMap[`m:${movie.stream_id}`]} onClick={() => setDetailMovie(movie)} />
-                {/* Download — always visible on touch (no hover on mobile), 44px tap target. */}
+                {/* Download — secondary, subtle. Quiet on the poster, not a primary CTA. */}
                 <button onClick={e => {
                     e.stopPropagation();
                     const url = buildVodUrl(credentials, movie.stream_id, movie.container_extension || 'mp4');
@@ -888,11 +888,15 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
+                    // Record to the Library "My Downloads" store
+                    import('@/lib/downloads').then(({ recordDownload }) => {
+                      recordDownload({ title: movie.name, poster: movie.stream_icon, url, type: 'movie' });
+                    });
                   }}
-                  className="absolute top-1.5 right-1.5 w-11 h-11 rounded-full flex items-center justify-center z-10 opacity-90 sm:opacity-0 sm:group-hover/card:opacity-100 transition-opacity active:scale-90"
-                  style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)' }}
+                  className="absolute top-1.5 right-1.5 w-8 h-8 rounded-full flex items-center justify-center z-10 opacity-50 sm:opacity-0 sm:group-hover/card:opacity-70 hover:!opacity-100 transition-opacity active:scale-90"
+                  style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(6px)' }}
                   title={t(lang, 'download')} aria-label={t(lang, 'download')}>
-                  <Download className="w-4 h-4 text-white" />
+                  <Download className="w-3.5 h-3.5 text-white/80" strokeWidth={1.6} />
                 </button>
               </div>
             ))}

@@ -21,6 +21,7 @@ import {
   type CatalogChannel,
 } from '@/lib/catalog';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
+import { FreePill } from '@/components/ui/FreePill';
 import { tap } from '@/lib/haptics';
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { setAmbientSpeed } from '@/lib/ambient-audio';
@@ -578,8 +579,14 @@ const ExperienceRow = React.memo(function ExperienceRow({
                   <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-70 ${ch.free ? 'bg-green-400' : 'bg-red-400'}`} />
                   <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${ch.free ? 'bg-green-400' : 'bg-red-400'}`} style={{ boxShadow: ch.free ? '0 0 5px rgba(74,222,128,0.95)' : '0 0 5px rgba(248,113,113,0.9)' }} />
                 </span>
-                {ch.free && <span className="text-[7px] font-bold text-white/75 tracking-wide">FREE</span>}
               </div>
+
+              {/* Neon-green FREE pill — the free-gift identity (bottom-left). */}
+              {ch.free && (
+                <div className="absolute bottom-1.5 left-1.5 z-[2]">
+                  <FreePill />
+                </div>
+              )}
 
               {/* Language pill — premium, subtle, faded (top-right) */}
               {ch.language && (

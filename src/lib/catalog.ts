@@ -150,6 +150,35 @@ const GEM_CROSS_LIST: Record<string, string[]> = {
   'A2i TV': ['Français'],
 };
 
+/**
+ * Distribute the FREE gems evenly through a row instead of leaving them
+ * clustered at the end. Premium channels keep their relative order; each free
+ * channel is placed at an evenly-spaced slot (offset by half a gap so the very
+ * first tile isn't free). Gentle reorder — no randomness, stable output.
+ */
+function balanceFreeChannels(list: CatalogChannel[]): CatalogChannel[] {
+  const free = list.filter((c) => c.free);
+  const rest = list.filter((c) => !c.free);
+  if (free.length === 0 || rest.length === 0) return list;
+
+  const total = list.length;
+  const out: (CatalogChannel | null)[] = new Array(total).fill(null);
+  const gap = total / free.length;
+
+  for (let k = 0; k < free.length; k++) {
+    let pos = Math.floor(gap * k + gap / 2);
+    if (pos >= total) pos = total - 1;
+    while (out[pos] !== null) pos = (pos + 1) % total; // next open slot
+    out[pos] = free[k];
+  }
+
+  let ri = 0;
+  for (let i = 0; i < total; i++) {
+    if (out[i] === null) out[i] = rest[ri++];
+  }
+  return out as CatalogChannel[];
+}
+
 function buildCatalog(raw: RawCatalog, gems: GemChannel[] = []): Catalog {
   const channels: CatalogChannel[] = raw.channels.map((c) => ({
     ...c,
@@ -189,6 +218,14 @@ function buildCatalog(raw: RawCatalog, gems: GemChannel[] = []): Catalog {
     for (const extra of (GEM_CROSS_LIST[g.name] || [])) {
       if (extra !== experience) (byExperience[extra] ||= []).push(ch);
     }
+  }
+
+  // ── Balance: the FREE gems are appended LAST, so they bunch up at the END of
+  // every row ("stacked in the corner"). Gently weave them through each row at
+  // even intervals so free + premium feel mixed — premium keeps its relative
+  // order, free just gets spread out (a reorder, not a shuffle).
+  for (const name of Object.keys(byExperience)) {
+    byExperience[name] = balanceFreeChannels(byExperience[name]);
   }
 
   const wcIds = new Set(raw.collections?.worldcup || []);

@@ -269,7 +269,7 @@ export const PlayerControls: React.FC<Props> = ({
           </div>
 
           <div className="flex items-center gap-1">
-            {/* Download button — for all VOD content (movies + series) */}
+            {/* Download — secondary action, intentionally subtle (not a primary CTA) */}
             {isVod && state.channel?.url && (
               <button
                 onClick={(e) => {
@@ -291,12 +291,21 @@ export const PlayerControls: React.FC<Props> = ({
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
+                    // Record to the Library "My Downloads" store
+                    import('@/lib/downloads').then(({ recordDownload }) => {
+                      recordDownload({
+                        title: state.channel!.name || 'Video',
+                        poster: state.channel!.logo,
+                        url: state.channel!.url,
+                        type: category === 'series' ? 'episode' : 'movie',
+                      });
+                    });
                   }
                 }}
-                className="w-11 h-11 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+                className="w-9 h-9 rounded-full hover:bg-white/[0.06] flex items-center justify-center text-white/35 hover:text-white/60 transition-colors"
                 title="Download"
               >
-                <Download className="w-5 h-5" />
+                <Download className="w-3.5 h-3.5" strokeWidth={1.6} />
               </button>
             )}
 
