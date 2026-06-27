@@ -356,15 +356,17 @@ export const VideoPlayer: React.FC<Props> = ({
   const connectDecidedForRef = useRef<string | null>(null);
   useEffect(() => {
     const id = state.channel?.id ?? null;
-    if (state.isLoading && id) {
+    // Decide once per SWITCH (not per rebuffer) — a stall on the current channel must
+    // not consume a connecting-card throttle slot or flash the card.
+    if (state.isSwitching && id) {
       if (connectDecidedForRef.current !== id) {
         connectDecidedForRef.current = id;
         setShowConnectCard(shouldShowConnectCard(id));
       }
-    } else if (!state.isLoading) {
+    } else if (!state.isSwitching) {
       connectDecidedForRef.current = null;
     }
-  }, [state.isLoading, state.channel?.id]);
+  }, [state.isSwitching, state.channel?.id]);
 
   // Re-show the suggestions grid and restart its 15s idle fade. Lives outside the
   // controls' switch-cooldown guard so a tap always brings the grid back.
@@ -649,8 +651,10 @@ export const VideoPlayer: React.FC<Props> = ({
         <div className="absolute inset-0 z-40 bg-[#060609]" />
       )}
 
-      {/* Transition loader — thin animated bar on blurred frozen frame during channel switch */}
-      {state.isLoading && !state.error && !showCinemaIntro && !postCinemaBlackout && (
+      {/* Transition loader — thin animated bar + blurred frozen frame + pulsing connecting
+          card. ONLY for a deliberate channel SWITCH / first-play (state.isSwitching), never
+          for a plain rebuffer of the current channel — that keeps controls sharp + visible. */}
+      {state.isSwitching && !state.error && !showCinemaIntro && !postCinemaBlackout && (
         <div className="absolute inset-0 z-40 flex items-center justify-center">
           {/* Blur overlay on frozen frame */}
           <div className="absolute inset-0 bg-black/35 transition-opacity duration-300"
@@ -690,6 +694,21 @@ export const VideoPlayer: React.FC<Props> = ({
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Plain rebuffer of the CURRENT channel (not a switch) — the stream stalled
+          while watching. Keep controls visible + SHARP: no blur, no connecting card,
+          no control-hide. Just a subtle top-center spinner so the viewer knows it's
+          working. pointer-events-none so it never eats a tap on the controls. */}
+      {state.isLoading && !state.isSwitching && state.isPlaying && !state.error && !showCinemaIntro && !postCinemaBlackout && (
+        <div className="absolute top-[64px] left-1/2 -translate-x-1/2 z-30 pointer-events-none"
+             style={{ animation: 'fade-in 0.4s ease-out 0.5s both' }}>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+               style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(157,78,221,0.2)' }}>
+            <div className="w-3 h-3 rounded-full border-[1.5px] border-white/20 border-t-primary-light animate-spin" />
+            <span className="text-[10px] text-white/55 font-medium tracking-wide">Buffering</span>
+          </div>
         </div>
       )}
 

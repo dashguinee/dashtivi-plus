@@ -26,6 +26,7 @@ export function usePlayer() {
     quality: 'Auto',
     qualities: ['Auto'],
     isLoading: false,
+    isSwitching: false,
     error: null,
     currentTime: 0,
     duration: 0,
@@ -150,6 +151,7 @@ export function usePlayer() {
           channel,
           isPlaying: true,
           isLoading: true,
+          isSwitching: true,
           error: null,
           currentTime: 0,
           duration: 0,
@@ -200,6 +202,7 @@ export function usePlayer() {
         quality: initQuality,
         qualities: ['AUTO', 'Source', '720p', '480p', '360p'],
         isLoading: true, // Thin bar on blurred frame during switch, full load on first play
+        isSwitching: true, // Deliberate transition — gates blur + connecting card + control-hide
         error: null,
         currentTime: 0,
         duration: 0,
@@ -281,7 +284,7 @@ export function usePlayer() {
             if (snapshotTimerRef.current) { clearTimeout(snapshotTimerRef.current); snapshotTimerRef.current = undefined; }
             setSwitchSnapshot(null); // Reveal error UI — don't mask it behind the frozen frame
             markDead(channel.id, errMsg);
-            setState((prev) => ({ ...prev, error: 'Stream interrupted — tap Reconnect to resume', isLoading: false }));
+            setState((prev) => ({ ...prev, error: 'Stream interrupted — tap Reconnect to resume', isLoading: false, isSwitching: false }));
           });
           if (isStale()) { hlsInstance.destroy(); return; } // Rapid switch — bail
           hlsRef.current = hlsInstance;
@@ -301,7 +304,7 @@ export function usePlayer() {
                 const data = await probe.json();
                 if (data.error === 'stream_limit') {
                   setStreamLimit({ activeChannel: data.activeChannel, upgrade: data.upgrade });
-                  setState((prev) => ({ ...prev, isLoading: false, error: null }));
+                  setState((prev) => ({ ...prev, isLoading: false, isSwitching: false, error: null }));
                   return;
                 }
               }
@@ -332,6 +335,7 @@ export function usePlayer() {
               setState((prev) => ({
                 ...prev,
                 isLoading: false,
+                isSwitching: false,
                 error: isLive
                   ? 'No active package for this channel — please upgrade ⚡'
                   : 'Connection timed out — tap to retry',
@@ -395,7 +399,7 @@ export function usePlayer() {
               markDead(channel.id, 'Stream error');
               setState((prev) => ({ ...prev, error: isLive
                 ? 'No active package for this channel — please upgrade ⚡'
-                : 'Stream unavailable — tap Reconnect', isLoading: false }));
+                : 'Stream unavailable — tap Reconnect', isLoading: false, isSwitching: false }));
             } else {
               clearTimeout(connectionTimeout);
               if (snapshotTimerRef.current) { clearTimeout(snapshotTimerRef.current); snapshotTimerRef.current = undefined; }
@@ -416,7 +420,7 @@ export function usePlayer() {
                 errorMsg = 'Channel not found';
               }
 
-              setState((prev) => ({ ...prev, error: errorMsg, isLoading: false }));
+              setState((prev) => ({ ...prev, error: errorMsg, isLoading: false, isSwitching: false }));
             }
           };
 
@@ -461,7 +465,9 @@ export function usePlayer() {
           if (idMatch) onStreamSuccess(parseInt(idMatch[1]));
           // Connect audio presence EQ (warmth, body, clarity — always on)
           connectBoost(video);
-          setState((prev) => ({ ...prev, isPlaying: true, isLoading: false, error: null }));
+          // Switch transition is over — frozen frame + connecting card come down here
+          // (snapshot cleared just above). isSwitching:false reveals sharp controls.
+          setState((prev) => ({ ...prev, isPlaying: true, isLoading: false, isSwitching: false, error: null }));
 
           // Best-effort: if the user was in PiP and the source just changed (PiP dropped
           // when video.src was reassigned), re-enter PiP now that the new stream paints.
@@ -886,6 +892,7 @@ export function usePlayer() {
       quality: 'Auto',
       qualities: ['Auto'],
       isLoading: false,
+      isSwitching: false,
       error: null,
       currentTime: 0,
       duration: 0,

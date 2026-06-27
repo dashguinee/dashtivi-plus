@@ -39,7 +39,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
   const creds = credentials ?? { username: '', password: '' };
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState('');
-  const [dim, setDim] = useState(false); // false = awake (1.0) · true = rested (~0.55)
+  const [dim, setDim] = useState(false); // false = awake (1.0 / 0.96) · true = rested (~0.34 opacity, 0.768 scale)
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [dragging, setDragging] = useState(false);
   const [nearClose, setNearClose] = useState(false); // pebble hovering the bottom dismiss-X
@@ -172,7 +172,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
           style={{
             left: pos.x, top: pos.y, width: SIZE, height: SIZE, padding: 0,
             background: 'transparent', border: 'none',
-            opacity: open ? 0 : (dim && !active) ? 0.55 : 1,
+            opacity: open ? 0 : (dim && !active) ? 0.34 : 1,
             transition: dragging ? 'none' : 'opacity 1.1s ease, left .5s cubic-bezier(0.34,1.56,0.64,1), top .5s cubic-bezier(0.34,1.56,0.64,1)',
             pointerEvents: open ? 'none' : 'auto',
             touchAction: 'none', cursor: 'grab', WebkitTapHighlightColor: 'transparent',
@@ -198,7 +198,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
               boxShadow: active
                 ? '0 16px 42px rgba(157,78,221,0.6), 0 0 0 5px rgba(199,125,255,0.26), 0 0 34px rgba(157,78,221,0.66)'
                 : '0 8px 22px rgba(157,78,221,0.45), 0 0 16px rgba(157,78,221,0.38), inset 0 1px 1px rgba(255,255,255,0.28)',
-              transform: `scale(${active ? 1.04 : 0.96})`,
+              transform: `scale(${active ? 1.04 : (dim ? 0.768 : 0.96)})`,
               transition: 'transform .3s cubic-bezier(0.34,1.56,0.64,1), box-shadow .3s',
             }}
           >

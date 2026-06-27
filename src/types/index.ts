@@ -24,6 +24,10 @@ export interface PlayerState {
   quality: string;
   qualities: string[];
   isLoading: boolean;
+  /** True ONLY during a deliberate channel-switch / first-play transition (frozen
+   *  frame + connecting card up). False during a plain rebuffer of the current
+   *  channel — lets the UI keep controls sharp + visible while buffering. */
+  isSwitching: boolean;
   error: string | null;
   currentTime: number;
   duration: number;
