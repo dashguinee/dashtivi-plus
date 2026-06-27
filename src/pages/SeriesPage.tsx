@@ -839,14 +839,15 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         <>
           <div className="grid grid-cols-2 min-[500px]:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5">
             {filteredAndSorted.slice(0, displayLimit).map(series => (
-              <PosterCard
-                key={series.series_id}
-                title={series.name}
-                poster={series.cover}
-                rating={series.rating}
-                tmdbData={tmdbMap[`s:${series.series_id}`]}
-                onClick={() => setDetailSeries(series)}
-              />
+              <div key={series.series_id} className="cv-grid-cell">
+                <PosterCard
+                  title={series.name}
+                  poster={series.cover}
+                  rating={series.rating}
+                  tmdbData={tmdbMap[`s:${series.series_id}`]}
+                  onClick={() => setDetailSeries(series)}
+                />
+              </div>
             ))}
           </div>
 

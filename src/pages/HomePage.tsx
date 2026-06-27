@@ -638,7 +638,7 @@ const ExperienceRow = React.memo(function ExperienceRow({
   const visibleChannels = channels.slice(0, shown);
 
   return (
-    <section className="mb-9" style={{ animation: 'row-in 0.55s cubic-bezier(0.16,1,0.3,1) both', animationDelay: `${Math.min(index, 9) * 65}ms` }}>
+    <section className="mb-9 cv-row" style={{ animation: 'row-in 0.55s cubic-bezier(0.16,1,0.3,1) both', animationDelay: `${Math.min(index, 9) * 65}ms` }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 mb-3.5">
         <div className="flex items-center gap-2.5 min-w-0">

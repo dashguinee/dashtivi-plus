@@ -872,7 +872,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         <>
           <div className="grid grid-cols-2 min-[500px]:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-x-4 gap-y-6 p-5">
             {(isSearching ? filteredAndSorted : filteredAndSorted.slice(0, displayLimit)).map(movie => (
-              <div key={movie.stream_id} className="relative group/card">
+              <div key={movie.stream_id} className="relative group/card cv-grid-cell">
                 <PosterCard title={movie.name} poster={movie.stream_icon} rating={movie.rating}
                   tmdbData={tmdbMap[`m:${movie.stream_id}`]} onClick={() => setDetailMovie(movie)} />
                 {/* Download — secondary, subtle. Quiet on the poster, not a primary CTA. */}

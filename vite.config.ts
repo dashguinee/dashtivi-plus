@@ -27,6 +27,9 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes('hls.js')) return 'hls';
           if (id.includes('mpegts.js')) return 'mpegts';
+          // @supabase/supabase-js is dynamically imported (see lib/supabase.ts)
+          // — keep its whole dependency tree in one async chunk, off the index.
+          if (id.includes('@supabase') || id.includes('postgrest') || id.includes('realtime-js') || id.includes('gotrue') || id.includes('storage-js') || id.includes('functions-js')) return 'supabase';
           if (id.includes('logo-map.generated')) return 'logo-data';
           if (id.includes('tmdb-map.generated')) return 'tmdb-data';
           if (id.includes('react-router-dom')) return 'router';

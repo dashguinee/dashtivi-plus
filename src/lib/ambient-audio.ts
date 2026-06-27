@@ -47,7 +47,7 @@ const HOME_ROTATION = [
 let rotationIndex = Math.floor(Math.random() * HOME_ROTATION.length);
 const AUDIO_URL = HOME_ROTATION[rotationIndex];
 const STORAGE_KEY = 'tivi_ambient_enabled';
-const VOLUME = 0.3; // lowered max — it cruises BELOW this via the gentle swing
+const VOLUME = 0.26; // lowered max — it cruises BELOW this via the gentle swing
 
 export function isAmbientEnabled(): boolean {
   try { return localStorage.getItem(STORAGE_KEY) !== 'off'; } catch { return true; }

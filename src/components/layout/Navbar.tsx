@@ -1,33 +1,34 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Tv, Users, Library } from 'lucide-react';
+import { Home, Tv, Users, Library, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
 import { tap } from '@/lib/haptics';
-import { TiviModeToggle } from './TiviModeToggle';
+import { TiviModeToggle, useVeeCycle } from './TiviModeToggle';
 
 interface NavItem {
   path: string;
   labelKey: TranslationKey;
   icon: React.FC<React.SVGProps<SVGSVGElement> & { size?: string | number }>;
-  isLive?: boolean;
+  isVee?: boolean;
 }
 
-// FINAL nav (Aziz, 2026-06-24): Home · Vee · Hub. ONLY. No Stream+ tab.
-// Stream+ is no longer a page — it's the continuation of the ONE home canvas
-// (the free showcase + Oyé/Stations woven through the infinite home scroll).
-// The center "Live" slot is the Vee multi-selector pebble (TiviModeToggle).
+// FINAL nav (Aziz, 2026-06-27): Home · Biblio · Vee · Dahub. Exactly 4.
+// Live TV is NOT a direct tab — it's reached through Vee's cycle.
+// Slot 3 (Vee) is a CYCLING navigator + the visual hero of the bar:
+// each tap advances Movies → Series → Live → Home (TiviModeToggle).
 const NAV_ITEMS: NavItem[] = [
   { path: '/', labelKey: 'navHome', icon: Home },
-  { path: '/live', labelKey: 'navLiveTV', icon: Tv, isLive: true },
-  { path: '/library', labelKey: 'navLibrary', icon: Library },
-  { path: '/hub', labelKey: 'navHub', icon: Users },
+  { path: '/library', labelKey: 'navBiblio', icon: Library },
+  { path: '/__vee__', labelKey: 'navVee', icon: Sparkles, isVee: true },
+  { path: '/hub', labelKey: 'navDahub', icon: Users },
 ];
 
 export const Navbar: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
+  const vee = useVeeCycle();
   const sidebarHoverRef = useRef(false);
   const [sidebarHover, setSidebarHoverState] = React.useState(false);
 
@@ -139,8 +140,8 @@ export const Navbar: React.FC = () => {
             const active = isActive(item.path);
             const Icon = item.icon;
 
-            // The center "Live" slot is the textured T/M/S mode pebble.
-            if (item.isLive) return <TiviModeToggle key={item.path} />;
+            // Slot 3 is the cycling Vee hero pebble.
+            if (item.isVee) return <TiviModeToggle key={item.path} />;
 
             return (
               <button
@@ -163,18 +164,6 @@ export const Navbar: React.FC = () => {
                     style={{ width: 22, height: 22 }}
                     strokeWidth={active ? 2.4 : 1.8}
                   />
-
-                  {/* Live TV pulse dot */}
-                  {item.isLive && (
-                    <span
-                      className="absolute -top-0.5 -right-1.5 w-[6px] h-[6px] rounded-full"
-                      style={{
-                        background: '#C77DFF',
-                        boxShadow: '0 0 6px rgba(157, 78, 221, 0.8)',
-                        animation: 'live-ring 2s infinite',
-                      }}
-                    />
-                  )}
                 </div>
 
                 {/* Label — fades in when active */}
@@ -246,19 +235,23 @@ export const Navbar: React.FC = () => {
         {/* Main items */}
         <div className="flex-1 flex flex-col gap-1 px-3 pt-6 overflow-hidden">
           {NAV_ITEMS.map((item) => {
-            const active = isActive(item.path);
+            // Vee = cycling hero (Movies → Series → Live → Home), lilac accent.
+            const isVee = item.isVee;
+            const active = isVee ? vee.isVeeActive : isActive(item.path);
             const Icon = item.icon;
 
             return (
               <button
                 key={item.path}
-                onClick={() => navigate(item.path)}
+                onClick={() => (isVee ? vee.onTap() : navigate(item.path))}
                 className="relative flex items-center gap-3 h-11 rounded-xl transition-[background-color,color,padding] duration-300 group"
                 style={{
                   paddingLeft: sidebarHover ? 12 : 0,
                   justifyContent: sidebarHover ? 'flex-start' : 'center',
-                  background: active ? 'rgba(157, 78, 221, 0.08)' : 'transparent',
-                  color: active ? '#C77DFF' : '#B8B8B8',
+                  background: isVee
+                    ? (active ? 'rgba(157, 78, 221, 0.16)' : 'rgba(157, 78, 221, 0.06)')
+                    : (active ? 'rgba(157, 78, 221, 0.08)' : 'transparent'),
+                  color: isVee ? '#C77DFF' : (active ? '#C77DFF' : '#B8B8B8'),
                 }}
               >
                 {active && (
@@ -274,25 +267,19 @@ export const Navbar: React.FC = () => {
                 <div className="relative flex-shrink-0">
                   <Icon
                     className="w-5 h-5 transition-transform duration-300"
-                    style={{ transform: active ? 'scale(1.1)' : 'scale(1)' }}
+                    style={{
+                      transform: active ? 'scale(1.1)' : 'scale(1)',
+                      filter: isVee ? 'drop-shadow(0 0 6px rgba(199,125,255,0.6))' : 'none',
+                    }}
                     strokeWidth={active ? 2.5 : 1.8}
                   />
-                  {item.isLive && (
-                    <span
-                      className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-primary"
-                      style={{
-                        boxShadow: active ? '0 0 6px rgba(157,78,221,0.6)' : 'none',
-                        animation: 'live-ring 2s infinite',
-                      }}
-                    />
-                  )}
                 </div>
 
                 <span
                   className="text-sm font-medium whitespace-nowrap overflow-hidden transition-[width,opacity] duration-300"
                   style={{ width: sidebarHover ? 'auto' : 0, opacity: sidebarHover ? 1 : 0 }}
                 >
-                  {t(item.labelKey)}
+                  {isVee ? `${t(item.labelKey)} · ${vee.nextLabel}` : t(item.labelKey)}
                 </span>
               </button>
             );

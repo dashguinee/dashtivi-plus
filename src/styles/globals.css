@@ -8,6 +8,29 @@
   to   { opacity: 1; transform: none; }
 }
 
+/* ═══ OFFSCREEN PERF — content-visibility ═══
+   Lets the browser SKIP layout + paint for rows/cards scrolled out of view,
+   then render them just-in-time as they approach the viewport. On cheap
+   Android this is the single biggest scroll-FPS + first-paint win because the
+   engine stops styling/laying-out thousands of offscreen poster nodes.
+   `contain-intrinsic-size: auto <h>` reserves the slot's height so the
+   scrollbar never jumps (zero CLS); the `auto` keyword makes the browser
+   remember the REAL rendered size after first paint, so it self-corrects.
+   Purely a rendering hint — ZERO visual change, no effect on onscreen nodes. */
+.cv-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 180px;
+}
+.cv-grid-cell {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 240px;
+}
+/* Shorter cells (live-channel cards) reserve less height. */
+.cv-grid-cell-sm {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 96px;
+}
+
 /* Channel-count badge — space-metallic chrome with a slow, faded shimmer */
 .tivi-count-metal {
   background: linear-gradient(115deg, #6b7280 0%, #d8dde6 28%, #9aa1ad 50%, #d8dde6 72%, #6b7280 100%);

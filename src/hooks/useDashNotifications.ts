@@ -12,7 +12,7 @@
  */
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 export interface DashNotification {
   id: string;
@@ -61,10 +61,11 @@ export function useDashNotifications({ appCode, dashId, limit = 20 }: Options): 
   const [notifications, setNotifications] = useState<DashNotification[]>([]);
 
   useEffect(() => {
-    if (!supabase) return;
     let cancelled = false;
     (async () => {
       try {
+        const supabase = await getSupabase();
+        if (cancelled) return;
         const { data, error } = await supabase
           .from('dash_notifications')
           .select('*')
@@ -86,27 +87,37 @@ export function useDashNotifications({ appCode, dashId, limit = 20 }: Options): 
   }, [appCode, dashId, limit]);
 
   useEffect(() => {
-    if (!supabase) return;
-    // supabase-js 2.104+ tightened the .on() overload types; the
-    // realtime event strings are accepted at runtime but the TS
-    // overload resolution misfires, so we cast the .on() handler.
-    const channel = (supabase.channel(`dash_notifications:${appCode}`) as any)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'dash_notifications' },
-        (payload: { new?: DashNotification }) => {
-          const row = payload.new;
-          if (!row) return;
-          if (!matchesAudience(row, appCode, dashId)) return;
-          setNotifications(prev => {
-            if (prev.some(p => p.id === row.id)) return prev;
-            return [{ ...row, read: isReadLocally(row.id) }, ...prev].slice(0, limit);
-          });
-        },
-      )
-      .subscribe();
+    let cancelled = false;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let sb: any = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let channel: any = null;
+    (async () => {
+      const supabase = await getSupabase();
+      if (cancelled) return;
+      sb = supabase;
+      // supabase-js 2.104+ tightened the .on() overload types; the
+      // realtime event strings are accepted at runtime but the TS
+      // overload resolution misfires, so we cast the .on() handler.
+      channel = (supabase.channel(`dash_notifications:${appCode}`) as any)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'dash_notifications' },
+          (payload: { new?: DashNotification }) => {
+            const row = payload.new;
+            if (!row) return;
+            if (!matchesAudience(row, appCode, dashId)) return;
+            setNotifications(prev => {
+              if (prev.some(p => p.id === row.id)) return prev;
+              return [{ ...row, read: isReadLocally(row.id) }, ...prev].slice(0, limit);
+            });
+          },
+        )
+        .subscribe();
+    })();
     return () => {
-      try { supabase.removeChannel(channel); } catch { /* noop */ }
+      cancelled = true;
+      try { if (sb && channel) sb.removeChannel(channel); } catch { /* noop */ }
     };
   }, [appCode, dashId, limit]);
 

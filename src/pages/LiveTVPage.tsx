@@ -1171,7 +1171,7 @@ function SearchGrid({ streams, credentials, onPlay, freeUrlMap }: {
           <button
             key={stream.stream_id}
             onClick={() => handlePlay(stream)}
-            className="group relative bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col items-center gap-2 hover:bg-white/10 hover:border-primary/30 transition-colors duration-300"
+            className="group relative bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col items-center gap-2 hover:bg-white/10 hover:border-primary/30 transition-colors duration-300 cv-grid-cell-sm"
           >
             <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" />
             <p className="text-xs text-text-secondary text-center truncate w-full group-hover:text-white transition-colors">
@@ -1353,7 +1353,7 @@ function StreamMoreSection({
             <button
               key={stream.stream_id}
               onClick={() => handlePlay(stream)}
-              className="group relative rounded-xl overflow-hidden text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.97]"
+              className="group relative rounded-xl overflow-hidden text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.97] cv-grid-cell-sm"
               style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
             >
               <div className="p-2.5 flex items-center gap-2">

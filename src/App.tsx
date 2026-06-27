@@ -79,10 +79,22 @@ const TestChannelsPage = lazyRetry(() => import('@/pages/TestChannelsPage'));
     import('@/pages/LiveTVPage');
     import('@/pages/ExperienceHomePage');
   };
+  // SNAPPY PLAY: the hls.js engine (~162KB gzip) is lazy-loaded on first play.
+  // On weak West-African networks that download would block the very first
+  // tap→play. So we warm the engine chunk during a LATER idle window (after the
+  // nav chunks), making first play instant. Pure module prefetch — it only
+  // *defines* the Hls class, never instantiates, so zero side-effects, zero
+  // interaction/visual change. mpegts is an empty chunk, so it's skipped.
+  const warmPlayerEngine = () => { import('hls.js').catch(() => {}); };
   if (typeof window === 'undefined') return;
   const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void }).requestIdleCallback;
-  if (ric) ric(warm, { timeout: 4000 });
-  else setTimeout(warm, 2500);
+  if (ric) {
+    ric(warm, { timeout: 4000 });
+    ric(warmPlayerEngine, { timeout: 8000 });
+  } else {
+    setTimeout(warm, 2500);
+    setTimeout(warmPlayerEngine, 5000);
+  }
 })();
 
 // Build-time version stamp — compared against remote version.json

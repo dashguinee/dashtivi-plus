@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 const VAPID_KEY_RAW = ((import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined) || '').trim();
 
@@ -73,6 +73,7 @@ export function usePushSubscribe(appCode: string = 'tivi', userId?: string | nul
       }
 
       const tokenOwner = userId || deviceId(sub.endpoint);
+      const supabase = await getSupabase();
       const { error } = await supabase.from('dash_push_tokens').upsert(
         {
           user_id: tokenOwner,

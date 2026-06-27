@@ -9,7 +9,10 @@ const translations = {
     navSeries: 'Séries',
     navWorldEX: 'WorldEX',
     navHub: 'Hub',
+    navDahub: 'Dahub',
     navLibrary: 'Biblio',
+    navBiblio: 'Biblio',
+    navVee: 'Vee',
     navFrench: 'Français',
     navStreamore: 'Stream+',
 
@@ -425,7 +428,10 @@ const translations = {
     navSeries: 'Series',
     navWorldEX: 'WorldEX',
     navHub: 'Hub',
+    navDahub: 'Dahub',
     navLibrary: 'Library',
+    navBiblio: 'Biblio',
+    navVee: 'Vee',
     navFrench: 'French',
     navStreamore: 'Stream+',
 

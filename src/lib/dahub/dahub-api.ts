@@ -11,7 +11,7 @@
  * row the RPCs recognise is best-effort — calls degrade to empty lists.
  */
 
-import { supabase } from '../supabase';
+import { getSupabase } from '../supabase';
 
 // Lightweight dev-logging shims (voyo had dedicated logger utils).
 const devLog = (...args: unknown[]) => {
@@ -124,6 +124,7 @@ export const friendsAPI = {
   async getFriends(userId: string, appFilter?: AppCode): Promise<Friend[]> {
     if (!userId) return [];
     try {
+      const supabase = await getSupabase();
       const { data, error } = await supabase.rpc('get_friends_with_presence', {
         p_user_id: userId,
       });
@@ -173,6 +174,7 @@ export const friendsAPI = {
   async addFriend(userId: string, friendId: string, nickname?: string): Promise<boolean> {
     if (!userId) return false;
     try {
+      const supabase = await getSupabase();
       const { error } = await supabase.rpc('add_friend', {
         p_user_id: userId,
         p_friend_id: friendId,
@@ -188,6 +190,7 @@ export const friendsAPI = {
   async removeFriend(userId: string, friendId: string): Promise<boolean> {
     if (!userId) return false;
     try {
+      const supabase = await getSupabase();
       const { error } = await supabase.rpc('remove_friend', {
         p_user_id: userId,
         p_friend_id: friendId,
@@ -201,6 +204,7 @@ export const friendsAPI = {
 
   async searchUsers(query: string): Promise<{ dash_id: string; name: string }[]> {
     try {
+      const supabase = await getSupabase();
       const { data, error } = await supabase
         .from('users')
         .select('core_id, full_name')
@@ -220,6 +224,7 @@ export const friendsAPI = {
   async getSharedAccountMembers(userId: string): Promise<SharedAccountMember[]> {
     if (!userId) return [];
     try {
+      const supabase = await getSupabase();
       const { data: userServices, error: userServicesError } = await supabase
         .from('user_services')
         .select('account_id, service_type')
@@ -317,6 +322,7 @@ export const messagesAPI = {
   async getConversations(userId: string): Promise<Conversation[]> {
     if (!userId) return [];
     try {
+      const supabase = await getSupabase();
       const { data, error } = await supabase.rpc('get_conversations', {
         p_user_id: userId,
       });
@@ -344,6 +350,7 @@ export const messagesAPI = {
   async getMessages(user1: string, user2: string, limit = 50): Promise<Message[]> {
     if (!user1 || !user2) return [];
     try {
+      const supabase = await getSupabase();
       const { data, error } = await supabase.rpc('get_conversation', {
         p_user_1: user1,
         p_user_2: user2,
@@ -367,6 +374,7 @@ export const messagesAPI = {
   ): Promise<boolean> {
     if (!fromId || !toId) return false;
     try {
+      const supabase = await getSupabase();
       const { error } = await supabase.from('messages').insert({
         from_id: fromId,
         to_id: toId,
@@ -403,6 +411,7 @@ export const messagesAPI = {
   async markAsRead(userId: string, friendId: string): Promise<boolean> {
     if (!userId || !friendId) return false;
     try {
+      const supabase = await getSupabase();
       const { error } = await supabase.rpc('mark_messages_read', {
         p_user_id: userId,
         p_friend_id: friendId,
@@ -417,6 +426,7 @@ export const messagesAPI = {
   async getUnreadCount(userId: string): Promise<number> {
     if (!userId) return 0;
     try {
+      const supabase = await getSupabase();
       const { count, error } = await supabase
         .from('messages')
         .select('*', { count: 'exact', head: true })
@@ -431,28 +441,37 @@ export const messagesAPI = {
 
   subscribeToMessages(userId: string, onMessage: (msg: Message) => void) {
     if (!userId) return () => {};
-    try {
-      const channel = supabase
-        .channel(`messages:${userId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'messages',
-            filter: `to_id=eq.${userId}`,
-          },
-          (payload: { new: Message }) => {
-            onMessage(payload.new);
-          },
-        )
-        .subscribe();
-      return () => {
-        try { supabase.removeChannel(channel); } catch { /* noop */ }
-      };
-    } catch {
-      return () => {};
-    }
+    let cancelled = false;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let sb: any = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let channel: any = null;
+    (async () => {
+      try {
+        const supabase = await getSupabase();
+        if (cancelled) return;
+        sb = supabase;
+        channel = supabase
+          .channel(`messages:${userId}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'messages',
+              filter: `to_id=eq.${userId}`,
+            },
+            (payload: { new: Message }) => {
+              onMessage(payload.new);
+            },
+          )
+          .subscribe();
+      } catch { /* noop */ }
+    })();
+    return () => {
+      cancelled = true;
+      try { if (sb && channel) sb.removeChannel(channel); } catch { /* noop */ }
+    };
   },
 };
 
@@ -470,6 +489,7 @@ export const presenceAPI = {
   ): Promise<boolean> {
     if (!userId) return false;
     try {
+      const supabase = await getSupabase();
       const { error } = await supabase.rpc('update_presence', {
         p_core_id: userId,
         p_status: status,
