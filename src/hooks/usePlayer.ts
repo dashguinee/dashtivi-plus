@@ -48,6 +48,7 @@ export function usePlayer() {
   const wasPiPRef = useRef(false); // User intent: was in PiP — re-request after source swap
   const switchingPiPRef = useRef(false); // True while a channel switch drops PiP (suppresses intent-clear)
   const pendingSeekRef = useRef(0); // Smart-resume: seconds to seek to once a direct-VOD stream is ready (0 = none)
+  const remuxOffsetRef = useRef(0); // Remux VOD: server-side &start=N offset, kept live so seek() updates it (display clock stays correct)
 
   // Capture the current video frame to a data URL so we can overlay it (blurred)
   // during the black gap of a channel switch. Returns null on failure (e.g. tainted
@@ -624,14 +625,15 @@ export function usePlayer() {
         // VOD time tracking — skip for live (infinite duration, no seek bar)
         // For remux streams with &start=N, video.currentTime starts at 0 but real position = start + currentTime
         const startMatch = url.match(/[&?]start=(\d+)/);
-        const remuxOffset = startMatch ? parseInt(startMatch[1]) : 0;
+        remuxOffsetRef.current = startMatch ? parseInt(startMatch[1]) : 0;
         let lastTimeUpdate = 0;
         video.ontimeupdate = () => {
           if (isLive) return;
           const now = Date.now();
           if (now - lastTimeUpdate < 1000) return; // throttle to 1/sec
           lastTimeUpdate = now;
-          setState((prev) => ({ ...prev, currentTime: video.currentTime + remuxOffset }));
+          // Read the offset from a ref — seek() updates it when it swaps src to &start=N
+          setState((prev) => ({ ...prev, currentTime: video.currentTime + remuxOffsetRef.current }));
         };
         // Duration: multiple sources, bulletproof chain
         let durationLocked = false;
@@ -815,7 +817,11 @@ export function usePlayer() {
     const isRemux = src.includes('/vod?');
     if (isRemux) {
       const base = src.replace(/&start=\d+/, '');
-      const seekUrl = base + '&start=' + Math.floor(time);
+      const startN = Math.floor(time);
+      const seekUrl = base + '&start=' + startN;
+      // Keep the offset ref in sync: the new stream restarts at currentTime 0, so the
+      // display clock must add startN (not the stale load-time offset) going forward.
+      remuxOffsetRef.current = startN;
       setState((prev) => ({ ...prev, currentTime: time }));
       video.src = seekUrl;
       video.play().catch(() => {});
