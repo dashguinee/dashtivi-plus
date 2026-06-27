@@ -747,10 +747,6 @@ export function usePlayer() {
   }, []);
 
   const toggleFullscreen = useCallback(() => {
-    const container = containerRef.current as (HTMLDivElement & {
-      webkitRequestFullscreen?: () => Promise<void> | void;
-      mozRequestFullScreen?: () => Promise<void> | void;
-    }) | null;
     const video = videoRef.current as (HTMLVideoElement & {
       webkitEnterFullscreen?: () => void;
       webkitExitFullscreen?: () => void;
@@ -777,20 +773,32 @@ export function usePlayer() {
     }
 
     // ── Enter path ──
-    // iOS Safari (iPhone) can ONLY fullscreen the <video> element itself — the
-    // container's requestFullscreen is absent or no-ops. Feature-detect first, then
+    // iOS Safari (iPhone) can ONLY fullscreen the <video> element itself — a div/
+    // document requestFullscreen is absent or no-ops there. Feature-detect first,
     // guard with an iOS check, then fall back to video.webkitEnterFullscreen.
     const isIOS = /iP(hone|od|ad)/.test(navigator.platform) ||
       /iPad|iPhone|iPod/.test(navigator.userAgent) ||
       (navigator.userAgent.includes('Mac') && 'ontouchend' in document); // iPadOS reports as Mac
-    const containerReq = container && (
-      container.requestFullscreen || container.webkitRequestFullscreen || container.mozRequestFullScreen
-    );
 
-    if (containerReq && !isIOS) {
-      // Standard / prefixed fullscreen on the container (keeps our overlay controls).
+    // CRITICAL: the persistent <video> (shell element, z-50) and our overlay
+    // controls (portaled into the surface stack, z-55) live in SEPARATE fixed
+    // layers — the controls container is NOT an ancestor of the <video>.
+    // Fullscreening the container therefore shows BLACK (the video stays outside
+    // the fullscreened subtree and keeps playing audio only). Fullscreen the
+    // document element instead: BOTH the video AND the controls render inside it
+    // with their normal z-stacking (video below, controls on top), so fullscreen
+    // shows the picture + keeps our overlay controls — for LIVE and VOD alike.
+    const root = document.documentElement as (HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void> | void;
+      mozRequestFullScreen?: () => Promise<void> | void;
+    });
+    const rootReq = root.requestFullscreen || root.webkitRequestFullscreen || root.mozRequestFullScreen;
+
+    if (rootReq && !isIOS) {
+      // Standard / prefixed fullscreen on the document — keeps the video visible
+      // AND our overlay controls (Flow button, genre bar, next/prev) on top.
       try {
-        const r = containerReq.call(container);
+        const r = rootReq.call(root);
         if (r && typeof (r as Promise<void>).then === 'function') (r as Promise<void>).catch(() => {});
       } catch { /* fall through silently */ }
       setState((prev) => ({ ...prev, isFullscreen: true }));
@@ -804,10 +812,10 @@ export function usePlayer() {
       };
       video.addEventListener('webkitendfullscreen', onEnd);
       setState((prev) => ({ ...prev, isFullscreen: true }));
-    } else if (containerReq) {
-      // No iOS video API but a (prefixed) container API exists — use it.
+    } else if (rootReq) {
+      // No iOS video API but a (prefixed) document API exists — use it.
       try {
-        const r = containerReq.call(container);
+        const r = rootReq.call(root);
         if (r && typeof (r as Promise<void>).then === 'function') (r as Promise<void>).catch(() => {});
       } catch { /* ignore */ }
       setState((prev) => ({ ...prev, isFullscreen: true }));
