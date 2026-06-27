@@ -133,6 +133,29 @@ export function usePlayer() {
       // Generation guard — increment early so rapid switches abort the fade-out
       const gen = ++playGeneration.current;
 
+      // Quick win: on a SWITCH, push the NEW channel into state RIGHT NOW —
+      // before the ~250ms audio fade-out below — so the central "connecting"
+      // card (next channel's logo + name, driven by state.channel/isLoading in
+      // VideoPlayer) flips to the new channel the instant the user taps, instead
+      // of ~250ms later. The frozen-frame snapshot was just captured above, so
+      // the connecting card renders cleanly over it. Keep isPlaying:true so the
+      // frozen frame stays visible while the fade-out + teardown + load run
+      // underneath. gen was already bumped, so the prior stream's now-stale
+      // handlers can't clobber this. First-play (non-switch) is untouched — it
+      // keeps its single setState below. The post-fade setState re-affirms the
+      // same channel id (no flicker) plus the remaining fields.
+      if (isSwitch) {
+        setState((prev) => ({
+          ...prev,
+          channel,
+          isPlaying: true,
+          isLoading: true,
+          error: null,
+          currentTime: 0,
+          duration: 0,
+        }));
+      }
+
       // Smooth fade-out (250ms — 5 steps, ease-out curve)
       if (isSwitch && video) {
         const startVol = video.volume;

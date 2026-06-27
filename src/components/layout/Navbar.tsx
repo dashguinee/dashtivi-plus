@@ -94,6 +94,19 @@ export const Navbar: React.FC = () => {
   const renderMobileItem = (item: NavItem) => {
     const active = isActive(item.path);
     const Icon = item.icon;
+    const isDahub = item.path === '/hub';
+    // Graft 1: drop the whole icon row down ~4px so nothing touches the bar edge
+    // (baseline +4px; active still lifts 2px relative to that for the label room).
+    const iconTransform = active
+      ? 'translateY(2px) scale(1.12)'
+      : 'translateY(4px)';
+    // Graft 3: Dahub wears the silver (same metal palette as the channel-count badge).
+    const iconColor = isDahub
+      ? (active ? '#e6eaf0' : '#aab1bd')
+      : (active ? '#C77DFF' : 'rgba(255,255,255,0.35)');
+    const iconFilter = isDahub
+      ? 'drop-shadow(0 0 5px rgba(216,221,230,0.30))'
+      : (active ? 'drop-shadow(0 0 8px rgba(157, 78, 221, 0.5))' : 'none');
     return (
       <button
         key={item.path}
@@ -105,14 +118,30 @@ export const Navbar: React.FC = () => {
         <div
           className="relative"
           style={{
-            transform: active ? 'translateY(-2px) scale(1.12)' : 'scale(1)',
-            color: active ? '#C77DFF' : 'rgba(255,255,255,0.35)',
-            filter: active ? 'drop-shadow(0 0 8px rgba(157, 78, 221, 0.5))' : 'none',
+            transform: iconTransform,
+            color: iconColor,
+            filter: iconFilter,
             transition: 'transform 0.15s ease-out, color 0.1s, filter 0.15s',
           }}
         >
+          {/* Graft 3: frosted silver chip behind Dahub — reuses .tivi-nav-silver
+              (the tivi-count-metal palette + shimmer), low opacity + backdrop-blur. */}
+          {isDahub && (
+            <div
+              className="tivi-nav-silver absolute left-1/2 top-1/2 rounded-[11px] pointer-events-none"
+              style={{
+                width: 34,
+                height: 34,
+                transform: 'translate(-50%, -50%)',
+                opacity: 0.11,
+                backdropFilter: 'blur(4px)',
+                WebkitBackdropFilter: 'blur(4px)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18)',
+              }}
+            />
+          )}
           <Icon
-            style={{ width: 22, height: 22 }}
+            style={{ width: 22, height: 22, position: 'relative' }}
             strokeWidth={active ? 2.4 : 1.8}
           />
         </div>
@@ -158,7 +187,7 @@ export const Navbar: React.FC = () => {
       `}</style>
 
       {/* MOBILE BOTTOM NAV */}
-      <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-3 pb-4 pt-2 pointer-events-none safe-bottom"
+      <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-5 pb-4 pt-2 pointer-events-none safe-bottom"
         style={{
           transform: 'translateZ(0)',
           opacity: navOpacity === 'dim' ? 0.3 : navOpacity === 'ghost' ? 0.12 : 1,
@@ -171,7 +200,7 @@ export const Navbar: React.FC = () => {
       >
         <div
           ref={navRef}
-          className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-between px-4 pointer-events-auto"
+          className="backdrop-blur-lg max-w-[400px] mx-auto h-[62px] rounded-2xl flex items-center justify-between px-4 pointer-events-auto"
           style={{
             background: navGlow === 'full'
               ? 'linear-gradient(135deg, rgba(157,78,221,0.12) 0%, rgba(10,10,15,0.65) 50%, rgba(157,78,221,0.08) 100%)'

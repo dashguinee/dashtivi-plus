@@ -343,15 +343,25 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                   3rd RENDERED row (rpos), so empty collections can't skip it. ── */}
               {rpos === 2 && hollywoodFeature && (
                 /* The mid-feed cinema beat — the live "Made in Hollywood" VIDEO
-                   card auto-plays when it scrolls on-screen; tap the frame →
-                   Movies. (No `reveal` wrapper: it's conditionally mounted, so
-                   the global reveal observer never catches it; the card animates
-                   itself.) */
+                   card auto-plays when it scrolls on-screen; tapping it opens the
+                   SAME free-HLS stream in the full player. We hand onPlay a
+                   free-HLS Channel that carries the channel's own direct .m3u8 url
+                   (NOT a proxy/catalog url), with category 'live' — the exact
+                   shape the free-gem row tiles use, so usePlayer routes it through
+                   createHlsPlayer (free path), never the premium proxy path.
+                   (No `reveal` wrapper: it's conditionally mounted, so the global
+                   reveal observer never catches it; the card animates itself.) */
                 <div className="mb-9">
                   <FreeHlsShowcaseCard
                     channel={hollywoodFeature}
                     bare
-                    onClick={() => navigate('/movies')}
+                    onClick={() => onPlay({
+                      id: hollywoodFeature.id,
+                      name: hollywoodFeature.name,
+                      url: hollywoodFeature.url,
+                      logo: hollywoodFeature.logo,
+                      category: 'live',
+                    })}
                   />
                 </div>
               )}

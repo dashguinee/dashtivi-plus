@@ -66,7 +66,7 @@ export const TiviModeToggle: React.FC = () => {
       `}</style>
       <div
         style={{
-          width: 46, height: 46, borderRadius: 15, marginTop: -14,
+          width: 46, height: 46, borderRadius: 15, marginTop: -10,
           background: 'radial-gradient(circle at 35% 30%, #FF8AD0, #A855F7 52%, #3B82F6)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           animation: 'vee-breathe 3.4s ease-in-out infinite',
