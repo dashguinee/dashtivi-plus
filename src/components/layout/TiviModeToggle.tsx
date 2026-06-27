@@ -47,64 +47,38 @@ export function useVeeCycle() {
 }
 
 export const TiviModeToggle: React.FC = () => {
-  const { onTap, isVeeActive, nextLabel } = useVeeCycle();
+  // Keep the NEW cycling routing (Movies → Series → Live → Home → loop)…
+  const { onTap } = useVeeCycle();
 
+  // …but the ORIGINAL, understated V look (pre-v.47): a small 46px pink→violet→blue
+  // pebble, gently breathing — no oversized FAB disc, no big radial glow, no hint label.
   return (
     <button
       onClick={onTap}
       aria-label="Vee — tap to cycle Movies / Series / Live / Home"
-      className="relative flex items-center justify-center flex-1 h-full"
+      className="relative flex items-center justify-center h-full w-14"
     >
       <style>{`
         @keyframes vee-breathe {
-          0%,100% { box-shadow: 0 7px 18px rgba(168,85,247,0.42), 0 0 20px rgba(199,125,255,0.24), inset 0 1px 1px rgba(255,255,255,0.55), inset 0 -2px 3px rgba(0,0,0,0.30); transform: scale(1); }
-          50%     { box-shadow: 0 9px 28px rgba(168,85,247,0.62), 0 0 34px rgba(123,44,191,0.34), inset 0 1px 1px rgba(255,255,255,0.55), inset 0 -2px 3px rgba(0,0,0,0.30); transform: scale(1.05); }
+          0%,100% { box-shadow: 0 6px 16px rgba(168,85,247,0.40), 0 0 18px rgba(255,107,157,0.22), inset 0 1px 1px rgba(255,255,255,0.5), inset 0 -2px 3px rgba(0,0,0,0.28); transform: scale(1); }
+          50%     { box-shadow: 0 8px 26px rgba(168,85,247,0.60), 0 0 30px rgba(59,130,246,0.30), inset 0 1px 1px rgba(255,255,255,0.5), inset 0 -2px 3px rgba(0,0,0,0.28); transform: scale(1.045); }
         }
       `}</style>
-
-      {/* Elevated lilac hero disc */}
       <div
         style={{
-          width: 52,
-          height: 52,
-          borderRadius: 17,
-          marginTop: -20,
-          background: 'radial-gradient(circle at 35% 28%, #E9C9FF, #C77DFF 46%, #9D4EDD 74%, #7B2CBF)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          width: 46, height: 46, borderRadius: 15, marginTop: -14,
+          background: 'radial-gradient(circle at 35% 30%, #FF8AD0, #A855F7 52%, #3B82F6)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
           animation: 'vee-breathe 3.4s ease-in-out infinite',
-          border: isVeeActive ? '1.5px solid rgba(233,201,255,0.85)' : '1.5px solid rgba(255,255,255,0.12)',
           touchAction: 'none',
-          transition: 'border-color 0.2s ease-out',
         }}
       >
-        <span
-          style={{
-            color: 'rgba(255,255,255,0.98)',
-            fontSize: 25,
-            fontWeight: 300,
-            lineHeight: 1,
-            fontFamily: "'Outfit','Inter',system-ui,sans-serif",
-            textShadow: '0 1px 3px rgba(0,0,0,0.38)',
-            letterSpacing: '0.01em',
-          }}
-        >
-          V
-        </span>
+        <span style={{
+          color: 'rgba(255,255,255,0.97)', fontSize: 22, fontWeight: 300, lineHeight: 1,
+          fontFamily: "'Outfit','Inter',system-ui,sans-serif",
+          textShadow: '0 1px 3px rgba(0,0,0,0.35)', letterSpacing: '0.01em',
+        }}>V</span>
       </div>
-
-      {/* Tiny next-destination hint */}
-      <span
-        className="absolute text-[8px] font-semibold tracking-wide"
-        style={{
-          bottom: 4,
-          color: isVeeActive ? '#E9C9FF' : 'rgba(199,125,255,0.65)',
-          textShadow: '0 1px 2px rgba(0,0,0,0.4)',
-        }}
-      >
-        {nextLabel}
-      </span>
     </button>
   );
 };

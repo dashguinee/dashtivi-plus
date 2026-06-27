@@ -89,6 +89,63 @@ export const Navbar: React.FC = () => {
     navigate(path);
   }, [navigate]);
 
+  // One mobile tab button (fixed width so the bar can be composed by groups
+  // instead of evenly-spaced flex-1 slots). Same tap/haptic/active grammar.
+  const renderMobileItem = (item: NavItem) => {
+    const active = isActive(item.path);
+    const Icon = item.icon;
+    return (
+      <button
+        key={item.path}
+        onPointerDown={() => tap()}
+        onClick={() => handleTap(item.path)}
+        className="relative flex flex-col items-center justify-center w-12 h-full"
+      >
+        {/* Icon — lifts up when active */}
+        <div
+          className="relative"
+          style={{
+            transform: active ? 'translateY(-2px) scale(1.12)' : 'scale(1)',
+            color: active ? '#C77DFF' : 'rgba(255,255,255,0.35)',
+            filter: active ? 'drop-shadow(0 0 8px rgba(157, 78, 221, 0.5))' : 'none',
+            transition: 'transform 0.15s ease-out, color 0.1s, filter 0.15s',
+          }}
+        >
+          <Icon
+            style={{ width: 22, height: 22 }}
+            strokeWidth={active ? 2.4 : 1.8}
+          />
+        </div>
+
+        {/* Label — fades in when active */}
+        <span
+          className="text-[10px] font-medium tracking-wide"
+          style={{
+            color: active ? '#C77DFF' : 'rgba(255,255,255,0.35)',
+            opacity: active ? 1 : 0,
+            marginTop: active ? 3 : 0,
+            height: active ? 'auto' : 0,
+            overflow: 'hidden',
+            transition: 'opacity 0.1s, margin 0.15s ease-out, color 0.1s',
+          }}
+        >
+          {t(item.labelKey)}
+        </span>
+
+        {/* Bottom dot indicator */}
+        {active && (
+          <div
+            className="absolute bottom-1.5 w-5 h-[2px] rounded-full"
+            style={{
+              background: '#9D4EDD',
+              boxShadow: '0 0 6px rgba(157, 78, 221, 0.5)',
+            }}
+          />
+        )}
+      </button>
+    );
+  };
+
   return (
     <>
       {/* Subtle pulse for content tabs (Live/Movies/Series) */}
@@ -114,7 +171,7 @@ export const Navbar: React.FC = () => {
       >
         <div
           ref={navRef}
-          className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-around px-1 pointer-events-auto"
+          className="backdrop-blur-lg max-w-md mx-auto h-[62px] rounded-2xl flex items-center justify-between px-4 pointer-events-auto"
           style={{
             background: navGlow === 'full'
               ? 'linear-gradient(135deg, rgba(157,78,221,0.12) 0%, rgba(10,10,15,0.65) 50%, rgba(157,78,221,0.08) 100%)'
@@ -136,64 +193,22 @@ export const Navbar: React.FC = () => {
               : 'background 1.2s cubic-bezier(0.16,1,0.3,1), border-color 1.2s cubic-bezier(0.16,1,0.3,1), box-shadow 1.2s cubic-bezier(0.16,1,0.3,1)',
           }}
         >
-          {NAV_ITEMS.map((item) => {
-            const active = isActive(item.path);
-            const Icon = item.icon;
+          {/* Asymmetric OPTICAL balance (not 4 even slots):
+              [Home·Biblio] tight-left group …… Vee near-center …… Dahub right.
+              justify-between → equal voids on each side of Vee, while content
+              leans left, so the Vee pebble optically reads slightly-right-of-center. */}
 
-            // Slot 3 is the cycling Vee hero pebble.
-            if (item.isVee) return <TiviModeToggle key={item.path} />;
+          {/* Left group — Home + Biblio clustered tight together */}
+          <div className="flex items-center gap-1">
+            {renderMobileItem(NAV_ITEMS[0])}
+            {renderMobileItem(NAV_ITEMS[1])}
+          </div>
 
-            return (
-              <button
-                key={item.path}
-                onPointerDown={() => tap()}
-                onClick={() => handleTap(item.path)}
-                className="relative flex flex-col items-center justify-center flex-1 h-full"
-              >
-                {/* Icon — lifts up when active */}
-                <div
-                  className="relative"
-                  style={{
-                    transform: active ? 'translateY(-2px) scale(1.12)' : 'scale(1)',
-                    color: active ? '#C77DFF' : 'rgba(255,255,255,0.35)',
-                    filter: active ? 'drop-shadow(0 0 8px rgba(157, 78, 221, 0.5))' : 'none',
-                    transition: 'transform 0.15s ease-out, color 0.1s, filter 0.15s',
-                  }}
-                >
-                  <Icon
-                    style={{ width: 22, height: 22 }}
-                    strokeWidth={active ? 2.4 : 1.8}
-                  />
-                </div>
+          {/* Vee — the cycling pebble, near-center */}
+          <TiviModeToggle />
 
-                {/* Label — fades in when active */}
-                <span
-                  className="text-[10px] font-medium tracking-wide"
-                  style={{
-                    color: active ? '#C77DFF' : 'rgba(255,255,255,0.35)',
-                    opacity: active ? 1 : 0,
-                    marginTop: active ? 3 : 0,
-                    height: active ? 'auto' : 0,
-                    overflow: 'hidden',
-                    transition: 'opacity 0.1s, margin 0.15s ease-out, color 0.1s',
-                  }}
-                >
-                  {t(item.labelKey)}
-                </span>
-
-                {/* Bottom dot indicator */}
-                {active && (
-                  <div
-                    className="absolute bottom-1.5 w-5 h-[2px] rounded-full"
-                    style={{
-                      background: '#9D4EDD',
-                      boxShadow: '0 0 6px rgba(157, 78, 221, 0.5)',
-                    }}
-                  />
-                )}
-              </button>
-            );
-          })}
+          {/* Dahub — right */}
+          {renderMobileItem(NAV_ITEMS[3])}
         </div>
       </div>
 
