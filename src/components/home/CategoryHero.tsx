@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Play, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { t } from '@/i18n';
 import type { Lang } from '@/i18n';
 import type { CatalogChannel } from '@/lib/catalog';
@@ -142,9 +142,9 @@ export function CategoryHero({
     >
       <style>{`
         @keyframes hero-sweep-${uid} { 0%{transform:translateX(-40%)} 100%{transform:translateX(140%)} }
-        @keyframes hero-play-breathe-${uid} {
-          0%,100% { box-shadow: 0 0 22px rgba(${a},0.45); transform: scale(1); }
-          50%     { box-shadow: 0 0 34px rgba(${a},0.70); transform: scale(1.06); }
+        @keyframes hero-play-aura-${uid} {
+          0%,100% { transform: scale(0.94); opacity: 0.5; }
+          50%     { transform: scale(1.12); opacity: 0.85; }
         }
         @keyframes hero-marquee-in-${uid} { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
@@ -230,21 +230,35 @@ export function CategoryHero({
             </p>
           </div>
         </div>
-        {/* Big play target */}
-        <div
-          className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{
-            // GOLF-BALL TEXTURE — a dimpled sphere. GPU-cheap: two static layered
-            // radial-gradient dot grids (offset = hexa-ish dimples) over the accent
-            // gradient, + inset spherical depth. No animation cost beyond the breathe.
-            backgroundImage: `radial-gradient(circle at 50% 50%, rgba(0,0,0,0.18) 0.6px, transparent 1.7px), radial-gradient(circle at 50% 50%, rgba(255,255,255,0.14) 0.6px, transparent 1.7px), linear-gradient(135deg, ${accent}, ${dark})`,
-            backgroundSize: '5px 5px, 5px 5px, 100% 100%',
-            backgroundPosition: '0 0, 2.5px 2.5px, 0 0',
-            boxShadow: 'inset -2px -2px 5px rgba(0,0,0,0.30), inset 2px 2px 5px rgba(255,255,255,0.17)',
-            animation: `hero-play-breathe-${uid} 2.8s ease-in-out infinite`,
-          }}
-        >
-          <Play className="w-6 h-6 text-white ml-0.5" fill="white" />
+        {/* Big play target — ABSTRACT "Beacon". Distilled, not decorated: PLAY is
+            the triangle ITSELF (the one signature mark), DASH premium = its
+            accent→light→dark gradient depth, LIVE = a soft accent AURA that
+            breathes behind it. No disc, no ring, no sphere, no texture. The aura
+            animates transform/opacity only on its own layer → zero crawl. */}
+        <div className="relative w-14 h-14 flex-shrink-0 flex items-center justify-center">
+          {/* Breathing aura — pure radial accent glow, scale + opacity only. */}
+          <div
+            aria-hidden
+            className="absolute inset-0 rounded-full pointer-events-none"
+            style={{
+              background: `radial-gradient(circle at 50% 50%, rgba(${a},0.55) 0%, rgba(${a},0.18) 42%, transparent 72%)`,
+              animation: `hero-play-aura-${uid} 2.8s ease-in-out infinite`,
+              willChange: 'transform, opacity',
+            }}
+          />
+          {/* The mark — a single gradient play triangle. Light top edge → accent
+              → dark bottom gives intergalactic depth; the drop-shadow lifts it. */}
+          <div
+            className="relative"
+            style={{
+              width: 30,
+              height: 32,
+              marginLeft: 3,
+              clipPath: 'polygon(8% 4%, 8% 96%, 96% 50%)',
+              background: `linear-gradient(135deg, #ffffff 0%, ${accent} 46%, ${dark} 100%)`,
+              filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))',
+            }}
+          />
         </div>
       </div>
     </button>
