@@ -201,58 +201,6 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
     onPlay(channel);
   }, [credentials, onPlay]);
 
-  if (!catalog) {
-    return (
-      <div className="pt-20 px-4 space-y-6 animate-pulse">
-        <div className="h-[34vh] rounded-2xl bg-white/[0.03]" />
-        <div className="space-y-5">
-          {[1, 2, 3].map((i) => (
-            <div key={i}>
-              <div className="h-4 w-32 rounded bg-white/[0.04] mb-3" />
-              <div className="flex gap-3">
-                {[1, 2, 3, 4].map((j) => (
-                  <div key={j} className="h-[88px] w-[124px] rounded-xl bg-white/[0.02]" />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // ── World Cup hero — the live moment. Marquee = first WC feed (beIN). ──
-  const worldcup = catalog.worldcup;
-
-  // ── Hero deck — World Cup first, then each non-empty experience in order,
-  // capped at 10 (HeroDeck enforces the cap + skips empties too). Each slide
-  // carries its own accent. 'Movies' shows as "Cinéma Live" to match the row.
-  const heroSlides: HeroSlide[] = [];
-  if (worldcup.length > 0) {
-    heroSlides.push({
-      key: 'World Cup',
-      title: 'World Cup',
-      accent: EXPERIENCE_ACCENT['World Cup'],
-      channels: worldcup,
-      onPlay: (ch) => play(ch, worldcup),
-      onSeeAll: () => navigate('/live/sports'),
-    });
-  }
-  for (const experience of catalog.experienceOrder) {
-    if (experience === 'World Cup') continue; // already the lead slide
-    const chans = catalog.byExperience[experience] || [];
-    if (chans.length === 0) continue;
-    const seeAllId = EXPERIENCE_TO_CURATOR_ID[experience];
-    heroSlides.push({
-      key: experience,
-      title: experience === 'Movies' ? 'Cinéma Live' : experience,
-      accent: EXPERIENCE_ACCENT[experience] || '#9D4EDD',
-      channels: chans,
-      onPlay: (ch) => play(ch, chans),
-      onSeeAll: seeAllId ? () => navigate(`/live/${seeAllId}`) : undefined,
-    });
-  }
-
   // ── Ambient bloom drift — the bloom is alive: it wanders organically around
   // its center, and its motion mirrors the user's energy. Scrolling feeds a
   // decaying "energy" value; drift speed + amplitude both scale with it, so it
@@ -260,6 +208,8 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   // transform-only per frame (no layout/paint/opacity), and it SLEEPS fully
   // when idle or the tab is hidden — resuming on the next scroll. Visuals
   // (color/size/position/gradient) are never touched, only the drift transform.
+  // MUST stay ABOVE the loading-skeleton early return so this hook runs on
+  // EVERY render (cold/null-catalog included) — no conditional hooks (React #310).
   const bloomRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = bloomRef.current;
@@ -332,6 +282,58 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       cancelAnimationFrame(raf);
     };
   }, []);
+
+  if (!catalog) {
+    return (
+      <div className="pt-20 px-4 space-y-6 animate-pulse">
+        <div className="h-[34vh] rounded-2xl bg-white/[0.03]" />
+        <div className="space-y-5">
+          {[1, 2, 3].map((i) => (
+            <div key={i}>
+              <div className="h-4 w-32 rounded bg-white/[0.04] mb-3" />
+              <div className="flex gap-3">
+                {[1, 2, 3, 4].map((j) => (
+                  <div key={j} className="h-[88px] w-[124px] rounded-xl bg-white/[0.02]" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── World Cup hero — the live moment. Marquee = first WC feed (beIN). ──
+  const worldcup = catalog.worldcup;
+
+  // ── Hero deck — World Cup first, then each non-empty experience in order,
+  // capped at 10 (HeroDeck enforces the cap + skips empties too). Each slide
+  // carries its own accent. 'Movies' shows as "Cinéma Live" to match the row.
+  const heroSlides: HeroSlide[] = [];
+  if (worldcup.length > 0) {
+    heroSlides.push({
+      key: 'World Cup',
+      title: 'World Cup',
+      accent: EXPERIENCE_ACCENT['World Cup'],
+      channels: worldcup,
+      onPlay: (ch) => play(ch, worldcup),
+      onSeeAll: () => navigate('/live/sports'),
+    });
+  }
+  for (const experience of catalog.experienceOrder) {
+    if (experience === 'World Cup') continue; // already the lead slide
+    const chans = catalog.byExperience[experience] || [];
+    if (chans.length === 0) continue;
+    const seeAllId = EXPERIENCE_TO_CURATOR_ID[experience];
+    heroSlides.push({
+      key: experience,
+      title: experience === 'Movies' ? 'Cinéma Live' : experience,
+      accent: EXPERIENCE_ACCENT[experience] || '#9D4EDD',
+      channels: chans,
+      onPlay: (ch) => play(ch, chans),
+      onSeeAll: seeAllId ? () => navigate(`/live/${seeAllId}`) : undefined,
+    });
+  }
 
   return (
     <div className="pt-16 pb-48">

@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Play, Search, X, ChevronRight, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { NeonGate, cardScaleStyle } from '@/components/ui/NeonGate';
+import { NeonGate } from '@/components/ui/NeonGate';
+import { useFocalLens } from '@/lib/useFocalLens';
 import { t, useLanguage } from '@/i18n';
 import type { XtreamCredentials, LiveStream, GroupedChannel, FreeChannel } from '@/lib/xtream';
 import { getLiveStreams, buildLiveUrl, groupChannelsByQuality, fetchVpsHealth, isCategoryDead, probeChannels, isChannelPlayable, sortGemsFirst, fetchServerProbeData, seedProbeCacheFromServer, fetchVerifiedData, seedVerifiedSet, getExperienceIds, getExperienceCategoryIds, fetchCuratorData, getCuratorExperience, curatorToLiveStreams, hasCuratorData, getFreeChannels, freeToLiveStream, buildFreeUrlMap, isFreeChannel } from '@/lib/xtream';
@@ -731,6 +732,7 @@ function ExperienceShowcase({
   const { lang } = useLanguage();
   const config = SHOWCASE_CONFIG[experienceId];
   const [activeSubTab, setActiveSubTab] = useState<string>('all');
+  const lensRef = useFocalLens<HTMLDivElement>();
   if (!config) return null;
 
   const alive = streams.filter(s => isChannelPlayable(s.stream_id));
@@ -812,36 +814,40 @@ function ExperienceShowcase({
           </div>
         )}
 
-        {/* Channel strip */}
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 items-end">
-          {top.map((stream, i) => (
-            <button
-              key={stream.stream_id}
-              onClick={() => onPlay(stream, filtered)}
-              className="flex-shrink-0 group"
-              style={{ width: i === 0 ? 150 : 125, ...cardScaleStyle(i), ...(i < 8 ? { animation: `vee-card-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${i * 90}ms both` } : {}) }}
-            >
-              <div
-                className="relative aspect-[16/10] rounded-xl overflow-hidden transition-all duration-300 group-hover:ring-1 flex items-center justify-center card-glass"
-                style={{
-                  boxShadow: i === 0 ? `0 0 16px ${config.accentGlow}` : undefined,
-                  ['--tw-ring-color' as string]: config.accentColor,
-                }}
+        {/* Channel strip — fish-eye focal lens (centre tiles magnify + light up) */}
+        <div className="relative lens-row">
+          <div className="lens-beam" aria-hidden />
+          <div ref={lensRef} className="flex gap-3 overflow-x-auto scrollbar-hide items-end lens-track">
+            {top.map((stream, i) => (
+              <button
+                key={stream.stream_id}
+                data-lens-tile
+                onClick={() => onPlay(stream, filtered)}
+                className="flex-shrink-0 group lens-tile"
+                style={{ width: i === 0 ? 150 : 125 }}
               >
-                <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" eager />
-                <ChannelBadge streamId={stream.stream_id} compact />
-                {stream.category_id === 'free' && (
-                  <div className="absolute bottom-1 left-1 z-[2]">
-                    <FreePill />
-                  </div>
-                )}
-              </div>
-              <p className="text-[9px] text-white/30 text-center mt-1.5 truncate group-hover:text-white/50 transition-colors">
-                {stream.name}
-              </p>
-            </button>
-          ))}
-          <NeonGate navigateTo={config.route} />
+                <div
+                  className="relative aspect-[16/10] rounded-xl overflow-hidden transition-all duration-300 group-hover:ring-1 flex items-center justify-center card-glass"
+                  style={{
+                    boxShadow: i === 0 ? `0 0 16px ${config.accentGlow}` : undefined,
+                    ['--tw-ring-color' as string]: config.accentColor,
+                  }}
+                >
+                  <ChannelIcon src={stream.stream_icon} name={stream.name} size="md" eager />
+                  <ChannelBadge streamId={stream.stream_id} compact />
+                  {stream.category_id === 'free' && (
+                    <div className="absolute bottom-1 left-1 z-[2]">
+                      <FreePill />
+                    </div>
+                  )}
+                </div>
+                <p className="text-[9px] text-white/30 text-center mt-1.5 truncate group-hover:text-white/50 transition-colors">
+                  {stream.name}
+                </p>
+              </button>
+            ))}
+            <NeonGate navigateTo={config.route} />
+          </div>
         </div>
 
         {/* Channel count footer */}
@@ -881,6 +887,7 @@ const ThemeRow = React.memo(function ThemeRow({
   const { lang } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<string>('all');
+  const lensRef = useFocalLens<HTMLDivElement>();
 
   const alive = streams.filter((s) => isChannelPlayable(s.stream_id));
   if (alive.length === 0) return null;
@@ -988,28 +995,31 @@ const ThemeRow = React.memo(function ThemeRow({
         </div>
       )}
 
-      {/* Horizontal scroll of channels — larger cards */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2 items-end">
-        {displayed.map((stream, i) => (
-          <button
-            key={stream.stream_id}
-            onClick={() => onPlay(stream, sorted)}
-            className={`flex-shrink-0 group ${i === 0 ? 'w-[140px]' : 'w-[110px]'}`}
-            style={cardScaleStyle(i)}
-          >
-            <div className={`relative rounded-xl flex items-center justify-center overflow-hidden
-                            group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/10 group-hover:scale-[1.03]
-                            active:scale-95 transition-all duration-300 ${i === 0 ? 'w-[140px] h-[90px] card-hero' : 'w-[110px] h-[72px] card-surface'}`}>
-              <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" eager />
-              <ChannelBadge streamId={stream.stream_id} compact />
-            </div>
-            <p className="text-[10px] text-white/40 text-center mt-1.5 truncate px-0.5
-                          group-hover:text-white/70 transition-colors">
-              {stream.name}
-            </p>
-          </button>
-        ))}
-        {expRoute && <NeonGate navigateTo={expRoute} />}
+      {/* Horizontal scroll of channels — fish-eye focal lens, larger cards */}
+      <div className="relative lens-row">
+        <div className="lens-beam" aria-hidden />
+        <div ref={lensRef} className="flex gap-3 overflow-x-auto scrollbar-hide px-4 items-end lens-track">
+          {displayed.map((stream, i) => (
+            <button
+              key={stream.stream_id}
+              data-lens-tile
+              onClick={() => onPlay(stream, sorted)}
+              className={`flex-shrink-0 group lens-tile ${i === 0 ? 'w-[140px]' : 'w-[110px]'}`}
+            >
+              <div className={`relative rounded-xl flex items-center justify-center overflow-hidden
+                              group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/10 group-hover:scale-[1.03]
+                              active:scale-95 transition-all duration-300 ${i === 0 ? 'w-[140px] h-[90px] card-hero' : 'w-[110px] h-[72px] card-surface'}`}>
+                <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" eager />
+                <ChannelBadge streamId={stream.stream_id} compact />
+              </div>
+              <p className="text-[10px] text-white/40 text-center mt-1.5 truncate px-0.5
+                            group-hover:text-white/70 transition-colors">
+                {stream.name}
+              </p>
+            </button>
+          ))}
+          {expRoute && <NeonGate navigateTo={expRoute} />}
+        </div>
       </div>
     </div>
   );

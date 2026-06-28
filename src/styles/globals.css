@@ -85,17 +85,26 @@
     -webkit-tap-highlight-color: transparent;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    /* NATIVE-APP HORIZONTAL LOCK — the page must never drift/rubber-band left↔right
+       like a webpage. `overflow-x: clip` hard-locks horizontal at the document
+       root WITHOUT creating a scrollport, so vertical scroll + pull-to-refresh
+       still work. Horizontal scrolling is contained to the channel rows (their
+       own overflow-x:auto), which can't leak to the page. */
+    overflow-x: clip;
     /* overscroll-behavior-y: contain — removed to enable pull-to-refresh */
   }
 
   body {
     @apply bg-bg text-text-primary font-sans antialiased;
-    overflow-x: hidden;
+    overflow-x: clip;
+    max-width: 100%;
     min-height: 100vh;
     min-height: 100dvh;
   }
 
   #root {
+    overflow-x: clip;
+    max-width: 100%;
     min-height: 100vh;
     min-height: 100dvh;
   }
@@ -760,7 +769,7 @@
     top: 25%;
     left: 50%;
     transform: translateX(-50%);
-    width: 100vw;
+    width: 100%;
     height: 50vh;
     pointer-events: none;
     contain: strict;
@@ -1421,6 +1430,65 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: rgba(255,255,255,0.40);
+}
+
+/* ═══ FISH-EYE FOCAL LENS — horizontal channel rows ═══
+   Tiles passing through the row centre magnify + light up; edge tiles recede.
+   The scale/opacity are written inline per scroll-frame by useFocalLens (GPU,
+   transform/opacity only — no transition on transform so it tracks the finger
+   in real time). The most-centred tile gets `.lens-hero` = the focal BEAM. */
+
+/* The scrollable track. CROP-SAFE: a tile scaled up at centre must never have
+   its top/edges clipped. `overflow-x:auto` forces the used `overflow-y` to a
+   non-visible value (so it can't be `visible`), which would crop the grown
+   tile — so instead we reserve VERTICAL PADDING headroom equal to the max
+   scale-up. Content inside the padding box is NOT clipped, so the enlarged
+   centre tile breathes freely above and below the baseline. */
+.lens-track {
+  padding-top: 22px;
+  padding-bottom: 10px;
+  overscroll-behavior-x: contain;
+}
+
+/* Soft centred focal halo — marks the focal plane the tiles flow through.
+   Behind the tiles, pointer-transparent, fixed at the row centre. */
+.lens-beam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 38%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse 62% 78% at 50% 50%,
+    rgba(157,78,221,0.12) 0%,
+    rgba(157,78,221,0.05) 42%,
+    transparent 76%);
+}
+
+/* Each tile. Bottom-anchored growth (rows are items-end) so the baseline holds
+   and the tile expands UP into the reserved headroom. No transform transition —
+   the lens drives it frame-accurately; box-shadow eases for the beam glow. */
+.lens-tile {
+  transform-origin: center bottom;
+  will-change: transform;
+  transition: box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  z-index: 1;
+}
+
+/* The BEAM on the most-centred tile — a soft premium halo that follows focus. */
+.lens-hero {
+  box-shadow:
+    0 0 22px rgba(157,78,221,0.22),
+    0 8px 26px rgba(0,0,0,0.40);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Flat, democratic row — the hook also no-ops, this clears any inline scale. */
+  .lens-tile { transform: none !important; opacity: 1 !important; }
+  .lens-beam { display: none; }
 }
 
 /* Divider between major sections — barely-there horizontal rule */

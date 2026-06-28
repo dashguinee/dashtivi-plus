@@ -553,6 +553,19 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   return (
     <div className="pb-32" style={{ paddingTop: 'max(4rem, calc(3.5rem + env(safe-area-inset-top, 0px)))' }}>
+      {/* ── Ambient depth — fixed, GPU-light, behind content (no scroll cost). A faint
+          candle-warm gold wash up top + terracotta/purple under-glow lift the flat dark. ── */}
+      <div
+        aria-hidden
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          zIndex: -1,
+          background:
+            'radial-gradient(115% 70% at 50% -8%, rgba(232,176,75,0.055), transparent 60%),' +
+            'radial-gradient(90% 60% at 8% 16%, rgba(201,118,59,0.045), transparent 55%),' +
+            'radial-gradient(85% 60% at 92% 88%, rgba(157,78,221,0.04), transparent 60%)',
+        }}
+      />
       {!isSearching && (
         <FloatingMoviesShowcase
           credentials={credentials}
@@ -808,7 +821,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
             <section className="px-4 pt-6 pb-2 row-tier-hero">
               <div className="flex items-center gap-2.5 mb-3.5">
                 <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: GOLD, boxShadow: `0 0 7px ${GOLD}` }} />
-                <h2 className="text-[19px] font-black tracking-tight text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                <h2 className="text-[19px] font-black tracking-tight text-white">
                   {lang === 'fr' ? 'Reprendre' : 'Keep Watching'}
                 </h2>
                 <RowCountBadge count={keepWatching.length} label={t(lang, 'moviesLabel')} />
@@ -937,7 +950,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           {!isSearching && activeGenre === 0 && ladder.length > 0 && (
             <div className="px-5 pt-6 pb-1 flex items-center gap-2.5">
               <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.3)' }} />
-              <h2 className="text-[15px] font-semibold text-white/55" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              <h2 className="text-[15px] font-semibold text-white/55">
                 {lang === 'fr' ? 'Tout le catalogue' : 'Browse all'}
               </h2>
             </div>

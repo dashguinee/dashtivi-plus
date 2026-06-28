@@ -70,8 +70,8 @@ export const VeeCollectionRow: React.FC<VeeCollectionRowProps> = React.memo(({
     <section>
       <div className="px-4 mb-2">
         <h3
-          className={`flex items-center gap-1.5 ${editorial ? 'text-[16px] font-bold text-white/75' : 'text-[15px] font-semibold text-white/60'}`}
-          style={{ fontFamily: editorial ? "'Outfit', sans-serif" : "'Space Grotesk', sans-serif", letterSpacing: editorial ? '-0.01em' : undefined }}
+          className={`flex items-center gap-1.5 ${editorial ? 'text-[16.5px] font-bold text-white/80' : 'text-[15.5px] font-semibold text-white/65'}`}
+          style={{ fontFamily: "'Clash Display', 'Space Grotesk', sans-serif", letterSpacing: editorial ? '-0.02em' : '-0.015em' }}
         >
           <span
             className="w-1.5 h-1.5 rounded-full"

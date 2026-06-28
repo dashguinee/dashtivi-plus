@@ -21,13 +21,13 @@ interface NavItem {
 // silhouette and one subtle low-opacity "structure" line each — clean, premium,
 // a touch intergalactic (DBS visual language).
 
-// HOME — a refined geometric house: peaked roof, soft-radius base, a faint eave
-// line, and a slim arched portal (door) that reads warm + designed, not generic.
+// HOME — a refined geometric house: peaked roof, soft-radius base, and a slim
+// arched portal (door) that reads warm + designed, not generic. (The faint
+// horizontal eave line was removed per Aziz — it read as a weird stray stroke.)
 const HomeGlyph: React.FC<GlyphProps> = ({ strokeWidth = 1.8, size: _s, ...props }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth as number}
     strokeLinecap="round" strokeLinejoin="round" {...props}>
     <path d="M3.5 11 L12 3.7 L20.5 11 V18.7 Q20.5 21 18.3 21 H5.7 Q3.5 21 3.5 18.7 Z" />
-    <path d="M3.5 11 H20.5" opacity="0.5" />
     <path d="M9.7 21 V15.8 Q9.7 13.2 12 13.2 Q14.3 13.2 14.3 15.8 V21" />
   </svg>
 );
@@ -220,6 +220,8 @@ export const Navbar: React.FC = () => {
             transition: navGlow
               ? 'background 0.08s ease-out, border-color 0.08s ease-out, box-shadow 0.08s ease-out'
               : 'background 1.2s cubic-bezier(0.16,1,0.3,1), border-color 1.2s cubic-bezier(0.16,1,0.3,1), box-shadow 1.2s cubic-bezier(0.16,1,0.3,1)',
+            // Tiny whole-bar rightward bias (~2px) to emulate the V pebble's bias.
+            transform: 'translateX(2px)',
           }}
         >
           {/* Even rhythm: 4 items equally spaced via justify-between, breathing
