@@ -617,6 +617,18 @@
     100% { background: rgba(255,255,255,0.03); }
   }
 
+  /* ═══ FLOW BLINK — subtle "holding it together" pulse while adapting ═══ */
+  /* Gentle, reassuring (NOT alarming): a soft opacity + dot-glow breath. The
+     mark fades out (mount/unmount) once the stream is stable at full quality. */
+  @keyframes flow-blink {
+    0%, 100% { opacity: 0.45; }
+    50% { opacity: 0.95; }
+  }
+  @keyframes flow-dot-pulse {
+    0%, 100% { opacity: 0.4; box-shadow: 0 0 3px rgba(157,78,221,0.4); }
+    50% { opacity: 1; box-shadow: 0 0 8px rgba(157,78,221,0.85); }
+  }
+
   /* ═══ DASH BEAM — neon light sweep for premium loaders ═══ */
   @keyframes dash-beam {
     0% { transform: translateX(-200%); }

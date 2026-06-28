@@ -488,6 +488,93 @@ export const FLOW_MIN_BANDWIDTH: Record<FlowTier, number> = { source: 5000000, h
 export function tierUp(t: FlowTier): FlowTier { const i = FLOW_TIERS.indexOf(t); return i > 0 ? FLOW_TIERS[i - 1] : t; }
 export function tierDown(t: FlowTier): FlowTier { const i = FLOW_TIERS.indexOf(t); return i < FLOW_TIERS.length - 1 ? FLOW_TIERS[i + 1] : t; }
 
+// ── Bandwidth probe → starting Flow tier ────────────────────────────────
+// WHY: navigator.connection.downlink is DEAD on iOS (always undefined) → the old
+// estimate fell through to 'eco' (480p) for EVERY iPhone, even on fat WiFi. Worse,
+// on Android it reports a coarse, often-stale guess. A real throughput probe at
+// player start seeds the right tier on any device.
+//
+// HOW: stream-download a known asset and measure real bytes/sec. We cap the read
+// at 256KB OR 2.5s — on a fast pipe we stop early at 256KB (clean number); on a
+// weak pipe the 2.5s cap means the *partial* bytes we got ARE the measurement
+// (slow networks self-report by transferring little in the window). Result is
+// cached per session so we probe ONCE — every later channel switch reuses it.
+//
+// Probe target = /curator.json (~590KB, same-origin). It is NOT in the SW's
+// cache-first list, so it falls to the network-first JSON branch → a real network
+// fetch (cache-first assets like free-channels-curated.json / *.png would return
+// instantly from cache and give a bogus "infinite bandwidth" reading).
+const BW_PROBE_KEY = 'tivi_bw_probe_bps';
+const PROBE_URL = '/curator.json';
+const PROBE_TARGET_BYTES = 256 * 1024; // stop a fast download here — enough to measure
+const PROBE_MAX_MS = 2500;             // hard cap so a slow pipe never delays anything
+
+/** Map a measured throughput (bits/sec) to a Flow tier, using the same thresholds
+ *  the tier ladder is built on. */
+export function tierForBps(bps: number): FlowTier {
+  if (bps >= FLOW_MIN_BANDWIDTH.source) return 'source';
+  if (bps >= FLOW_MIN_BANDWIDTH.hd720) return 'hd720';
+  if (bps >= FLOW_MIN_BANDWIDTH.eco) return 'eco';
+  return 'low';
+}
+
+/** Synchronous best-guess starting tier — reads the cached probe result if a
+ *  prior probe ran this session, else a conservative default. Used to seed the
+ *  URL's &q= BEFORE src assignment (no double-load) without blocking on the async
+ *  probe. The async probe (probeBandwidthBps) corrects it shortly after start. */
+export function seedTierSync(): FlowTier {
+  try {
+    const cached = sessionStorage.getItem(BW_PROBE_KEY);
+    if (cached) { const n = parseFloat(cached); if (n > 0) return tierForBps(n); }
+  } catch {}
+  // No probe yet — start at hd720 (the proxy's own weak-network default). NOT
+  // 'source' (could overshoot a phone pipe → instant stall) and NOT 'low' (would
+  // needlessly start everyone at 360p). The probe + predictive loop adjust fast.
+  return 'hd720';
+}
+
+/** Real throughput probe. Returns bits/sec, or null if it couldn't measure.
+ *  Result cached in sessionStorage so it runs at most once per session. */
+let bwProbeInFlight: Promise<number | null> | null = null;
+export async function probeBandwidthBps(): Promise<number | null> {
+  try {
+    const cached = sessionStorage.getItem(BW_PROBE_KEY);
+    if (cached) { const n = parseFloat(cached); if (n > 0) return n; }
+  } catch {}
+  if (bwProbeInFlight) return bwProbeInFlight;
+  bwProbeInFlight = (async () => {
+    try {
+      const url = `${PROBE_URL}?bw=${Date.now()}`;
+      const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok || !res.body) return null;
+      const reader = res.body.getReader();
+      let bytes = 0;
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        bytes += value ? value.length : 0;
+        const elapsed = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0;
+        if (bytes >= PROBE_TARGET_BYTES || elapsed > PROBE_MAX_MS) {
+          try { await reader.cancel(); } catch {}
+          break;
+        }
+      }
+      const secs = ((typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0) / 1000;
+      // Need a meaningful sample — too few bytes or sub-ms time can't be trusted.
+      if (secs <= 0.02 || bytes < 16 * 1024) return null;
+      const bps = (bytes * 8) / secs;
+      try { sessionStorage.setItem(BW_PROBE_KEY, String(Math.round(bps))); } catch {}
+      return bps;
+    } catch {
+      return null;
+    } finally {
+      bwProbeInFlight = null;
+    }
+  })();
+  return bwProbeInFlight;
+}
+
 export function getStreamQuality(): StreamMode {
   try { const v = localStorage.getItem(QUALITY_KEY); return (v && ['auto','source','hd720','eco','low'].includes(v)) ? v as StreamMode : 'auto'; }
   catch { return 'auto'; }

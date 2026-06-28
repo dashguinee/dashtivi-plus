@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { markDead, markAlive } from '@/hooks/useChannelHealth';
-import { onStreamSuccess, onStreamFail, getStreamQuality, setStreamQuality, tierUp, tierDown, FLOW_MIN_BANDWIDTH } from '@/lib/xtream';
+import { onStreamSuccess, onStreamFail, getStreamQuality, setStreamQuality, tierUp, tierDown, FLOW_TIERS, seedTierSync, probeBandwidthBps, tierForBps } from '@/lib/xtream';
 import type { FlowTier } from '@/lib/xtream';
 import { createHlsPlayer } from '@/lib/hls';
 import { connectBoost, disconnectBoost } from '@/lib/audio-boost';
@@ -37,6 +37,8 @@ export function usePlayer() {
     qualities: ['Auto'],
     isLoading: false,
     isSwitching: false,
+    flowAdapting: false,
+    weakConnection: false,
     error: null,
     currentTime: 0,
     duration: 0,
@@ -224,6 +226,8 @@ export function usePlayer() {
         qualities: ['AUTO', 'Source', '720p', '480p', '360p'],
         isLoading: true, // Thin bar on blurred frame during switch, full load on first play
         isSwitching: true, // Deliberate transition — gates blur + connecting card + control-hide
+        flowAdapting: false, // fresh stream — predictive controller re-arms below
+        weakConnection: false,
         error: null,
         currentTime: 0,
         duration: 0,
@@ -254,17 +258,12 @@ export function usePlayer() {
           url = url.replace(/&q=(source|hd720|eco|low)/, '');
           const mode = getStreamQuality();
           if (mode === 'auto' && isLive) {
-            // Estimate tier BEFORE src assignment — prevents double-load
-            try {
-              const conn = (navigator as any).connection;
-              if (conn?.downlink) {
-                const bps = conn.downlink * 1000000;
-                if (bps < FLOW_MIN_BANDWIDTH.low) url += '&q=low';
-                else if (bps < FLOW_MIN_BANDWIDTH.eco) url += '&q=eco';
-                else if (bps < FLOW_MIN_BANDWIDTH.hd720) url += '&q=hd720';
-                // else source (no param)
-              }
-            } catch {}
+            // Seed the tier BEFORE src assignment — prevents a double-load. Uses the
+            // cached bandwidth-probe result (seedTierSync) instead of the dead
+            // navigator.connection.downlink guess (undefined on iOS → everyone got
+            // 480p). The async probe + predictive loop (Flow block below) refine it.
+            const seed = seedTierSync();
+            if (seed !== 'source') url += '&q=' + seed;
           } else if (mode !== 'auto' && mode !== 'source') {
             url += '&q=' + mode;
           }
@@ -595,51 +594,49 @@ export function usePlayer() {
           }
         };
 
-        // ── Flow v3: Multi-tier adaptive streaming ──
-        // 4 tiers: source > hd720 > eco > low
-        // Auto mode: estimate bandwidth → pick tier → oscillate on buffer
-        // Manual modes: user locks to a tier, no auto-switching
+        // ── Flow v4: PREDICTIVE multi-tier adaptive streaming ──
+        // 4 tiers: source > hd720 > eco > low. North star on weak West-Africa /
+        // France / SL mobile pipes (the NORMAL case here): NEVER a buffer spinner,
+        // NEVER a hard freeze. We watch the buffer LEAD (seconds buffered ahead of
+        // the playhead) on a 1s interval and step the tier DOWN *before* it empties
+        // — driven by the TREND, not by waiting for onwaiting/the stall. The
+        // anti-thrash cap LOOSENS when the buffer is genuinely collapsing
+        // (continuity wins). At the floor we surface a calm "weak connection"
+        // message (never a spinner/error wall) and keep quietly retrying. When the
+        // pipe stabilises we climb back up quietly.
         if (isLive) {
-          const streamId = url.match(/id=(\d+)/)?.[1] || '';
           const userMode = getStreamQuality();
           const sourceUrl = url.replace(/&q=(source|hd720|eco|low)/, '');
 
           if (userMode === 'auto') {
-            let currentTier: FlowTier;
-            let switchCount = 0;
-            // Bound total tier oscillation (was 4 — trimmed to reduce thrash)
-            const MAX_SWITCHES = 3;
-            let bufferStalls: number[] = [];
-            // Tighter window so only genuinely clustered stalls count toward a step-down.
-            const STALL_WINDOW = 30000;
-            // Drop a tier after just 2 in-window stalls — a buffering stall should trigger
-            // a FAST quality step-down + recovery rather than a long freeze. Still bounded
-            // by MAX_SWITCHES (3) so working playback never thrashes.
-            const STALL_THRESHOLD = 2;
-            let recoveryCheck: ReturnType<typeof setInterval> | null = null;
-            let recoveryStarted = 0;
-            const RECOVERY_DELAY = 90000;
-            // Lock out failed recovery at 120s too
-            let failedRecoveryTier: FlowTier | null = null;
-
             const tierUrl = (t: FlowTier) => t === 'source' ? sourceUrl : sourceUrl + '&q=' + t;
 
-            // Estimate starting tier from Network Information API
-            const estimateTier = (): FlowTier => {
-              try {
-                const conn = (navigator as any).connection;
-                if (conn?.downlink) {
-                  const bps = conn.downlink * 1000000;
-                  if (bps >= FLOW_MIN_BANDWIDTH.source) return 'source';
-                  if (bps >= FLOW_MIN_BANDWIDTH.hd720) return 'hd720';
-                  if (bps >= FLOW_MIN_BANDWIDTH.eco) return 'eco';
-                  return 'low';
-                }
-              } catch {}
-              return 'eco';
-            };
+            // Seed from the cached bandwidth probe (sync) — the async probe below
+            // refines it within ~2.5s on the first play of the session.
+            let currentTier: FlowTier = seedTierSync();
+            const playStartedAt = Date.now();
 
-            currentTier = estimateTier();
+            // Anti-thrash budget for PREDICTIVE (non-stall) down-steps. Loosened
+            // automatically when the buffer is collapsing (see SOFT_CAP usage).
+            const SOFT_CAP = 3;
+            let downSteps = 0;
+            let failedUpTier: FlowTier | null = null; // a step-up that re-stalled is locked out
+
+            // Buffer-lead thresholds (seconds ahead of the playhead).
+            const LEAD_HEALTHY = 8;   // ≥ this, sustained → stable: fade the indicator, allow step-up
+            const LEAD_WATCH = 5;     // ≤ this AND shrinking → predictive step DOWN
+            const LEAD_CRITICAL = 2;  // ≤ this → collapse: step DOWN now, ignore the soft cap
+
+            const SAMPLE_MS = 1000;
+            const SWITCH_COOLDOWN_MS = 6000;  // after a swap, let the new buffer fill before deciding
+            const RECOVERY_STABLE_MS = 45000; // sustained-healthy before a quiet step UP
+
+            let leadHistory: number[] = [];
+            let lastSwitchAt = 0;
+            let stableSince = 0;
+            let adapting = false;
+            let weak = false;
+            let predictiveCheck: ReturnType<typeof setInterval> | null = null;
 
             // Initial tier already set in URL before src assignment — no double-load
             setState((prev) => ({ ...prev, qualities: ['AUTO', 'Source', '720p', '480p', '360p'] }));
@@ -655,12 +652,37 @@ export function usePlayer() {
               }
             };
 
-            const switchTier = (to: FlowTier) => {
-              if (switchCount >= MAX_SWITCHES || to === currentTier || to === failedRecoveryTier) return;
+            const setAdapting = (on: boolean) => {
+              if (on === adapting) return;
+              adapting = on;
+              setState((prev) => ({ ...prev, flowAdapting: on }));
+            };
+            const setWeak = (on: boolean) => {
+              if (on === weak) return;
+              weak = on;
+              setState((prev) => ({ ...prev, weakConnection: on }));
+            };
+
+            const bufferedLead = () => (video.buffered.length > 0
+              ? video.buffered.end(video.buffered.length - 1) - video.currentTime
+              : 0);
+
+            // Trend = is the lead shrinking toward empty across the recent window?
+            const trendShrinking = () => {
+              if (leadHistory.length < 3) return false;
+              const w = leadHistory.slice(-4);
+              return (w[0] - w[w.length - 1]) >= 0.8; // lead fell ~0.8s+ across the window
+            };
+
+            const switchTier = (to: FlowTier, _reason: string) => {
+              if (to === currentTier || to === failedUpTier) return;
+              const goingDown = FLOW_TIERS.indexOf(to) > FLOW_TIERS.indexOf(currentTier);
               currentTier = to;
-              switchCount++;
-              bufferStalls = [];
-              recoveryStarted = 0;
+              if (goingDown) downSteps++;
+              leadHistory = [];
+              stableSince = 0;
+              lastSwitchAt = Date.now();
+              setAdapting(true); // blink the Flow mark while the swap settles
               // Mask the re-buffer hitch of the hard src-swap with a frozen frame
               // (revealed in onplaying when the new tier paints). Prime never shows
               // a black flash on an adaptive quality change — neither should we.
@@ -674,67 +696,96 @@ export function usePlayer() {
               video.play().catch(() => {});
             };
 
-            // Buffer stall detection
+            // Real bandwidth probe — corrects the seeded tier within ~2.5s on the
+            // first play of the session (cached after → later switches are instant).
+            // Replaces the dead navigator.connection.downlink guess (iOS quick win).
+            probeBandwidthBps().then((bps) => {
+              if (isStale() || bps == null) return;
+              const probed = tierForBps(bps);
+              // Only correct while still early and before we've adapted off the seed.
+              if (probed !== currentTier && downSteps === 0 && Date.now() - playStartedAt < 8000) {
+                switchTier(probed, 'probe');
+              }
+            }).catch(() => {});
+
+            // Backstop: a real stall (onwaiting) means prediction was too late — force
+            // a step DOWN ignoring the soft cap. Predictive should make this rare.
             const origWaiting = video.onwaiting;
             video.onwaiting = () => {
               if (isStale()) return;
               if (typeof origWaiting === 'function') origWaiting.call(video, new Event('waiting'));
               else setState((prev) => ({ ...prev, isLoading: true }));
-
-              const now = Date.now();
-              bufferStalls.push(now);
-              bufferStalls = bufferStalls.filter(t => now - t < STALL_WINDOW);
-
-              if (bufferStalls.length >= STALL_THRESHOLD && switchCount < MAX_SWITCHES) {
-                const lower = tierDown(currentTier);
-                if (lower !== currentTier && lower !== failedRecoveryTier) {
-                  bufferStalls = [];
-                  switchTier(lower);
-                }
+              if (currentTier !== 'low' && Date.now() - lastSwitchAt > 2500) {
+                switchTier(tierDown(currentTier), 'stall');
+              } else if (currentTier === 'low') {
+                setWeak(true); // already at the floor and still stalling → graceful fallback
               }
             };
 
-            // Recovery: try higher tier after sustained stability
-            recoveryCheck = setInterval(() => {
-              if (isStale() || switchCount >= MAX_SWITCHES) return;
+            // ── PREDICTIVE control loop (1s) — the core ──
+            predictiveCheck = setInterval(() => {
+              if (isStale()) return;
               if (!video || video.paused) return;
               readResolution();
 
-              const ahead = video.buffered.length > 0
-                ? video.buffered.end(video.buffered.length - 1) - video.currentTime
-                : 0;
+              const lead = bufferedLead();
+              leadHistory.push(lead);
+              if (leadHistory.length > 8) leadHistory.shift();
 
-              if (ahead >= 10) {
-                if (!recoveryStarted) { recoveryStarted = Date.now(); return; }
-                if (Date.now() - recoveryStarted >= RECOVERY_DELAY) {
+              const now = Date.now();
+              const inCooldown = now - lastSwitchAt < SWITCH_COOLDOWN_MS;
+              const collapsing = lead <= LEAD_CRITICAL;
+              const shrinking = lead <= LEAD_WATCH && trendShrinking();
+
+              // ── PREDICTIVE STEP-DOWN — step BEFORE the stall ──
+              if (!inCooldown && currentTier !== 'low' && (collapsing || shrinking)) {
+                // Loosen the anti-thrash cap when genuinely collapsing — continuity wins.
+                if (downSteps < SOFT_CAP || collapsing) {
+                  switchTier(tierDown(currentTier), collapsing ? 'collapse' : 'predictive');
+                  return;
+                }
+              }
+
+              // ── GRACEFUL FLOOR FALLBACK — at lowest tier, pipe still can't hold it ──
+              if (currentTier === 'low' && (collapsing || shrinking)) {
+                setWeak(true);
+                setAdapting(true);
+                if (video.paused) video.play().catch(() => {}); // keep quietly retrying
+                // don't return — the recovery branch below can still clear it
+              }
+
+              // ── STABLE / RECOVER UP (quiet) ──
+              if (lead >= LEAD_HEALTHY) {
+                if (!stableSince) stableSince = now;
+                if (weak && now - stableSince > 3000) setWeak(false);
+                if (adapting && now - stableSince > 4000) setAdapting(false);
+                if (currentTier !== 'source' && !inCooldown && now - stableSince > RECOVERY_STABLE_MS) {
                   const higher = tierUp(currentTier);
-                  if (higher !== currentTier && higher !== failedRecoveryTier) {
-                    // Try recovery — if it triggers a stall within 30s, lock this tier out
+                  if (higher !== currentTier && higher !== failedUpTier) {
+                    const preTier = currentTier;
                     const tryTier = higher;
-                    const stallBefore = bufferStalls.length;
-                    const preRecoveryTier = currentTier;
-                    switchTier(tryTier);
+                    switchTier(tryTier, 'recover-up');
+                    // If the step-up re-stalls within 25s, drop back + lock it out so
+                    // recovery feels smooth, never a yo-yo.
                     setTimeout(() => {
                       if (isStale()) return;
-                      if (bufferStalls.length > stallBefore) {
-                        // Recovery failed — drop back and lock
-                        failedRecoveryTier = tryTier;
-                        switchTier(preRecoveryTier);
+                      if (currentTier === tryTier && bufferedLead() < LEAD_CRITICAL) {
+                        failedUpTier = tryTier;
+                        switchTier(preTier, 'recover-rollback');
                       }
-                    }, 30000);
+                    }, 25000);
                   }
-                  recoveryStarted = 0;
                 }
               } else {
-                recoveryStarted = 0;
+                stableSince = 0;
               }
-            }, 5000);
+            }, SAMPLE_MS);
 
             video.addEventListener('loadeddata', readResolution, { once: true });
 
             const origDestroy = destroyRef.current;
             destroyRef.current = () => {
-              if (recoveryCheck) clearInterval(recoveryCheck);
+              if (predictiveCheck) clearInterval(predictiveCheck);
               if (origDestroy) origDestroy();
             };
           }
@@ -994,6 +1045,8 @@ export function usePlayer() {
       qualities: ['Auto'],
       isLoading: false,
       isSwitching: false,
+      flowAdapting: false,
+      weakConnection: false,
       error: null,
       currentTime: 0,
       duration: 0,

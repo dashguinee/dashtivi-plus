@@ -417,6 +417,11 @@ const translations = {
     updateAvailable: 'Mise à jour disponible',
     updatingDashTivi: 'Mise à jour de DashTivi+',
 
+    // ── Player / Flow (weak-connection grace) ─────────────────
+    flowHolding: 'Flux',
+    weakConnection: 'Connexion faible — essayez une autre chaîne, ou patientez.',
+    weakConnectionAction: 'Essayer une autre chaîne',
+
     // ── Footer / Branding ─────────────────────────────────────
     dashLifestyle: 'DASH Lifestyle',
     dashPremium: 'Premium',
@@ -837,6 +842,11 @@ const translations = {
     // ── App Updates ───────────────────────────────────────────
     updateAvailable: 'Update available',
     updatingDashTivi: 'Updating DashTivi+',
+
+    // ── Player / Flow (weak-connection grace) ─────────────────
+    flowHolding: 'Flow',
+    weakConnection: 'Weak connection — try another channel, or hold on.',
+    weakConnectionAction: 'Try another channel',
 
     // ── Footer / Branding ─────────────────────────────────────
     dashLifestyle: 'DASH Lifestyle',

@@ -28,6 +28,16 @@ export interface PlayerState {
    *  frame + connecting card up). False during a plain rebuffer of the current
    *  channel — lets the UI keep controls sharp + visible while buffering. */
   isSwitching: boolean;
+  /** Predictive Flow: true while the adaptive controller is actively stepping
+   *  tiers (down to fit a shrinking pipe, or quietly back up on recovery). Drives
+   *  the subtle blinking "Flow" mark — "holding it together". Clears once the
+   *  stream is stable at the chosen tier. */
+  flowAdapting?: boolean;
+  /** Graceful floor: true when Flow is already at its LOWEST tier (360p) and the
+   *  pipe STILL can't sustain it. Drives the calm "Weak connection — try another
+   *  channel, or hold on." message. Playback keeps quietly retrying underneath —
+   *  this is NEVER a hard error wall, and clears the moment the pipe recovers. */
+  weakConnection?: boolean;
   error: string | null;
   currentTime: number;
   duration: number;

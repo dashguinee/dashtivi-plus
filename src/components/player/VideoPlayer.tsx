@@ -11,6 +11,7 @@ import {
   accentForExperience,
 } from '@/lib/catalog';
 import { tap } from '@/lib/haptics';
+import { useLanguage } from '@/i18n';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { SmartMatch } from './SmartMatch';
 import { EpgWidget } from './EpgWidget';
@@ -81,6 +82,7 @@ export const VideoPlayer: React.FC<Props> = ({
   onGenreSwitch,
   credentials,
 }) => {
+  const { t } = useLanguage();
   const [controlsVisible, setControlsVisible] = useState(true);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout>>();
   // Mirrors state.isSwitching so timers/callbacks can read it without re-binding.
@@ -795,6 +797,47 @@ export const VideoPlayer: React.FC<Props> = ({
                style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(157,78,221,0.2)' }}>
             <div className="w-3 h-3 rounded-full border-[1.5px] border-white/20 border-t-primary-light animate-spin" />
             <span className="text-[10px] text-white/55 font-medium tracking-wide">Buffering</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Flow indicator (predictive adapt) ──────────────────────────────────
+          Subtle "Flow" mark that BLINKS while the predictive controller is actively
+          stepping tiers (down to fit a shrinking pipe, or quietly back up) — a calm
+          "holding it together" cue, never alarming. Mounts on state.flowAdapting and
+          fades when the stream is stable at full quality (controller clears the flag).
+          Suppressed while a switch/buffering pill already owns the top-center spot. */}
+      {state.flowAdapting && !isVod && !state.isSwitching && !state.error && !showBuffering && (
+        <div className="absolute top-[64px] left-1/2 -translate-x-1/2 z-[35] pointer-events-none"
+             style={{ animation: 'fade-in 0.4s ease-out both' }}>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+               style={{ background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(157,78,221,0.22)', animation: 'flow-blink 1.6s ease-in-out infinite' }}>
+            <div className="w-1.5 h-1.5 rounded-full bg-primary-light" style={{ animation: 'flow-dot-pulse 1.6s ease-in-out infinite' }} />
+            <span className="text-[10px] text-primary-light/80 font-medium tracking-[0.14em] uppercase">{t('flowHolding')}</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Graceful weak-connection fallback ──────────────────────────────────
+          Flow is already at its FLOOR (360p) and the pipe STILL can't sustain it.
+          Instead of a spinner / freeze / error wall, a calm minimal message — the
+          stream keeps quietly retrying underneath (predictive loop re-asserts play
+          + clears this the instant the pipe recovers). "Try another channel" is a
+          gentle way out (back to the grid), never forced. */}
+      {state.weakConnection && !state.error && !isVod && (
+        <div className="absolute inset-x-0 bottom-[150px] flex justify-center z-[36] pointer-events-none px-6">
+          <div className="flex flex-col items-center gap-3 max-w-xs text-center px-5 py-4 rounded-2xl"
+               style={{ background: 'rgba(6,6,9,0.55)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(157,78,221,0.18)', animation: 'fade-in 0.5s ease-out both' }}>
+            {/* Soft breathing dot — reassures it's still working, not frozen. */}
+            <div className="w-2 h-2 rounded-full bg-primary-light" style={{ animation: 'flow-dot-pulse 1.8s ease-in-out infinite' }} />
+            <p className="text-[12.5px] text-white/65 leading-snug">{t('weakConnection')}</p>
+            <button
+              onClick={(e) => { e.stopPropagation(); (onBack || onClose)(); }}
+              className="pointer-events-auto text-[11px] font-medium text-primary-light/90 px-3.5 py-1.5 rounded-full active:scale-95 transition-transform"
+              style={{ background: 'rgba(157,78,221,0.12)', border: '1px solid rgba(157,78,221,0.3)' }}
+            >
+              {t('weakConnectionAction')}
+            </button>
           </div>
         </div>
       )}
