@@ -186,8 +186,10 @@ export function CategoryHero({
         }}
       >
         <span className="relative flex h-1.5 w-1.5">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: accent }} />
-          <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: accent }} />
+          {/* PERF: static dot (no animate-ping). The hero deck keeps ALL slides
+              mounted, so every slide's ping ran forever off-screen. Only the main
+              "RIGHT NOW" hero dot stays animated. Subtle glow keeps it alive-looking. */}
+          <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: accent, boxShadow: `0 0 5px ${accent}` }} />
         </span>
         <span
           className={`text-[10.5px] font-bold tracking-[1.5px] uppercase${isWorldCup ? ' tivi-count-metal' : ''}`}

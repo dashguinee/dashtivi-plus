@@ -310,7 +310,12 @@ export function FreeHlsShowcaseCard({
             padding: '1px',
             background: `linear-gradient(90deg, transparent 0%, ${accent}26 30%, ${accent}77 50%, ${accent}26 70%, transparent 100%)`,
             backgroundSize: '200% 100%',
-            animation: focused ? 'beam-sweep 4s ease-in-out infinite alternate' : 'none',
+            // PERF: beam-sweep animates background-position (a PAINT property) right
+            // over the live <video> → repaints the video region every frame = the
+            // hero-video flicker. Run it only while WARMING (focused, not yet playing);
+            // once the stream paints, freeze the seam to a static gradient (no repaint
+            // over the moving video). The border seam itself stays — only the sweep stops.
+            animation: focused && !playing ? 'beam-sweep 4s ease-in-out infinite alternate' : 'none',
             WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
             WebkitMaskComposite: 'xor',
             maskComposite: 'exclude',

@@ -564,7 +564,9 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
           <div id="scroll-ambient" className="fixed inset-0 pointer-events-none z-[1]" style={{
             background: 'radial-gradient(ellipse 60% 35% at 50% var(--ambient-y, 30%), rgba(157,78,221,0.04) 0%, transparent 70%)',
             transition: 'none',
-            willChange: 'background',
+            // PERF: no `will-change: background` — `background` is NOT a compositable
+            // property, so the hint only pinned a permanent wasted GPU layer (529-layer
+            // explosion) without helping. The --ambient-y scroll update still works.
           }} />
         </>
       )}

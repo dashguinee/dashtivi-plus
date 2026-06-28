@@ -849,7 +849,10 @@ const ExperienceRow = React.memo(function ExperienceRow({
               <div className="absolute top-1.5 left-1.5 z-[2] flex items-center gap-1 px-1.5 py-0.5 rounded-full"
                 style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}>
                 <span className="relative flex h-1.5 w-1.5">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-70 ${ch.free ? 'bg-sky-400' : 'bg-red-400'}`} />
+                  {/* PERF: static solid dot (no perpetual animate-ping). Dozens of these
+                      in the grid each ran a forever animation → ~38k style-invalidations
+                      per scroll. The glow boxShadow keeps it visually identical at 6px.
+                      The pinging "RIGHT NOW" hero dot above stays animated (one only). */}
                   <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${ch.free ? 'bg-sky-400' : 'bg-red-400'}`} style={{ boxShadow: ch.free ? '0 0 5px rgba(120,190,255,0.95)' : '0 0 5px rgba(248,113,113,0.9)' }} />
                 </span>
               </div>

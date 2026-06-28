@@ -47,7 +47,10 @@
   background-size: 220% 100%;
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent; color: transparent;
-  animation: tivi-count-shimmer 5s linear infinite;
+  /* PERF: static metallic gradient (no infinite background-position sweep).
+     The sweep animated a PAINT property forever on every "N channels live" label,
+     repainting each frame. A fixed bright-band position keeps the chrome look. */
+  background-position: 30% 0;
   opacity: 0.6;
 }
 @keyframes tivi-count-shimmer { from { background-position: 200% 0; } to { background-position: -20% 0; } }
@@ -57,7 +60,8 @@
 .tivi-nav-silver {
   background: linear-gradient(115deg, #6b7280 0%, #d8dde6 28%, #9aa1ad 50%, #d8dde6 72%, #6b7280 100%);
   background-size: 220% 100%;
-  animation: tivi-count-shimmer 5s linear infinite;
+  /* PERF: static metallic (see .tivi-count-metal) — no perpetual paint sweep. */
+  background-position: 30% 0;
 }
 
 /* Player "connecting" — breathing ring (reassures during buffering, the #1 SL pain) */
@@ -815,6 +819,9 @@
     top: 10%;
     left: 30%;
     background: rgba(157, 78, 221, 0.08);
+    /* PERF: fixed organic radius — the morph now animates transform ONLY, so this
+       big blur(40px) layer no longer repaints its border-radius every frame. */
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
     animation: blob-morph-1 12s ease-in-out infinite;
   }
 
@@ -825,6 +832,8 @@
     top: 20%;
     right: 20%;
     background: rgba(59, 130, 246, 0.05);
+    /* PERF: fixed organic radius — transform-only morph (see blob-1). */
+    border-radius: 40% 60% 50% 50% / 40% 50% 50% 60%;
     animation: blob-morph-2 9s ease-in-out infinite;
   }
 
@@ -834,38 +843,20 @@
     display: none;
   }
 
+  /* PERF: transform-ONLY morph (translate + scale are GPU-composited). The
+     border-radius shape-morph was removed — animating border-radius repainted
+     the blur(40px) layer every frame. Fixed radius lives on the blob classes. */
   @keyframes blob-morph-1 {
-    0%, 100% {
-      border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
-      transform: translate(0, 0) scale(1);
-    }
-    25% {
-      border-radius: 58% 42% 75% 25% / 76% 46% 54% 24%;
-      transform: translate(20px, -15px) scale(1.05);
-    }
-    50% {
-      border-radius: 50% 50% 33% 67% / 55% 27% 73% 45%;
-      transform: translate(-10px, 10px) scale(0.97);
-    }
-    75% {
-      border-radius: 33% 67% 58% 42% / 63% 68% 32% 37%;
-      transform: translate(15px, 5px) scale(1.03);
-    }
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25%      { transform: translate(20px, -15px) scale(1.05); }
+    50%      { transform: translate(-10px, 10px) scale(0.97); }
+    75%      { transform: translate(15px, 5px) scale(1.03); }
   }
 
   @keyframes blob-morph-2 {
-    0%, 100% {
-      border-radius: 40% 60% 50% 50% / 40% 50% 50% 60%;
-      transform: translate(0, 0) scale(1);
-    }
-    33% {
-      border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%;
-      transform: translate(-25px, 15px) scale(1.08);
-    }
-    66% {
-      border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%;
-      transform: translate(15px, -20px) scale(0.95);
-    }
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%      { transform: translate(-25px, 15px) scale(1.08); }
+    66%      { transform: translate(15px, -20px) scale(0.95); }
   }
 
   /* blob-morph-3 keyframes deleted — blob-3 is display:none */
