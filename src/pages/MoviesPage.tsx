@@ -905,8 +905,13 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 );
               })}
             </div>
-          ) : (movies.length > 0 && hasTmdb) ? (
-            // CLS RESERVE: the ladder computes at DEFERRED (non-urgent) priority, so
+          ) : (movies.length > 0) ? (
+            // CLS RESERVE: the ladder needs tmdbMap (loads LATER than the list) AND
+            // renders at deferred priority — so there's a window where the list is
+            // ready but the ladder is absent. Without a reserve here the GRID below
+            // sits high, then the ladder appears and SHOVES it down (the measured
+            // 0.39 grid shift). So reserve the ladder's box the instant the list is
+            // ready (NOT gated on tmdb), at the EXACT final row heights.
             // for one paint it's empty. Without a reserve, the real rows pop in a
             // tick later and shove the grid below → big cumulative shift. So we
             // render skeleton rows at the EXACT final height (the same header +
