@@ -326,7 +326,18 @@ export function HeroDeck({
             viewport space. Opacity rides drag magnitude; dissolves on settle. */}
         <div
           className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden"
-          style={{ zIndex: 8, opacity: dragActive ? 1 : 0, transition: 'opacity 0.32s ease-out' }}
+          style={{
+            zIndex: 8,
+            opacity: dragActive ? 1 : 0,
+            transition: 'opacity 0.32s ease-out',
+            // FEATHER the lit panel's TOP + BOTTOM edges. The glow streak runs
+            // full-height; clipped at the card's rectangle it left a HARD
+            // horizontal edge right above the pagination dots. A vertical mask
+            // dissolves the light before it reaches either edge → no sharp band,
+            // nothing clashing with the dotted dials. Idle is unchanged (opacity 0).
+            maskImage: 'linear-gradient(180deg, transparent 0%, #000 18%, #000 76%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(180deg, transparent 0%, #000 18%, #000 76%, transparent 100%)',
+          }}
           aria-hidden
         >
           {/* Soft glow streak — a vertical accent band centered on the drag,
