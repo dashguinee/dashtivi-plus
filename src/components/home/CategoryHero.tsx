@@ -234,7 +234,13 @@ export function CategoryHero({
         <div
           className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
           style={{
-            background: `linear-gradient(135deg, ${accent}, ${dark})`,
+            // GOLF-BALL TEXTURE — a dimpled sphere. GPU-cheap: two static layered
+            // radial-gradient dot grids (offset = hexa-ish dimples) over the accent
+            // gradient, + inset spherical depth. No animation cost beyond the breathe.
+            backgroundImage: `radial-gradient(circle at 50% 50%, rgba(0,0,0,0.18) 0.6px, transparent 1.7px), radial-gradient(circle at 50% 50%, rgba(255,255,255,0.14) 0.6px, transparent 1.7px), linear-gradient(135deg, ${accent}, ${dark})`,
+            backgroundSize: '5px 5px, 5px 5px, 100% 100%',
+            backgroundPosition: '0 0, 2.5px 2.5px, 0 0',
+            boxShadow: 'inset -2px -2px 5px rgba(0,0,0,0.30), inset 2px 2px 5px rgba(255,255,255,0.17)',
             animation: `hero-play-breathe-${uid} 2.8s ease-in-out infinite`,
           }}
         >
