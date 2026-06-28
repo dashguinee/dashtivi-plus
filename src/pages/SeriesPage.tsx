@@ -917,8 +917,11 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 );
               })}
             </div>
-          ) : (seriesList.length > 0 && hasTmdb) ? (
-            // CLS RESERVE: the ladder computes at DEFERRED priority → empty for one
+          ) : (seriesList.length > 0) ? (
+            // CLS RESERVE: the ladder needs tmdbMap (loads LATER than the list) and
+            // renders at deferred priority — reserve its box the instant the list is
+            // ready (NOT gated on tmdb) so the grid below never gets shoved down.
+            // The ladder computes at DEFERRED priority → empty for one
             // paint. Reserve each row's EXACT final box (header + cardWidth×1.5
             // posters, matching VeeCollectionRow) so the real rows replace these
             // in-place and shift NOTHING. (Mirrors MoviesPage; long-task stays fixed.)

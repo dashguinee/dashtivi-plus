@@ -669,8 +669,8 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       )}
 
       {/* ── Cinéma en direct (live cinema-TV channels) ── */}
-      {!isSearching && liveCinema.length > 0 && (
-        <section className="px-4 pt-5 pb-1 row-tier-standard">
+      {!isSearching && liveCinema.length > 0 ? (
+        <section className="px-4 pt-5 pb-1 row-tier-standard" style={{ minHeight: 200 }}>
           <div className="flex items-center gap-2.5 mb-3.5">
             <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: GOLD, boxShadow: `0 0 6px ${GOLD}` }} />
             <h2 className="text-[19px] font-black tracking-tight text-white">Cinéma en direct</h2>
@@ -720,7 +720,13 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
             ))}
           </div>
         </section>
-      )}
+      ) : (!isSearching && !catalog) ? (
+        // CLS RESERVE: hold the live-cinema row's EXACT final height (≈196px → 200)
+        // while the catalog (→ liveCinema) is still resolving, so when it lands at
+        // ~506ms it fills the reserved box and the ladder + grid below NEVER move.
+        // This was the last real CLS contributor (the 0.13 `section.px-4.pt-5` shift).
+        <section className="px-4 pt-5 pb-1 row-tier-standard" style={{ minHeight: 200 }} aria-hidden />
+      ) : null}
 
       {/* ── Smart sticky header (search + tabs + genre pills) ── */}
       <div className={stickyClass} style={stickyStyle}>
