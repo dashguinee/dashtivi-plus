@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useCallback, useEffect, useDeferredValue, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Navbar } from '@/components/layout/Navbar';
@@ -216,8 +216,7 @@ function ScrollToTop() {
 // a purple breath dissolves the live world and the cinema condenses out of it.
 // Routing is untouched (real route, back/forward intact); only the *transition*
 // becomes a breath. Respects prefers-reduced-motion (the CSS no-ops the breath).
-function MergeTransition({ children }: { children: React.ReactNode }) {
-  const { pathname } = useLocation();
+function MergeTransition({ children, pathname }: { children: React.ReactNode; pathname: string }) {
   React.useEffect(() => {
     const el = document.getElementById('merge-breath');
     if (el) {
@@ -243,6 +242,14 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
   const player = usePlayer();
   const { addToHistory, getResume, updateDuration } = useWatchHistory();
   const ambientStartedRef = React.useRef(false);
+
+  // INP: keep tab/route switches responsive. The live location commits the URL
+  // instantly (fast paint of the current view), while the HEAVY route-tree
+  // render is driven by a DEFERRED location — React renders it concurrently /
+  // interruptibly off the input-critical path, so the tap responds in <1 frame
+  // instead of blocking the main thread for the new page's full sync render.
+  const routerLocation = useLocation();
+  const deferredRouteLoc = useDeferredValue(routerLocation);
 
   // The full-screen player now mounts as a RISING SURFACE over the persistent
   // world (SurfaceStack), instead of a plain z-index overlay. `showFullPlayer`
@@ -553,8 +560,8 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
         <main className="pb-20 lg:pb-0 lg:pl-[72px] safe-bottom-content">
           <ErrorBoundary>
             <Suspense fallback={<div className="pt-20 px-4 space-y-6 animate-pulse"><div className="h-[22vh] rounded-2xl bg-white/[0.02]" /><div className="flex gap-2">{[1,2,3,4].map(i=><div key={i} className="h-8 w-16 rounded-full bg-white/[0.03]" />)}</div><div className="space-y-4">{[1,2,3].map(i=><div key={i} className="h-32 rounded-xl bg-white/[0.02]" />)}</div></div>}>
-              <MergeTransition>
-                <Routes>
+              <MergeTransition pathname={deferredRouteLoc.pathname}>
+                <Routes location={deferredRouteLoc}>
                   <Route path="/" element={<ErrorBoundary><HomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/live/:experienceId" element={<ErrorBoundary><ExperienceHomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/live" element={<ErrorBoundary><LiveTVPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
