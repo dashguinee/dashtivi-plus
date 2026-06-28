@@ -128,28 +128,38 @@ export function startPreload() {
   stepDone(); // (was verified)
 
   // 3. FULL LOGO WARM — fetch + durably cache EVERY channel logo into the SW's
-  //    logo cache while the splash shows, so the whole shell (incl. all ~600
-  //    logos) is on-device before the interface is revealed → forever-instant,
-  //    never re-requested. Bounded internally so it can't hang the splash; any
-  //    stragglers keep warming in the background. Lazy-imported (zero main-bundle
-  //    cost). This load IS awaited by preloadReady so the splash holds for it.
-  const LOGO_BUDGET_MS = 12000;
-  loads.push(
-    import('@/lib/logoPreload')
-      .then(({ preloadAllLogos }) =>
-        preloadAllLogos((done, total) => {
-          setLogoProgress(total ? done / total : 1);
-        }, LOGO_BUDGET_MS),
-      )
-      .catch(() => {})
-      .finally(() => setLogoProgress(1)),
-  );
+  //    logo cache, so from the first session all ~600 logos are on-device
+  //    forever (never re-requested). Runs in the BACKGROUND to completion (full
+  //    budget); lazy-imported so it costs the main bundle nothing.
+  //
+  //    The splash HOLDS for it only up to LOGO_HOLD_MS: on a good network the
+  //    logos finish in a couple seconds → the interface is revealed fully
+  //    preloaded; on a weak West-Africa network (where the real pain is
+  //    bandwidth) the app still reveals promptly and the rest keep warming in
+  //    the background. Correctness ("load a logo at most once, ever") does NOT
+  //    depend on this hold — the SW's durable logo cache stores each logo on its
+  //    first sight regardless; this just front-loads it.
+  const LOGO_BG_BUDGET_MS = 12000; // full background warm
+  const LOGO_HOLD_MS = 6000;       // max the splash waits for the warm
+  import('@/lib/logoPreload')
+    .then(({ preloadAllLogos }) =>
+      preloadAllLogos((done, total) => {
+        setLogoProgress(total ? done / total : 1);
+      }, LOGO_BG_BUDGET_MS),
+    )
+    .catch(() => {})
+    .finally(() => setLogoProgress(1));
 
-  // Signal ready when chunk + data + logos are loaded (or the hard ceiling).
-  // The ceiling sits just past the logo budget so a slow/dead network still
-  // reveals the app; it never holds the splash longer than necessary.
+  // Gate that resolves when the warm completes OR the hold elapses.
+  const logoHold = new Promise<void>((res) => {
+    const off = onLogoProgress((p) => { if (p >= 1) { off(); res(); } });
+    setTimeout(() => { off(); res(); }, LOGO_HOLD_MS);
+  });
+  loads.push(logoHold);
+
+  // Signal ready when chunk + catalog + the logo hold are done (or the ceiling).
   Promise.allSettled(loads).then(() => resolveReady());
-  setTimeout(resolveReady, LOGO_BUDGET_MS + 2500);
+  setTimeout(resolveReady, LOGO_HOLD_MS + 2000);
 }
 
 /**

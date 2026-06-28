@@ -54,8 +54,8 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
     });
 
     // Failsafe — absolute ceiling so a dead network can never trap the user on
-    // the splash. Sits just past the logo-warm budget (preloader caps at ~14.5s).
-    const failsafe = setTimeout(() => { onComplete(); }, 16000);
+    // the splash. Sits just past the splash's logo hold (preloader caps at ~8s).
+    const failsafe = setTimeout(() => { onComplete(); }, 9000);
 
     return () => { clearTimeout(t1); clearTimeout(failsafe); offProgress(); };
   }, [onComplete]);
