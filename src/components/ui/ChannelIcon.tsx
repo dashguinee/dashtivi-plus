@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import { safeImageUrl, getChannelMeta } from '../../lib/xtream';
-import { prefetchDecode, useNearViewport } from '../../lib/imageLoading';
+import { prefetchDecode, useNearViewport, markPainted, isPainted } from '../../lib/imageLoading';
 
 interface Props {
   src?: string;
@@ -491,13 +491,13 @@ const sizes = {
 };
 
 // ── Painted-source cache ─────────────────────────────────────────────
-// Channel logos are tiny and immutable. Once a given URL has painted once,
-// we remember it process-wide so ANY later mount of the same logo (a memo
-// drop, a content-visibility reveal, a parent re-render, a re-entered row)
-// renders it INSTANTLY at full opacity — no re-fetch, no re-fade, no jerky
-// pop while scrolling a horizontal channel strip. This is the core fix for
-// "logos keep reloading / popping in" on horizontal scroll.
-const PAINTED_SRC = new Set<string>();
+// Channel logos are tiny and immutable. Once a given URL has painted once it's
+// remembered in the shared painted registry (imageLoading), which is ALSO
+// seeded from the SW's durable logo cache at boot — so ANY later mount of the
+// same logo (a memo drop, a content-visibility reveal, a parent re-render, a
+// re-entered row, or a full app restart) renders it INSTANTLY at full opacity:
+// no re-fetch, no re-fade, no jerky pop while scrolling a channel strip. This
+// is the core fix for "logos keep reloading / popping in".
 
 export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', className = '', eager = false }: Props) {
   const [failed, setFailed] = useState(false);
@@ -515,7 +515,7 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
 
   // Seed the fade-in from the painted cache: if this exact logo has already
   // shown once this session, start fully-loaded so it never fades/pops again.
-  const [loaded, setLoaded] = useState(() => (safeSrc ? PAINTED_SRC.has(safeSrc) : false));
+  const [loaded, setLoaded] = useState(() => isPainted(safeSrc));
 
   // Anticipatory load: when the tile is within ~one screen of the viewport,
   // decode the logo AHEAD of time and promote the <img> to eager + high
@@ -585,7 +585,7 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
         src={safeSrc}
         alt={name}
         className={`absolute inset-0 w-full h-full rounded-xl object-contain bg-white/5 p-1 transition-opacity duration-200 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-        onLoad={() => { if (safeSrc) PAINTED_SRC.add(safeSrc); setLoaded(true); }}
+        onLoad={() => { markPainted(safeSrc); setLoaded(true); }}
         onError={() => {
           if (import.meta.env.DEV) console.warn('[ICON] Failed:', name, safeSrc?.slice(0, 60));
           if (safeSrc?.includes('tv-logos')) setLogoFailed(true);

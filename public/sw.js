@@ -9,7 +9,16 @@ const CACHE_NAME = 'tivi-cache-stable-1';
 // JS/CSS asset entries. Once a logo/poster is fetched it's served from here
 // instantly forever — zero refetch on scroll / nav / reopen.
 const IMG_CACHE = 'tivi-img-stable-1';
-const IMG_CACHE_MAX = 450; // hard cap — evict oldest beyond this (storage-safe)
+const IMG_CACHE_MAX = 600; // hard cap for POSTER art (thousands exist) — evict oldest beyond this
+
+// DEDICATED, DURABLE CHANNEL-LOGO cache. The ~600 channel logos are a FIXED,
+// finite set (part of the SHELL — they must be present instantly, forever, even
+// offline). They live in their OWN cache so the bounded poster cache can never
+// evict them, and the cap is set well above the catalog size so a logo, once
+// fetched, is NEVER re-requested for the life of the install. This is the core
+// of "a channel logo is requested at most ONCE, ever."
+const LOGO_CACHE = 'tivi-logos-stable-1';
+const LOGO_CACHE_MAX = 1500; // > full catalog (~600) + headroom; logos never evict in practice
 
 // APP-SHELL PRECACHE — the static UI + design + catalog. Precached at install
 // so the app opens INSTANTLY and the channel list/design are browsable OFFLINE.
@@ -23,6 +32,8 @@ const SHELL = [
   '/tivi-curated.json',
   '/streamore-locked.json',
   '/streamore-gems.json', // catalog dependency — needed to build the offline catalog
+  '/logo-map.json',       // catalog dependency — name→logo fallback map
+  '/free-channels-curated.json', // catalog dependency — free HLS gems
   '/tivi-192.png',
   '/tivi-512.png',
 ];
@@ -45,7 +56,7 @@ self.addEventListener('activate', (event) => {
   console.log('[SW] Activating ' + CACHE_NAME);
   event.waitUntil(
     caches.keys().then((keys) => {
-      const old = keys.filter((k) => k !== CACHE_NAME && k !== IMG_CACHE);
+      const old = keys.filter((k) => k !== CACHE_NAME && k !== IMG_CACHE && k !== LOGO_CACHE);
       if (old.length) {
         console.log('[SW] Purging old caches:', old.join(', '));
         return Promise.all(old.map((k) => caches.delete(k))).then(() => {
@@ -77,27 +88,56 @@ function cacheFirstThenNetwork(request) {
   }).catch(() => caches.match(request));
 }
 
-// Trim the image cache back to its cap, evicting the OLDEST entries first.
+// Trim a bounded cache back to its cap, evicting the OLDEST entries first.
 // cache.keys() preserves insertion order, so the front of the list is oldest.
-function trimImageCache() {
-  caches.open(IMG_CACHE).then((cache) =>
+function trimCache(cacheName, max) {
+  caches.open(cacheName).then((cache) =>
     cache.keys().then((keys) => {
-      const over = keys.length - IMG_CACHE_MAX;
+      const over = keys.length - max;
       for (let i = 0; i < over; i++) cache.delete(keys[i]);
     })
   );
 }
 
-// Cache-first against the dedicated, bounded IMG_CACHE. Once an image is stored
-// it's served locally forever (until LRU-evicted). Network only on first miss.
+// A response is storable if it's a normal 200 OK *or* an OPAQUE cross-origin
+// response (status 0, ok=false). Channel logos + TMDB posters come from other
+// origins as no-cors <img> loads, so their responses are OPAQUE — the OLD code
+// only cached `response.ok`, so it NEVER actually cached a single cross-origin
+// logo and every one re-requested on every mount/scroll/reopen. Caching opaque
+// responses too is what makes "load a logo at most ONCE, ever" real.
+function isStorable(response) {
+  return !!response && (response.ok || response.type === 'opaque');
+}
+
+// Cache-first against the DURABLE, effectively-unbounded LOGO_CACHE. Channel
+// logos are a fixed finite set + part of the shell, so once stored they're
+// served locally forever — zero refetch on scroll / nav / reopen / restart.
+function logoCacheFirst(request) {
+  return caches.open(LOGO_CACHE).then((cache) =>
+    cache.match(request).then((cached) => {
+      if (cached) return cached;
+      return fetch(request).then((response) => {
+        if (isStorable(response)) {
+          cache.put(request, response.clone());
+          trimCache(LOGO_CACHE, LOGO_CACHE_MAX);
+        }
+        return response;
+      });
+    })
+  ).catch(() => caches.match(request));
+}
+
+// Cache-first against the bounded IMG_CACHE (poster art — thousands exist, so
+// it's LRU-capped). Now also stores opaque cross-origin responses (TMDB posters
+// are cross-origin no-cors) so a poster paints from cache on revisit, no re-fade.
 function imageCacheFirst(request) {
   return caches.open(IMG_CACHE).then((cache) =>
     cache.match(request).then((cached) => {
       if (cached) return cached;
       return fetch(request).then((response) => {
-        if (response.ok) {
+        if (isStorable(response)) {
           cache.put(request, response.clone());
-          trimImageCache();
+          trimCache(IMG_CACHE, IMG_CACHE_MAX);
         }
         return response;
       });
@@ -159,21 +199,22 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // --- CHANNEL ICONS: cache-first via bounded image cache (logos don't change) ---
+  // --- CHANNEL ICONS: cache-first via the DURABLE logo cache (load once forever) ---
   if (url.includes('/icons/') || (url.includes('supabase.co') && url.includes('channel-icons'))) {
-    event.respondWith(imageCacheFirst(request));
+    event.respondWith(logoCacheFirst(request));
     return;
   }
 
-  // --- LOGO / IMAGE CDNs: cache-first REGARDLESS of origin. Channel logos come
-  // from external CDNs (tv-logo GitHub, etc.) and were re-downloading on every
-  // mount/scroll because the same-origin gate below skipped them. They're
-  // immutable art — cache once. Kills the "frenetic reload" + saves data.
+  // --- LOGO / IMAGE CDNs: cache-first REGARDLESS of origin, into the DURABLE
+  // logo cache. Channel logos come from external CDNs (tv-logo GitHub, etc.) as
+  // cross-origin no-cors loads — their responses are OPAQUE, so they were never
+  // actually cached and re-downloaded on every mount/scroll. Now stored once in
+  // the never-evicting logo cache → requested at most ONCE for the app's life.
   if (
     url.includes('raw.githubusercontent.com') ||
     /\.(png|webp|svg|jpg|jpeg|ico|gif)(\?|$)/i.test(url)
   ) {
-    event.respondWith(imageCacheFirst(request));
+    event.respondWith(logoCacheFirst(request));
     return;
   }
 
@@ -218,6 +259,24 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
+    // --- SHELL DATA (the curated catalog + its static deps): CACHE-FIRST. These
+    // ARE the shell — the ~600 channels, logos map + free/gem feeds the catalog
+    // is built from. Cache-first = the home + channel grid render INSTANTLY from
+    // the on-device copy on every open, and fully OFFLINE, with zero network
+    // round-trip. Freshness is handled by the version gate (a forced version
+    // wipes all caches + re-precaches), never by a per-open refetch. ---
+    if (
+      url.includes('/tivi-curated.json') ||
+      url.includes('/streamore-gems.json') ||
+      url.includes('/streamore-locked.json') ||
+      url.includes('/free-channels-curated.json') ||
+      url.includes('/logo-map.json') ||
+      url.includes('/tmdb-data.json')
+    ) {
+      event.respondWith(cacheFirstThenNetwork(request));
+      return;
+    }
+
     // --- JSON DATA FILES: network-first (probe, tmdb, free-channels) ---
     if (url.endsWith('.json') && !url.includes('manifest.json')) {
       event.respondWith(
@@ -243,9 +302,9 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
-    // --- IMAGES/LOGOS: cache-first via bounded image cache ---
+    // --- IMAGES/LOGOS (same-origin): cache-first via the DURABLE logo cache ---
     if (url.includes('/logos/') || url.match(/\.(png|webp|svg|ico|jpg|jpeg)$/)) {
-      event.respondWith(imageCacheFirst(request));
+      event.respondWith(logoCacheFirst(request));
       return;
     }
 

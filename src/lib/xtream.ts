@@ -889,6 +889,31 @@ export async function fetchCuratorData(): Promise<CuratorData | null> {
   return curatorPromise;
 }
 
+/**
+ * SYNC curator build — returns the cached curator data, or builds it INSTANTLY
+ * from the already-in-memory catalog (getCatalogSync), with NO await/network.
+ * Lets the live page paint the static ~600-channel list on its FIRST render
+ * (no loading skeleton) whenever the catalog is already cached — which it is
+ * after splash/Home. Returns null only if the catalog isn't in memory yet (then
+ * the normal async path fills it in). Builds the exact same CuratorData as
+ * fetchCuratorData, so the two are interchangeable + idempotent.
+ */
+export function getCuratorDataSync(): CuratorData | null {
+  if (curatorData) return curatorData;
+  if (!getCatalogSync()) return null; // catalog not loaded yet → defer to async
+  const experiences: Record<string, CuratorChannel[]> = {};
+  let total = 0;
+  for (const expId of CURATOR_EXPERIENCE_IDS) {
+    const chs = catGetByExperience(expId); // tier-gated
+    experiences[expId] = chs.map(catalogToCuratorChannel);
+    total += experiences[expId].length;
+  }
+  curatorData = { ts: new Date().toISOString(), total, experiences };
+  curatorFetchedAt = Date.now();
+  seedGemSet(curatorData);
+  return curatorData;
+}
+
 /** Get curator channels for an experience — logs miss */
 export function getCuratorExperience(experienceId: string): CuratorChannel[] | null {
   if (!curatorData) {

@@ -33,6 +33,23 @@ export function onPreloadProgress(fn: (p: number) => void): () => void {
   return () => { const i = _listeners.indexOf(fn); if (i >= 0) _listeners.splice(i, 1); };
 }
 
+// ── Logo-warm progress (0→1) — the splash holds until this reaches 1 (or the
+//    budget elapses), so on first open EVERY channel logo is cached on-device
+//    forever before the interface is revealed. ──────────────────────────────
+let _logoProgress = 0;
+const _logoListeners: Array<(p: number) => void> = [];
+/** Current logo-warm progress 0→1 (1 = every logo cached, or budget reached). */
+export function getLogoProgress(): number { return _logoProgress; }
+export function onLogoProgress(fn: (p: number) => void): () => void {
+  _logoListeners.push(fn);
+  fn(_logoProgress);
+  return () => { const i = _logoListeners.indexOf(fn); if (i >= 0) _logoListeners.splice(i, 1); };
+}
+function setLogoProgress(p: number) {
+  _logoProgress = p;
+  for (const fn of _logoListeners) fn(p);
+}
+
 // Parsed JSON data — consumed once, then cleared
 let _prefetchedCurator: unknown | null = null;
 let _prefetchedVee: unknown | null = null;
@@ -110,9 +127,29 @@ export function startPreload() {
   stepDone(); // (was channels)
   stepDone(); // (was verified)
 
-  // Signal ready when chunk + data are loaded (or timeout)
+  // 3. FULL LOGO WARM — fetch + durably cache EVERY channel logo into the SW's
+  //    logo cache while the splash shows, so the whole shell (incl. all ~600
+  //    logos) is on-device before the interface is revealed → forever-instant,
+  //    never re-requested. Bounded internally so it can't hang the splash; any
+  //    stragglers keep warming in the background. Lazy-imported (zero main-bundle
+  //    cost). This load IS awaited by preloadReady so the splash holds for it.
+  const LOGO_BUDGET_MS = 12000;
+  loads.push(
+    import('@/lib/logoPreload')
+      .then(({ preloadAllLogos }) =>
+        preloadAllLogos((done, total) => {
+          setLogoProgress(total ? done / total : 1);
+        }, LOGO_BUDGET_MS),
+      )
+      .catch(() => {})
+      .finally(() => setLogoProgress(1)),
+  );
+
+  // Signal ready when chunk + data + logos are loaded (or the hard ceiling).
+  // The ceiling sits just past the logo budget so a slow/dead network still
+  // reveals the app; it never holds the splash longer than necessary.
   Promise.allSettled(loads).then(() => resolveReady());
-  setTimeout(resolveReady, 6000);
+  setTimeout(resolveReady, LOGO_BUDGET_MS + 2500);
 }
 
 /**

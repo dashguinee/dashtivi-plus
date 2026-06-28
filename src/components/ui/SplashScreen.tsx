@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { preloadReady } from '@/lib/preloader';
+import { preloadReady, getLogoProgress, onLogoProgress } from '@/lib/preloader';
 
 interface Props {
   onComplete: () => void;
@@ -8,6 +8,9 @@ interface Props {
 
 export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) => {
   const [phase, setPhase] = useState<'dark' | 'brand' | 'ready' | 'exit'>('dark');
+  // Determinate progress hint (0→1): the share of the ~600 logos cached so far.
+  // Lets the existing loading bar quietly fill while the shell front-loads.
+  const [progress, setProgress] = useState(() => getLogoProgress());
   const authRef = useRef(authReady);
   authRef.current = authReady;
 
@@ -16,12 +19,18 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
     // Remove the HTML pre-splash (it served its purpose — no white flash)
     document.getElementById('pre-splash')?.remove();
 
+    // Reflect logo-warm progress on the bar (subtle hint, no redesign).
+    const offProgress = onLogoProgress(setProgress);
+
     // Phase 1: dark → brand
     const t1 = setTimeout(() => setPhase('brand'), 500);
 
-    // Phase 2: wait for assets + minimum brand time. Trimmed to keep
-    // boot-to-interactive well under the 4s budget — a brief brand flash, then
-    // we're in. (Was 2800 + 2600 ≈ 5.4s of splash, the bulk of cold boot.)
+    // Phase 2: HOLD the splash until the app is TRULY fully loaded — the shell,
+    // the catalog AND every channel logo cached on-device — so the moment the
+    // interface is revealed it's complete + instant + offline-ready, and stays
+    // that way forever (only the video stream ever loads after this). This is a
+    // deliberate, one-time, slightly-longer FIRST splash for a forever-instant
+    // app; the preload budget (in the preloader) caps it so it can never hang.
     const minBrandTime = new Promise<void>(r => setTimeout(r, 1300));
 
     Promise.all([minBrandTime, preloadReady]).then(() => {
@@ -44,10 +53,11 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
       waitForAuth();
     });
 
-    // Failsafe — never stuck longer than 4s
-    const failsafe = setTimeout(() => { onComplete(); }, 4000);
+    // Failsafe — absolute ceiling so a dead network can never trap the user on
+    // the splash. Sits just past the logo-warm budget (preloader caps at ~14.5s).
+    const failsafe = setTimeout(() => { onComplete(); }, 16000);
 
-    return () => { clearTimeout(t1); clearTimeout(failsafe); };
+    return () => { clearTimeout(t1); clearTimeout(failsafe); offProgress(); };
   }, [onComplete]);
 
   return (
@@ -88,14 +98,22 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
           Bring Joy
         </p>
 
-        {/* Loading bar */}
+        {/* Loading bar — determinate once logo-warm starts (fills 0→100% as the
+            ~600 logos cache), falling back to the gentle pulse before then. */}
         <div
           className={`mt-5 mx-auto w-12 h-[2px] rounded-full overflow-hidden transition-opacity duration-500 ${
-            phase === 'brand' ? 'opacity-100' : 'opacity-0'
+            phase === 'brand' || phase === 'ready' ? 'opacity-100' : 'opacity-0'
           }`}
           style={{ background: 'rgba(255,255,255,0.04)' }}
         >
-          <div className="h-full w-full bg-primary/40 rounded-full" style={{ animation: 'loading-bar 1.5s ease-in-out infinite' }} />
+          {progress > 0 ? (
+            <div
+              className="h-full bg-primary/50 rounded-full origin-left transition-[width] duration-300 ease-out"
+              style={{ width: `${Math.round(progress * 100)}%` }}
+            />
+          ) : (
+            <div className="h-full w-full bg-primary/40 rounded-full" style={{ animation: 'loading-bar 1.5s ease-in-out infinite' }} />
+          )}
         </div>
 
       </div>

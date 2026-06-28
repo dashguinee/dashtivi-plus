@@ -16,6 +16,50 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+// ── Painted-source registry (durable, boot-seeded) ───────────────────
+// A URL is "painted" once it has rendered fully at least once on this device.
+// Logo + poster components consult this to decide their INITIAL opacity: a URL
+// already known-painted starts at full opacity (no fade-in), so art never
+// re-fades on a re-render, a scroll back, a tab reveal, or — crucially — after
+// a full reload/restart, because the registry is SEEDED from the Service
+// Worker's durable caches at boot (seedPaintedFromCache). This is what makes
+// the shell "always there, never re-fades", with only the video stream loading.
+const _painted = new Set<string>();
+
+/** Remember that a URL has fully painted (called from an <img> onLoad). */
+export function markPainted(url?: string | null): void {
+  if (url) _painted.add(url);
+}
+
+/** Has this exact URL already painted on this device (in-session or on disk)? */
+export function isPainted(url?: string | null): boolean {
+  return !!url && _painted.has(url);
+}
+
+// Cache names must match public/sw.js (durable logo cache + bounded poster cache).
+const _DURABLE_CACHES = ['tivi-logos-stable-1', 'tivi-img-stable-1'];
+
+/**
+ * Seed the painted registry from the SW's durable caches, so any logo/poster
+ * already stored on-device is treated as already-painted and renders at full
+ * opacity on the very first frame after a reload — zero re-fade. Best-effort:
+ * never throws, resolves quickly, and silently no-ops where Cache Storage is
+ * unavailable. Call once, early, before the shell renders.
+ */
+export async function seedPaintedFromCache(): Promise<void> {
+  try {
+    if (typeof caches === 'undefined') return;
+    for (const name of _DURABLE_CACHES) {
+      if (!(await caches.has(name))) continue;
+      const cache = await caches.open(name);
+      const keys = await cache.keys();
+      for (const req of keys) _painted.add(req.url);
+    }
+  } catch {
+    /* best-effort — a cold cache just means the first paint may fade in once */
+  }
+}
+
 // ── Decode-ahead cache ───────────────────────────────────────────────
 const _decoded = new Set<string>();
 

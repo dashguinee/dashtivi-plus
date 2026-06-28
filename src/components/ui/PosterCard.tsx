@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, memo } from 'react';
 import { Star, Clock } from 'lucide-react';
-import { prefetchDecode, useNearViewport } from '../../lib/imageLoading';
+import { prefetchDecode, useNearViewport, markPainted, isPainted } from '../../lib/imageLoading';
 
 import type { TmdbEntry } from '../../lib/tmdb-map.generated';
 import { TMDB_GENRES } from '../../lib/tmdb-map.generated';
@@ -57,10 +57,10 @@ function formatRuntime(minutes: number): string {
   return `${h}h ${m}m`;
 }
 
-// Process-wide cache of poster URLs that have painted once. Lets a card that
-// re-mounts (content-visibility reveal, grid re-render, re-entered route) show
-// its poster instantly at full opacity — no second shimmer, no re-fade pop.
-const POSTER_PAINTED = new Set<string>();
+// Poster paint-state lives in the shared painted registry (imageLoading), which
+// is seeded from the SW's durable poster cache at boot. A card that re-mounts
+// (content-visibility reveal, grid re-render, re-entered route, app restart)
+// shows its poster instantly at full opacity — no second shimmer, no re-fade.
 
 export const PosterCard = memo(function PosterCard({ title, poster, rating, categoryId, onClick, tmdbData, onTrailer, rank }: Props) {
   const badge = categoryId ? PLATFORM_BADGES[categoryId] : undefined;
@@ -72,8 +72,8 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
   const tmdbPoster = tmdbData?.p ? `https://image.tmdb.org/t/p/w342${tmdbData.p}` : null;
   // The poster URL actually being shown right now (first choice, then fallback).
   const activePoster = (safePoster && !imgFailed) ? safePoster : (tmdbPoster && !tmdbFailed) ? tmdbPoster : null;
-  const [imgLoaded, setImgLoaded] = useState(() => (activePoster ? POSTER_PAINTED.has(activePoster) : false));
-  const onImgLoad = useCallback(() => { if (activePoster) POSTER_PAINTED.add(activePoster); setImgLoaded(true); }, [activePoster]);
+  const [imgLoaded, setImgLoaded] = useState(() => isPainted(activePoster));
+  const onImgLoad = useCallback(() => { markPainted(activePoster); setImgLoaded(true); }, [activePoster]);
 
   // Anticipatory load: decode the poster ~one screen ahead + promote to
   // eager/high priority so it's painted before it scrolls into view.
