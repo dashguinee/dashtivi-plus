@@ -146,6 +146,7 @@ export function CategoryHero({
           0%,100% { transform: scale(0.94); opacity: 0.5; }
           50%     { transform: scale(1.12); opacity: 0.85; }
         }
+        @keyframes hero-play-spin-${uid} { to { transform: rotate(360deg); } }
         @keyframes hero-marquee-in-${uid} { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
 
@@ -246,19 +247,44 @@ export function CategoryHero({
               willChange: 'transform, opacity',
             }}
           />
-          {/* The mark — a single gradient play triangle. Light top edge → accent
-              → dark bottom gives intergalactic depth; the drop-shadow lifts it. */}
-          <div
+          {/* Orbiting loader trail — a thin accent arc that loops continuously
+              around the Beacon. Rotate transform on its OWN layer, infinite
+              linear, seamless (360 == 0). No box-shadow/pattern → zero crawl. */}
+          <svg
+            aria-hidden
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            viewBox="0 0 56 56"
+            style={{ animation: `hero-play-spin-${uid} 2.4s linear infinite`, willChange: 'transform' }}
+          >
+            <circle
+              cx="28" cy="28" r="24" fill="none"
+              stroke={accent} strokeWidth="2" strokeLinecap="round"
+              strokeDasharray="30 200" opacity="0.7"
+            />
+          </svg>
+          {/* The mark — a single gradient play triangle with SOFTENED corners
+              (round joins/caps). Light top edge → accent → dark = depth. */}
+          <svg
             className="relative"
-            style={{
-              width: 30,
-              height: 32,
-              marginLeft: 3,
-              clipPath: 'polygon(8% 4%, 8% 96%, 96% 50%)',
-              background: `linear-gradient(135deg, #ffffff 0%, ${accent} 46%, ${dark} 100%)`,
-              filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))',
-            }}
-          />
+            width="30" height="32" viewBox="0 0 30 32"
+            style={{ marginLeft: 3, filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))' }}
+          >
+            <defs>
+              <linearGradient id={`beacon-${uid}`} x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="46%" stopColor={accent} />
+                <stop offset="100%" stopColor={dark} />
+              </linearGradient>
+            </defs>
+            <path
+              d="M10 8 L10 24 L23 16 Z"
+              fill={`url(#beacon-${uid})`}
+              stroke={`url(#beacon-${uid})`}
+              strokeWidth="6"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+          </svg>
         </div>
       </div>
     </button>
