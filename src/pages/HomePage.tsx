@@ -66,6 +66,12 @@ const EXPERIENCE_ACCENT: Record<string, string> = {
   '4K Showcase': DASH_BLUE,
 };
 
+// Reserve the hero-deck's final height from the very first frame so the home
+// paints settled — the skeleton AND the loaded deck occupy this SAME box, so the
+// page never nudges down as the deck resolves. = one CategoryHero slide
+// (clamp(158, 22vh, 190)) + the dot-indicator row beneath it.
+const HERO_DECK_MIN_H = 'calc(clamp(158px, 22vh, 190px) + 18px)';
+
 // Clean a curated channel name for display — keep the FULL readable name,
 // just normalize whitespace (no truncation to "…orts HD1").
 function cleanName(name: string): string {
@@ -299,7 +305,11 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
             <div className="w-full aspect-video rounded-2xl bg-white/[0.03]" />
           </div>
         </section>
-        <div className="px-4 space-y-5">
+        {/* Hero-deck slot — same reserved box as the loaded HeroDeck. */}
+        <div className="px-4" style={{ minHeight: HERO_DECK_MIN_H }}>
+          <div className="w-full rounded-2xl bg-white/[0.03]" style={{ height: 'clamp(158px, 22vh, 190px)' }} />
+        </div>
+        <div className="px-4 space-y-5 mt-5">
           {[1, 2, 3].map((i) => (
             <div key={i}>
               <div className="h-4 w-32 rounded bg-white/[0.04] mb-3" />
@@ -372,28 +382,38 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
         <div className="relative z-10">
       {/* TOP HERO — the strongest live pick auto-plays at the top for everyone,
-          calm, no click. FreeHlsShowcaseCard owns the one live <video> surface. */}
-      {helloChannel && (
-        <section className="mb-8" style={{ animation: 'row-in 0.55s cubic-bezier(0.23,1,0.32,1) both' }}>
-          <div className="px-4 mb-2 flex items-center gap-3">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-70" style={{ background: DASH_BLUE }} />
-              <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: DASH_BLUE, boxShadow: '0 0 6px rgba(79,141,247,0.8)' }} />
-            </span>
-            <span className="text-[10px] font-black tracking-[2.5px] uppercase" style={{ color: '#93B8FF' }}>
-              {lang === 'fr' ? 'À l’instant' : 'Right now'}
-            </span>
-          </div>
+          calm, no click. FreeHlsShowcaseCard owns the one live <video> surface.
+          The section ALWAYS reserves its box (indicator row + aspect-video) so
+          when the live pick resolves it fills a held slot — the page never nudges. */}
+      <section className="mb-8" style={{ animation: 'row-in 0.55s cubic-bezier(0.23,1,0.32,1) both' }}>
+        <div className="px-4 mb-2 flex items-center gap-3" style={{ minHeight: 16 }}>
+          {helloChannel && (
+            <>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-70" style={{ background: DASH_BLUE }} />
+                <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: DASH_BLUE, boxShadow: '0 0 6px rgba(79,141,247,0.8)' }} />
+              </span>
+              <span className="text-[10px] font-black tracking-[2.5px] uppercase" style={{ color: '#93B8FF' }}>
+                {lang === 'fr' ? 'À l’instant' : 'Right now'}
+              </span>
+            </>
+          )}
+        </div>
+        {helloChannel ? (
           <FreeHlsShowcaseCard channel={helloChannel} onSurf={surfHello} priority />
-        </section>
-      )}
+        ) : (
+          <div className="px-4"><div className="w-full aspect-video rounded-2xl bg-white/[0.03]" /></div>
+        )}
+      </section>
 
       {/* ── The hero deck — swipe horizontally to glide through one cinematic
-          hero per category (World Cup first), each with its own accent.
-          Independent of the top hero above. ── */}
-      {heroSlides.length > 0 && (
-        <HeroDeck slides={heroSlides} lang={lang} />
-      )}
+          hero per category (World Cup first), each with its own accent. Wrapped
+          in the SAME reserved box the skeleton holds, so it never grows on load. */}
+      <div style={{ minHeight: HERO_DECK_MIN_H }}>
+        {heroSlides.length > 0 && (
+          <HeroDeck slides={heroSlides} lang={lang} />
+        )}
+      </div>
         </div>
       </div>
 
