@@ -583,7 +583,10 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
   if (!safeSrc) return renderTile(true);
 
   return (
-    <div ref={setNearRef} className={`${sizes[size]} relative rounded-xl overflow-hidden flex-shrink-0 ${className}`}>
+    // Eager tiles (in-row carousels) already load immediately, so we DON'T attach
+    // the near-viewport observer — it would flip `near` and force a one-time
+    // re-render as each tile scrolls in. Only lazy tiles need the anticipation.
+    <div ref={eager ? undefined : setNearRef} className={`${sizes[size]} relative rounded-xl overflow-hidden flex-shrink-0 ${className}`}>
       {/* QUIET tile behind — sizes the slot (no layout shift), no letters, so a
           loading logo never flashes initials. Fades out the instant the logo
           paints; if the logo fails we swap in the lettered tile (never blank). */}

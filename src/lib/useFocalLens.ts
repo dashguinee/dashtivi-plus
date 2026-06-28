@@ -66,35 +66,55 @@ export function useFocalLens<T extends HTMLElement = HTMLDivElement>(opts: LensO
     let ticking = false;
     let active = true; // false when offscreen or tab hidden
 
+    // Per-tile last-applied values — lets the WRITE pass skip no-op style writes
+    // (compositor stays quiet when the row is still or barely moving).
+    const lastApplied = new WeakMap<HTMLElement, { s: number; o: number; z: string }>();
+    // Scratch buffer reused across frames — zero per-frame allocation.
+    let focusBuf: number[] = [];
+
     const apply = () => {
       ticking = false;
-      if (!active || tiles.length === 0) return;
+      if (!active) return;
+      const n = tiles.length;
+      if (n === 0) return;
+
+      // ── READ PASS — every layout read first, so the browser flushes layout
+      //    ONCE per frame. No interleaved writes ⇒ zero layout thrashing. ──
       const rect = container.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
-      const firstW = tiles[0].getBoundingClientRect().width || 120;
-      const sigma = sigmaOpt ?? firstW * 1.15;
+      const sigma = sigmaOpt ?? ((tiles[0].offsetWidth || 120) * 1.15); // offsetWidth = unscaled
       const twoSigmaSq = 2 * sigma * sigma;
-
+      if (focusBuf.length !== n) focusBuf = new Array(n);
       let bestFocus = -1;
-      let hero: HTMLElement | null = null;
-
-      for (const tile of tiles) {
-        const r = tile.getBoundingClientRect();
-        const tc = r.left + r.width / 2;
-        const dist = tc - centerX;
-        // Gaussian bell: 1 at centre, smoothly → 0 toward the edges.
-        const focus = Math.exp(-(dist * dist) / twoSigmaSq);
-        const scale = minScale + (maxScale - minScale) * focus;
-        const opacity = minOpacity + (1 - minOpacity) * focus;
-        tile.style.transform = `scale(${scale.toFixed(4)})`;
-        tile.style.opacity = opacity.toFixed(3);
-        // Magnified tile must paint above its smaller neighbours.
-        tile.style.zIndex = focus > 0.5 ? '2' : '1';
-        if (focus > bestFocus) { bestFocus = focus; hero = tile; }
+      let heroIdx = -1;
+      for (let i = 0; i < n; i++) {
+        const r = tiles[i].getBoundingClientRect();
+        const dist = (r.left + r.width / 2) - centerX;
+        const focus = Math.exp(-(dist * dist) / twoSigmaSq); // gaussian bell, 1 centre → 0 edges
+        focusBuf[i] = focus;
+        if (focus > bestFocus) { bestFocus = focus; heroIdx = i; }
       }
 
-      // BEAM: glow only the most-centred tile, and only when it's truly centred.
-      // Toggled on hero CHANGE (not every frame) → near-zero cost.
+      // ── WRITE PASS — transform/opacity only (GPU; no layout/paint reflow). ──
+      for (let i = 0; i < n; i++) {
+        const tile = tiles[i];
+        const focus = focusBuf[i];
+        const scale = minScale + (maxScale - minScale) * focus;
+        const opacity = minOpacity + (1 - minOpacity) * focus;
+        const z = focus > 0.5 ? '2' : '1';
+        const prev = lastApplied.get(tile);
+        if (prev && Math.abs(prev.s - scale) < 0.002 && Math.abs(prev.o - opacity) < 0.004 && prev.z === z) {
+          continue; // imperceptible delta — skip the write
+        }
+        tile.style.transform = `scale(${scale.toFixed(4)})`;
+        tile.style.opacity = opacity.toFixed(3);
+        if (!prev || prev.z !== z) tile.style.zIndex = z; // magnified tile paints above neighbours
+        lastApplied.set(tile, { s: scale, o: opacity, z });
+      }
+
+      // BEAM: glow only the most-centred tile, toggled on hero CHANGE (not every
+      // frame) → near-zero cost.
+      const hero = heroIdx >= 0 ? tiles[heroIdx] : null;
       if (hero !== currentHero) {
         currentHero?.classList.remove('lens-hero');
         if (hero && bestFocus > 0.62) { hero.classList.add('lens-hero'); currentHero = hero; }
