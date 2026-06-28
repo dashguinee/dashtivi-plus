@@ -253,16 +253,99 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
     });
   }
 
+  // ── Ambient bloom drift — the bloom is alive: it wanders organically around
+  // its center, and its motion mirrors the user's energy. Scrolling feeds a
+  // decaying "energy" value; drift speed + amplitude both scale with it, so it
+  // moves while you scroll and settles to rest when idle. ONE rAF loop,
+  // transform-only per frame (no layout/paint/opacity), and it SLEEPS fully
+  // when idle or the tab is hidden — resuming on the next scroll. Visuals
+  // (color/size/position/gradient) are never touched, only the drift transform.
+  const bloomRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = bloomRef.current;
+    if (!el || typeof window === 'undefined') return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+
+    let energy = 0;            // 0 = at rest, 1 = actively scrolling
+    let t = 0;                 // organic phase clock (faster when energetic)
+    let last = performance.now();
+    let raf = 0;
+    let running = false;
+
+    const AMP_X = 13, AMP_Y = 9, SCALE = 0.012; // small — a whisper, not a lamp
+
+    const frame = (now: number) => {
+      const dt = Math.min(0.05, (now - last) / 1000); // clamp tab-switch jumps
+      last = now;
+
+      // Energy decays toward 0 when no scroll feeds it (~0.7s gentle tail).
+      energy = Math.max(0, energy - dt * 1.45);
+      // Phase advances; slow drift when calm, livelier while scrolling.
+      t += dt * (0.25 + energy * 1.4);
+
+      // Organic wander = sum of detuned sines → a non-mechanical path.
+      const nx = (Math.sin(t * 0.62) + 0.5 * Math.sin(t * 1.13 + 1.3)) / 1.5;
+      const ny = (Math.cos(t * 0.51) + 0.5 * Math.sin(t * 0.91 + 0.7)) / 1.5;
+      const a = energy; // amplitude tracks energy → idle settles to center
+
+      const dx = (nx * AMP_X * a).toFixed(2);
+      const dy = (ny * AMP_Y * a).toFixed(2);
+      const sc = (1 + SCALE * a).toFixed(4);
+      el.style.transform = `translate3d(${dx}px, ${dy}px, 0) scale(${sc})`;
+
+      if (energy <= 0.001) {
+        // Fully settle, then SLEEP (battery). Next scroll wakes it.
+        el.style.transform = 'translate3d(0,0,0) scale(1)';
+        running = false;
+        return;
+      }
+      raf = requestAnimationFrame(frame);
+    };
+
+    const start = () => {
+      if (running || document.hidden) return;
+      running = true;
+      last = performance.now();
+      raf = requestAnimationFrame(frame);
+    };
+
+    // Scroll handler stays O(1): feed energy, (re)start the loop. capture:true
+    // catches inner scroll containers too (scroll doesn't bubble).
+    const onScroll = () => {
+      energy = Math.min(1, energy + 0.34);
+      start();
+    };
+    const onVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(raf);
+        running = false;
+      } else if (energy > 0.001) {
+        start();
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('scroll', onScroll, { capture: true } as EventListenerOptions);
+      document.removeEventListener('visibilitychange', onVisibility);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
   return (
     <div className="pt-16 pb-48">
       {/* Ambient bloom — a soft blue-white halo that lifts the dark canvas.
           ONE fixed, composited radial: GPU-cheap, no blur filter, no per-tile
-          cost, never repaints on scroll. A breath of light, not a glow. */}
+          cost. It DRIFTS organically (transform-only) — alive, mirroring the
+          user's energy (see the rAF loop above). Visuals untouched. */}
       <div
+        ref={bloomRef}
         aria-hidden
         className="fixed inset-0 pointer-events-none"
         style={{
           zIndex: -1,
+          willChange: 'transform',
           background:
             'radial-gradient(62% 40% at 50% 38%, rgba(79,141,247,0.10) 0%, rgba(255,255,255,0.05) 30%, transparent 70%)',
         }}
