@@ -150,7 +150,7 @@ export const SmartMatch: React.FC<SmartMatchProps> = ({
 
   return (
     <div
-      className={`absolute bottom-[130px] sm:bottom-[140px] left-0 right-0 z-30 transition-[opacity,transform] duration-300
+      className={`absolute bottom-[92px] sm:bottom-[100px] left-0 right-0 z-30 transition-[opacity,transform] duration-300
                   ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'}`}
     >
       <div

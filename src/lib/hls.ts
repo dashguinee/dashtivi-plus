@@ -151,6 +151,19 @@ export async function createHlsPlayer(
       return;
     }
 
+    // ── PiP SURVIVAL: while we ARE the floating Picture-in-Picture window (the app is
+    // typically backgrounded), NEVER tear the stream down on a transient fatal error —
+    // keep recovering so the OS PiP window keeps playing. Backgrounding throttles the
+    // network/decoder and can briefly surface fatal errors; destroying here is what
+    // kills PiP. Normal (foreground) teardown resumes once we're not in PiP.
+    if (typeof document !== 'undefined' && document.pictureInPictureElement) {
+      try {
+        if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
+        else hls.startLoad();
+      } catch { /* loader mid-teardown — ignore */ }
+      return;
+    }
+
     switch (data.type) {
       case Hls.ErrorTypes.NETWORK_ERROR:
         if (retryCount < 6) {

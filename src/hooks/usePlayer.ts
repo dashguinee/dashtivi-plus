@@ -46,6 +46,7 @@ export function usePlayer() {
   const snapshotTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined); // Safety: auto-clears frozen-frame overlay if stream never renders
   const playGeneration = useRef(0); // Guards against stale handlers from rapid channel switches
   const userMutedRef = useRef(false); // Tracks explicit user mute — respected across channel switches
+  const userPausedRef = useRef(false); // Tracks explicit user pause — so PiP keep-alive never fights a deliberate pause
   const wasPiPRef = useRef(false); // User intent: was in PiP — re-request after source swap
   const switchingPiPRef = useRef(false); // True while a channel switch drops PiP (suppresses intent-clear)
   const pendingSeekRef = useRef(0); // Smart-resume: seconds to seek to once a direct-VOD stream is ready (0 = none)
@@ -105,6 +106,8 @@ export function usePlayer() {
       disconnectBoost();
       // Smart-resume: clear any stale pending direct-VOD seek from a prior play.
       pendingSeekRef.current = 0;
+      // New channel = fresh intent; clear any prior deliberate-pause flag.
+      userPausedRef.current = false;
 
       // If we're currently in PiP, the imminent src swap will auto-drop it. Flag this
       // so the leave listener doesn't treat it as a user-intent change — we re-request
@@ -367,6 +370,13 @@ export function usePlayer() {
 
           video.onerror = (evt) => {
             if (isStale()) return;
+            // PiP survival: while we're the floating PiP window (backgrounded), a transient
+            // media error must NOT reassign src (that drops PiP) or surface a terminal error.
+            // Nudge playback and keep the stream alive — real teardown waits for foreground.
+            if (typeof document !== 'undefined' && document.pictureInPictureElement === video) {
+              video.play().catch(() => {});
+              return;
+            }
             if (retryCount < maxRetries) {
               retryCount++;
               setState((prev) => ({ ...prev, error: `Retry ${retryCount}/${maxRetries}`, isPlaying: false }));
@@ -723,8 +733,10 @@ export function usePlayer() {
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) {
+      userPausedRef.current = false;
       video.play().catch(() => {});
     } else {
+      userPausedRef.current = true; // deliberate pause — PiP keep-alive must respect it
       video.pause();
     }
   }, []);
@@ -946,6 +958,25 @@ export function usePlayer() {
       video.removeEventListener('enterpictureinpicture', enter);
       video.removeEventListener('leavepictureinpicture', leave);
     };
+  }, []);
+
+  // ── PiP SURVIVES BACKGROUNDING ────────────────────────────────────────────
+  // When the document goes hidden (app backgrounded / screen locked) while the
+  // <video> is the active Picture-in-Picture element, the OS keeps the floating
+  // window alive — but ONLY if we don't pause or tear the stream down. We never
+  // pause on hide; this is a belt-and-suspenders that re-asserts playback if
+  // browser throttling / a transient stall paused it while hidden, UNLESS the user
+  // deliberately paused. Non-PiP backgrounding behavior is left completely untouched.
+  useEffect(() => {
+    const onVisibility = () => {
+      if (!document.hidden) return;
+      const video = videoRef.current;
+      if (!video || document.pictureInPictureElement !== video) return; // only when WE are PiP
+      if (userPausedRef.current) return; // respect a deliberate pause
+      if (video.paused) video.play().catch(() => {});
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
   const dismissStreamLimit = useCallback(() => setStreamLimit(null), []);

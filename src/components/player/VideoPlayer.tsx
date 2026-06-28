@@ -243,49 +243,105 @@ export const VideoPlayer: React.FC<Props> = ({
   const cinemaMinTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const cinemaMaxTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Trigger cinema intro when a VOD channel starts loading
+  // Trigger the cinema intro when a VOD channel begins.
   const cinemaAbortedRef = useRef(false);
   const cinemaMutedByUsRef = useRef(false); // tracks if cinema intro owns the mute
+  // ── ROOT-CAUSE FIX (movies black) ─────────────────────────────────────────
+  // Keyed on the channel ID ONLY — never on state.isLoading. isLoading toggles
+  // constantly (the early isLoading:false in playChannel, every buffer stall), and
+  // the previous version's cleanup cleared the cinema timers + unmuted on EVERY
+  // toggle. That stranded `cinemaMinTimeRef=false` forever, so the dismiss effect
+  // never fired and `showCinemaIntro` stayed true — the black intro / blackout sat
+  // ON TOP of a playing movie (controls portal renders over the persistent <video>).
+  // Now the timers are armed once per actual channel change; teardown is unmount-only.
   useEffect(() => {
-    const isVod = state.channel?.category === 'movie' || state.channel?.category === 'series';
-    const channelId = state.channel?.id ?? null;
+    const ch = state.channel;
+    const channelId = ch?.id ?? null;
+    const isVodCh = ch?.category === 'movie' || ch?.category === 'series';
 
-    if (isVod && state.isLoading && channelId !== cinemaChannelRef.current) {
-      cinemaChannelRef.current = channelId;
-      cinemaMinTimeRef.current = false;
-      cinemaAbortedRef.current = false;
-      setShowCinemaIntro(true);
-      // Mute during cinema intro — directly, without touching userMutedRef
-      if (videoRef.current && !state.isMuted) {
-        videoRef.current.muted = true;
-        cinemaMutedByUsRef.current = true;
-      }
-      cinemaMinTimerRef.current = setTimeout(() => { cinemaMinTimeRef.current = true; }, 2500);
-      // Bug 2 fix: check aborted flag before unmuting at max timeout
-      cinemaMaxTimerRef.current = setTimeout(() => {
-        if (cinemaAbortedRef.current) return;
-        // Cinema time expired — transition to black screen, unmute deferred to blackout lift
-        setShowCinemaIntro(false);
-        setPostCinemaBlackout(true);
-        setControlsVisible(false);
-      }, 8000);
-    } else if (!state.channel) {
+    if (!channelId) {
       cinemaChannelRef.current = null;
       setShowCinemaIntro(false);
       setPostCinemaBlackout(false);
+      return;
+    }
+    if (channelId === cinemaChannelRef.current) return; // same channel — don't re-arm
+    cinemaChannelRef.current = channelId;
+
+    // Reset any in-flight cinema timers from a previous channel.
+    clearTimeout(cinemaMinTimerRef.current);
+    clearTimeout(cinemaMaxTimerRef.current);
+
+    if (!isVodCh) {
+      // Live channel — no cinema intro; ensure no black overlay lingers.
+      setShowCinemaIntro(false);
+      setPostCinemaBlackout(false);
+      return;
     }
 
-    return () => {
-      cinemaAbortedRef.current = true;
-      clearTimeout(cinemaMinTimerRef.current);
-      clearTimeout(cinemaMaxTimerRef.current);
-      // Only unmute if cinema intro owned the mute — don't force unmute on channel switch
+    // VOD — run the DASH cinema bumper while the movie buffers.
+    cinemaMinTimeRef.current = false;
+    cinemaAbortedRef.current = false;
+    setShowCinemaIntro(true);
+    setPostCinemaBlackout(false);
+    if (videoRef.current && !state.isMuted) {
+      videoRef.current.muted = true;
+      cinemaMutedByUsRef.current = true;
+    }
+    cinemaMinTimerRef.current = setTimeout(() => { cinemaMinTimeRef.current = true; }, 2500);
+    cinemaMaxTimerRef.current = setTimeout(() => {
+      if (cinemaAbortedRef.current) return;
+      // Bumper time expired without frames — fall back to the pure-black hold; the
+      // safety-lift effect below guarantees this can never strand the viewer.
+      setShowCinemaIntro(false);
+      setPostCinemaBlackout(true);
+      setControlsVisible(false);
+    }, 8000);
+  }, [state.channel?.id]);
+
+  // Cinema timers: cleared only on unmount (channel-change resets happen above).
+  useEffect(() => () => {
+    clearTimeout(cinemaMinTimerRef.current);
+    clearTimeout(cinemaMaxTimerRef.current);
+  }, []);
+
+  // ── SAFETY: a movie must NEVER sit behind a stuck black overlay. ───────────
+  // The cinema intro + post-cinema blackout are black layers above the <video>. If
+  // any state event is missed they can strand the viewer on a black screen with
+  // audio. This force-LIFTS both the instant the stream actually presents frames
+  // (readyState≥3 + clock advancing), after a brief min-hold so the bumper breathes,
+  // and hard-caps them with an absolute timeout. It only ever CLEARS black overlays.
+  useEffect(() => {
+    if (!showCinemaIntro && !postCinemaBlackout) return;
+    const video = videoRef.current;
+    const start = Date.now();
+    const lift = () => {
       if (cinemaMutedByUsRef.current && videoRef.current) {
         videoRef.current.muted = false;
+        cinemaMutedByUsRef.current = false;
       }
-      cinemaMutedByUsRef.current = false;
+      cinemaAbortedRef.current = true;
+      setShowCinemaIntro(false);
+      setPostCinemaBlackout(false);
     };
-  }, [state.channel, state.isLoading]);
+    const onFrame = () => {
+      const v = videoRef.current;
+      if (v && !v.paused && v.readyState >= 3 && v.currentTime > 0 && Date.now() - start >= 1200) lift();
+    };
+    onFrame(); // already presenting? lift (respecting the min-hold).
+    const minHoldCheck = setTimeout(onFrame, 1300); // re-check right after the min-hold
+    video?.addEventListener('timeupdate', onFrame);
+    video?.addEventListener('playing', onFrame);
+    video?.addEventListener('loadeddata', onFrame);
+    const hardCap = setTimeout(lift, 9000); // absolute — black can never outlive this
+    return () => {
+      clearTimeout(minHoldCheck);
+      clearTimeout(hardCap);
+      video?.removeEventListener('timeupdate', onFrame);
+      video?.removeEventListener('playing', onFrame);
+      video?.removeEventListener('loadeddata', onFrame);
+    };
+  }, [showCinemaIntro, postCinemaBlackout]);
 
   // Dismiss cinema intro when video starts playing AND min time elapsed
   useEffect(() => {
@@ -1264,7 +1320,7 @@ function ChannelCarousel({
 
   return (
     <div
-      className={`absolute bottom-[72px] sm:bottom-[80px] left-0 right-0 z-30 transition-[opacity,transform] duration-300
+      className={`absolute bottom-[164px] sm:bottom-[176px] left-0 right-0 z-30 transition-[opacity,transform] duration-300
                   ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
     >
       {/* Glass background */}

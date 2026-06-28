@@ -109,7 +109,7 @@ export const PlayerControls: React.FC<Props> = ({
 
   return (
     <div
-      className={`absolute inset-0 flex flex-col justify-between transition-opacity duration-200 ${
+      className={`absolute inset-0 flex flex-col justify-between transition-opacity duration-[550ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
         visible ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}
     >
@@ -121,6 +121,10 @@ export const PlayerControls: React.FC<Props> = ({
           paddingTop: 'max(1rem, env(safe-area-inset-top))',
           paddingLeft: 'max(1rem, env(safe-area-inset-left))',
           paddingRight: 'max(1rem, env(safe-area-inset-right))',
+          // Staged exit: the top bar lifts up as it fades. Pairs with the bottom bar's
+          // downward drift for an elegant, choreographed dissolve (not an abrupt vanish).
+          transform: visible ? 'translateY(0)' : 'translateY(-14px)',
+          transition: 'transform 550ms cubic-bezier(0.4,0,0.2,1)',
         }}
       >
         <div className="flex items-center gap-3">
@@ -176,7 +180,15 @@ export const PlayerControls: React.FC<Props> = ({
       </div>
 
       {/* Bottom controls */}
-      <div className="player-controls-gradient p-4 pt-8">
+      <div
+        className="player-controls-gradient p-4 pt-8"
+        style={{
+          // Staged exit: the bottom bar drifts down as it fades, a beat behind the top
+          // bar (40ms stagger) — the controls retreat gracefully instead of snapping off.
+          transform: visible ? 'translateY(0)' : 'translateY(16px)',
+          transition: 'transform 550ms cubic-bezier(0.4,0,0.2,1) 40ms',
+        }}
+      >
         {/* Progress bar — seek for mp4 passthrough, display-only for remux */}
         {isVod && state.duration > 0 ? (
           <div className="flex items-center gap-3 mb-4">
