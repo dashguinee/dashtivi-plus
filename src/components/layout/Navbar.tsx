@@ -21,16 +21,51 @@ interface NavItem {
 // silhouette and one subtle low-opacity "structure" line each — clean, premium,
 // a touch intergalactic (DBS visual language).
 
-// HOME — a refined geometric house: peaked roof, soft-radius base, and a slim
-// arched portal (door) that reads warm + designed, not generic. (The faint
-// horizontal eave line was removed per Aziz — it read as a weird stray stroke.)
-const HomeGlyph: React.FC<GlyphProps> = ({ strokeWidth = 1.8, size: _s, ...props }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth as number}
-    strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="M3.5 11 L12 3.7 L20.5 11 V18.7 Q20.5 21 18.3 21 H5.7 Q3.5 21 3.5 18.7 Z" />
-    <path d="M9.7 21 V15.8 Q9.7 13.2 12 13.2 Q14.3 13.2 14.3 15.8 V21" />
-  </svg>
-);
+// HOME — the refined geometric house (peaked roof, soft-radius base, slim arched
+// door), now with CHARACTER: golden DASH shades on the house + door (a top-lit
+// gold gradient, not a flat fill) and a tiny warm neon glow inside the doorway —
+// the home lit from within. Unique gradient ids per instance (useId) so the
+// mobile + desktop copies never collide as paint servers.
+const HomeGlyph: React.FC<GlyphProps> = ({ strokeWidth = 1.8, size: _s, ...props }) => {
+  const uid = React.useId();
+  const gGold = `hgGold-${uid}`;
+  const gDoor = `hgDoor-${uid}`;
+  const fBlur = `hgBlur-${uid}`;
+  const house = 'M3.5 11 L12 3.7 L20.5 11 V18.7 Q20.5 21 18.3 21 H5.7 Q3.5 21 3.5 18.7 Z';
+  return (
+    <svg viewBox="0 0 24 24" fill="none" {...props}>
+      <defs>
+        {/* DASH gold, top-lit → bronze base, for depth (not flat) */}
+        <linearGradient id={gGold} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFE9A8" />
+          <stop offset="42%" stopColor="#FFD700" />
+          <stop offset="100%" stopColor="#E0A93E" />
+        </linearGradient>
+        {/* warm neon — lit from within the doorway */}
+        <radialGradient id={gDoor} cx="50%" cy="74%" r="72%">
+          <stop offset="0%" stopColor="#FFF6CC" stopOpacity="1" />
+          <stop offset="50%" stopColor="#FFD24A" stopOpacity="0.85" />
+          <stop offset="100%" stopColor="#E0A93E" stopOpacity="0.1" />
+        </radialGradient>
+        <filter id={fBlur} x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="0.5" />
+        </filter>
+      </defs>
+      {/* gold wash over the whole house — golden warmth on roof + body */}
+      <path d={house} fill={`url(#${gGold})`} fillOpacity="0.17" />
+      {/* neon-lit doorway — soft glowing fill */}
+      <path d="M9.7 21 V15.8 Q9.7 13.2 12 13.2 Q14.3 13.2 14.3 15.8 V21 Z"
+        fill={`url(#${gDoor})`} filter={`url(#${fBlur})`} />
+      {/* house outline — golden shades */}
+      <path d={house} fill="none" stroke={`url(#${gGold})`} strokeWidth={strokeWidth as number}
+        strokeLinecap="round" strokeLinejoin="round" />
+      {/* arched door outline — golden */}
+      <path d="M9.7 21 V15.8 Q9.7 13.2 12 13.2 Q14.3 13.2 14.3 15.8 V21"
+        fill="none" stroke={`url(#${gGold})`} strokeWidth={strokeWidth as number}
+        strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+};
 
 // BIBLIO — a small library: three upright spines of varied height with rounded
 // tops + one book leaning into the stack, all resting on a faint shelf line.
