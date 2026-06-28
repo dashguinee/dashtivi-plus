@@ -57,6 +57,9 @@ export const TiviModeToggle: React.FC = () => {
       onClick={onTap}
       aria-label="Vee — tap to cycle Movies / Series / Live / Home"
       className="relative flex items-center justify-center h-full w-14"
+      // Exact 1px left-shift, equal to Biblio's, so V + Biblio nudge left together
+      // while Home + Dahub hold their spots (visual only — no reflow).
+      style={{ transform: 'translateX(-1px)' }}
     >
       <style>{`
         @keyframes vee-breathe {

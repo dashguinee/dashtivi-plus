@@ -22,6 +22,7 @@ const SHELL = [
   '/manifest.json',
   '/tivi-curated.json',
   '/streamore-locked.json',
+  '/streamore-gems.json', // catalog dependency — needed to build the offline catalog
   '/tivi-192.png',
   '/tivi-512.png',
 ];
@@ -173,6 +174,19 @@ self.addEventListener('fetch', (event) => {
     /\.(png|webp|svg|jpg|jpeg|ico|gif)(\?|$)/i.test(url)
   ) {
     event.respondWith(imageCacheFirst(request));
+    return;
+  }
+
+  // --- FONTS (cross-origin): cache-first so the type system works OFFLINE.
+  // Google Fonts + Fontshare (Clash Display) are cross-origin, so they must be
+  // caught HERE, before the same-origin gate below (which would otherwise skip
+  // them and leave the app font-less offline). Immutable — cache once forever.
+  if (
+    url.includes('fonts.googleapis.com') ||
+    url.includes('fonts.gstatic.com') ||
+    url.includes('fontshare.com')
+  ) {
+    event.respondWith(cacheFirstThenNetwork(request));
     return;
   }
 

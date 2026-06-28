@@ -73,11 +73,26 @@ const TestChannelsPage = lazyRetry(() => import('@/pages/TestChannelsPage'));
 // memory, no Suspense flash. Runs once, only when the browser is idle, so it never
 // competes with the first paint. Cheap (the chunks are tiny + then cached by the SW).
 (() => {
+  // Primary nav chunks — warmed first so the most-used switches are instant.
   const warm = () => {
     import('@/pages/MoviesPage');
     import('@/pages/SeriesPage');
     import('@/pages/LiveTVPage');
     import('@/pages/ExperienceHomePage');
+  };
+  // EVERY remaining page chunk — warmed on a later idle window so the FIRST
+  // visit to ANY page never hits the Suspense skeleton (the page-switch glitch),
+  // and so all route JS lands in the SW runtime cache → every page works OFFLINE
+  // after the first online session. Spread over idle so it never competes with
+  // first paint and stays gentle on weak West-African networks.
+  const warmRest = () => {
+    import('@/pages/FrenchPage').catch(() => {});
+    import('@/pages/DaHubPage').catch(() => {});
+    import('@/pages/PlatformsPage').catch(() => {});
+    import('@/pages/ExplorePage').catch(() => {});
+    import('@/pages/NbaPage').catch(() => {});
+    import('@/pages/LibraryPage').catch(() => {});
+    import('@/pages/WelcomePage').catch(() => {});
   };
   // SNAPPY PLAY: the hls.js engine (~162KB gzip) is lazy-loaded on first play.
   // On weak West-African networks that download would block the very first
@@ -90,10 +105,12 @@ const TestChannelsPage = lazyRetry(() => import('@/pages/TestChannelsPage'));
   const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void }).requestIdleCallback;
   if (ric) {
     ric(warm, { timeout: 4000 });
-    ric(warmPlayerEngine, { timeout: 8000 });
+    ric(warmRest, { timeout: 7000 });
+    ric(warmPlayerEngine, { timeout: 9000 });
   } else {
     setTimeout(warm, 2500);
-    setTimeout(warmPlayerEngine, 5000);
+    setTimeout(warmRest, 4500);
+    setTimeout(warmPlayerEngine, 6500);
   }
 })();
 

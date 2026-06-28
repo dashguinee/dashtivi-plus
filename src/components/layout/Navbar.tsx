@@ -1,25 +1,57 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Tv, Users, BookOpen, Sparkles } from 'lucide-react';
+import { Tv, Users, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
 import { tap } from '@/lib/haptics';
 import { TiviModeToggle, useVeeCycle } from './TiviModeToggle';
 
+type GlyphProps = React.SVGProps<SVGSVGElement> & { size?: string | number };
+
 interface NavItem {
   path: string;
   labelKey: TranslationKey;
-  icon: React.FC<React.SVGProps<SVGSVGElement> & { size?: string | number }>;
+  icon: React.FC<GlyphProps>;
   isVee?: boolean;
 }
+
+// ── BESPOKE DASH NAV GLYPHS ───────────────────────────────────────────────
+// Hand-drawn, not stock lucide. Monochrome `currentColor` stroke so they sit
+// with the silver Dahub + the V pebble. Rounded joins, a peaked/geometric
+// silhouette and one subtle low-opacity "structure" line each — clean, premium,
+// a touch intergalactic (DBS visual language).
+
+// HOME — a refined geometric house: peaked roof, soft-radius base, a faint eave
+// line, and a slim arched portal (door) that reads warm + designed, not generic.
+const HomeGlyph: React.FC<GlyphProps> = ({ strokeWidth = 1.8, size: _s, ...props }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth as number}
+    strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M3.5 11 L12 3.7 L20.5 11 V18.7 Q20.5 21 18.3 21 H5.7 Q3.5 21 3.5 18.7 Z" />
+    <path d="M3.5 11 H20.5" opacity="0.5" />
+    <path d="M9.7 21 V15.8 Q9.7 13.2 12 13.2 Q14.3 13.2 14.3 15.8 V21" />
+  </svg>
+);
+
+// BIBLIO — a small library: three upright spines of varied height with rounded
+// tops + one book leaning into the stack, all resting on a faint shelf line.
+const BiblioGlyph: React.FC<GlyphProps> = ({ strokeWidth = 1.8, size: _s, ...props }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth as number}
+    strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M4.6 9.7 Q4.6 8.6 5.7 8.6 H6.8 Q7.9 8.6 7.9 9.7 V19.3 H4.6 Z" />
+    <path d="M8.7 7.7 Q8.7 6.6 9.8 6.6 H10.9 Q12 6.6 12 7.7 V19.3 H8.7 Z" />
+    <path d="M12.8 9.1 Q12.8 8 13.9 8 H15 Q16.1 8 16.1 9.1 V19.3 H12.8 Z" />
+    <path d="M16.9 19.3 L18.6 10.3 L20.3 10.7 L18.6 19.3 Z" />
+    <path d="M3.7 19.3 H20.3" opacity="0.5" />
+  </svg>
+);
 
 // FINAL nav (Aziz, 2026-06-27): Home · Biblio · Vee · Dahub. Exactly 4.
 // Live TV is NOT a direct tab — it's reached through Vee's cycle.
 // Slot 3 (Vee) is a CYCLING navigator + the visual hero of the bar:
 // each tap advances Movies → Series → Live → Home (TiviModeToggle).
 const NAV_ITEMS: NavItem[] = [
-  { path: '/', labelKey: 'navHome', icon: Home },
-  { path: '/library', labelKey: 'navBiblio', icon: BookOpen },
+  { path: '/', labelKey: 'navHome', icon: HomeGlyph },
+  { path: '/library', labelKey: 'navBiblio', icon: BiblioGlyph },
   { path: '/__vee__', labelKey: 'navVee', icon: Sparkles, isVee: true },
   { path: '/hub', labelKey: 'navDahub', icon: Users },
 ];
@@ -32,35 +64,9 @@ export const Navbar: React.FC = () => {
   const sidebarHoverRef = useRef(false);
   const [sidebarHover, setSidebarHoverState] = React.useState(false);
 
-  // ── Nav visibility: 3-tier fade ──
-  // Scrolling → 30%  |  Idle 2s → 100%  |  Idle 5s more → 15% ghost
-  const fadeRef = useRef<'full' | 'dim' | 'ghost'>('full');
-  const [navOpacity, setNavOpacity] = React.useState<'full' | 'dim' | 'ghost'>('full');
-  const dimTimer = useRef<ReturnType<typeof setTimeout>>();
-  const ghostTimer = useRef<ReturnType<typeof setTimeout>>();
-
-  useEffect(() => {
-    const onScroll = () => {
-      clearTimeout(dimTimer.current);
-      clearTimeout(ghostTimer.current);
-      if (window.scrollY < 80) {
-        if (fadeRef.current !== 'full') { fadeRef.current = 'full'; setNavOpacity('full'); }
-        return;
-      }
-      // Scrolling → dim
-      if (fadeRef.current !== 'dim') { fadeRef.current = 'dim'; setNavOpacity('dim'); }
-      // Idle 2s → full
-      dimTimer.current = setTimeout(() => {
-        fadeRef.current = 'full'; setNavOpacity('full');
-        // Idle 5s more → ghost
-        ghostTimer.current = setTimeout(() => {
-          if (window.scrollY > 80) { fadeRef.current = 'ghost'; setNavOpacity('ghost'); }
-        }, 5000);
-      }, 2000);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => { window.removeEventListener('scroll', onScroll); clearTimeout(dimTimer.current); clearTimeout(ghostTimer.current); };
-  }, []);
+  // Bottom nav is FIXED + STEADY — it must not move, hide, dim, or transform on
+  // scroll. (The old 3-tier scroll-fade — dim on scroll, ghost when idle — was
+  // removed: Aziz wants the bar scroll-immune.)
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -73,19 +79,10 @@ export const Navbar: React.FC = () => {
   const FULL_GLOW_TABS = new Set(['/', '/hub']);
 
   const handleTap = useCallback((path: string) => {
-    // Wake from ghost
-    clearTimeout(ghostTimer.current);
-    if (fadeRef.current !== 'full') { fadeRef.current = 'full'; setNavOpacity('full'); }
-
-    // Home & Hub = full glow, Live/Movies/Series = soft glow
+    // Home & Hub = full glow, Live/Movies/Series = soft glow (tap feedback only).
     clearTimeout(glowTimer.current);
     setNavGlow(FULL_GLOW_TABS.has(path) ? 'full' : 'soft');
     glowTimer.current = setTimeout(() => setNavGlow(false), 2000);
-
-    // Re-arm ghost timer
-    ghostTimer.current = setTimeout(() => {
-      if (window.scrollY > 80) { fadeRef.current = 'ghost'; setNavOpacity('ghost'); }
-    }, 7000);
     navigate(path);
   }, [navigate]);
 
@@ -118,6 +115,9 @@ export const Navbar: React.FC = () => {
         onPointerDown={() => tap()}
         onClick={() => handleTap(item.path)}
         className="relative flex flex-col items-center justify-center w-12 h-full"
+        // Exact 1px left-shift for Biblio (matches the V pebble's 1px); Home and
+        // Dahub stay put. translateX is visual only, so it doesn't reflow the others.
+        style={isBiblio ? { transform: 'translateX(-1px)' } : undefined}
       >
         {/* Icon — lifts up when active */}
         <div
@@ -195,12 +195,7 @@ export const Navbar: React.FC = () => {
       <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-5 pb-4 pt-2 pointer-events-none safe-bottom"
         style={{
           transform: 'translateZ(0)',
-          opacity: navOpacity === 'dim' ? 0.3 : navOpacity === 'ghost' ? 0.12 : 1,
-          transition: navOpacity === 'dim'
-            ? 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1)'
-            : navOpacity === 'ghost'
-              ? 'opacity 2s cubic-bezier(0.16, 1, 0.3, 1)'
-              : 'opacity 0.4s ease-out',
+          opacity: 1,
         }}
       >
         <div
