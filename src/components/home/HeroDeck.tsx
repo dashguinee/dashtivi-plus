@@ -325,18 +325,19 @@ export function HeroDeck({
             above the track (NOT translated by it) so it tracks the finger in
             viewport space. Opacity rides drag magnitude; dissolves on settle. */}
         <div
-          className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden"
+          className="pointer-events-none absolute inset-0"
           style={{
             zIndex: 8,
             opacity: dragActive ? 1 : 0,
             transition: 'opacity 0.32s ease-out',
-            // FEATHER the lit panel's TOP + BOTTOM edges. The glow streak runs
-            // full-height; clipped at the card's rectangle it left a HARD
-            // horizontal edge right above the pagination dots. A vertical mask
-            // dissolves the light before it reaches either edge → no sharp band,
-            // nothing clashing with the dotted dials. Idle is unchanged (opacity 0).
-            maskImage: 'linear-gradient(180deg, transparent 0%, #000 18%, #000 76%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(180deg, transparent 0%, #000 18%, #000 76%, transparent 100%)',
+            // JUST THE EFFECT — no hard clipped panel. The rounded rectangle +
+            // overflow-hidden gave the glow its OWN hard background box, which
+            // broke continuity and clipped a sharp edge over the dots. Removed the
+            // clip; a full vertical feather gives soft top/bottom edges, the streak
+            // already feathers left/right + blurs → a soft edgeless light that
+            // blends into the page. No box, no rectangle, no clash with the dots.
+            maskImage: 'linear-gradient(180deg, transparent 0%, #000 24%, #000 72%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(180deg, transparent 0%, #000 24%, #000 72%, transparent 100%)',
           }}
           aria-hidden
         >
