@@ -27,6 +27,9 @@ export const VOYO_SURFACE_ID = 'voyo';
 
 export type VoyoSection = 'oye' | 'stations';
 
+/** The VOYO destination — cross-sell cards link straight out to it. */
+export const VOYO_LINK = 'https://voyo.dasuperhub.com';
+
 /** Base VOYO PWA origin. Borderless = no Tivi chrome, VOYO renders its own. */
 const VOYO_ORIGIN = 'https://voyomusic.com';
 

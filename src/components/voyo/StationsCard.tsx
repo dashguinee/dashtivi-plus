@@ -1,44 +1,31 @@
 /**
  * StationsCard — Tivi+ cross-sell teaser for VOYO Stations.
- *
- * Adapted from VOYO's StationHero (the radio-always-tuning model): same
- * green #007749 / gold #FFB612 accent pair, the spinning bronze halo, a live
- * "on-air" breathing dot, and the metallic Join pill treatment — distilled to
- * a compact entry card. Tap → VOYO rises borderless into Stations via
- * useOpenVoyo('stations').
- *
- * Feel: alive + bouncy but a touch calmer than the Oyé card (Stations = tuning
- * radio, not a cheer) — a slow halo spin + a single gentle card breathe on the
- * DASH signature ease.
+ * VOYO's own palette: deep violet + lit lavender, spinning halo, breathing
+ * on-air dot, metallic Join pill. Tap → opens VOYO.
  */
 
 import { useState, useEffect, useRef } from 'react';
 import { Radio } from 'lucide-react';
-import { useOpenVoyo } from './VoyoSurface';
+import { VOYO_LINK } from './VoyoSurface';
 
-// VOYO is violet, not yellow/green. These two drive the whole card; keep the
-// bronze metallic (VOYO's signature) but swap the SA green/gold for VOYO purple.
-const GREEN = '#7C3AED'; // deep violet (base / depth)  — was SA green #007749
-const GOLD = '#C77DFF';  // lit lavender (accent / glow) — was SA gold #FFB612
+// VOYO palette — violet base + lavender accent.
+const GREEN = '#7C3AED'; // deep violet (base / depth)
+const GOLD = '#C77DFF';  // lit lavender (accent / glow)
 
 interface StationsCardProps {
   className?: string;
 }
 
 export function StationsCard({ className = '' }: StationsCardProps) {
-  const open = useOpenVoyo('stations');
   const [pressed, setPressed] = useState(false);
 
-  // PERF: pause all loops (breathe / halo spin / disc / dot) when off-screen.
+  // Pause all loops (breathe / halo spin / disc / dot) when off-screen.
   const ref = useRef<HTMLButtonElement>(null);
   const [inView, setInView] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const io = new IntersectionObserver(
-      ([e]) => setInView(e.isIntersecting),
-      { threshold: 0.15 },
-    );
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.15 });
     io.observe(el);
     return () => io.disconnect();
   }, []);
@@ -46,7 +33,7 @@ export function StationsCard({ className = '' }: StationsCardProps) {
   return (
     <button
       ref={ref}
-      onClick={() => open()}
+      onClick={() => window.open(VOYO_LINK, '_blank', 'noopener,noreferrer')}
       onPointerDown={() => setPressed(true)}
       onPointerUp={() => setPressed(false)}
       onPointerLeave={() => setPressed(false)}

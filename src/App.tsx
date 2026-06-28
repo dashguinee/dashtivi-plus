@@ -244,6 +244,46 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
   const [pendingChannel, setPendingChannel] = useState<Channel | null>(null);
   const [codeInput, setCodeInput] = useState('');
 
+  // ── Movable mini-player position (shared) ──────────────────────────────
+  // The minimized <video> and the MiniPlayer chrome card are two separate fixed
+  // elements that must move together as one unit. We hold ONE position here and
+  // apply the identical left/top to both so they stay pixel-aligned while dragged.
+  // `null` = not yet dragged → use the default bottom-right anchor.
+  const [miniPos, setMiniPos] = useState<{ x: number; y: number } | null>(null);
+  // viewport tick so the default anchor recomputes on resize/rotate.
+  const [miniVp, setMiniVp] = useState(0);
+  useEffect(() => {
+    const onResize = () => setMiniVp((n) => n + 1);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
+  // Card geometry — must match MiniPlayer's tailwind size (w-72 / sm:w-80, 16:9).
+  const miniW = typeof window !== 'undefined' && window.innerWidth >= 640 ? 320 : 288;
+  const miniH = Math.round((miniW * 9) / 16);
+  // Default anchor = the old resting spot: right-4, bottom-20 (mobile) / bottom-4 (lg).
+  const defaultMiniPos = React.useMemo(() => {
+    if (typeof window === 'undefined') return { x: 0, y: 0 };
+    const bottomPx = window.innerWidth >= 1024 ? 16 : 80;
+    return {
+      x: window.innerWidth - miniW - 16,
+      y: window.innerHeight - miniH - bottomPx,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [miniVp, miniW, miniH]);
+  const effectiveMiniPos = miniPos ?? defaultMiniPos;
+  // Re-clamp a dragged position back inside the viewport after a resize/rotate.
+  useEffect(() => {
+    if (!miniPos) return;
+    const cx = Math.max(6, Math.min(window.innerWidth - miniW - 6, miniPos.x));
+    const cy = Math.max(56, Math.min(window.innerHeight - miniH - 8, miniPos.y));
+    if (cx !== miniPos.x || cy !== miniPos.y) setMiniPos({ x: cx, y: cy });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [miniVp]);
+
   // Layered back: system/browser BACK closes the Go-Premium modal (pops the top
   // layer) instead of leaving the app.
   const closeCodeOverlay = useCallback(() => setShowCodeOverlay(false), []);
@@ -551,7 +591,9 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
         )}
         <MiniPlayer state={player.state} videoRef={player.videoRef} onTogglePlay={player.togglePlay}
           onClose={handleStopPlayer} onExpand={handleExpandMini} onSurf={handleMiniSurf}
-          visible={!showFullPlayer && !!player.state.channel} />
+          visible={!showFullPlayer && !!player.state.channel}
+          pos={effectiveMiniPos} dragged={!!miniPos} onMove={setMiniPos}
+          cardW={miniW} cardH={miniH} />
         {/* Single persistent <video> element — NEVER unmounted.
             Full player mode: fills screen behind VideoPlayer controls overlay.
             Mini mode: becomes the small picture-in-picture rectangle (bottom-right),
@@ -566,9 +608,15 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
                 player.state.isLoading && !player.state.isPlaying ? 'blur-sm scale-[1.01]' : ''
               }`
             : player.state.channel
-              ? 'fixed bottom-20 lg:bottom-4 right-4 z-40 w-72 sm:w-80 aspect-video rounded-2xl object-cover bg-black'
+              ? 'fixed z-40 w-72 sm:w-80 aspect-video rounded-2xl object-cover bg-black'
               : 'hidden'
           }
+          // Mini mode: explicit left/top from the SHARED position so the video
+          // tracks the MiniPlayer card 1:1 while it's dragged. (No effect in
+          // full-player mode — inset-0 classes win.)
+          style={!showFullPlayer && player.state.channel
+            ? { left: effectiveMiniPos.x, top: effectiveMiniPos.y, transition: miniPos ? 'none' : undefined }
+            : undefined}
           crossOrigin="anonymous"
           playsInline
           autoPlay

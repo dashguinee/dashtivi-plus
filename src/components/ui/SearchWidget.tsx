@@ -262,7 +262,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
             className="absolute pointer-events-none"
             style={{
               top: '6vh', width: 'min(520px, 96vw)', height: '44vh', left: '50%', transform: 'translateX(-50%)',
-              background: 'radial-gradient(ellipse 60% 50% at 50% 30%, rgba(157,78,221,0.55), rgba(157,78,221,0.12) 45%, transparent 70%)',
+              background: 'radial-gradient(ellipse 60% 50% at 50% 30%, rgba(157,78,221,0.55), rgba(79,141,247,0.30) 45%, transparent 70%)',
               filter: 'blur(26px)', animation: 'sw-beam 3.4s ease-in-out infinite', transformOrigin: '50% 30%',
             }}
           />

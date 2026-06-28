@@ -13,6 +13,15 @@ interface Props {
   /** Swipe-surf in the mini card → play the adjacent channel (live only). */
   onSurf?: (channel: Channel) => void;
   visible: boolean;
+  /** Shared position (fixed left/top) — kept in App so the <video> tracks it. */
+  pos: { x: number; y: number };
+  /** Has the user dragged it yet? (controls drop-in transition). */
+  dragged: boolean;
+  /** Report a new dragged position up to App (applied to both card + video). */
+  onMove: (pos: { x: number; y: number }) => void;
+  /** Card pixel size — for viewport clamping while dragging. */
+  cardW: number;
+  cardH: number;
 }
 
 /** Format seconds into H:MM:SS or M:SS */
@@ -32,6 +41,11 @@ export const MiniPlayer: React.FC<Props> = ({
   onExpand,
   onSurf,
   visible,
+  pos,
+  dragged,
+  onMove,
+  cardW,
+  cardH,
 }) => {
   const category = state.channel?.category?.toLowerCase() ?? '';
   const isVod = category === 'movie' || category === 'series';
@@ -73,12 +87,42 @@ export const MiniPlayer: React.FC<Props> = ({
     if (!tapRef.current?.moved) onExpand();
   }, [onExpand]);
 
+  // ── Drag-to-move (search-pebble pattern) ───────────────────────────────
+  // Lives on a dedicated grip handle (marked data-no-surf so swipe-surf ignores
+  // gestures that start on it). Pointer-capture + a tap-vs-drag threshold; the
+  // card is clamped fully inside the viewport. Position is reported up to App so
+  // the persistent <video> moves with it as one unit.
+  const DRAG_SLOP = 6;
+  const dragRef = useRef<{ offX: number; offY: number; moved: boolean } | null>(null);
+  const clampX = useCallback((x: number) => Math.max(6, Math.min(window.innerWidth - cardW - 6, x)), [cardW]);
+  const clampY = useCallback((y: number) => Math.max(56, Math.min(window.innerHeight - cardH - 8, y)), [cardH]);
+
+  const onGripDown = useCallback((e: React.PointerEvent) => {
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    dragRef.current = { offX: e.clientX - pos.x, offY: e.clientY - pos.y, moved: false };
+  }, [pos.x, pos.y]);
+  const onGripMove = useCallback((e: React.PointerEvent) => {
+    const d = dragRef.current;
+    if (!d) return;
+    const nx = e.clientX - d.offX, ny = e.clientY - d.offY;
+    if (!d.moved && Math.hypot(nx - pos.x, ny - pos.y) > DRAG_SLOP) d.moved = true;
+    if (d.moved) onMove({ x: clampX(nx), y: clampY(ny) });
+  }, [pos.x, pos.y, onMove, clampX, clampY]);
+  const onGripUp = useCallback((e: React.PointerEvent) => {
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
+    dragRef.current = null;
+  }, []);
+
   if (!state.channel || !visible) return null;
 
   return (
     // Same fixed box as the persistent <video> in App.tsx (z-[41] chrome over the
-    // z-40 video) so this card's frame sits exactly around the playing picture.
-    <div className="fixed bottom-20 lg:bottom-4 right-4 z-[41] w-72 sm:w-80 aspect-video animate-slide-up">
+    // z-40 video). Position comes from the SHARED `pos` so card + video align 1:1
+    // while dragging. Slide-in only on first appearance (not while repositioning).
+    <div
+      className={`fixed z-[41] w-72 sm:w-80 aspect-video ${dragged ? '' : 'animate-slide-up'}`}
+      style={{ left: pos.x, top: pos.y, transition: dragged ? 'none' : undefined }}
+    >
       <div
         className="relative w-full h-full rounded-2xl overflow-hidden neon-primary shadow-2xl shadow-black/50 ring-1 ring-white/10"
         onPointerDown={onTapDown}
@@ -86,6 +130,20 @@ export const MiniPlayer: React.FC<Props> = ({
         onPointerUp={onTapUp}
         onPointerCancel={surfHandlers.onPointerCancel}
       >
+        {/* Drag-to-move handle — top strip (data-no-surf so swipe-surf ignores it).
+            Buttons sit above it (z-20); the grip pill hints it's draggable. */}
+        <div
+          data-no-surf
+          onPointerDown={onGripDown}
+          onPointerMove={onGripMove}
+          onPointerUp={onGripUp}
+          onPointerCancel={onGripUp}
+          className="absolute top-0 inset-x-0 z-10 h-7 flex items-start justify-center pt-1 cursor-grab active:cursor-grabbing"
+          style={{ touchAction: 'none' }}
+          aria-label="Move player"
+        >
+          <span className="w-8 h-1 rounded-full bg-white/40" />
+        </div>
         {/* Tap-to-expand surface — sits over the (transparent) video area. Not a
             button so swipe-surf still reads gestures that start here. */}
         <div

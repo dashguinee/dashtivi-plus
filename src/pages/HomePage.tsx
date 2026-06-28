@@ -46,12 +46,13 @@ interface Props {
   onPlay: (channel: Channel) => void;
 }
 
-// Per-experience accent — one signature color per row (premium, not a rainbow).
-// Football / sports carry beIN's brand purple→magenta. Green is reserved
-// exclusively for the FREE / free-gift signal (the one intentional green).
+// DASHtivi+ brand blue — the "+" flare. Electric royal blue that complements
+// the violet. Used for premium accents + the "À l'instant" live indicator.
+const DASH_BLUE = '#4F8DF7';
+
+// Per-experience accent — one signature color per row. Green stays reserved
+// for the FREE gift signal only.
 const EXPERIENCE_ACCENT: Record<string, string> = {
-  // beIN SPORTS owns football here — beIN's brand purple→magenta, NOT green.
-  // Green is reserved for the FREE / free-gift indicator only.
   'World Cup': '#C026D3',
   'Sports': '#C026D3',
   'Movies': '#9D4EDD',
@@ -62,7 +63,7 @@ const EXPERIENCE_ACCENT: Record<string, string> = {
   'Kids': '#EC4899',
   'News': '#EF4444',
   'Documentary': '#A78BFA',
-  '4K Showcase': '#EAB308',
+  '4K Showcase': DASH_BLUE,
 };
 
 // Clean a curated channel name for display — keep the FULL readable name,
@@ -254,29 +255,35 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   return (
     <div className="pt-16 pb-48">
-      {/* ════════════════════════════════════════════════════════════════
-          TOP ZONE — wrapped in a `relative` shell so the World Cup ambient
-          backdrop (a big, faded, football clip with a drifting visor) sits
-          BEHIND the hero deck + WC/Sports lead only. It fades into the dark by
-          the bottom edge and never bleeds into the rest of the page.
-          ════════════════════════════════════════════════════════════════ */}
+      {/* Ambient bloom — a soft blue-white halo that lifts the dark canvas.
+          ONE fixed, composited radial: GPU-cheap, no blur filter, no per-tile
+          cost, never repaints on scroll. A breath of light, not a glow. */}
+      <div
+        aria-hidden
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          zIndex: -1,
+          background:
+            'radial-gradient(62% 40% at 50% 38%, rgba(79,141,247,0.10) 0%, rgba(255,255,255,0.05) 30%, transparent 70%)',
+        }}
+      />
+
+      {/* TOP ZONE — relative shell so the World Cup backdrop sits BEHIND the
+          hero deck + WC/Sports lead only, fading out before the rest. */}
       <div className="relative">
         <WorldCupBackdrop />
 
         <div className="relative z-10">
-      {/* ════════════════════════════════════════════════════════════════
-          THE TOP HERO — the magic hello. The strongest live pick auto-plays at
-          the very top for EVERYONE, calm, no click ("there it is"). The
-          FreeHlsShowcaseCard focus engine claims the one live <video> surface.
-          ════════════════════════════════════════════════════════════════ */}
+      {/* TOP HERO — the strongest live pick auto-plays at the top for everyone,
+          calm, no click. FreeHlsShowcaseCard owns the one live <video> surface. */}
       {helloChannel && (
         <section className="mb-8">
           <div className="px-4 mb-2 flex items-center gap-2">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-70" style={{ background: '#22C55E' }} />
-              <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: '#22C55E' }} />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-70" style={{ background: DASH_BLUE }} />
+              <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: DASH_BLUE, boxShadow: '0 0 6px rgba(79,141,247,0.8)' }} />
             </span>
-            <span className="text-[10px] font-black tracking-[2.5px] uppercase" style={{ color: '#86EFAC' }}>
+            <span className="text-[10px] font-black tracking-[2.5px] uppercase" style={{ color: '#93B8FF' }}>
               {lang === 'fr' ? 'À l’instant' : 'Right now'}
             </span>
           </div>
@@ -394,7 +401,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           <div className="flex items-center gap-2 mb-4">
             <span
               className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-              style={{ background: '#FFD700', boxShadow: '0 0 6px rgba(255,215,0,0.6)' }}
+              style={{ background: '#9D4EDD', boxShadow: '0 0 6px rgba(157,78,221,0.6)' }}
             />
             <h2 className="text-[19px] font-black tracking-tight text-white">
               {lang === 'fr' ? 'VOYO · Le continent' : 'VOYO · The continent'}
@@ -426,7 +433,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           <div className="flex items-center gap-2 mb-3.5">
             <span
               className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-              style={{ background: '#FFD700', boxShadow: '0 0 6px rgba(255,215,0,0.55)' }}
+              style={{ background: '#9D4EDD', boxShadow: '0 0 6px rgba(157,78,221,0.55)' }}
             />
             <h2 className="text-[15px] font-semibold tracking-tight text-white/55">
               VOYO · Musique
