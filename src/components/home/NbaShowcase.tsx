@@ -112,10 +112,11 @@ export function NbaShowcase({
             onClick={(e) => { e.stopPropagation(); tap(); onSeeAll(); }}
             onPointerDown={(e) => e.stopPropagation()}
             className="absolute top-4 right-4 flex items-center gap-0.5 text-[11px] font-semibold tracking-wide px-2.5 py-1.5 rounded-full active:scale-95 transition-transform"
-            style={{ background: 'rgba(29,66,138,0.22)', border: '1px solid rgba(29,66,138,0.45)', color: '#9DB4E8' }}
+            style={{ background: 'rgba(29,66,138,0.22)', border: '1px solid rgba(29,66,138,0.45)' }}
           >
-            {t(lang, 'seeAll')}
-            <ChevronRight className="w-3 h-3" />
+            {/* Moon-silver metallic text, dimmed a touch — present, not loud. */}
+            <span className="tivi-count-metal" style={{ opacity: 0.8 }}>{t(lang, 'seeAll')}</span>
+            <ChevronRight className="w-3 h-3" style={{ color: '#bcc2cc', opacity: 0.8 }} />
           </span>
         )}
 

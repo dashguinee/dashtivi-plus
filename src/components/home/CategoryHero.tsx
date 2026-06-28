@@ -118,6 +118,9 @@ export function CategoryHero({
   const dark = shade(accent);
   // Stable per-instance keyframe names so multiple heros don't collide.
   const uid = accent.replace('#', '');
+  // World Cup gets the moon-silver treatment on its pill (silver text + white
+  // contour, fill untouched). Other categories keep their accent identity.
+  const isWorldCup = title === 'World Cup';
 
   return (
     <button
@@ -167,8 +170,9 @@ export function CategoryHero({
       <div
         className="absolute top-4 left-4 flex items-center gap-1.5 pl-2 pr-2.5 py-1 rounded-full"
         style={{
+          // Inner fill UNCHANGED. Only the World Cup contour goes white.
           background: `linear-gradient(180deg, rgba(${a},0.16), rgba(${a},0.07))`,
-          border: `1px solid rgba(${a},0.32)`,
+          border: isWorldCup ? '1px solid rgba(255,255,255,0.85)' : `1px solid rgba(${a},0.32)`,
           boxShadow: `0 0 14px rgba(${a},0.14), inset 0 1px 0 rgba(255,255,255,0.07)`,
           backdropFilter: 'blur(10px)',
         }}
@@ -177,7 +181,10 @@ export function CategoryHero({
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: accent }} />
           <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: accent }} />
         </span>
-        <span className="text-[10.5px] font-bold tracking-[1.5px] uppercase" style={{ color: accent }}>
+        <span
+          className={`text-[10.5px] font-bold tracking-[1.5px] uppercase${isWorldCup ? ' tivi-count-metal' : ''}`}
+          style={isWorldCup ? { opacity: 0.95 } : { color: accent }}
+        >
           {title}
         </span>
       </div>
@@ -190,10 +197,11 @@ export function CategoryHero({
           onClick={(e) => { e.stopPropagation(); tap(); onSeeAll(); }}
           onPointerDown={(e) => e.stopPropagation()}
           className="absolute top-4 right-4 flex items-center gap-0.5 text-[11px] font-semibold tracking-wide px-2.5 py-1.5 rounded-full active:scale-95 transition-transform"
-          style={{ background: `rgba(${a},0.16)`, border: `1px solid rgba(${a},0.4)`, color: accent }}
+          style={{ background: `rgba(${a},0.16)`, border: `1px solid rgba(${a},0.4)` }}
         >
-          {t(lang, 'seeAll')}
-          <ChevronRight className="w-3 h-3" />
+          {/* Moon-silver metallic text, dimmed a touch — present, not loud. */}
+          <span className="tivi-count-metal" style={{ opacity: 0.8 }}>{t(lang, 'seeAll')}</span>
+          <ChevronRight className="w-3 h-3" style={{ color: '#bcc2cc', opacity: 0.8 }} />
         </span>
       )}
 
