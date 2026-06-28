@@ -33,11 +33,6 @@ export interface PlayerState {
    *  the subtle blinking "Flow" mark — "holding it together". Clears once the
    *  stream is stable at the chosen tier. */
   flowAdapting?: boolean;
-  /** Graceful floor: true when Flow is already at its LOWEST tier (360p) and the
-   *  pipe STILL can't sustain it. Drives the calm "Weak connection — try another
-   *  channel, or hold on." message. Playback keeps quietly retrying underneath —
-   *  this is NEVER a hard error wall, and clears the moment the pipe recovers. */
-  weakConnection?: boolean;
   error: string | null;
   currentTime: number;
   duration: number;

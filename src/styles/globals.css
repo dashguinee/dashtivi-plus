@@ -617,12 +617,15 @@
     100% { background: rgba(255,255,255,0.03); }
   }
 
-  /* ═══ FLOW BLINK — subtle "holding it together" pulse while adapting ═══ */
-  /* Gentle, reassuring (NOT alarming): a soft opacity + dot-glow breath. The
-     mark fades out (mount/unmount) once the stream is stable at full quality. */
-  @keyframes flow-blink {
-    0%, 100% { opacity: 0.45; }
-    50% { opacity: 0.95; }
+  /* ═══ FLOW FADE — show solid, then softly dissolve over ~30s ═══ */
+  /* When Flow turns on the pill is solid; it holds ~10s (0%→33%) then eases to
+     fully transparent by 30s. animation-fill-mode:forwards pins it at opacity 0.
+     Pure CSS, runs once — no JS timer churn. A re-trigger (next tier step) bumps
+     the React key so this animation replays from solid. The dot keeps its own
+     flow-dot-pulse breath while the pill is visible. */
+  @keyframes flow-fade {
+    0%, 33% { opacity: 1; }
+    100% { opacity: 0; }
   }
   @keyframes flow-dot-pulse {
     0%, 100% { opacity: 0.4; box-shadow: 0 0 3px rgba(157,78,221,0.4); }

@@ -38,7 +38,6 @@ export function usePlayer() {
     isLoading: false,
     isSwitching: false,
     flowAdapting: false,
-    weakConnection: false,
     error: null,
     currentTime: 0,
     duration: 0,
@@ -227,7 +226,6 @@ export function usePlayer() {
         isLoading: true, // Thin bar on blurred frame during switch, full load on first play
         isSwitching: true, // Deliberate transition — gates blur + connecting card + control-hide
         flowAdapting: false, // fresh stream — predictive controller re-arms below
-        weakConnection: false,
         error: null,
         currentTime: 0,
         duration: 0,
@@ -601,9 +599,9 @@ export function usePlayer() {
         // the playhead) on a 1s interval and step the tier DOWN *before* it empties
         // — driven by the TREND, not by waiting for onwaiting/the stall. The
         // anti-thrash cap LOOSENS when the buffer is genuinely collapsing
-        // (continuity wins). At the floor we surface a calm "weak connection"
-        // message (never a spinner/error wall) and keep quietly retrying. When the
-        // pipe stabilises we climb back up quietly.
+        // (continuity wins). At the floor we keep quietly retrying in the
+        // background (no user-facing message — Flow handles it). When the pipe
+        // stabilises we climb back up quietly.
         if (isLive) {
           const userMode = getStreamQuality();
           const sourceUrl = url.replace(/&q=(source|hd720|eco|low)/, '');
@@ -635,7 +633,6 @@ export function usePlayer() {
             let lastSwitchAt = 0;
             let stableSince = 0;
             let adapting = false;
-            let weak = false;
             let predictiveCheck: ReturnType<typeof setInterval> | null = null;
 
             // Initial tier already set in URL before src assignment — no double-load
@@ -657,12 +654,6 @@ export function usePlayer() {
               adapting = on;
               setState((prev) => ({ ...prev, flowAdapting: on }));
             };
-            const setWeak = (on: boolean) => {
-              if (on === weak) return;
-              weak = on;
-              setState((prev) => ({ ...prev, weakConnection: on }));
-            };
-
             const bufferedLead = () => (video.buffered.length > 0
               ? video.buffered.end(video.buffered.length - 1) - video.currentTime
               : 0);
@@ -717,9 +708,9 @@ export function usePlayer() {
               else setState((prev) => ({ ...prev, isLoading: true }));
               if (currentTier !== 'low' && Date.now() - lastSwitchAt > 2500) {
                 switchTier(tierDown(currentTier), 'stall');
-              } else if (currentTier === 'low') {
-                setWeak(true); // already at the floor and still stalling → graceful fallback
               }
+              // Already at the floor and still stalling → keep quietly retrying
+              // (the background play() nudge below handles it); no user-facing pill.
             };
 
             // ── PREDICTIVE control loop (1s) — the core ──
@@ -746,9 +737,10 @@ export function usePlayer() {
                 }
               }
 
-              // ── GRACEFUL FLOOR FALLBACK — at lowest tier, pipe still can't hold it ──
+              // ── GRACEFUL FLOOR — at lowest tier, pipe still can't hold it ──
+              // Keep the Flow mark alive + quietly retry in the background. No
+              // user-facing "weak connection" message (Flow handles the network).
               if (currentTier === 'low' && (collapsing || shrinking)) {
-                setWeak(true);
                 setAdapting(true);
                 if (video.paused) video.play().catch(() => {}); // keep quietly retrying
                 // don't return — the recovery branch below can still clear it
@@ -757,7 +749,6 @@ export function usePlayer() {
               // ── STABLE / RECOVER UP (quiet) ──
               if (lead >= LEAD_HEALTHY) {
                 if (!stableSince) stableSince = now;
-                if (weak && now - stableSince > 3000) setWeak(false);
                 if (adapting && now - stableSince > 4000) setAdapting(false);
                 if (currentTier !== 'source' && !inCooldown && now - stableSince > RECOVERY_STABLE_MS) {
                   const higher = tierUp(currentTier);
@@ -1046,7 +1037,6 @@ export function usePlayer() {
       isLoading: false,
       isSwitching: false,
       flowAdapting: false,
-      weakConnection: false,
       error: null,
       currentTime: 0,
       duration: 0,

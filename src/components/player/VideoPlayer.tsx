@@ -411,6 +411,23 @@ export const VideoPlayer: React.FC<Props> = ({
   const isPlayingRef = useRef(state.isPlaying);
   useEffect(() => { isPlayingRef.current = state.isPlaying; }, [state.isPlaying]);
 
+  // ── Flow pill show + fade lifecycle ───────────────────────────────────────
+  // Aziz loves the Flow pill but wants it to SOFTLY fade away, not linger/blink.
+  // On each rising edge of state.flowAdapting (a fresh tier step) we mount the
+  // pill and bump `flowKey` so the pure-CSS `flow-fade` animation replays from
+  // solid (hold ~10s → ease to transparent by ~30s, fill-mode forwards). When
+  // the 30s animation ends, onAnimationEnd unmounts it. No JS timers.
+  const [flowShow, setFlowShow] = useState(false);
+  const [flowKey, setFlowKey] = useState(0);
+  const flowWasAdaptingRef = useRef(false);
+  useEffect(() => {
+    if (state.flowAdapting && !flowWasAdaptingRef.current) {
+      setFlowShow(true);
+      setFlowKey((k) => k + 1); // restart the show+fade on every fresh step
+    }
+    flowWasAdaptingRef.current = !!state.flowAdapting;
+  }, [state.flowAdapting]);
+
   // Connecting-card throttle — decide once per (channel, loading-start) whether
   // the full logo+name block shows. After the first few channels this session,
   // only the thin top beam remains. Computed in an effect so the render stays
@@ -802,42 +819,22 @@ export const VideoPlayer: React.FC<Props> = ({
       )}
 
       {/* ── Flow indicator (predictive adapt) ──────────────────────────────────
-          Subtle "Flow" mark that BLINKS while the predictive controller is actively
-          stepping tiers (down to fit a shrinking pipe, or quietly back up) — a calm
-          "holding it together" cue, never alarming. Mounts on state.flowAdapting and
-          fades when the stream is stable at full quality (controller clears the flag).
+          Subtle "Flow" mark shown when the predictive controller steps tiers (down
+          to fit a shrinking pipe, or quietly back up) — a calm "holding it together"
+          cue, never alarming. Aziz loves it but wants it to SOFTLY fade out: it shows
+          solid, holds ~10s, then eases to fully transparent by ~30s via the pure-CSS
+          `flow-fade` keyframe (fill-mode forwards). A fresh tier step bumps `flowKey`
+          → the animation replays from solid. onAnimationEnd unmounts it (no JS timers).
           Suppressed while a switch/buffering pill already owns the top-center spot. */}
-      {state.flowAdapting && !isVod && !state.isSwitching && !state.error && !showBuffering && (
-        <div className="absolute top-[64px] left-1/2 -translate-x-1/2 z-[35] pointer-events-none"
-             style={{ animation: 'fade-in 0.4s ease-out both' }}>
+      {flowShow && !isVod && !state.isSwitching && !state.error && !showBuffering && (
+        <div key={flowKey}
+             className="absolute top-[64px] left-1/2 -translate-x-1/2 z-[35] pointer-events-none"
+             style={{ animation: 'flow-fade 30s ease-in-out forwards' }}
+             onAnimationEnd={() => setFlowShow(false)}>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full"
-               style={{ background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(157,78,221,0.22)', animation: 'flow-blink 1.6s ease-in-out infinite' }}>
+               style={{ background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(157,78,221,0.22)' }}>
             <div className="w-1.5 h-1.5 rounded-full bg-primary-light" style={{ animation: 'flow-dot-pulse 1.6s ease-in-out infinite' }} />
             <span className="text-[10px] text-primary-light/80 font-medium tracking-[0.14em] uppercase">{t('flowHolding')}</span>
-          </div>
-        </div>
-      )}
-
-      {/* ── Graceful weak-connection fallback ──────────────────────────────────
-          Flow is already at its FLOOR (360p) and the pipe STILL can't sustain it.
-          Instead of a spinner / freeze / error wall, a calm minimal message — the
-          stream keeps quietly retrying underneath (predictive loop re-asserts play
-          + clears this the instant the pipe recovers). "Try another channel" is a
-          gentle way out (back to the grid), never forced. */}
-      {state.weakConnection && !state.error && !isVod && (
-        <div className="absolute inset-x-0 bottom-[150px] flex justify-center z-[36] pointer-events-none px-6">
-          <div className="flex flex-col items-center gap-3 max-w-xs text-center px-5 py-4 rounded-2xl"
-               style={{ background: 'rgba(6,6,9,0.55)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(157,78,221,0.18)', animation: 'fade-in 0.5s ease-out both' }}>
-            {/* Soft breathing dot — reassures it's still working, not frozen. */}
-            <div className="w-2 h-2 rounded-full bg-primary-light" style={{ animation: 'flow-dot-pulse 1.8s ease-in-out infinite' }} />
-            <p className="text-[12.5px] text-white/65 leading-snug">{t('weakConnection')}</p>
-            <button
-              onClick={(e) => { e.stopPropagation(); (onBack || onClose)(); }}
-              className="pointer-events-auto text-[11px] font-medium text-primary-light/90 px-3.5 py-1.5 rounded-full active:scale-95 transition-transform"
-              style={{ background: 'rgba(157,78,221,0.12)', border: '1px solid rgba(157,78,221,0.3)' }}
-            >
-              {t('weakConnectionAction')}
-            </button>
           </div>
         </div>
       )}
