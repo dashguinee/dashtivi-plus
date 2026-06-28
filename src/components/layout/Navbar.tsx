@@ -125,7 +125,7 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/hub', labelKey: 'navDahub', icon: Users },
 ];
 
-export const Navbar: React.FC = () => {
+const NavbarImpl: React.FC = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
@@ -299,6 +299,12 @@ export const Navbar: React.FC = () => {
             // background transitions stay silky without repainting siblings.
             transform: 'translateX(2px) translateZ(0)',
             willChange: 'background, box-shadow',
+            // STEADY-NAV: self-contain the bar's rendering so a repaint behind it
+            // (scrolling content / drifting bloom sampled by the backdrop-blur)
+            // can't invalidate or re-raster the bar's own layer → no flicker.
+            contain: 'layout paint style',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
           }}
         >
           {/* Even rhythm: 4 items equally spaced via justify-between, breathing
@@ -423,3 +429,11 @@ export const Navbar: React.FC = () => {
     </>
   );
 };
+
+// MEMOISED: the nav takes no props, so React.memo makes it IMMUNE to parent
+// re-renders (AppContent re-renders on player ticks / mini-player drags / pull-
+// to-refresh / scroll-ambient). It now re-renders ONLY on its own hook changes
+// (route → active tab, language). That kills the "nav flickers on scroll/tab"
+// repaint that came from the whole bar (backdrop-blur + SVG-filter glyphs)
+// re-rendering on every unrelated parent update.
+export const Navbar = React.memo(NavbarImpl);

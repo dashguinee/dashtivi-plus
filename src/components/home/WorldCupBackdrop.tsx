@@ -74,7 +74,13 @@ export function WorldCupBackdrop() {
           opacity: 0.29,
           // Cool it into the page palette so the green pitch doesn't shout.
           filter: 'saturate(0.82) contrast(1.02) brightness(0.92)',
-          willChange: 'transform',
+          // NO `willChange:'transform'` here: this transform is STATIC (never
+          // animated). Hinting will-change forced the <video> onto its own
+          // independently-scrolled compositor layer, which the browser moved
+          // async from the main-thread foreground → the backdrop visibly
+          // "detached" from the content on top during tap/scroll. Dropping it
+          // lets the video scroll locked to its content (see the pinned wrapper).
+          backfaceVisibility: 'hidden',
         }}
       />
 

@@ -59,7 +59,7 @@ function getInitials(name: string): string {
 }
 
 // Map channel names to tv-logo GitHub CDN URLs
-const TV_LOGO_BASE = 'https://raw.githubusercontent.com/tv-logo/tv-logos/main/countries';
+const TV_LOGO_BASE = '/logos/tv';
 const LOGO_MAP: Record<string, string> = {
   // ── Sky Sports (UK) ──────────────────────────────────────────────────
   'sky sports main event': `${TV_LOGO_BASE}/united-kingdom/sky-sports-main-event-uk.png`,
@@ -588,7 +588,7 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
         onLoad={() => { markPainted(safeSrc); setLoaded(true); }}
         onError={() => {
           if (import.meta.env.DEV) console.warn('[ICON] Failed:', name, safeSrc?.slice(0, 60));
-          if (safeSrc?.includes('tv-logos')) setLogoFailed(true);
+          if (safeSrc?.includes('tv-logos') || safeSrc?.includes('/logos/tv/')) setLogoFailed(true);
           else setFailed(true);
         }}
         loading={wantsPriority ? 'eager' : 'lazy'}

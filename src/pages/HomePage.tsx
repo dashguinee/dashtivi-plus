@@ -289,6 +289,18 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
     };
   }, []);
 
+  // PAINT-ONCE TOP ZONE: the hero's `row-in` entrance (opacity 0→1 + translateY)
+  // RESTARTS every time the kept-alive Home is REVEALED — toggling display:none→
+  // block restarts CSS animations — so the whole top zone re-fades/flickers on
+  // each return to Home. Play it ONCE on first mount, then drop the animation so
+  // later reveals just show the already-settled hero (paints once and holds).
+  // Hook lives ABOVE the early return so hook order stays stable (React #310).
+  const [topEntered, setTopEntered] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setTopEntered(true), 650); // > the 550ms row-in
+    return () => clearTimeout(id);
+  }, []);
+
   if (!catalog) {
     // CLS: the skeleton MUST occupy the SAME box as the loaded hero+feed so the
     // swap on catalog-resolve shifts nothing. Mirror the loaded layout EXACTLY:
@@ -376,16 +388,23 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       />
 
       {/* TOP ZONE — relative shell so the World Cup backdrop sits BEHIND the
-          hero deck + WC/Sports lead only, fading out before the rest. */}
-      <div className="relative">
+          hero deck + WC/Sports lead only, fading out before the rest.
+          PINNED: `isolation:isolate` makes the backdrop + content ONE self-
+          contained stacking/compositing context, so the absolute WC backdrop
+          can't be composited or scrolled independently of the foreground — they
+          move locked together on tap/scroll (no detach/separation). */}
+      <div className="relative" style={{ isolation: 'isolate' }}>
         <WorldCupBackdrop />
 
-        <div className="relative z-10">
+        {/* Foreground promoted to its OWN compositor layer (translateZ(0)) so the
+            compositor moves it in lockstep with the video's layer — both shift by
+            the same scroll delta on the same thread → backdrop stays welded on. */}
+        <div className="relative z-10" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
       {/* TOP HERO — the strongest live pick auto-plays at the top for everyone,
           calm, no click. FreeHlsShowcaseCard owns the one live <video> surface.
           The section ALWAYS reserves its box (indicator row + aspect-video) so
           when the live pick resolves it fills a held slot — the page never nudges. */}
-      <section className="mb-8" style={{ animation: 'row-in 0.55s cubic-bezier(0.23,1,0.32,1) both' }}>
+      <section className="mb-8" style={{ animation: topEntered ? undefined : 'row-in 0.55s cubic-bezier(0.23,1,0.32,1) both' }}>
         <div className="px-4 mb-2 flex items-center gap-3" style={{ minHeight: 16 }}>
           {helloChannel && (
             <>

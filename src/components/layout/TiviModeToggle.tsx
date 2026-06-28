@@ -46,7 +46,7 @@ export function useVeeCycle() {
   return { onTap, isVeeActive, nextLabel };
 }
 
-export const TiviModeToggle: React.FC = () => {
+const TiviModeToggleImpl: React.FC = () => {
   // Keep the NEW cycling routing (Movies → Series → Live → Home → loop)…
   const { onTap } = useVeeCycle();
 
@@ -90,3 +90,7 @@ export const TiviModeToggle: React.FC = () => {
     </button>
   );
 };
+
+// Memoised alongside Navbar: the breathing V pebble re-renders only on its own
+// route-driven state, never on unrelated parent re-renders → no replayed breathe.
+export const TiviModeToggle = React.memo(TiviModeToggleImpl);

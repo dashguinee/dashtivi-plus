@@ -99,6 +99,10 @@ export function cleanChannelName(name: string): string {
  */
 export function safeImageUrl(url?: string | null): string | null {
   if (!url) return null;
+  // Same-origin local logo (our own CDN, e.g. "/logos/abc123.png") — always safe,
+  // pass straight through. Channel logos are now downloaded into public/logos and
+  // served same-origin, so these must NOT be dropped by the https-only gate below.
+  if (url.startsWith('/')) return url;
   // Fix common URL corruption
   let u = url.replace(/^ttps:/, 'https:').replace(/"$/, '');
   // Replace dead starshare domain

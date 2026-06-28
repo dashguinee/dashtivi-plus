@@ -18,7 +18,7 @@ const IMG_CACHE_MAX = 600; // hard cap for POSTER art (thousands exist) — evic
 // fetched, is NEVER re-requested for the life of the install. This is the core
 // of "a channel logo is requested at most ONCE, ever."
 const LOGO_CACHE = 'tivi-logos-stable-1';
-const LOGO_CACHE_MAX = 1500; // > full catalog (~600) + headroom; logos never evict in practice
+const LOGO_CACHE_MAX = 4000; // > full catalog incl. free pool (~1800 unique /logos/*) + tv-logo mirror + headroom; logos never evict in practice
 
 // APP-SHELL PRECACHE — the static UI + design + catalog. Precached at install
 // so the app opens INSTANTLY and the channel list/design are browsable OFFLINE.
@@ -34,6 +34,8 @@ const SHELL = [
   '/streamore-gems.json', // catalog dependency — needed to build the offline catalog
   '/logo-map.json',       // catalog dependency — name→logo fallback map
   '/free-channels-curated.json', // catalog dependency — free HLS gems
+  '/wc-bg.mp4',           // World Cup ambient BACKDROP clip — a STATIC shell asset
+                          // (not a live stream): precache so it's local + offline.
   '/tivi-192.png',
   '/tivi-512.png',
 ];
@@ -176,6 +178,17 @@ self.addEventListener('fetch', (event) => {
 
   // --- NETWORK-ONLY: version gate (must always be fresh) ---
   if (url.includes('version.json')) return;
+
+  // --- WC BACKDROP CLIP: /wc-bg.mp4 is a STATIC shell asset that ships with the
+  // app (the ambient backdrop behind the home top zone), NOT a live channel
+  // stream. Cache-first so it's served local + instant + offline after the first
+  // load and never re-streamed. Checked BEFORE the .mp4 network-only gate below;
+  // live channel streams are cross-origin .mp4/.ts/.m3u8 and still fall through
+  // to network-only. ---
+  if (url.includes('/wc-bg.mp4')) {
+    event.respondWith(cacheFirstThenNetwork(request));
+    return;
+  }
 
   // --- NETWORK-ONLY: API calls, streaming, external services ---
   // Never cache these — they are live data or stream segments
