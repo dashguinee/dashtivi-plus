@@ -669,7 +669,12 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       )}
 
       {/* ── Cinéma en direct (live cinema-TV channels) ── */}
-      {!isSearching && liveCinema.length > 0 ? (
+      {/* While the catalog is still resolving, reserve this section's EXACT box (minHeight 200)
+          so when liveCinema lands at data-resolve and the real section mounts, the rows below
+          don't shift. This was the lone remaining CLS contributor (section.px-4.pt-5 @~678ms). */}
+      {!isSearching && liveCinema.length === 0 && loading ? (
+        <section className="px-4 pt-5 pb-1" style={{ minHeight: 200 }} aria-hidden />
+      ) : !isSearching && liveCinema.length > 0 ? (
         <section className="px-4 pt-5 pb-1 row-tier-standard" style={{ minHeight: 200 }}>
           <div className="flex items-center gap-2.5 mb-3.5">
             <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: GOLD, boxShadow: `0 0 6px ${GOLD}` }} />
