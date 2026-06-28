@@ -1,5 +1,6 @@
-import React, { useState, useCallback, memo } from 'react';
-import { Star, Clock, Play } from 'lucide-react';
+import React, { useState, useCallback, useEffect, useRef, memo } from 'react';
+import { Star, Clock } from 'lucide-react';
+import { prefetchDecode, useNearViewport } from '../../lib/imageLoading';
 
 import type { TmdbEntry } from '../../lib/tmdb-map.generated';
 import { TMDB_GENRES } from '../../lib/tmdb-map.generated';
@@ -73,12 +74,20 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
   const activePoster = (safePoster && !imgFailed) ? safePoster : (tmdbPoster && !tmdbFailed) ? tmdbPoster : null;
   const [imgLoaded, setImgLoaded] = useState(() => (activePoster ? POSTER_PAINTED.has(activePoster) : false));
   const onImgLoad = useCallback(() => { if (activePoster) POSTER_PAINTED.add(activePoster); setImgLoaded(true); }, [activePoster]);
+
+  // Anticipatory load: decode the poster ~one screen ahead + promote to
+  // eager/high priority so it's painted before it scrolls into view.
+  const [setNearRef, near] = useNearViewport();
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const imgLoading: 'eager' | 'lazy' = near ? 'eager' : 'lazy';
+  useEffect(() => { if (near && activePoster) prefetchDecode(activePoster); }, [near, activePoster]);
+  // fetchpriority isn't typed on React 18 img props — set it imperatively.
+  useEffect(() => { if (imgRef.current) imgRef.current.setAttribute('fetchpriority', near ? 'high' : 'low'); }, [near]);
   const hasPoster = (safePoster && !imgFailed) || (tmdbPoster && !tmdbFailed);
   const { clean: cleanTitle } = parseTitle(title);
 
   const displayRating = tmdbData?.r ? tmdbData.r.toFixed(1) : rating;
   const hasRating = displayRating && parseFloat(displayRating) > 0;
-  const hasTrailer = tmdbData?.y;
   const runtime = tmdbData?.t ? formatRuntime(tmdbData.t) : null;
 
   // First genre name for the pill
@@ -103,6 +112,7 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
           {rank}
         </span>
         <button
+          ref={setNearRef}
           onClick={onClick}
           className="group relative w-full aspect-[2/3] rounded-xl overflow-hidden text-left card-press hover:scale-[1.03] active:scale-[0.96]"
           style={{ background: 'rgba(255,255,255,0.02)' }}
@@ -116,13 +126,13 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
             }} />
           )}
           {safePoster && !imgFailed ? (
-            <img src={safePoster} alt={title} width={200} height={300}
+            <img ref={imgRef} src={safePoster} alt={title} width={200} height={300}
               className={`absolute inset-0 w-full h-full object-cover img-settle ${imgLoaded ? 'loaded' : ''}`}
-              onLoad={onImgLoad} onError={() => setImgFailed(true)} loading="lazy" decoding="async" />
+              onLoad={onImgLoad} onError={() => setImgFailed(true)} loading={imgLoading} decoding="async" />
           ) : tmdbPoster && !tmdbFailed ? (
-            <img src={tmdbPoster} alt={title} width={200} height={300}
+            <img ref={imgRef} src={tmdbPoster} alt={title} width={200} height={300}
               className={`absolute inset-0 w-full h-full object-cover img-settle ${imgLoaded ? 'loaded' : ''}`}
-              onLoad={onImgLoad} onError={() => setTmdbFailed(true)} loading="lazy" decoding="async" />
+              onLoad={onImgLoad} onError={() => setTmdbFailed(true)} loading={imgLoading} decoding="async" />
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-3"
               style={{ background: 'linear-gradient(135deg, rgba(157,78,221,0.12) 0%, rgba(10,10,18,0.95) 50%, rgba(157,78,221,0.06) 100%)', border: '1px solid rgba(157,78,221,0.08)' }}>
@@ -131,14 +141,6 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
             </div>
           )}
           {hasPoster && <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />}
-          {/* Play triangle on hover for items with trailers */}
-          {hasTrailer && (
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 pointer-events-none">
-              <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <Play className="w-4 h-4 text-white fill-white ml-0.5" />
-              </div>
-            </div>
-          )}
           {hasPoster && (
             <div className="absolute bottom-0 left-0 right-0 p-2">
               {hasRating && (
@@ -157,6 +159,7 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
 
   return (
     <button
+      ref={setNearRef}
       onClick={onClick}
       className="group relative w-full aspect-[2/3] rounded-xl overflow-hidden text-left card-press hover:scale-[1.03] active:scale-[0.96]"
       style={{ background: 'rgba(255,255,255,0.02)' }}
@@ -172,6 +175,7 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
 
       {safePoster && !imgFailed ? (
         <img
+          ref={imgRef}
           src={safePoster}
           alt={title}
           width={200}
@@ -179,11 +183,12 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
           className={`absolute inset-0 w-full h-full object-cover img-settle ${imgLoaded ? 'loaded' : ''}`}
           onLoad={onImgLoad}
           onError={() => setImgFailed(true)}
-          loading="lazy"
+          loading={imgLoading}
           decoding="async"
         />
       ) : tmdbPoster && !tmdbFailed ? (
         <img
+          ref={imgRef}
           src={tmdbPoster}
           alt={title}
           width={200}
@@ -191,7 +196,7 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
           className={`absolute inset-0 w-full h-full object-cover img-settle ${imgLoaded ? 'loaded' : ''}`}
           onLoad={onImgLoad}
           onError={() => setTmdbFailed(true)}
-          loading="lazy"
+          loading={imgLoading}
           decoding="async"
         />
       ) : (
@@ -227,15 +232,6 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
       {/* Bottom gradient */}
       {hasPoster && (
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
-      )}
-
-      {/* Play triangle on hover for items with trailers (cleaner than clapperboard) */}
-      {hasTrailer && (
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 pointer-events-none">
-          <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-            <Play className="w-4.5 h-4.5 text-white fill-white ml-0.5" />
-          </div>
-        </div>
       )}
 
       {/* Bottom info — rating + genre pill + year + runtime */}

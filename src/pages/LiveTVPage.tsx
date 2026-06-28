@@ -835,9 +835,6 @@ function ExperienceShowcase({
                     <FreePill />
                   </div>
                 )}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-xl">
-                  <Play className="w-4 h-4 text-white" />
-                </div>
               </div>
               <p className="text-[9px] text-white/30 text-center mt-1.5 truncate group-hover:text-white/50 transition-colors">
                 {stream.name}
@@ -1005,9 +1002,6 @@ const ThemeRow = React.memo(function ThemeRow({
                             active:scale-95 transition-all duration-300 ${i === 0 ? 'w-[140px] h-[90px] card-hero' : 'w-[110px] h-[72px] card-surface'}`}>
               <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" eager />
               <ChannelBadge streamId={stream.stream_id} compact />
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-xl">
-                <Play className="w-4 h-4 text-white" />
-              </div>
             </div>
             <p className="text-[10px] text-white/40 text-center mt-1.5 truncate px-0.5
                           group-hover:text-white/70 transition-colors">

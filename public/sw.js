@@ -4,11 +4,39 @@
 // are cached forever. So a deploy only re-downloads what actually changed —
 // blazing + data-saving. Bump this string ONLY for a deliberate hard cache reset.
 const CACHE_NAME = 'tivi-cache-stable-1';
+// Dedicated, BOUNDED image cache (poster art + channel logos). Kept separate
+// from the shell cache so it can be LRU-capped without ever evicting shell or
+// JS/CSS asset entries. Once a logo/poster is fetched it's served from here
+// instantly forever — zero refetch on scroll / nav / reopen.
+const IMG_CACHE = 'tivi-img-stable-1';
+const IMG_CACHE_MAX = 450; // hard cap — evict oldest beyond this (storage-safe)
+
+// APP-SHELL PRECACHE — the static UI + design + catalog. Precached at install
+// so the app opens INSTANTLY and the channel list/design are browsable OFFLINE.
+// Only stable, non-hashed files: hashed /assets/* chunks are runtime cache-first
+// and HTML stays network-first, so the force-update version gate still controls
+// updates (a new version clears caches + re-precaches the fresh shell).
+const SHELL = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/tivi-curated.json',
+  '/streamore-locked.json',
+  '/tivi-192.png',
+  '/tivi-512.png',
+];
 
 // --- INSTALL ---
-self.addEventListener('install', () => {
+self.addEventListener('install', (event) => {
   console.log('[SW] Installing ' + CACHE_NAME);
   self.skipWaiting();
+  // Resilient precache: each entry added independently so a single 404 can
+  // never abort the install (which would leave the app uncontrolled).
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.allSettled(SHELL.map((u) => cache.add(u).catch(() => {})))
+    )
+  );
 });
 
 // --- ACTIVATE ---
@@ -16,7 +44,7 @@ self.addEventListener('activate', (event) => {
   console.log('[SW] Activating ' + CACHE_NAME);
   event.waitUntil(
     caches.keys().then((keys) => {
-      const old = keys.filter((k) => k !== CACHE_NAME);
+      const old = keys.filter((k) => k !== CACHE_NAME && k !== IMG_CACHE);
       if (old.length) {
         console.log('[SW] Purging old caches:', old.join(', '));
         return Promise.all(old.map((k) => caches.delete(k))).then(() => {
@@ -46,6 +74,34 @@ function cacheFirstThenNetwork(request) {
       return response;
     });
   }).catch(() => caches.match(request));
+}
+
+// Trim the image cache back to its cap, evicting the OLDEST entries first.
+// cache.keys() preserves insertion order, so the front of the list is oldest.
+function trimImageCache() {
+  caches.open(IMG_CACHE).then((cache) =>
+    cache.keys().then((keys) => {
+      const over = keys.length - IMG_CACHE_MAX;
+      for (let i = 0; i < over; i++) cache.delete(keys[i]);
+    })
+  );
+}
+
+// Cache-first against the dedicated, bounded IMG_CACHE. Once an image is stored
+// it's served locally forever (until LRU-evicted). Network only on first miss.
+function imageCacheFirst(request) {
+  return caches.open(IMG_CACHE).then((cache) =>
+    cache.match(request).then((cached) => {
+      if (cached) return cached;
+      return fetch(request).then((response) => {
+        if (response.ok) {
+          cache.put(request, response.clone());
+          trimImageCache();
+        }
+        return response;
+      });
+    })
+  ).catch(() => caches.match(request));
 }
 
 function networkFirstThenCache(request, fallbackBody) {
@@ -96,15 +152,15 @@ self.addEventListener('fetch', (event) => {
     return; // Let browser handle natively — no SW involvement
   }
 
-  // --- TMDB IMAGES: cache-first (static poster art, rarely changes) ---
+  // --- TMDB IMAGES: cache-first via bounded image cache (static poster art) ---
   if (url.includes('image.tmdb.org')) {
-    event.respondWith(cacheFirstThenNetwork(request));
+    event.respondWith(imageCacheFirst(request));
     return;
   }
 
-  // --- CHANNEL ICONS: cache-first (logos don't change) ---
+  // --- CHANNEL ICONS: cache-first via bounded image cache (logos don't change) ---
   if (url.includes('/icons/') || (url.includes('supabase.co') && url.includes('channel-icons'))) {
-    event.respondWith(cacheFirstThenNetwork(request));
+    event.respondWith(imageCacheFirst(request));
     return;
   }
 
@@ -116,7 +172,7 @@ self.addEventListener('fetch', (event) => {
     url.includes('raw.githubusercontent.com') ||
     /\.(png|webp|svg|jpg|jpeg|ico|gif)(\?|$)/i.test(url)
   ) {
-    event.respondWith(cacheFirstThenNetwork(request));
+    event.respondWith(imageCacheFirst(request));
     return;
   }
 
@@ -173,9 +229,9 @@ self.addEventListener('fetch', (event) => {
       return;
     }
 
-    // --- IMAGES/LOGOS: cache-first ---
+    // --- IMAGES/LOGOS: cache-first via bounded image cache ---
     if (url.includes('/logos/') || url.match(/\.(png|webp|svg|ico|jpg|jpeg)$/)) {
-      event.respondWith(cacheFirstThenNetwork(request));
+      event.respondWith(imageCacheFirst(request));
       return;
     }
 

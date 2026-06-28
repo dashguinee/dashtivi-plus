@@ -1,5 +1,6 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { safeImageUrl, getChannelMeta } from '../../lib/xtream';
+import { prefetchDecode, useNearViewport } from '../../lib/imageLoading';
 
 interface Props {
   src?: string;
@@ -529,11 +530,28 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
   // shown once this session, start fully-loaded so it never fades/pops again.
   const [loaded, setLoaded] = useState(() => (safeSrc ? PAINTED_SRC.has(safeSrc) : false));
 
-  // Premium branded placeholder — used during load AND as the final, never-blank
-  // fallback. Stable hue from the name + clean initials + top-shine + inner border,
-  // so a logo-less channel reads as a designed tile, part of the brand system.
+  // Anticipatory load: when the tile is within ~one screen of the viewport,
+  // decode the logo AHEAD of time and promote the <img> to eager + high
+  // priority so it's painted before the user scrolls to it.
+  const [setNearRef, near] = useNearViewport();
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const wantsPriority = eager || near;
+
+  useEffect(() => {
+    if (near && safeSrc) prefetchDecode(safeSrc);
+  }, [near, safeSrc]);
+
+  // fetchpriority isn't typed on React 18's img props — set it imperatively.
+  useEffect(() => {
+    if (imgRef.current) imgRef.current.setAttribute('fetchpriority', wantsPriority ? 'high' : 'low');
+  }, [wantsPriority]);
+
+  // Premium branded tile. `withInitials` is true ONLY when there is genuinely
+  // no logo — then the initials ARE the design. While a real logo is loading we
+  // render the tile WITHOUT letters, so the user never sees a letter-flash that
+  // then gets overwritten by the logo.
   const initialsSize = size === 'lg' ? '26px' : size === 'md' ? '19px' : '14px';
-  const placeholderEl = (
+  const renderTile = (withInitials: boolean) => (
     <div
       className={`${sizes[size]} rounded-xl relative overflow-hidden flex items-center justify-center flex-shrink-0 ${className}`}
       style={getPlaceholderStyle(name)}
@@ -546,30 +564,34 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
             'linear-gradient(160deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 22%, transparent 46%)',
         }}
       />
-      <span
-        className="relative font-semibold leading-none select-none"
-        style={{
-          fontSize: initialsSize,
-          letterSpacing: '0.02em',
-          textShadow: '0 1px 2px rgba(0,0,0,0.45)',
-        }}
-      >
-        {initials}
-      </span>
+      {withInitials && (
+        <span
+          className="relative font-semibold leading-none select-none"
+          style={{
+            fontSize: initialsSize,
+            letterSpacing: '0.02em',
+            textShadow: '0 1px 2px rgba(0,0,0,0.45)',
+          }}
+        >
+          {initials}
+        </span>
+      )}
     </div>
   );
 
-  if (!safeSrc) return placeholderEl;
+  // No logo at all → the lettered tile is the permanent, designed fallback.
+  if (!safeSrc) return renderTile(true);
 
   return (
-    <div className={`${sizes[size]} relative rounded-xl overflow-hidden flex-shrink-0 ${className}`}>
-      {/* Placeholder behind — sizes the tile (no layout shift) but FADES OUT the
-          instant the icon paints, so the letters never show through the logo.
-          Stays fully visible if the image fails (never blank). */}
+    <div ref={setNearRef} className={`${sizes[size]} relative rounded-xl overflow-hidden flex-shrink-0 ${className}`}>
+      {/* QUIET tile behind — sizes the slot (no layout shift), no letters, so a
+          loading logo never flashes initials. Fades out the instant the logo
+          paints; if the logo fails we swap in the lettered tile (never blank). */}
       <div className={`transition-opacity duration-200 ${loaded ? 'opacity-0' : 'opacity-100'}`}>
-        {placeholderEl}
+        {renderTile(false)}
       </div>
       <img
+        ref={imgRef}
         src={safeSrc}
         alt={name}
         className={`absolute inset-0 w-full h-full rounded-xl object-contain bg-white/5 p-1 transition-opacity duration-200 ${loaded ? 'opacity-100' : 'opacity-0'}`}
@@ -579,7 +601,7 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
           if (safeSrc?.includes('tv-logos')) setLogoFailed(true);
           else setFailed(true);
         }}
-        loading={eager ? 'eager' : 'lazy'}
+        loading={wantsPriority ? 'eager' : 'lazy'}
         decoding="async"
       />
     </div>
