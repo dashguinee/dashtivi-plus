@@ -282,6 +282,19 @@ function main() {
     const block = ['', '── PERFORMANCE SCORECARD ──', ...lines, '', verdict, ''].join('\n');
     console.log(block);
 
+    // ── CLS DIAGNOSTIC: attribute the dominant layout-shifts (top 12) ──
+    try {
+      const allShifts = [];
+      for (const b of data.report) for (const s of (b.shifts || [])) allShifts.push({ ...s, surface: b.label });
+      allShifts.sort((a, b) => b.value - a.value);
+      const sum = allShifts.reduce((a, s) => a + s.value, 0);
+      console.log(`── TOP LAYOUT SHIFTS (sum ${sum.toFixed(3)} · ${allShifts.length} shifts) ──`);
+      for (const s of allShifts.slice(0, 12)) {
+        console.log(`${s.value.toFixed(4)}  [${s.surface}] ${s.route} @${s.time}ms  ←  ${(s.sources || []).join('  |  ')}`);
+      }
+      console.log('');
+    } catch (e) { console.log('(cls-diag failed)', e.message); }
+
     const ts = new Date().toISOString();
     let md = `# Tivi+ Performance Scorecard\n\n`;
     md += `> Generated: ${ts}\n> Target: ${URL}\n> Harness: \`scripts/check-performance.mjs\` · re-run \`npm run check:perf\`\n\n`;

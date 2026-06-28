@@ -84,6 +84,10 @@ function parseYear(name: string): number {
   return m ? parseInt(m[1], 10) : 0;
 }
 
+// Card widths per ladder tier — the deferred-ladder skeleton reserves one row
+// per entry at the matching height (~9 rows ≈ the cold-start ladder).
+const LADDER_SKELETON_WIDTHS = [140, 120, 120, 108, 108, 108, 108, 108, 108];
+
 /** Warm accent per ladder row, by driver/identity. Top-10 rows ignore this (stay red). */
 function rowAccent(row: RankedRow): string {
   if (row.id === 'african-spotlight') return TERRACOTTA;
@@ -885,7 +889,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           )}
 
           {/* The recommendation ladder — every row through VeeCollectionRow + PosterCard */}
-          {ladder.length > 0 && (
+          {ladder.length > 0 ? (
             <div className="py-3">
               {ladder.map((row, i) => {
                 const tierClass = i === 0 ? 'row-tier-hero' : i <= 2 ? 'row-tier-featured' : 'row-tier-standard';
@@ -913,7 +917,27 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 );
               })}
             </div>
-          )}
+          ) : (seriesList.length > 0 && hasTmdb) ? (
+            // CLS RESERVE: the ladder computes at DEFERRED priority → empty for one
+            // paint. Reserve each row's EXACT final box (header + cardWidth×1.5
+            // posters, matching VeeCollectionRow) so the real rows replace these
+            // in-place and shift NOTHING. (Mirrors MoviesPage; long-task stays fixed.)
+            <div className="py-3" aria-hidden>
+              {LADDER_SKELETON_WIDTHS.map((cw, i) => (
+                <section key={i} className={`${i === 0 ? 'row-tier-hero' : i <= 2 ? 'row-tier-featured' : 'row-tier-standard'} mb-1 animate-pulse`}>
+                  <div className="px-4 mb-2">
+                    <div className="h-5 w-44 rounded bg-white/[0.05]" />
+                    <div className="h-[14px] w-3/5 max-w-[260px] rounded bg-white/[0.03] mt-0.5" />
+                  </div>
+                  <div className="flex px-4 pb-2 items-end" style={{ gap: 14 }}>
+                    {[0, 1, 2, 3, 4, 5].map(j => (
+                      <div key={j} className="flex-shrink-0 rounded-xl bg-white/[0.025]" style={{ width: cw, height: Math.round(cw * 1.5) }} />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          ) : null}
         </>
       )}
 
