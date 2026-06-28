@@ -142,11 +142,10 @@ export function CategoryHero({
     >
       <style>{`
         @keyframes hero-sweep-${uid} { 0%{transform:translateX(-40%)} 100%{transform:translateX(140%)} }
-        @keyframes hero-play-aura-${uid} {
-          0%,100% { transform: scale(0.96); opacity: 0.42; }
-          50%     { transform: scale(1.08); opacity: 0.66; }
+        @keyframes hero-lens-breathe-${uid} {
+          0%,100% { transform: scale(1); }
+          50%     { transform: scale(1.03); }
         }
-        @keyframes hero-play-spin-${uid} { to { transform: rotate(360deg); } }
         @keyframes hero-marquee-in-${uid} { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
 
@@ -239,81 +238,72 @@ export function CategoryHero({
             </p>
           </div>
         </div>
-        {/* Big play target — ABSTRACT "Beacon". Distilled, not decorated: PLAY is
-            the triangle ITSELF (the one signature mark), DASH premium = its
-            accent→light→dark gradient depth, LIVE = a soft accent AURA that
-            breathes behind it. No disc, no ring, no sphere, no texture. The aura
-            animates transform/opacity only on its own layer → zero crawl. */}
-        <div className="relative w-14 h-14 flex-shrink-0 flex items-center justify-center">
-          {/* Breathing aura — pure radial accent glow, scale + opacity only. */}
+        {/* Big play target — "THE LENS". ONE crafted, frosted-glass play control:
+            a real backdrop-blur disc with glass depth (top sheen, bottom inner
+            shadow, floating drop-shadow), ONE thin violet→accent gradient ring
+            (the single signature), and a crisp play mark. Motion = a single
+            near-imperceptible breathe (scale 1→1.03); tap = quick scale-down +
+            ring-glow flash. GPU only (transform/opacity), nothing else moves. */}
+        <div className="relative w-14 h-14 flex-shrink-0 transition-transform duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] group-active:scale-[0.94]">
+          {/* Breathe wrapper — scales the whole lens; isolated from the tap
+              scale (which lives on the parent) so they never conflict. */}
           <div
-            aria-hidden
-            className="absolute inset-0 rounded-full pointer-events-none"
-            style={{
-              background: `radial-gradient(circle at 50% 50%, rgba(${a},0.55) 0%, rgba(${a},0.18) 42%, transparent 72%)`,
-              animation: `hero-play-aura-${uid} 2.8s ease-in-out infinite`,
-              willChange: 'transform, opacity',
-            }}
-          />
-          {/* Orbiting WATER-DROP COMET — a bright accent droplet (head) with a
-              tail that FADES to transparent behind it, looping around the Beacon.
-              The whole SVG rotates as ONE GPU layer (transform only, seamless
-              360==0) so the gradient/head/tail move together — zero flicker. */}
-          <svg
-            aria-hidden
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            viewBox="0 0 56 56"
-            style={{ animation: `hero-play-spin-${uid} 3s linear infinite`, willChange: 'transform' }}
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ animation: `hero-lens-breathe-${uid} 3s ease-in-out infinite`, willChange: 'transform' }}
           >
-            <defs>
-              {/* Tail fade — transparent at the tail end → accent at the drop. */}
-              <linearGradient id={`comet-${uid}`} gradientUnits="userSpaceOnUse" x1="48.8" y1="40" x2="28" y2="4">
-                <stop offset="0%" stopColor={accent} stopOpacity="0" />
-                <stop offset="60%" stopColor={accent} stopOpacity="0.32" />
-                <stop offset="100%" stopColor={accent} stopOpacity="0.95" />
-              </linearGradient>
-              {/* Wet droplet — white core → accent → dark rim. */}
-              <radialGradient id={`drop-${uid}`} cx="0.42" cy="0.4" r="0.62">
-                <stop offset="0%" stopColor="#ffffff" />
-                <stop offset="50%" stopColor={accent} />
-                <stop offset="100%" stopColor={dark} />
-              </radialGradient>
-            </defs>
-            {/* The tail — a curved stroke that tapers off into nothing. */}
-            <path
-              d="M48.8 40 A 24 24 0 0 1 28 4"
-              fill="none"
-              stroke={`url(#comet-${uid})`}
-              strokeWidth="3.4"
-              strokeLinecap="round"
+            {/* Frosted-glass disc — backdrop blur + translucent fill + accent tint. */}
+            <div
+              aria-hidden
+              className="absolute inset-0 rounded-full"
+              style={{
+                background:
+                  `radial-gradient(circle at 32% 26%, rgba(255,255,255,0.34) 0%, rgba(255,255,255,0.08) 38%, transparent 60%), ` +
+                  `linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05)), rgba(${a},0.10)`,
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                boxShadow:
+                  'inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -2px 6px rgba(0,0,0,0.30), 0 6px 20px rgba(0,0,0,0.40)',
+              }}
             />
-            {/* The drop — soft glow halo + the bright wet head. */}
-            <circle cx="28" cy="4" r="6" fill={accent} opacity="0.22" />
-            <circle cx="28" cy="4" r="3.1" fill={`url(#drop-${uid})`} />
-          </svg>
-          {/* The mark — a single gradient play triangle with SOFTENED corners
-              (round joins/caps). Light top edge → accent → dark = depth. */}
-          <svg
-            className="relative"
-            width="30" height="32" viewBox="0 0 30 32"
-            style={{ marginLeft: 3, filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.5))' }}
-          >
-            <defs>
-              <linearGradient id={`beacon-${uid}`} x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#ffffff" />
-                <stop offset="46%" stopColor={accent} />
-                <stop offset="100%" stopColor={dark} />
-              </linearGradient>
-            </defs>
-            <path
-              d="M10 8 L10 24 L23 16 Z"
-              fill={`url(#beacon-${uid})`}
-              stroke={`url(#beacon-${uid})`}
-              strokeWidth="6"
-              strokeLinejoin="round"
-              strokeLinecap="round"
+            {/* Ring-glow flash — invisible at rest, blooms on tap (group-active). */}
+            <div
+              aria-hidden
+              className="absolute inset-0 rounded-full opacity-0 group-active:opacity-100 transition-opacity duration-150 pointer-events-none"
+              style={{ boxShadow: `0 0 16px rgba(${a},0.6), 0 0 0 1px rgba(${a},0.5)` }}
             />
-          </svg>
+            {/* THE one signature — a thin violet→accent gradient ring. */}
+            <svg aria-hidden className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 56 56">
+              <defs>
+                <linearGradient id={`lensring-${uid}`} x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#9D4EDD" />
+                  <stop offset="100%" stopColor={accent} />
+                </linearGradient>
+              </defs>
+              <circle cx="28" cy="28" r="26.8" fill="none" stroke={`url(#lensring-${uid})`} strokeWidth="1.5" opacity="0.9" />
+            </svg>
+            {/* The play mark — white → pale-accent, rounded joins, optically
+                centered (nudged right ~2px), soft drop-shadow. */}
+            <svg
+              className="relative"
+              width="22" height="24" viewBox="0 0 22 24"
+              style={{ marginLeft: 2, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.45))' }}
+            >
+              <defs>
+                <linearGradient id={`lensmark-${uid}`} x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="100%" stopColor="#ecccff" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M6 5 L6 19 L18 12 Z"
+                fill={`url(#lensmark-${uid})`}
+                stroke={`url(#lensmark-${uid})`}
+                strokeWidth="4.5"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
         </div>
       </div>
     </button>
