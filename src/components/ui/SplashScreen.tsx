@@ -19,8 +19,10 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
     // Phase 1: dark → brand
     const t1 = setTimeout(() => setPhase('brand'), 500);
 
-    // Phase 2: wait for assets + minimum brand time (auth has 3s max)
-    const minBrandTime = new Promise<void>(r => setTimeout(r, 2800));
+    // Phase 2: wait for assets + minimum brand time. Trimmed to keep
+    // boot-to-interactive well under the 4s budget — a brief brand flash, then
+    // we're in. (Was 2800 + 2600 ≈ 5.4s of splash, the bulk of cold boot.)
+    const minBrandTime = new Promise<void>(r => setTimeout(r, 1300));
 
     Promise.all([minBrandTime, preloadReady]).then(() => {
       // verbose: '[SPLASH] Assets ready'
@@ -28,11 +30,12 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
       const proceed = () => {
         // verbose: '[SPLASH] Proceeding'
         setPhase('ready');
-        setTimeout(() => setPhase('exit'), 700);
-        setTimeout(() => onComplete(), 2600);
+        setTimeout(() => setPhase('exit'), 320);
+        // onComplete just after the 500ms opacity fade finishes — no dead air.
+        setTimeout(() => onComplete(), 900);
       };
       const waitForAuth = () => {
-        if (authRef.current || Date.now() - authStart > 3000) {
+        if (authRef.current || Date.now() - authStart > 1800) {
           proceed();
         } else {
           setTimeout(waitForAuth, 80);
@@ -41,8 +44,8 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
       waitForAuth();
     });
 
-    // Failsafe — never stuck longer than 6s
-    const failsafe = setTimeout(() => { onComplete(); }, 6000);
+    // Failsafe — never stuck longer than 4s
+    const failsafe = setTimeout(() => { onComplete(); }, 4000);
 
     return () => { clearTimeout(t1); clearTimeout(failsafe); };
   }, [onComplete]);

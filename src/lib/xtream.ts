@@ -103,8 +103,12 @@ export function safeImageUrl(url?: string | null): string | null {
   let u = url.replace(/^ttps:/, 'https:').replace(/"$/, '');
   // Replace dead starshare domain
   u = u.replace('buxjam.com:8080', 'fastshare1.com:8080').replace('starshare.live:8080', 'fastshare1.com:8080').replace('datahub11.com:8080', 'fastshare1.com:8080').replace('datahub11.com:80', 'fastshare1.com:8080');
-  // Block known junk hosts
-  if (u.includes('webhop.live') || u.includes('imdb.com') || u.includes('wikia.nocookie.net') || u.includes('paste.pics') || u.includes('tensports.com.pk') || u.includes('stariptv.fun') || u.includes('starapk1.com') || u.includes('stackpathcdn.com') || u.includes('QuranTVSA')) {
+  // Block known junk / dead hosts — these reliably 4xx/5xx or fail to connect,
+  // so we never fire the request: ChannelIcon falls straight to its painted
+  // initials placeholder (no broken-image flash, no failed network request).
+  //   · upload.wikimedia.org — returns 400/404 for the thumb URLs we stored
+  //   · i.ibb.co / ibb.co    — image host is dead/blocked (connection failure)
+  if (u.includes('webhop.live') || u.includes('imdb.com') || u.includes('wikia.nocookie.net') || u.includes('paste.pics') || u.includes('tensports.com.pk') || u.includes('stariptv.fun') || u.includes('starapk1.com') || u.includes('stackpathcdn.com') || u.includes('QuranTVSA') || u.includes('upload.wikimedia.org') || u.includes('ibb.co')) {
     return null;
   }
   // Already HTTPS — safe

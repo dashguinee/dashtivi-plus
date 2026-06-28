@@ -18,17 +18,18 @@
    remember the REAL rendered size after first paint, so it self-corrects.
    Purely a rendering hint — ZERO visual change, no effect on onscreen nodes.
 
-   ⚠ NOT for the home-feed CAROUSEL ROWS: those <section>s carry an inline
-   `row-in` (opacity 0→1 + translateY) entrance animation. When a
-   `content-visibility:auto` subtree is skipped offscreen and re-rendered as it
-   scrolls back in, Chromium RESTARTS the CSS animations inside it — so the
-   whole row (e.g. the World Cup cards) re-fades / BLINKS on every scroll
-   re-entry. So `.cv-row` keeps only cheap layout/paint containment (which does
-   NOT skip rendering, so animations never replay) — the flicker is gone while
-   sibling rows stay isolated. The vertical GRID cells below have no entrance
-   animation, so they safely keep the full offscreen-skip. */
+   The home-feed ROWS carry an inline `row-in` (opacity 0→1 + translateY)
+   entrance animation. When a `content-visibility:auto` subtree is skipped
+   offscreen and re-rendered as it scrolls back in, Chromium RESTARTS the CSS
+   animations inside it → the whole row (e.g. the World Cup cards) re-fades /
+   BLINKS on every scroll re-entry. So we KEEP the offscreen-skip (the big
+   scroll-FPS win) and instead NEUTRALISE the replaying entrance animation with
+   `animation: none` — no blink, and the row paints instantly. Best of both:
+   buttery scroll AND zero flicker. */
 .cv-row {
-  contain: layout style;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 180px;
+  animation: none !important;
 }
 .cv-grid-cell {
   content-visibility: auto;
