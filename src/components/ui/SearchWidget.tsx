@@ -252,7 +252,7 @@ export const SearchWidget: React.FC<Props> = ({ credentials, onPlay }) => {
           <div
             aria-hidden
             className="absolute left-0 top-0 pointer-events-none select-none"
-            style={{ zIndex: 2, paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)', paddingLeft: 20, opacity: 0.92 }}
+            style={{ zIndex: 2, paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)', paddingLeft: 22, opacity: 0.92 }}
           >
             <span className="text-[19px] font-black tracking-tight text-white uppercase" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>DASH</span>
             <span className="text-[14px] font-light tracking-wide text-white/45" style={{ fontFamily: "'Outfit', sans-serif", marginLeft: '1px' }}>ti<span className="font-semibold" style={{ color: '#C77DFF' }}>V</span>i</span>
