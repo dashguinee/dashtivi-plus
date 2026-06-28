@@ -284,10 +284,22 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
   }, []);
 
   if (!catalog) {
+    // CLS: the skeleton MUST occupy the SAME box as the loaded hero+feed so the
+    // swap on catalog-resolve shifts nothing. Mirror the loaded layout EXACTLY:
+    // same `pt-16`, the same hero slot (indicator row + a `px-4` `w-full
+    // aspect-video` card — identical to the FreeHlsShowcaseCard box), then the
+    // row placeholders. The hero card is the largest element, so matching its
+    // box from frame 1 kills the dominant layout shift.
     return (
-      <div className="pt-20 px-4 space-y-6 animate-pulse">
-        <div className="h-[34vh] rounded-2xl bg-white/[0.03]" />
-        <div className="space-y-5">
+      <div className="pt-16 pb-48 animate-pulse">
+        {/* Hero slot — identical dimensions to the loaded <section> hero */}
+        <section className="mb-8">
+          <div className="px-4 mb-2 flex items-center gap-3" style={{ height: 16 }} />
+          <div className="px-4">
+            <div className="w-full aspect-video rounded-2xl bg-white/[0.03]" />
+          </div>
+        </section>
+        <div className="px-4 space-y-5">
           {[1, 2, 3].map((i) => (
             <div key={i}>
               <div className="h-4 w-32 rounded bg-white/[0.04] mb-3" />
