@@ -175,12 +175,23 @@ export function toRecItem(item: AnyStream, kind: CatalogKind): RecItem {
 // ─────────────────────────────────────────────────────────────────────────────────
 
 /** Parse a release year from a catalog title like "Movie (2025)". 0 when absent.
- *  NEVER read `TmdbEntry.y` for a year — that field is the YouTube trailer key. */
+ *  NEVER read `TmdbEntry.y` for a year — that field is the YouTube trailer key.
+ *
+ *  PERF: the recommendation ladder runs ~9 scoring passes and each pass calls this
+ *  once PER TITLE, so the SAME title gets regex-parsed ~9× per page build — and on
+ *  a tab-switch (Movies/Series first mount) that pushed the ladder render over the
+ *  100ms long-task budget. The result is deterministic per title, so memoize it:
+ *  the first pass parses, the rest hit the cache. Pure speed-up, identical output. */
+const _yearCache = new Map<string, number>();
 export function parseYearFromName(name: string): number {
+  const cached = _yearCache.get(name);
+  if (cached !== undefined) return cached;
   const m = name.match(/\((\d{4})\)/);
-  if (!m) return 0;
-  const y = parseInt(m[1], 10);
-  return y >= 1900 && y <= 2100 ? y : 0;
+  let y = 0;
+  if (m) { const p = parseInt(m[1], 10); if (p >= 1900 && p <= 2100) y = p; }
+  if (_yearCache.size > 20000) _yearCache.clear(); // defensive cap (catalogs are ~thousands)
+  _yearCache.set(name, y);
+  return y;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────────

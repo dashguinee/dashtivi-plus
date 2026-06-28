@@ -102,10 +102,16 @@ export function startPreload() {
   loads.push(
     import('@/pages/HomePage').catch(() => {}).finally(stepDone),
   );
-  // Non-blocking: prefetch secondary page chunks so route transitions feel instant
+  // Non-blocking: prefetch secondary page chunks during idle so route transitions
+  // feel instant. Movies + Series are in the Vee cycle (the main tab-switch path);
+  // prefetching them here means the FIRST Vee tap doesn't pay a cold chunk
+  // parse/compile on the main thread (that cold parse was the worst tab-switch
+  // long-task) — by tap time the chunk is already compiled.
   const prefetchPages = () => {
     import('@/pages/ExperienceHomePage').catch(() => {});
     import('@/pages/LiveTVPage').catch(() => {});
+    import('@/pages/MoviesPage').catch(() => {});
+    import('@/pages/SeriesPage').catch(() => {});
   };
   if (typeof requestIdleCallback === 'function') {
     requestIdleCallback(prefetchPages, { timeout: 4000 });
