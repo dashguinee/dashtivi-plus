@@ -69,13 +69,15 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
         willChange: 'transform, opacity',
       }}
     >
-      {/* PERF FIX: replaced glass-strong with solid bg on non-home pages.
-          backdrop-filter: blur(40px) on a sticky header recalculates every scroll frame. */}
+      {/* STEADY-SHELL: the header hides/shows on scroll, so a live backdrop-filter
+          here re-samples the screen every frame and flickers. Non-home now uses a
+          STATIC frosted background (no backdrop-blur) — reads ~identical, never
+          unfills. Home stays a transparent gradient (nothing to sample). */}
       <div
         className={`flex items-center justify-between px-4 py-3 transition-[background-color,border-color] duration-500 ${
           isHome
             ? 'bg-gradient-to-b from-black/30 via-black/10 to-transparent'
-            : 'backdrop-blur-lg bg-[rgba(10,10,10,0.55)] border-b border-white/[0.04]'
+            : 'bg-[rgba(11,11,14,0.92)] border-b border-white/[0.04]'
         }`}
       >
         {/* Logo */}

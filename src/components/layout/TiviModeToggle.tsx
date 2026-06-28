@@ -62,9 +62,14 @@ const TiviModeToggleImpl: React.FC = () => {
       style={{ transform: 'translateX(-1px) translateZ(0)' }}
     >
       <style>{`
+        /* PRE-BAKED glow + transform-only breathe. The old keyframes animated
+           box-shadow every frame (a paint each tick, which made the pebble a
+           hungry, flicker-prone element). The glow is now a STATIC box-shadow
+           (the mid-breathe value) baked onto the disc, and only transform:scale
+           animates — pure GPU, zero per-frame paint, steady at a glance. */
         @keyframes vee-breathe {
-          0%,100% { box-shadow: 0 6px 16px rgba(168,85,247,0.40), 0 0 18px rgba(255,107,157,0.22), inset 0 1px 1px rgba(255,255,255,0.5), inset 0 -2px 3px rgba(0,0,0,0.28); transform: scale(1); }
-          50%     { box-shadow: 0 8px 26px rgba(168,85,247,0.60), 0 0 30px rgba(59,130,246,0.30), inset 0 1px 1px rgba(255,255,255,0.5), inset 0 -2px 3px rgba(0,0,0,0.28); transform: scale(1.045); }
+          0%,100% { transform: translateZ(0) scale(1); }
+          50%     { transform: translateZ(0) scale(1.045); }
         }
       `}</style>
       <div
@@ -72,6 +77,8 @@ const TiviModeToggleImpl: React.FC = () => {
           width: 46, height: 46, borderRadius: 15, marginTop: -1,
           background: 'radial-gradient(circle at 35% 30%, #FF8AD0, #A855F7 52%, #3B82F6)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
+          // Static, pre-baked soft glow (no animated/SVG filter) — mid-breathe value.
+          boxShadow: '0 7px 21px rgba(168,85,247,0.50), 0 0 24px rgba(255,107,157,0.26), 0 0 24px rgba(59,130,246,0.18), inset 0 1px 1px rgba(255,255,255,0.5), inset 0 -2px 3px rgba(0,0,0,0.28)',
           animation: 'vee-breathe 3.4s ease-in-out infinite',
           touchAction: 'none',
           // Promote the breathe to its own composited layer → scale animates on the
