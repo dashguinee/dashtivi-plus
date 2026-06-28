@@ -549,8 +549,8 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           </div>
           <p className="text-[11px] text-white/35 mt-3.5 px-0.5 leading-snug">
             {lang === 'fr'
-              ? 'Tout un univers musical — touchez, VOYO s’ouvre sans quitter Tivi+.'
-              : 'A whole music universe — tap, and VOYO opens without leaving Tivi+.'}
+              ? 'La musique aussi — touchez pour ouvrir VOYO, dans Tivi+.'
+              : 'Music too — tap to open VOYO, right inside Tivi+.'}
           </p>
         </section>
       )}

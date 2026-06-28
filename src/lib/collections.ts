@@ -199,7 +199,7 @@ export function getFeaturedHero(): FeaturedHero {
   if (hour >= 12 && hour < 18) {
     return {
       title: 'Afternoon Escape',
-      subtitle: 'Award-winning movies and handpicked series. Your next favorite is here.',
+      subtitle: 'Award-winning movies and handpicked series.',
       cta: 'Explore',
       navigateTo: '/movies',
       gradient: 'from-amber-600/15 via-[#0A0A0A] to-orange-900/10',
@@ -210,7 +210,7 @@ export function getFeaturedHero(): FeaturedHero {
   if (hour >= 18 && hour < 23) {
     return {
       title: 'Prime Time',
-      subtitle: 'Live sports, fresh cinema, and curated series. Your evening, elevated.',
+      subtitle: 'Live sports, fresh cinema, curated series.',
       cta: 'Watch Now',
       navigateTo: '/live',
       gradient: 'from-primary/20 via-[#0A0A0A] to-primary-dark/10',
@@ -220,8 +220,8 @@ export function getFeaturedHero(): FeaturedHero {
   // Late night (11pm-6am)
   return {
     title: 'Late Night',
-    subtitle: 'The best series for those who stay up. Something new awaits.',
-    cta: 'Dive In',
+    subtitle: 'The best series for late nights.',
+    cta: 'Watch',
     navigateTo: '/series',
     gradient: 'from-indigo-600/15 via-[#0A0A0A] to-violet-900/10',
   };

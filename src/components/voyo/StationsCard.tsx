@@ -97,7 +97,7 @@ export function StationsCard({ className = '' }: StationsCardProps) {
             Stations
           </h3>
           <p className="text-white/70 text-sm font-medium mt-0.5 line-clamp-1">
-            Always-tuning African radio. Join one.
+            Live African radio. Pick a station.
           </p>
         </div>
 

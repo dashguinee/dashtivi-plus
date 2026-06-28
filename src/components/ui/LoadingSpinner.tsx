@@ -29,7 +29,7 @@ export function LoadingSpinner({ text }: { size?: 'sm' | 'md' | 'lg'; text?: str
 export function FullPageLoader() {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-[#0a0a12]/90 z-50">
-      <LoadingSpinner text="Tuning signal" />
+      <LoadingSpinner text="Loading" />
     </div>
   );
 }
