@@ -267,6 +267,14 @@ export function FreeHlsShowcaseCard({
     return `${parseInt(n.slice(0, 2), 16)}, ${parseInt(n.slice(2, 4), 16)}, ${parseInt(n.slice(4, 6), 16)}`;
   })(accent);
 
+  // Brand-violet wash (~6%), matching every CategoryHero so the whole hero
+  // layer breathes the DASH identity. LIGHTER (~3.5%) on Made in Hollywood
+  // (free-2339) + France 24 (free-2667) per Aziz.
+  const lightWash =
+    channel.id === 'free-2339' || channel.id === 'free-2667' || /hollywood|france\s*24/i.test(channel.name);
+  const washA = lightWash ? 0.035 : 0.06;
+  const washB = lightWash ? 0.03 : 0.05;
+
   return (
     <div className="px-4">
       <div
@@ -303,6 +311,12 @@ export function FreeHlsShowcaseCard({
             WebkitMaskComposite: 'xor',
             maskComposite: 'exclude',
           }}
+        />
+        {/* Brand-violet wash — under the video + content, lighter on Hollywood/F24. */}
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: `linear-gradient(135deg, rgba(157,78,221,${washA}) 0%, transparent 52%, rgba(199,125,255,${washB}) 100%)` }}
         />
 
         {focused && (

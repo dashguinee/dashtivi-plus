@@ -86,6 +86,14 @@ export function NbaShowcase({
           style={{ background: 'radial-gradient(ellipse 100% 80% at 50% 40%, transparent 55%, rgba(0,0,0,0.45) 100%)' }}
         />
 
+        {/* Subtle brand-violet wash (~6%) — same as every CategoryHero so the
+            whole hero layer breathes the DASH identity, under the content. */}
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, transparent 52%, rgba(199,125,255,0.05) 100%)' }}
+        />
+
         {/* LIVE · NBA pill — top left */}
         <div
           className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full"
