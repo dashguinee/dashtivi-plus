@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { PlayerControls } from './PlayerControls';
 import { RefreshCw, AlertTriangle, ChevronLeft as ChevLeft, ChevronRight as ChevRight, SkipForward, SkipBack, Tv } from 'lucide-react';
@@ -254,7 +254,10 @@ export const VideoPlayer: React.FC<Props> = ({
   // never fired and `showCinemaIntro` stayed true — the black intro / blackout sat
   // ON TOP of a playing movie (controls portal renders over the persistent <video>).
   // Now the timers are armed once per actual channel change; teardown is unmount-only.
-  useEffect(() => {
+  // FLICKER FIX: useLayoutEffect (not useEffect) so showCinemaIntro is set BEFORE the
+  // browser paints the channel-change render — the cinema intro appears in the SAME
+  // frame, eliminating the 1-frame gap where the bare loading video would flash.
+  useLayoutEffect(() => {
     const ch = state.channel;
     const channelId = ch?.id ?? null;
     const isVodCh = ch?.category === 'movie' || ch?.category === 'series';
@@ -415,8 +418,9 @@ export const VideoPlayer: React.FC<Props> = ({
   useEffect(() => {
     const id = state.channel?.id ?? null;
     // Decide once per SWITCH (not per rebuffer) — a stall on the current channel must
-    // not consume a connecting-card throttle slot or flash the card.
-    if (state.isSwitching && id) {
+    // not consume a connecting-card throttle slot or flash the card. Live-only: the
+    // card never renders for VOD (cinema intro owns that), so VOD must not burn slots.
+    if (state.isSwitching && id && !isVod) {
       if (connectDecidedForRef.current !== id) {
         connectDecidedForRef.current = id;
         setShowConnectCard(shouldShowConnectCard(id));
@@ -424,7 +428,23 @@ export const VideoPlayer: React.FC<Props> = ({
     } else if (!state.isSwitching) {
       connectDecidedForRef.current = null;
     }
-  }, [state.isSwitching, state.channel?.id]);
+  }, [state.isSwitching, state.channel?.id, isVod]);
+
+  // ── Buffering pill — DEBOUNCED both directions (FLICKER FIX) ──────────────
+  // A rough stream fires `waiting`/`playing` repeatedly, toggling state.isLoading
+  // fast. Rendering the pill directly off isLoading made it mount/unmount on every
+  // toggle, restarting its fade-in each time = a flicker. We debounce: the pill only
+  // appears after the buffering condition holds ~500ms, and only hides after it has
+  // been clear ~400ms — so micro-stalls and rapid toggles never flicker it.
+  const [showBuffering, setShowBuffering] = useState(false);
+  const bufTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => {
+    const buffering = state.isLoading && !state.isSwitching && state.isPlaying
+      && !state.error && !showCinemaIntro && !postCinemaBlackout;
+    clearTimeout(bufTimerRef.current);
+    bufTimerRef.current = setTimeout(() => setShowBuffering(buffering), buffering ? 500 : 400);
+    return () => clearTimeout(bufTimerRef.current);
+  }, [state.isLoading, state.isSwitching, state.isPlaying, state.error, showCinemaIntro, postCinemaBlackout]);
 
   // Re-show the suggestions grid and restart its 15s idle fade. Lives outside the
   // controls' switch-cooldown guard so a tap always brings the grid back.
@@ -713,8 +733,13 @@ export const VideoPlayer: React.FC<Props> = ({
           Final z-order inside this overlay:
             blur (z-20, BELOW controls) → controls (z-30, sharp) → beam + card
             (z-45, on top). Every switch layer is pointer-events-none so it can
-            never eat a tap on the controls / arrows / Flow button. */}
-      {state.isSwitching && !state.error && !showCinemaIntro && !postCinemaBlackout && (
+            never eat a tap on the controls / arrows / Flow button.
+          GLITCH FIX: gated on !isVod. `state.isSwitching` is set SYNCHRONOUSLY in
+          playChannel, but `showCinemaIntro` is set in a post-render effect — so for
+          a VOD play this block rendered for ONE frame (the purple switch-blur flash)
+          before the cinema intro took over. The blur/connecting-card is a live-surf
+          concept anyway; VOD masking is owned entirely by the cinema intro. */}
+      {state.isSwitching && !isVod && !state.error && !showCinemaIntro && !postCinemaBlackout && (
         <>
           {/* Blur overlay on the frozen frame — sits BELOW the controls layer. */}
           <div className="absolute inset-0 z-20 bg-black/35 transition-opacity duration-300 pointer-events-none"
@@ -763,9 +788,9 @@ export const VideoPlayer: React.FC<Props> = ({
           while watching. Keep controls visible + SHARP: no blur, no connecting card,
           no control-hide. Just a subtle top-center spinner so the viewer knows it's
           working. pointer-events-none so it never eats a tap on the controls. */}
-      {state.isLoading && !state.isSwitching && state.isPlaying && !state.error && !showCinemaIntro && !postCinemaBlackout && (
+      {showBuffering && (
         <div className="absolute top-[64px] left-1/2 -translate-x-1/2 z-[35] pointer-events-none"
-             style={{ animation: 'fade-in 0.4s ease-out 0.5s both' }}>
+             style={{ animation: 'fade-in 0.3s ease-out both' }}>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full"
                style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(157,78,221,0.2)' }}>
             <div className="w-3 h-3 rounded-full border-[1.5px] border-white/20 border-t-primary-light animate-spin" />

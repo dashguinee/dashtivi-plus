@@ -183,7 +183,7 @@ export function CategoryHero({
         </span>
         <span
           className={`text-[10.5px] font-bold tracking-[1.5px] uppercase${isWorldCup ? ' tivi-count-metal' : ''}`}
-          style={isWorldCup ? { opacity: 0.95 } : { color: accent }}
+          style={isWorldCup ? { opacity: 0.78 } : { color: accent }}
         >
           {title}
         </span>
@@ -200,8 +200,8 @@ export function CategoryHero({
           style={{ background: `rgba(${a},0.16)`, border: `1px solid rgba(${a},0.4)` }}
         >
           {/* Moon-silver metallic text, dimmed a touch — present, not loud. */}
-          <span className="tivi-count-metal" style={{ opacity: 0.8 }}>{t(lang, 'seeAll')}</span>
-          <ChevronRight className="w-3 h-3" style={{ color: '#bcc2cc', opacity: 0.8 }} />
+          <span className="tivi-count-metal" style={{ opacity: 0.64 }}>{t(lang, 'seeAll')}</span>
+          <ChevronRight className="w-3 h-3" style={{ color: '#bcc2cc', opacity: 0.64 }} />
         </span>
       )}
 

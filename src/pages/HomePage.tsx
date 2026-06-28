@@ -363,7 +363,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
           calm, no click. FreeHlsShowcaseCard owns the one live <video> surface. */}
       {helloChannel && (
         <section className="mb-8">
-          <div className="px-4 mb-2 flex items-center gap-2">
+          <div className="px-4 mb-2 flex items-center gap-3">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-70" style={{ background: DASH_BLUE }} />
               <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: DASH_BLUE, boxShadow: '0 0 6px rgba(79,141,247,0.8)' }} />

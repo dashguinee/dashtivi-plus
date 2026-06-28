@@ -24,7 +24,7 @@
  *     <NeonGate />                                              // non-tiles ignored
  *   </div>
  */
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 
 interface LensOptions {
   /** Scale of the most-centred tile. Default 1.14 (tasteful, not nauseating). */
@@ -44,7 +44,7 @@ export function useFocalLens<T extends HTMLElement = HTMLDivElement>(opts: LensO
   const minOpacity = opts.minOpacity ?? 0.72;
   const sigmaOpt = opts.sigma;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const container = ref.current;
     if (!container || typeof window === 'undefined') return;
 
@@ -95,33 +95,38 @@ export function useFocalLens<T extends HTMLElement = HTMLDivElement>(opts: LensO
         if (focus > bestFocus) { bestFocus = focus; heroIdx = i; }
       }
 
+      // HERO + BEAM (decided BEFORE the writes so z can key off it). HYSTERESIS
+      // (promote >0.62, demote <0.48) stops BOTH the glow AND the z-index
+      // flickering when a tile rests near a boundary. Toggled only on a real
+      // hero change. classList is a write, and no reads follow → no thrash.
+      const candidate = heroIdx >= 0 ? tiles[heroIdx] : null;
+      if (candidate === currentHero) {
+        if (currentHero && bestFocus < 0.48) { currentHero.classList.remove('lens-hero'); currentHero = null; }
+      } else if (candidate && bestFocus > 0.62) {
+        currentHero?.classList.remove('lens-hero');
+        candidate.classList.add('lens-hero');
+        currentHero = candidate;
+      }
+      // else: candidate not clearly centred → keep the current hero (no flicker).
+
       // ── WRITE PASS — transform/opacity only (GPU; no layout/paint reflow). ──
       for (let i = 0; i < n; i++) {
         const tile = tiles[i];
         const focus = focusBuf[i];
         const scale = minScale + (maxScale - minScale) * focus;
         const opacity = minOpacity + (1 - minOpacity) * focus;
-        const z = focus > 0.5 ? '2' : '1';
+        // z is binary and keyed off the HYSTERETIC hero only — the hero sits on
+        // top (3), everyone else shares DOM-order stacking (1). No per-frame z
+        // churn at the 0.5 boundary ⇒ no stacking flicker.
+        const z = tile === currentHero ? '3' : '1';
         const prev = lastApplied.get(tile);
         if (prev && Math.abs(prev.s - scale) < 0.002 && Math.abs(prev.o - opacity) < 0.004 && prev.z === z) {
           continue; // imperceptible delta — skip the write
         }
         tile.style.transform = `scale(${scale.toFixed(4)})`;
         tile.style.opacity = opacity.toFixed(3);
-        if (!prev || prev.z !== z) tile.style.zIndex = z; // magnified tile paints above neighbours
+        if (!prev || prev.z !== z) tile.style.zIndex = z;
         lastApplied.set(tile, { s: scale, o: opacity, z });
-      }
-
-      // BEAM: glow only the most-centred tile, toggled on hero CHANGE (not every
-      // frame) → near-zero cost.
-      const hero = heroIdx >= 0 ? tiles[heroIdx] : null;
-      if (hero !== currentHero) {
-        currentHero?.classList.remove('lens-hero');
-        if (hero && bestFocus > 0.62) { hero.classList.add('lens-hero'); currentHero = hero; }
-        else currentHero = null;
-      } else if (currentHero && bestFocus <= 0.62) {
-        currentHero.classList.remove('lens-hero');
-        currentHero = null;
       }
     };
 
@@ -134,7 +139,10 @@ export function useFocalLens<T extends HTMLElement = HTMLDivElement>(opts: LensO
     // Re-measure when the row resizes or its tiles change (subtab filter etc.).
     const ro = new ResizeObserver(() => { requestApply(); });
     ro.observe(container);
-    const mo = new MutationObserver(() => { refreshTiles(); requestApply(); });
+    // Tiles changed (subtab filter, see-more). Re-measure and apply SYNCHRONOUSLY
+    // in the same microtask — the new tiles get their lens scale before the
+    // browser paints, so a filtered row never flashes a frame at flat scale 1.
+    const mo = new MutationObserver(() => { refreshTiles(); apply(); });
     mo.observe(container, { childList: true });
 
     // Sleep when the row scrolls offscreen.
@@ -147,8 +155,10 @@ export function useFocalLens<T extends HTMLElement = HTMLDivElement>(opts: LensO
     const onVis = () => { active = !document.hidden; if (active) requestApply(); };
     document.addEventListener('visibilitychange', onVis);
 
-    // Initial paint + a follow-up after images/layout settle.
-    requestApply();
+    // Initial apply runs SYNCHRONOUSLY inside this layout effect — the lens
+    // scale is written before the browser's first paint, so tiles never flash a
+    // frame at flat scale 1 on mount. A follow-up catches post-image layout.
+    apply();
     const settle = window.setTimeout(requestApply, 350);
 
     return () => {

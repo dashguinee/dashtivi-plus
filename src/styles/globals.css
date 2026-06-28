@@ -1473,16 +1473,19 @@
 .lens-tile {
   transform-origin: center bottom;
   will-change: transform;
-  transition: box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  /* filter (not box-shadow): the button has no radius and wraps card+label, so a
+     box-shadow would be an offset rectangular halo. drop-shadow follows the
+     ACTUAL rounded-card shape → a clean glow that hugs the tile. */
+  transition: filter 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
   z-index: 1;
 }
 
 /* The BEAM on the most-centred tile — a soft premium halo that follows focus. */
 .lens-hero {
-  box-shadow:
-    0 0 22px rgba(157,78,221,0.22),
-    0 8px 26px rgba(0,0,0,0.40);
+  filter:
+    drop-shadow(0 3px 10px rgba(0,0,0,0.45))
+    drop-shadow(0 0 14px rgba(157,78,221,0.42));
 }
 
 @media (prefers-reduced-motion: reduce) {

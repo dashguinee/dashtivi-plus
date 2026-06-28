@@ -150,6 +150,9 @@ export function TriondaBall({ size = 'icon', px }: TriondaBallProps) {
         style={{
           display: 'inline-flex',
           padding: 0,
+          // Give the inline home ball room to breathe — space above, to the
+          // right, and below so it isn't cramped against neighbouring content.
+          margin: size === 'icon' ? '10px 14px 12px 0' : 0,
           border: 'none',
           background: 'transparent',
           cursor: 'pointer',

@@ -881,6 +881,16 @@ export function usePlayer() {
       // Keep the offset ref in sync: the new stream restarts at currentTime 0, so the
       // display clock must add startN (not the stale load-time offset) going forward.
       remuxOffsetRef.current = startN;
+      // GLITCH FIX: a remux seek hard-swaps video.src, which black-flashes until the
+      // new position paints. Mask the seam with a frozen frame of the current picture
+      // (same recipe as channel-switch / tier-switch) — cleared in onplaying when the
+      // new position renders. Direct (mp4) seek needs none; it just sets currentTime.
+      const snap = captureFrame(video);
+      if (snap) {
+        setSwitchSnapshot(snap);
+        if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
+        snapshotTimerRef.current = setTimeout(() => setSwitchSnapshot(null), 12000);
+      }
       setState((prev) => ({ ...prev, currentTime: time }));
       video.src = seekUrl;
       video.play().catch(() => {});
@@ -888,7 +898,7 @@ export function usePlayer() {
       video.currentTime = time;
       setState((prev) => ({ ...prev, currentTime: time }));
     }
-  }, []);
+  }, [captureFrame]);
 
   const stop = useCallback(() => {
     cleanup();
