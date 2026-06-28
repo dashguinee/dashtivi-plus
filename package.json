@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "glitch": "node scripts/glitch-detect.mjs",
+    "check:exp": "node scripts/check-experience.mjs",
+    "check:perf": "node scripts/check-performance.mjs",
+    "lint": "eslint \"src/**/*.{ts,tsx}\""
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.0",
@@ -18,13 +22,19 @@
     "react-router-dom": "^6.22.3"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@typescript-eslint/parser": "^8.62.0",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.18",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^17.7.0",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "typescript": "~5.6.2",
+    "typescript-eslint": "^8.62.0",
     "vite": "^6.0.0"
   }
 }
