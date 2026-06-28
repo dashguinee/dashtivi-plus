@@ -996,6 +996,13 @@
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
   }
+  /* PERF: composited shimmer — sweeps via TRANSFORM (GPU) instead of
+     background-position (which repaints the element every frame). Use on a
+     full-bleed gradient band inside an overflow-hidden parent. */
+  @keyframes shimmer-x {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
 
   /* card-press: release easing + press glow. The card lights up under your finger. */
   .card-press {

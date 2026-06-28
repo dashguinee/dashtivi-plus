@@ -51,6 +51,7 @@ export function CategoryHero({
   onSeeAll,
   rotateMs = 90000,
   lead,
+  active = true,
 }: {
   /** Display title (e.g. "World Cup", "Cinéma Live"). */
   title: string;
@@ -66,6 +67,11 @@ export function CategoryHero({
   rotateMs?: number;
   /** Preferred channel to show FIRST (matched by name). */
   lead?: RegExp;
+  /** Is this the on-screen slide? The hero deck keeps ALL slides mounted; the
+   *  off-screen ones must NOT run their perpetual ambient animations (light-sweep
+   *  + play-lens breathe) — that's ~10× wasted per-frame style work. Default true
+   *  so standalone uses (ExperienceHomePage) animate normally. */
+  active?: boolean;
 }) {
   // Reorder ONCE: pin the lead-matching channel to index 0, stable otherwise.
   const ordered = useMemo(() => {
@@ -155,7 +161,8 @@ export function CategoryHero({
           className="absolute inset-y-0 -left-1/3 w-2/3 opacity-70"
           style={{
             background: `linear-gradient(115deg, transparent 20%, rgba(${a},0.07) 46%, rgba(255,255,255,0.05) 50%, transparent 70%)`,
-            animation: `hero-sweep-${uid} 7s ease-in-out infinite`,
+            // Only the on-screen slide sweeps — off-screen slides stay frozen.
+            animation: active ? `hero-sweep-${uid} 7s ease-in-out infinite` : 'none',
           }}
         />
       </div>
@@ -251,7 +258,7 @@ export function CategoryHero({
               scale (which lives on the parent) so they never conflict. */}
           <div
             className="absolute inset-0 flex items-center justify-center"
-            style={{ animation: `hero-lens-breathe-${uid} 3s ease-in-out infinite`, willChange: 'transform' }}
+            style={{ animation: active ? `hero-lens-breathe-${uid} 3s ease-in-out infinite` : 'none', willChange: active ? 'transform' : 'auto' }}
           >
             {/* Frosted-glass disc — backdrop blur + translucent fill + accent tint. */}
             <div

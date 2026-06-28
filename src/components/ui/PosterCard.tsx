@@ -120,9 +120,10 @@ export const PosterCard = memo(function PosterCard({ title, poster, rating, cate
           {/* Shimmer loading state */}
           {!imgLoaded && hasPoster && (
             <div className="absolute inset-0 z-0" style={{
-              background: 'linear-gradient(110deg, rgba(255,255,255,0.02) 30%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 70%)',
-              backgroundSize: '200% 100%',
-              animation: 'shimmer 1.8s linear infinite',
+              // PERF: GPU-composited sweep (transform) — no per-frame repaint.
+              background: 'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.06) 50%, transparent 70%)',
+              animation: 'shimmer-x 1.8s linear infinite',
+              willChange: 'transform',
             }} />
           )}
           {safePoster && !imgFailed ? (

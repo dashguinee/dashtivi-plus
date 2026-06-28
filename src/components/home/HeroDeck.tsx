@@ -314,6 +314,11 @@ export function HeroDeck({
                     lang={lang}
                     onPlay={s.onPlay}
                     onSeeAll={s.onSeeAll}
+                    /* PERF: only the on-screen slide runs its perpetual ambient
+                       animations (light-sweep + play-lens breathe). The deck keeps
+                       all slides mounted for instant swipe, but off-screen ones must
+                       not burn per-frame style work. */
+                    active={active}
                   />
                 </div>
               </div>
