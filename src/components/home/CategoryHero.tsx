@@ -127,7 +127,7 @@ export function CategoryHero({
       ref={rootRef}
       onPointerDown={() => tap()}
       onClick={() => onPlay(featured)}
-      className="relative w-full overflow-hidden rounded-2xl text-left active:scale-[0.99] transition-transform duration-200 group"
+      className="relative w-full overflow-hidden rounded-2xl text-left active:scale-[0.99] transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group"
       style={{
         height: '22vh',
         minHeight: 158,
@@ -211,7 +211,7 @@ export function CategoryHero({
         <div
           key={featured.stream_id}
           className="flex items-end gap-4 flex-1 min-w-0"
-          style={{ animation: `hero-marquee-in-${uid} 0.5s ease-out` }}
+          style={{ animation: `hero-marquee-in-${uid} 0.5s cubic-bezier(0.23,1,0.32,1)` }}
         >
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden"

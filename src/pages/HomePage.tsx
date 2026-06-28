@@ -362,7 +362,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
       {/* TOP HERO — the strongest live pick auto-plays at the top for everyone,
           calm, no click. FreeHlsShowcaseCard owns the one live <video> surface. */}
       {helloChannel && (
-        <section className="mb-8">
+        <section className="mb-8" style={{ animation: 'row-in 0.55s cubic-bezier(0.23,1,0.32,1) both' }}>
           <div className="px-4 mb-2 flex items-center gap-3">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-70" style={{ background: DASH_BLUE }} />
@@ -642,7 +642,7 @@ function KeepWatchingRow({ onPlay, lang }: { onPlay: (ch: Channel) => void; lang
               style={{ width: cardW }}
             >
               <div
-                className="relative rounded-2xl overflow-hidden transition-transform duration-200 ease-out group-hover:scale-[1.04] group-active:scale-[0.95]"
+                className="relative rounded-2xl overflow-hidden transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.04] group-active:scale-[0.95]"
                 style={{
                   width: cardW,
                   height: cardH,
@@ -740,7 +740,7 @@ const ExperienceRow = React.memo(function ExperienceRow({
   const visibleChannels = channels.slice(0, shown);
 
   return (
-    <section className="mb-9 cv-row" style={{ animation: 'row-in 0.55s cubic-bezier(0.16,1,0.3,1) both', animationDelay: `${Math.min(index, 9) * 65}ms` }}>
+    <section className="mb-9 cv-row" style={{ animation: 'row-in 0.55s cubic-bezier(0.23,1,0.32,1) both', animationDelay: `${Math.min(index, 9) * 65}ms` }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 mb-3.5">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -786,7 +786,7 @@ const ExperienceRow = React.memo(function ExperienceRow({
             style={{ width: cardW }}
           >
             <div
-              className="relative rounded-2xl flex items-center justify-center overflow-hidden transition-transform duration-200 ease-out group-hover:scale-[1.04] group-active:scale-[0.95]"
+              className="relative rounded-2xl flex items-center justify-center overflow-hidden transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.04] group-active:scale-[0.95]"
               style={{
                 width: cardW,
                 height: cardH,

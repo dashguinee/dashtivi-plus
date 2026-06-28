@@ -59,7 +59,7 @@ export const TiviModeToggle: React.FC = () => {
       className="relative flex items-center justify-center h-full w-14"
       // Exact 1px left-shift, equal to Biblio's, so V + Biblio nudge left together
       // while Home + Dahub hold their spots (visual only — no reflow).
-      style={{ transform: 'translateX(-1px)' }}
+      style={{ transform: 'translateX(-1px) translateZ(0)' }}
     >
       <style>{`
         @keyframes vee-breathe {
@@ -74,6 +74,11 @@ export const TiviModeToggle: React.FC = () => {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           animation: 'vee-breathe 3.4s ease-in-out infinite',
           touchAction: 'none',
+          // Promote the breathe to its own composited layer → scale animates on the
+          // GPU, no per-frame layout/paint, silky 60fps.
+          willChange: 'transform',
+          backfaceVisibility: 'hidden',
+          transform: 'translateZ(0)',
         }}
       >
         <span style={{

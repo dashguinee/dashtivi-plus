@@ -125,6 +125,7 @@ export const PlayerControls: React.FC<Props> = ({
           // downward drift for an elegant, choreographed dissolve (not an abrupt vanish).
           transform: visible ? 'translateY(0)' : 'translateY(-14px)',
           transition: 'transform 550ms cubic-bezier(0.4,0,0.2,1)',
+          willChange: 'transform',
         }}
       >
         <div className="flex items-center gap-3">
@@ -165,7 +166,7 @@ export const PlayerControls: React.FC<Props> = ({
       <div className="flex-1 flex items-center justify-center">
         <button
           onClick={onTogglePlay}
-          className={`rounded-full flex items-center justify-center transition-all duration-300 active:scale-90 ${
+          className={`rounded-full flex items-center justify-center transition-[transform,background-color,box-shadow] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-90 ${
             isVod
               ? 'w-16 h-16 bg-primary/80 backdrop-blur-sm hover:bg-primary hover:scale-105 shadow-lg shadow-primary/30'
               : 'w-12 h-12 bg-white/[0.07] hover:bg-white/[0.12]'
@@ -187,6 +188,7 @@ export const PlayerControls: React.FC<Props> = ({
           // bar (40ms stagger) — the controls retreat gracefully instead of snapping off.
           transform: visible ? 'translateY(0)' : 'translateY(16px)',
           transition: 'transform 550ms cubic-bezier(0.4,0,0.2,1) 40ms',
+          willChange: 'transform',
         }}
       >
         {/* Progress bar — seek for mp4 passthrough, display-only for remux */}
@@ -204,13 +206,16 @@ export const PlayerControls: React.FC<Props> = ({
               onPointerCancel={onBarPointerUp}
             >
               <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-1 bg-white/10 rounded-full" />
+              {/* Fill — GPU scaleX (origin-left) instead of animating width: composited,
+                  jank-free scrub at 60fps. */}
               <div
-                className={`absolute top-1/2 -translate-y-1/2 left-0 h-1 bg-primary rounded-full ${scrubPct == null ? 'transition-[width] duration-100' : ''}`}
-                style={{ width: `${fillPct}%` }}
+                className={`absolute top-1/2 left-0 right-0 h-1 bg-primary rounded-full origin-left will-change-transform ${scrubPct == null ? 'transition-transform duration-100 ease-[cubic-bezier(0.4,0,0.2,1)]' : ''}`}
+                style={{ transform: `translateY(-50%) scaleX(${Math.max(0, Math.min(1, fillPct / 100))})` }}
               />
+              {/* Thumb — grows via transform scale (not w/h), GPU-composited. */}
               <div
-                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg transition-[opacity,width,height] duration-300 ${scrubPct != null ? 'opacity-100 w-6 h-6' : 'opacity-0 group-hover:opacity-100 group-active:opacity-100 group-active:w-6 group-active:h-6'}`}
-                style={{ left: `calc(${fillPct}% - 8px)` }}
+                className={`absolute top-1/2 w-4 h-4 bg-white rounded-full shadow-lg will-change-transform transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${scrubPct != null ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                style={{ left: `calc(${fillPct}% - 8px)`, transform: `translateY(-50%) scale(${scrubPct != null ? 1.5 : 1})` }}
               />
             </div>
             <span className="text-[11px] text-white/60 font-mono min-w-[3.5rem]">
@@ -273,7 +278,7 @@ export const PlayerControls: React.FC<Props> = ({
                 className={`overflow-hidden transition-[width,opacity] duration-[400ms] ${
                   showVolume ? 'w-20 opacity-100 ml-1' : 'w-0 opacity-0'
                 }`}
-                style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' }}
+                style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}
               >
                 <input
                   type="range"
@@ -318,7 +323,7 @@ export const PlayerControls: React.FC<Props> = ({
                   e.stopPropagation();
                   onQualityChange();
                 }}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full ml-2 bg-white/[0.03] border transition-all duration-300 active:scale-95"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full ml-2 bg-white/[0.03] border transition-[transform,border-color,background-color] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95"
                 style={{
                   // Color law: PRIMARY only. Full strength = best flow (AUTO/Source),
                   // dimmer = degraded — quiet status, never a cyan/orange shout.

@@ -206,8 +206,8 @@ export const MiniPlayer: React.FC<Props> = ({
         <div className="absolute bottom-0 inset-x-0 z-20 h-0.5 bg-black/30 pointer-events-none">
           {isVod && state.duration > 0 ? (
             <div
-              className="h-full bg-primary transition-[width] duration-500"
-              style={{ width: `${(state.currentTime / state.duration) * 100}%` }}
+              className="h-full w-full origin-left bg-primary transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-transform"
+              style={{ transform: `scaleX(${Math.max(0, Math.min(1, state.duration > 0 ? state.currentTime / state.duration : 0))})` }}
             />
           ) : (
             <div className="h-full bg-primary w-full animate-pulse" />

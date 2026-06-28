@@ -118,6 +118,7 @@ export function WorldCupBackdrop() {
         }
         .wc-visor {
           animation: wc-visor-drift 26s ease-in-out infinite;
+          will-change: transform;
         }
         @media (prefers-reduced-motion: reduce) {
           .wc-visor { animation: none !important; }

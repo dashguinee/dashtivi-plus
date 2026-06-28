@@ -166,7 +166,7 @@ export function NbaShowcase({
               style={{ width: 130 }}
             >
               <div
-                className="relative rounded-2xl flex items-center justify-center overflow-hidden transition-transform duration-200 ease-out group-hover:scale-[1.04] group-active:scale-[0.95]"
+                className="relative rounded-2xl flex items-center justify-center overflow-hidden transition-transform duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-hover:scale-[1.04] group-active:scale-[0.95]"
                 style={{
                   width: 130,
                   height: 96,

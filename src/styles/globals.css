@@ -69,6 +69,14 @@
   :root {
     /* Display type — Wakanda-DASH: Clash Display on the big headers only (not body). */
     --font-display: 'Clash Display', 'Space Grotesk', 'Outfit', system-ui, sans-serif;
+
+    /* ═══ SILK EASING VOCABULARY ═══
+       ONE coherent motion language so every transition feels intentional, not
+       abrupt. --ease-silk is the canonical decelerate curve (settles like the
+       app exhales); --ease-silk-soft is gentler for larger surfaces. Durations
+       stay short (140–620ms) so nothing reads as molasses. */
+    --ease-silk: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-silk-soft: cubic-bezier(0.16, 1, 0.3, 1);
   }
   /* Big display headers get the display face; body text stays clean/legible. */
   h1, h2 {
@@ -123,6 +131,9 @@
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
+    /* Native momentum flicks on every hidden-scrollbar carousel (touch-only;
+       a no-op on non-scroll containers) → buttery across the whole app. */
+    -webkit-overflow-scrolling: touch;
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
@@ -1451,6 +1462,10 @@
   padding-top: 22px;
   padding-bottom: 10px;
   overscroll-behavior-x: contain;
+  /* Native momentum + no inherited smooth-scroll fighting the finger → buttery
+     horizontal flicks on iOS/Android. */
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto;
 }
 
 /* Soft centred focal halo — marks the focal plane the tiles flow through.
@@ -1479,7 +1494,7 @@
   /* filter (not box-shadow): the button has no radius and wraps card+label, so a
      box-shadow would be an offset rectangular halo. drop-shadow follows the
      ACTUAL rounded-card shape → a clean glow that hugs the tile. */
-  transition: filter 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: filter 0.35s var(--ease-silk);
   position: relative;
   z-index: 1;
 }

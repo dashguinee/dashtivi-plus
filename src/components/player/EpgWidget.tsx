@@ -70,8 +70,8 @@ export const EpgWidget: React.FC<Props> = React.memo(({ streamId, visible, isLiv
             {/* Progress bar */}
             <div className="mt-1.5 h-[2px] rounded-full bg-white/[0.06] overflow-hidden">
               <div
-                className="h-full rounded-full bg-primary/60 transition-[width] duration-1000"
-                style={{ width: `${progress}%` }}
+                className="h-full w-full origin-left rounded-full bg-primary/60 transition-transform duration-1000 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-transform"
+                style={{ transform: `scaleX(${Math.max(0, Math.min(1, progress / 100))})` }}
               />
             </div>
             <div className="flex justify-between mt-0.5">

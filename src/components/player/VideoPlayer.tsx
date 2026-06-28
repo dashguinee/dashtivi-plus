@@ -615,7 +615,7 @@ export const VideoPlayer: React.FC<Props> = ({
                 ? 'linear-gradient(90deg, rgba(157,78,221,0.30), transparent)'
                 : 'linear-gradient(270deg, rgba(157,78,221,0.30), transparent)',
               opacity: Math.min(1, Math.abs(surfDragX) / 80),
-              transition: `opacity 0.2s cubic-bezier(0.23,1,0.32,1)`,
+              transition: `opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1)`,
             } as React.CSSProperties}
           />
           {/* Channel-intent preview — confirms WHICH way you're surfing once the

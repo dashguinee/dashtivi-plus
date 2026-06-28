@@ -40,7 +40,8 @@ const HomeGlyph: React.FC<GlyphProps> = ({ strokeWidth = 1.8, size: _s, style, .
   const house = 'M3.5 11 L12 3.7 L20.5 11 V18.7 Q20.5 21 18.3 21 H5.7 Q3.5 21 3.5 18.7 Z';
   const doorOutline = 'M9.7 21 V15.8 Q9.7 13.2 12 13.2 Q14.3 13.2 14.3 15.8 V21';
   return (
-    <svg viewBox="0 0 24 24" fill="none" style={{ overflow: 'visible', ...style }} {...props}>
+    <svg viewBox="0 0 24 24" fill="none"
+      style={{ overflow: 'visible', transform: 'translateZ(0)', willChange: 'transform', backfaceVisibility: 'hidden', ...style }} {...props}>
       <defs>
         {/* OyeAfrica bed — gold corner → warm dark middle → bronze (135°, depth) */}
         <linearGradient id={gBed} x1="0" y1="0" x2="1" y2="1">
@@ -185,16 +186,21 @@ export const Navbar: React.FC = () => {
         className="relative flex flex-col items-center justify-center w-12 h-full"
         // Exact 1px left-shift for Biblio (matches the V pebble's 1px); Home and
         // Dahub stay put. translateX is visual only, so it doesn't reflow the others.
-        style={isBiblio ? { transform: 'translateX(-1px)' } : undefined}
+        style={isBiblio ? { transform: 'translateX(-1px) translateZ(0)' } : undefined}
       >
         {/* Icon — lifts up when active */}
         <div
           className="relative"
           style={{
-            transform: iconTransform,
+            // translateZ(0) promotes to a composited layer so the active scale +
+            // the Home SVG-filter raster don't repaint each frame (silky 60fps).
+            transform: `${iconTransform} translateZ(0)`,
             color: iconColor,
             filter: iconFilter,
-            transition: 'transform 0.15s ease-out, color 0.1s, filter 0.15s',
+            // One consistent DASH ease for every nav micro-motion.
+            transition: 'transform 0.3s cubic-bezier(0.22,1,0.36,1), color 0.25s cubic-bezier(0.22,1,0.36,1), filter 0.3s cubic-bezier(0.22,1,0.36,1)',
+            willChange: 'transform, filter',
+            backfaceVisibility: 'hidden',
           }}
         >
           {/* Graft 3: frosted silver chip behind Dahub — reuses .tivi-nav-silver
@@ -228,7 +234,7 @@ export const Navbar: React.FC = () => {
             marginTop: active ? 3 : 0,
             height: active ? 'auto' : 0,
             overflow: 'hidden',
-            transition: 'opacity 0.1s, margin 0.15s ease-out, color 0.1s',
+            transition: 'opacity 0.3s cubic-bezier(0.22,1,0.36,1), margin 0.3s cubic-bezier(0.22,1,0.36,1), color 0.25s cubic-bezier(0.22,1,0.36,1)',
           }}
         >
           {t(item.labelKey)}
@@ -289,7 +295,10 @@ export const Navbar: React.FC = () => {
               ? 'background 0.08s ease-out, border-color 0.08s ease-out, box-shadow 0.08s ease-out'
               : 'background 1.2s cubic-bezier(0.16,1,0.3,1), border-color 1.2s cubic-bezier(0.16,1,0.3,1), box-shadow 1.2s cubic-bezier(0.16,1,0.3,1)',
             // Tiny whole-bar rightward bias (~2px) to emulate the V pebble's bias.
-            transform: 'translateX(2px)',
+            // translateZ(0) gives the bar its own composited layer so the glow /
+            // background transitions stay silky without repainting siblings.
+            transform: 'translateX(2px) translateZ(0)',
+            willChange: 'background, box-shadow',
           }}
         >
           {/* Even rhythm: 4 items equally spaced via justify-between, breathing
