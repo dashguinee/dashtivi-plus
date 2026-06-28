@@ -44,6 +44,7 @@ export function WorldCupBackdrop() {
       // Let one frame paint, then freeze.
       v.pause();
     } else {
+      v.playbackRate = 0.7; // Aziz: slow the backdrop to 0.7x — calmer ambient energy.
       v.play().catch(() => { /* autoplay can be blocked — the still is fine */ });
     }
   }, [reducedMotion]);
@@ -64,6 +65,7 @@ export function WorldCupBackdrop() {
         playsInline
         autoPlay={!reducedMotion}
         preload="metadata"
+        onLoadedMetadata={(e) => { e.currentTarget.playbackRate = 0.7; }}
         disablePictureInPicture
         onContextMenu={(e) => e.preventDefault()}
         className="absolute left-1/2 top-1/2 h-full w-full select-none object-cover"

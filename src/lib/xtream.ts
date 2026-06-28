@@ -1227,40 +1227,60 @@ async function sbRpc<T>(fn: string, body: Record<string, unknown> = {}): Promise
 }
 
 /** Fetch VOD by category from Supabase (replaces Xtream get_vod_streams) */
+// In-memory TTL cache for VOD category results. The catalog is effectively
+// static within a session, so once a category is fetched, re-visiting Movies
+// (Home → Movies → Home → Movies …) serves INSTANTLY from memory — zero network,
+// zero "reload". This is the core of reload-free navigation for the VOD pages.
+const vodCatCache = new Map<string, { at: number; data: VodDbItem[] }>();
+const VOD_CAT_TTL = 15 * 60 * 1000; // 15 min — plenty for a browsing session
+
 export async function getVodByCategory(catId: string, limit = 500, offset = 0): Promise<VodDbItem[]> {
   if (!SB_ANON) return [];
+  const key = `${catId}:${limit}:${offset}`;
+  const hit = vodCatCache.get(key);
+  if (hit && Date.now() - hit.at < VOD_CAT_TTL) return hit.data;
   try {
     const res = await fetch(
       `${SB_URL}/rest/v1/tivi_vod?category_id=eq.${catId}&is_active=eq.true&is_hidden=eq.false&select=vod_id,name,poster,quality,rating,year,genre,tmdb_id,is_gem,container_extension,added_ts&order=is_gem.desc,rating.desc.nullslast,added_ts.desc.nullslast&limit=${limit}&offset=${offset}`,
       { headers: { 'apikey': SB_ANON, 'Authorization': `Bearer ${SB_ANON}` }, signal: AbortSignal.timeout(8000) }
     );
-    if (!res.ok) return [];
+    if (!res.ok) return hit ? hit.data : [];
     const rows = await res.json();
-    return rows.map((r: Record<string, unknown>) => ({
+    const data = rows.map((r: Record<string, unknown>) => ({
       id: r.vod_id, name: r.name, poster: r.poster || '', quality: r.quality || 'SD',
       rating: Number(r.rating) || 0, year: r.year as number | null, genre: (r.genre as string) || '',
       tmdb_id: r.tmdb_id as number | null, gem: !!r.is_gem, ext: (r.container_extension as string) || 'mp4',
       duration: null, added: Number(r.added_ts) || 0,
     })) as VodDbItem[];
-  } catch { return []; }
+    vodCatCache.set(key, { at: Date.now(), data });
+    return data;
+  } catch { return hit ? hit.data : []; }
 }
 
 /** Fetch series by category from Supabase */
+// Same TTL memory cache as VOD — re-visiting Series serves instantly, no reload.
+const seriesCatCache = new Map<string, { at: number; data: SeriesDbItem[] }>();
+
 export async function getSeriesByCategory(catId: string, limit = 500, offset = 0): Promise<SeriesDbItem[]> {
   if (!SB_ANON) return [];
+  const key = `${catId}:${limit}:${offset}`;
+  const hit = seriesCatCache.get(key);
+  if (hit && Date.now() - hit.at < VOD_CAT_TTL) return hit.data;
   try {
     const res = await fetch(
       `${SB_URL}/rest/v1/tivi_series?category_id=eq.${catId}&is_active=eq.true&is_hidden=eq.false&select=series_id,name,cover,genre,rating,tmdb_id,is_gem,season_count,episode_count&order=is_gem.desc,rating.desc.nullslast,last_modified_ts.desc.nullslast&limit=${limit}&offset=${offset}`,
       { headers: { 'apikey': SB_ANON, 'Authorization': `Bearer ${SB_ANON}` }, signal: AbortSignal.timeout(8000) }
     );
-    if (!res.ok) return [];
+    if (!res.ok) return hit ? hit.data : [];
     const rows = await res.json();
-    return rows.map((r: Record<string, unknown>) => ({
+    const data = rows.map((r: Record<string, unknown>) => ({
       id: r.series_id, name: r.name, cover: r.cover || '', genre: (r.genre as string) || '',
       rating: Number(r.rating) || 0, tmdb_id: r.tmdb_id as number | null, gem: !!r.is_gem,
       seasons: r.season_count as number | null, episodes: r.episode_count as number | null,
     })) as SeriesDbItem[];
-  } catch { return []; }
+    seriesCatCache.set(key, { at: Date.now(), data });
+    return data;
+  } catch { return hit ? hit.data : []; }
 }
 
 /** Search VOD from Supabase — optionally scoped to category IDs */

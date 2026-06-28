@@ -54,7 +54,7 @@ const EpisodeCard = React.memo(function EpisodeCard({
             {!loaded && (
               <div className="absolute inset-0 z-0" style={{
                 background: 'linear-gradient(110deg, rgba(255,255,255,0.02) 30%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 70%)',
-                backgroundSize: '200% 100%', animation: 'shimmer 1.8s ease-in-out infinite',
+                backgroundSize: '200% 100%', animation: 'shimmer 1.8s linear infinite',
               }} />
             )}
             <img
@@ -127,7 +127,7 @@ const SeasonCard = React.memo(function SeasonCard({
           {!loaded && (
             <div className="absolute inset-0 z-0" style={{
               background: 'linear-gradient(110deg, rgba(255,255,255,0.02) 30%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 70%)',
-              backgroundSize: '200% 100%', animation: 'shimmer 1.8s ease-in-out infinite',
+              backgroundSize: '200% 100%', animation: 'shimmer 1.8s linear infinite',
             }} />
           )}
           <img src={cover} alt={`${label} ${meta.number}`}

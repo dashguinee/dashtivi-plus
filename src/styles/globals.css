@@ -244,7 +244,10 @@
       #1e1e1e 80%
     );
     background-size: 200% 100%;
-    animation: shimmer 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    /* LINEAR (not eased) so the sweep flows as a seamless continuous loop —
+       an eased timing decelerates to a stop each cycle, which reads as the
+       shimmer "abruptly stopping" before it restarts. */
+    animation: shimmer 2.5s linear infinite;
   }
 
   .skeleton-hex {
