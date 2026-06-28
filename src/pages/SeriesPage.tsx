@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo, useDeferredValue } from 'react';
 import { Play, X, Search, SlidersHorizontal, Star, Sparkles, Plus } from 'lucide-react';
 import type { XtreamCredentials, SeriesItem, SeriesInfo, Episode } from '@/lib/xtream';
 import { getSeries, getSeriesInfo, buildSeriesUrl, buildVodFallbackUrl, getTmdbMap, getSeriesByCategory, seriesDbToItem, searchSeries } from '@/lib/xtream';
@@ -146,6 +146,10 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   // Data
   const [seriesList, setSeriesList] = useState<SeriesItem[]>([]);
+  // PERF: feed the heavy recommendation ladder a DEFERRED list so its ~9 scoring
+  // passes render at non-urgent priority — off the first-paint critical path,
+  // interruptible, never blocking the main thread / scroll. (Mirrors MoviesPage.)
+  const deferredSeries = useDeferredValue(seriesList);
   const [gemSet, setGemSet] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [seriesError, setSeriesError] = useState(false);
@@ -430,7 +434,8 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // Every row names its driver in recommendations.ts and self-suppresses below 4 items, so
   // we never render an empty row. The regional spotlight is pinned in the top third either way.
   const ladder = useMemo<RankedRow[]>(() => {
-    if (!hasTmdb || seriesList.length === 0) return [];
+    if (!hasTmdb || deferredSeries.length === 0) return [];
+    const seriesList = deferredSeries; // heavy rec passes run on the deferred list
 
     const because = becauseYouWatched(seriesList, 'series', tmdbMap, affinity, { maxRows: 2 }, signals);
     const pourVous = recommendFor(seriesList, 'series', tmdbMap, affinity, {}, signals);
@@ -464,7 +469,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     // De-dup row ids (a seed title could collide) — keep first.
     const seen = new Set<string>();
     return rows.filter(r => (seen.has(r.id) ? false : (seen.add(r.id), true)));
-  }, [seriesList, africanPool, tmdbMap, affinity, signals, gemSet, packLabels, cold, hasTmdb]);
+  }, [deferredSeries, africanPool, tmdbMap, affinity, signals, gemSet, packLabels, cold, hasTmdb]);
 
   // ── Genre-active context rows (design §4 — context is never fully lost) ──
   const genreContextRows = useMemo<RankedRow[]>(() => {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo, useDeferredValue } from 'react';
 import { Download, Search, X, SlidersHorizontal, Play, Plus, Star, Sparkles } from 'lucide-react';
 import type { XtreamCredentials, VodStream } from '@/lib/xtream';
 import { getVodStreams, buildVodUrl, getTmdbMap, getVodByCategory, vodDbToStream, searchVod, buildLiveUrl } from '@/lib/xtream';
@@ -135,6 +135,12 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   // Data
   const [movies, setMovies] = useState<VodStream[]>([]);
+  // PERF: the recommendation LADDER runs ~9 scoring passes over the full movie
+  // list — a 150ms+ long task. Feed it a DEFERRED copy of `movies` so that heavy
+  // compute renders at non-urgent priority (interruptible, off the first-paint
+  // critical path): the hero + grid paint instantly, the rec rows fill in a tick
+  // later without blocking the main thread / scroll.
+  const deferredMovies = useDeferredValue(movies);
   const [gemSet, setGemSet] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [moviesError, setMoviesError] = useState(false);
@@ -411,7 +417,8 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // Every row names its driver in recommendations.ts and self-suppresses below 4 items, so
   // we never render an empty row. African/Nollywood is pinned in the top third either way.
   const ladder = useMemo<RankedRow[]>(() => {
-    if (!hasTmdb || movies.length === 0) return [];
+    if (!hasTmdb || deferredMovies.length === 0) return [];
+    const movies = deferredMovies; // heavy rec passes run on the deferred list
 
     const because = becauseYouWatched(movies, 'movie', tmdbMap, affinity, { maxRows: 2 }, signals);
     const pourVous = recommendFor(movies, 'movie', tmdbMap, affinity, {}, signals);
@@ -445,12 +452,12 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     // De-dup row ids (a seed title could collide) — keep first.
     const seen = new Set<string>();
     return rows.filter(r => (seen.has(r.id) ? false : (seen.add(r.id), true)));
-  }, [movies, africanPool, tmdbMap, affinity, signals, gemSet, packLabels, cold, hasTmdb]);
+  }, [deferredMovies, africanPool, tmdbMap, affinity, signals, gemSet, packLabels, cold, hasTmdb]);
 
   // ── Genre-active context rows (design §4 — context is never fully lost) ──
   const genreContextRows = useMemo<RankedRow[]>(() => {
     if (activeGenre === 0 || !hasTmdb || isSearching) return [];
-    const pool = movies.filter(m => tmdbMap[`m:${m.stream_id}`]?.g?.includes(activeGenre));
+    const pool = deferredMovies.filter(m => tmdbMap[`m:${m.stream_id}`]?.g?.includes(activeGenre));
     if (pool.length < 4) return [];
     const label = genreLabel(activeGenre, lang);
     const out: RankedRow[] = [];
@@ -459,7 +466,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     const gem = dashCurated(pool, 'movie', tmdbMap, { gemSet: gemSet.size ? gemSet : undefined });
     if (gem) out.push({ ...gem, id: `genre-ctx-gem`, name: `Pépites · ${label}`, tagline: '' });
     return out;
-  }, [activeGenre, movies, tmdbMap, gemSet, hasTmdb, isSearching, lang]);
+  }, [activeGenre, deferredMovies, tmdbMap, gemSet, hasTmdb, isSearching, lang]);
 
   // ── Search context strip (design §4) ──
   const searchContextRow = useMemo<RankedRow | null>(() => {
