@@ -28,9 +28,22 @@ export function useScrollAmbient() {
     const ambientEl = document.getElementById('scroll-ambient');
     let ticking = false;
 
+    // PERF: `scrollHeight` is a forced-layout read. Reading it EVERY scroll frame
+    // (as before) reflowed the page once per frame during scroll — and on Home the
+    // DOM is dirty mid-scroll (cv-row reveals, proximity opacity writes, images
+    // loading), so each read flushed a full reflow → the Home scroll-FPS floor.
+    // Cache it instead; recompute only when the layout actually changes (resize +
+    // a ResizeObserver on body, both OFF the scroll path where layout is clean).
+    let maxScroll = 1;
+    const recomputeMax = () => {
+      maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    };
+    recomputeMax();
+
     const updateGradient = () => {
       if (!ambientEl) return;
-      const scrollPct = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight || 1);
+      // window.scrollY is a cheap cached read — NO forced layout here anymore.
+      const scrollPct = Math.min(1, window.scrollY / maxScroll);
       // Move gradient vertically: 20% → 80% of viewport
       const y = 20 + scrollPct * 60;
       ambientEl.style.setProperty('--ambient-y', `${y}%`);
@@ -45,6 +58,11 @@ export function useScrollAmbient() {
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', recomputeMax, { passive: true });
+    // Body height changes (lazy rows, cv reveals) update the cache off the
+    // scroll path — RO fires after layout, so this read never forces a reflow.
+    const sizeObs = new ResizeObserver(recomputeMax);
+    sizeObs.observe(document.body);
 
     // ── 2. Row proximity — dim rows at viewport edges ──
     const rows = document.querySelectorAll('[data-goggle], .row-tier-hero, .row-tier-featured, .row-tier-standard');
@@ -90,6 +108,8 @@ export function useScrollAmbient() {
 
     return () => {
       window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', recomputeMax);
+      sizeObs.disconnect();
       proximityObserver.disconnect();
       mutObs.disconnect();
     };

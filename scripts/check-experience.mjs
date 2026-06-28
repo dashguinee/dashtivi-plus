@@ -56,6 +56,7 @@ async function run() {
 
   const extra = {
     playerTTFF: null,        // ms to video readyState>=2 (null = never)
+    avcSupported: null,      // can THIS browser even decode H.264/AAC? (null=unprobed)
     revisitDataReq: null,    // # data-endpoint fetches on a revisit
     revisitRoute: '',
     reducedMotionAnims: null,
@@ -131,6 +132,16 @@ async function run() {
     await page.goto(URL + '/live', { waitUntil: 'domcontentloaded' });
     await waitForApp(page); await sleep(1200);
     extra.contentPerSurface.Live = await countContent(page);
+    // Probe codec support: IPTV is H.264/AAC in MP4/HLS. Headless chromium-1194
+    // ships WITHOUT the proprietary H.264/AAC decoders, so MediaSource can never
+    // paint an IPTV frame here even though real Chrome/Android/Safari do. We use
+    // this to qualify the TTFF check as N/A (lab limit) vs ❌ (real bug) below.
+    extra.avcSupported = await page.evaluate(() => {
+      try {
+        return !!(window.MediaSource &&
+          MediaSource.isTypeSupported('video/mp4; codecs="avc1.42E01E,mp4a.40.2"'));
+      } catch { return null; }
+    });
     try {
       const ch = page.locator('main img, [class*="card"], [role="button"]').first();
       if (await ch.count()) {
@@ -200,7 +211,9 @@ async function run() {
 // ───────────────────────────── evaluate checks ──────────────────────────────
 function evaluate({ report, capture, extra }) {
   const checks = [];
-  const add = (pass, name, measured, threshold, surface) => checks.push({ pass, name, measured, threshold, surface });
+  // na=true → criterion is Not Applicable in THIS environment (lab physically
+  // can't test it); it is excluded from the n/N denominator, not counted as a fail.
+  const add = (pass, name, measured, threshold, surface, na = false) => checks.push({ pass, name, measured, threshold, surface, na });
 
   // 1. Flicker-free — worst per-surface CLS
   let worstSurf = null, worstCLS = 0, worstEl = null;
@@ -245,10 +258,21 @@ function evaluate({ report, capture, extra }) {
   if (minCards === Infinity) minCards = 0;
   add(minCards >= MIN_CONTENT_PER_SURF, 'Every surface renders content', `min ${minCards} cards`, `>= ${MIN_CONTENT_PER_SURF}`, emptySurf);
 
-  // 7. Player paints a frame within TTFF budget
+  // 7. Player paints a frame within TTFF budget.
+  // LAB QUALIFICATION: headless chromium-1194 has no H.264/AAC decoder, so a real
+  // IPTV stream can NEVER reach readyState>=2 here regardless of app health. When
+  // the codec is genuinely absent we mark this N/A (excluded from the denominator,
+  // verify on a real device) — but ONLY then: if avc1 IS supported and TTFF still
+  // fails, that's a real bug and we keep it ❌.
   const ttff = extra.playerTTFF;
-  add(ttff != null && ttff < MAX_PLAYER_TTFF_MS, 'Player paints a frame (TTFF)',
-      ttff == null ? 'no frame / infinite spinner' : `${ttff}ms`, `< ${MAX_PLAYER_TTFF_MS}ms`, ttff == null || ttff >= MAX_PLAYER_TTFF_MS ? 'Live' : null);
+  if (extra.avcSupported === false) {
+    add(true, 'Player paints a frame (TTFF)',
+        'N/A — lab chromium has no H.264/AAC codec (avc1 unsupported); verify on a real device',
+        `< ${MAX_PLAYER_TTFF_MS}ms`, null, true);
+  } else {
+    add(ttff != null && ttff < MAX_PLAYER_TTFF_MS, 'Player paints a frame (TTFF)',
+        ttff == null ? 'no frame / infinite spinner' : `${ttff}ms`, `< ${MAX_PLAYER_TTFF_MS}ms`, ttff == null || ttff >= MAX_PLAYER_TTFF_MS ? 'Live' : null);
+  }
 
   // 8. Reload-free navigation
   const rv = extra.revisitDataReq;
@@ -266,8 +290,8 @@ function evaluate({ report, capture, extra }) {
 // ───────────────────────────── render scorecard ─────────────────────────────
 function renderLines(checks) {
   return checks.map((c) => {
-    const mark = c.pass ? '✅' : '❌';
-    const surf = !c.pass && c.surface ? `  [${c.surface}]` : '';
+    const mark = c.na ? '⚪' : (c.pass ? '✅' : '❌');
+    const surf = !c.na && !c.pass && c.surface ? `  [${c.surface}]` : '';
     return `${mark} ${c.name} — ${c.measured} (threshold ${c.threshold})${surf}`;
   });
 }
@@ -275,11 +299,14 @@ function renderLines(checks) {
 function main() {
   run().then((data) => {
     const checks = evaluate(data);
-    const passed = checks.filter((c) => c.pass).length;
-    const total = checks.length;
+    // N/A checks (lab physically can't test) are excluded from the denominator.
+    const applicable = checks.filter((c) => !c.na);
+    const naCount = checks.length - applicable.length;
+    const passed = applicable.filter((c) => c.pass).length;
+    const total = applicable.length;
     const lines = renderLines(checks);
 
-    const verdict = `EXPERIENCE: ${passed}/${total} ✅`;
+    const verdict = `EXPERIENCE: ${passed}/${total} ✅${naCount ? ` (+${naCount} N/A — lab limit)` : ''}`;
     const block = ['', '── EXPERIENCE SCORECARD ──', ...lines, '', verdict, ''].join('\n');
     console.log(block);
 
@@ -289,7 +316,7 @@ function main() {
     md += `> Generated: ${ts}\n> Target: ${URL}\n> Harness: \`scripts/check-experience.mjs\` · re-run \`npm run check:exp\`\n\n`;
     md += `"Does it look + feel right — no flash, no break?" Each criterion is a measured ✅/❌.\n\n`;
     md += `| | Criterion | Measured | Threshold | Surface |\n|---|---|---|---|---|\n`;
-    for (const c of checks) md += `| ${c.pass ? '✅' : '❌'} | ${c.name} | ${String(c.measured).replace(/\|/g, '\\|')} | ${c.threshold} | ${(!c.pass && c.surface) ? c.surface : ''} |\n`;
+    for (const c of checks) md += `| ${c.na ? '⚪' : (c.pass ? '✅' : '❌')} | ${c.name} | ${String(c.measured).replace(/\|/g, '\\|')} | ${c.threshold} | ${(!c.na && !c.pass && c.surface) ? c.surface : ''} |\n`;
     md += `\n**${verdict}**\n`;
     if (passed < total) {
       md += `\n## Failing checks\n\n`;

@@ -289,6 +289,10 @@ export function FreeHlsShowcaseCard({
         style={{
           ['--freehls-accent' as string]: accent,
           ['--freehls-accent-rgb' as string]: accentRgb,
+          // CLS: the card's box is fixed by `aspect-video`; `contain: layout`
+          // makes it a hard layout-containment boundary so the <video> mounting
+          // (on focus) + any internal change can NEVER reflow the feed below it.
+          contain: 'layout',
           boxShadow: focused
             ? `0 12px 44px ${accent}33, 0 0 0 1px ${accent}66`
             : `0 5px 22px ${accent}1f, 0 0 0 1px ${accent}2e`,
