@@ -863,6 +863,7 @@ function AppRouter() {
         <AccessCodeLogin
           onLoginPin={async (id, pin) => { if (isAmbientEnabled()) startAmbient(); return auth.loginWithPin(id, pin); }}
           onLogin={async (code) => { if (isAmbientEnabled()) startAmbient(); return auth.login(code); }}
+          onHubSignIn={() => { if (isAmbientEnabled()) startAmbient(); auth.signInWithHub(); }}
         />
       )}
       {auth.isAuthenticated && (

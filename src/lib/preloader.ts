@@ -140,7 +140,6 @@ export function startPreload() {
   //    depend on this hold — the SW's durable logo cache stores each logo on its
   //    first sight regardless; this just front-loads it.
   const LOGO_BG_BUDGET_MS = 12000; // full background warm
-  const LOGO_HOLD_MS = 6000;       // max the splash waits for the warm
   import('@/lib/logoPreload')
     .then(({ preloadAllLogos }) =>
       preloadAllLogos((done, total) => {
@@ -150,16 +149,16 @@ export function startPreload() {
     .catch(() => {})
     .finally(() => setLogoProgress(1));
 
-  // Gate that resolves when the warm completes OR the hold elapses.
-  const logoHold = new Promise<void>((res) => {
-    const off = onLogoProgress((p) => { if (p >= 1) { off(); res(); } });
-    setTimeout(() => { off(); res(); }, LOGO_HOLD_MS);
-  });
-  loads.push(logoHold);
-
-  // Signal ready when chunk + catalog + the logo hold are done (or the ceiling).
+  // BOOT NOTE: the splash reveal is NO LONGER held for the 600-logo warm. Warming
+  // every logo before reveal was adding ~1.5s of dead splash on first open while
+  // the 600 logo fetches also saturated bandwidth and slowed the critical path
+  // (catalog + first content images). It's non-critical to reveal: each logo still
+  // lazy-loads with its one-time fade and the SW durably caches it on first sight,
+  // so the warm just front-loads that — it now finishes in the BACKGROUND after
+  // the interface is already interactive. Reveal gates on chunk + catalog only.
+  // Signal ready when the HomePage chunk + catalog are done.
   Promise.allSettled(loads).then(() => resolveReady());
-  setTimeout(resolveReady, LOGO_HOLD_MS + 2000);
+  setTimeout(resolveReady, 5000); // absolute ceiling so a dead network can't trap the splash
 }
 
 /**

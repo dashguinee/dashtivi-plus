@@ -21,8 +21,20 @@ export const DASH_ID = process.env.GLITCH_ID || '001AAD';
 export const PIN = process.env.GLITCH_PIN || '123456';
 export const HEADLESS = process.env.GLITCH_HEAD ? false : true;
 
-// Pinned local chromium (same binary glitch-detect uses).
+// Pinned local chromium (same binary glitch-detect uses). Built WITHOUT the
+// proprietary H.264/AAC decoders → fine for layout/console/network checks, but it
+// physically cannot paint an IPTV/HLS frame.
 export const CHROME = '/home/dash/.cache/ms-playwright/chromium-1194/chrome-linux/chrome';
+
+// Codec-capable browser for the TTFF check ONLY: real branded Google Chrome ships
+// the licensed H.264/AAC decoders (chromium + Chrome-for-Testing do NOT), so the
+// player can ACTUALLY decode a free HLS channel and we measure a true time-to-first
+// -frame instead of N/A-ing it. Extracted (no sudo) from the google-chrome .deb to
+// this path; override with GLITCH_CODEC_CHROME. If absent, TTFF honestly falls back
+// to N/A on the codec-less chromium (never a fake pass).
+export const CODEC_CHROME = process.env.GLITCH_CODEC_CHROME ||
+  (process.env.HOME + '/.cache/tivi-codec-chrome/chrome');
+export const hasCodecBrowser = () => existsSync(CODEC_CHROME);
 
 // Mobile-first context — the real audience is on phones.
 export const VIEWPORT = { width: 412, height: 915 };
@@ -133,9 +145,18 @@ export function instrument() {
 }
 
 // ───────────────────────────── launch + capture ─────────────────────────────
-export async function launchContext({ reducedMotion = false } = {}) {
+export async function launchContext({ reducedMotion = false, codec = false } = {}) {
   const launchOpts = { headless: HEADLESS };
-  if (existsSync(CHROME)) launchOpts.executablePath = CHROME;
+  if (codec && existsSync(CODEC_CHROME)) {
+    // Real Google Chrome for the codec-bearing TTFF probe. ignoreDefaultArgs drops
+    // the `--disable-features=…` default that otherwise suppresses the proprietary
+    // decoders; the autoplay flag lets the free-HLS showcase start without a gesture.
+    launchOpts.executablePath = CODEC_CHROME;
+    launchOpts.ignoreDefaultArgs = ['--disable-features=AcceptCHFrame,MediaRouter,OptimizationHints'];
+    launchOpts.args = ['--autoplay-policy=no-user-gesture-required'];
+  } else if (existsSync(CHROME)) {
+    launchOpts.executablePath = CHROME;
+  }
   const browser = await chromium.launch(launchOpts);
   const context = await browser.newContext({
     viewport: VIEWPORT, userAgent: UA, deviceScaleFactor: 2, isMobile: true, hasTouch: true,

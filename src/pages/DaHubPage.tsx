@@ -908,16 +908,20 @@ export function DaHubPage() {
       setIsLoading(false);
       return;
     }
-    const [friendsRes, sharedRes, convosRes, unreadRes] = await Promise.allSettled([
+    const [friendsRes, sharedRes, convosRes] = await Promise.allSettled([
       friendsAPI.getFriends(userId),
       friendsAPI.getSharedAccountMembers(userId),
       messagesAPI.getConversations(userId),
-      messagesAPI.getUnreadCount(userId),
     ]);
     if (friendsRes.status === 'fulfilled') setFriends(friendsRes.value);
     if (sharedRes.status === 'fulfilled') setSharedMembers(sharedRes.value);
-    if (convosRes.status === 'fulfilled') setConversations(convosRes.value);
-    if (unreadRes.status === 'fulfilled') setUnreadCount(unreadRes.value);
+    if (convosRes.status === 'fulfilled') {
+      setConversations(convosRes.value);
+      // Derive total unread from the conversations we already fetched instead of
+      // a separate HEAD count query — one fewer round-trip and no extra in-flight
+      // request that gets ERR_ABORTED when the user navigates away from DaHub.
+      setUnreadCount(convosRes.value.reduce((sum, c) => sum + (c.unread_count || 0), 0));
+    }
     setIsLoading(false);
   }, [userId]);
 

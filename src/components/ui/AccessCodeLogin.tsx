@@ -8,9 +8,11 @@ interface Props {
   onLoginPin: (id: string, pin: string) => Promise<{ success: boolean; guest?: boolean; error?: string }>;
   /** Legacy fallback — single DASH-XXXX access code. */
   onLogin: (code: string) => Promise<{ success: boolean; error?: string }>;
+  /** SSO — bounce to the DASH Hub and come back auto-authed (no PIN). */
+  onHubSignIn?: () => void;
 }
 
-export const AccessCodeLogin: React.FC<Props> = ({ onLoginPin, onLogin }) => {
+export const AccessCodeLogin: React.FC<Props> = ({ onLoginPin, onLogin, onHubSignIn }) => {
   const { lang } = useLanguage();
 
   // Primary: DASH ID + PIN
@@ -190,6 +192,18 @@ export const AccessCodeLogin: React.FC<Props> = ({ onLoginPin, onLogin }) => {
                     t(lang, 'enter')
                   )}
                 </button>
+
+                {/* SSO: continue with an existing DASH Hub session (no PIN). */}
+                {onHubSignIn && (
+                  <button
+                    type="button"
+                    onClick={onHubSignIn}
+                    className="w-full py-3.5 rounded-xl text-[12px] font-bold tracking-[1.5px] uppercase text-white/80 border border-white/[0.14] bg-white/[0.04] hover:bg-white/[0.07] hover:text-white transition-colors"
+                    style={{ fontFamily: "'Outfit', sans-serif" }}
+                  >
+                    Continue with DASH Hub
+                  </button>
+                )}
 
                 {/* Secondary: legacy access-code reveal */}
                 <button

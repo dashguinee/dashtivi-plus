@@ -18,7 +18,7 @@ import { dirname, resolve } from 'node:path';
 import {
   URL, DATA_ENDPOINT, sleep, launchContext, makeCapture, makeStep,
   scrollPage, scrollCarousels, waitForApp, loginIfNeeded, nav, tapVee,
-  countContent, bucketCLS, worstShiftSource,
+  countContent, bucketCLS, worstShiftSource, hasCodecBrowser,
 } from './_harness-lib.mjs';
 
 // ════════════════════════ THRESHOLDS (tune here) ════════════════════════════
@@ -57,6 +57,8 @@ async function run() {
   const extra = {
     playerTTFF: null,        // ms to video readyState>=2 (null = never)
     avcSupported: null,      // can THIS browser even decode H.264/AAC? (null=unprobed)
+    codecTTFF: null,         // ms to first painted frame in the CODEC browser (null=never)
+    codecBrowserUsed: false, // did we run the codec-capable TTFF probe?
     revisitDataReq: null,    // # data-endpoint fetches on a revisit
     revisitRoute: '',
     reducedMotionAnims: null,
@@ -205,6 +207,31 @@ async function run() {
     await rm.browser.close();
   } catch { extra.reducedMotionAnims = -1; }
 
+  // ── REAL TTFF — codec-capable browser, free HLS channel ──────────────────────
+  // The main walk runs on codec-less chromium-1194 (can't decode H.264), so the
+  // in-walk TTFF is unmeasurable there. If a codec-bearing Chrome is present we
+  // measure TTFF for real: load Home (the FreeHlsShowcaseCard autoplays exactly one
+  // free, guest-playable HLS channel via hls.js → MSE → H.264) and time the video to
+  // readyState>=2 (HAVE_CURRENT_DATA = a painted frame). This is a genuine end-to-end
+  // play of a real channel with real codecs — not a lab workaround.
+  if (hasCodecBrowser()) {
+    try {
+      const cb = await launchContext({ codec: true });
+      await cb.page.goto(URL + '/', { waitUntil: 'domcontentloaded' });
+      await loginIfNeeded(cb.page);
+      await waitForApp(cb.page); await sleep(1500);
+      await cb.page.evaluate(() => window.scrollTo(0, 0)); await sleep(500);
+      const t0 = Date.now();
+      extra.codecTTFF = await cb.page.waitForFunction(() => {
+        const v = [...document.querySelectorAll('video')]
+          .find((el) => el.readyState >= 2 && el.videoWidth > 0 && !(el.currentSrc || '').includes('wc-bg'));
+        return v ? Math.round(performance.now()) : false;
+      }, { timeout: MAX_PLAYER_TTFF_MS + 8000 }).then(() => Date.now() - t0).catch(() => null);
+      extra.codecBrowserUsed = true;
+      await cb.browser.close();
+    } catch { extra.codecBrowserUsed = false; }
+  }
+
   return { report, capture, extra };
 }
 
@@ -259,17 +286,24 @@ function evaluate({ report, capture, extra }) {
   add(minCards >= MIN_CONTENT_PER_SURF, 'Every surface renders content', `min ${minCards} cards`, `>= ${MIN_CONTENT_PER_SURF}`, emptySurf);
 
   // 7. Player paints a frame within TTFF budget.
-  // LAB QUALIFICATION: headless chromium-1194 has no H.264/AAC decoder, so a real
-  // IPTV stream can NEVER reach readyState>=2 here regardless of app health. When
-  // the codec is genuinely absent we mark this N/A (excluded from the denominator,
-  // verify on a real device) — but ONLY then: if avc1 IS supported and TTFF still
-  // fails, that's a real bug and we keep it ❌.
-  const ttff = extra.playerTTFF;
-  if (extra.avcSupported === false) {
+  // Measured for REAL when a codec-capable Chrome is available (extra.codecTTFF):
+  // a free HLS channel actually plays via hls.js → MSE → H.264 and we time the first
+  // painted frame (readyState>=2). That is a genuine end-to-end play — pass/fail on
+  // the real number. Only when NO codec browser exists do we fall back: codec-less
+  // chromium physically can't decode IPTV (avc1 unsupported) → honest N/A (verify on
+  // a real device), never a fake green. If avc1 IS supported but TTFF still failed,
+  // that's a real bug and stays ❌.
+  if (extra.codecBrowserUsed) {
+    const ct = extra.codecTTFF;
+    add(ct != null && ct < MAX_PLAYER_TTFF_MS, 'Player paints a frame (TTFF)',
+        ct == null ? 'no frame / infinite spinner (codec browser)' : `${ct}ms (real HLS play, codec Chrome)`,
+        `< ${MAX_PLAYER_TTFF_MS}ms`, ct == null || ct >= MAX_PLAYER_TTFF_MS ? 'Live/Home player' : null);
+  } else if (extra.avcSupported === false) {
     add(true, 'Player paints a frame (TTFF)',
-        'N/A — lab chromium has no H.264/AAC codec (avc1 unsupported); verify on a real device',
+        'N/A — no codec browser found and lab chromium has no H.264/AAC (avc1 unsupported); verify on a real device',
         `< ${MAX_PLAYER_TTFF_MS}ms`, null, true);
   } else {
+    const ttff = extra.playerTTFF;
     add(ttff != null && ttff < MAX_PLAYER_TTFF_MS, 'Player paints a frame (TTFF)',
         ttff == null ? 'no frame / infinite spinner' : `${ttff}ms`, `< ${MAX_PLAYER_TTFF_MS}ms`, ttff == null || ttff >= MAX_PLAYER_TTFF_MS ? 'Live' : null);
   }

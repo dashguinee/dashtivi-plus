@@ -653,10 +653,14 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
             'radial-gradient(85% 60% at 92% 88%, rgba(157,78,221,0.04), transparent 60%)',
         }}
       />
-      {/* ── Hero Billboard — dynamic resolver (affinity → editorial) ── */}
-      {heroItem && heroEntry?.p ? (
-        <div className="relative overflow-hidden" style={{ height: 'clamp(170px, 36vh, 300px)' }}>
-          {/* Backdrop — candle-warm cross-dissolve on rotation */}
+      {/* ── Hero Billboard — dynamic resolver (affinity → editorial) ──
+          ONE always-mounted container (box + static vignettes) so the data-resolve
+          swap never INSERTS an absolute inset-0 layer (whose own appearance the
+          layout-shift API counts as a phantom CLS even though nothing visually
+          moves). Same look, zero cold-load shift. */}
+      <div className="relative overflow-hidden" style={{ height: 'clamp(170px, 36vh, 300px)' }}>
+        {/* Backdrop — candle-warm cross-dissolve, keyed so rotation re-dissolves */}
+        {heroItem && heroEntry?.p && (
           <div
             key={heroItem.series_id}
             className="absolute inset-0 bg-cover bg-center"
@@ -666,10 +670,19 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               animation: 'vee-card-in 1.4s cubic-bezier(0.16,1,0.3,1) both',
             }}
           />
-          {/* Warm vignette — brown-black, left-to-dark so the title floats on warmth */}
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #161210 2%, rgba(22,18,16,0.55) 38%, transparent 78%)' }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(22,18,16,0.82) 0%, rgba(22,18,16,0.25) 42%, transparent 70%)' }} />
-          {/* Content — bottom left */}
+        )}
+        {/* Warm vignette — ALWAYS mounted (no insert on resolve) */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #161210 2%, rgba(22,18,16,0.55) 38%, transparent 78%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(22,18,16,0.82) 0%, rgba(22,18,16,0.25) 42%, transparent 70%)' }} />
+        {/* Pre-resolve title — same box, no layout change when rich content swaps in */}
+        {!(heroItem && heroEntry?.p) && (
+          <div className="absolute top-0 left-0 right-0 pt-16 pb-5 px-5">
+            <h1 className="text-[22px] font-semibold text-white/85 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.02em' }}>Séries</h1>
+            <div className="w-16 h-[2px] rounded-full mt-2" style={{ background: `linear-gradient(90deg, ${GOLD}88 0%, ${GOLD}26 60%, transparent 100%)` }} />
+          </div>
+        )}
+        {/* Content — bottom left */}
+        {heroItem && heroEntry?.p && (
           <div className="absolute bottom-0 left-0 right-0 p-5 pb-6">
             <span className="inline-flex items-center gap-1.5 mb-2 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide"
               style={{ background: `${GOLD}1f`, color: GOLD, border: `1px solid ${GOLD}33` }}>
@@ -718,16 +731,8 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               </button>
             </div>
           </div>
-        </div>
-      ) : (
-        // Reserve the hero's FINAL box (same clamp as the resolved billboard) so the
-        // fallback→billboard swap on data-resolve animates content in WITHOUT pushing
-        // the reveal rows below — kills the measured route-load CLS (was 0.12).
-        <div className="pt-16 pb-5 px-5" style={{ minHeight: 'clamp(170px, 36vh, 300px)' }}>
-          <h1 className="text-[22px] font-semibold text-white/85 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.02em' }}>Séries</h1>
-          <div className="w-16 h-[2px] rounded-full mt-2" style={{ background: `linear-gradient(90deg, ${GOLD}88 0%, ${GOLD}26 60%, transparent 100%)` }} />
-        </div>
-      )}
+        )}
+      </div>
 
       {/* ── Smart sticky header (search + tabs + genre pills) ── */}
       <div className={stickyClass} style={stickyStyle}>

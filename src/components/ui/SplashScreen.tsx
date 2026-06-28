@@ -31,7 +31,7 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
     // that way forever (only the video stream ever loads after this). This is a
     // deliberate, one-time, slightly-longer FIRST splash for a forever-instant
     // app; the preload budget (in the preloader) caps it so it can never hang.
-    const minBrandTime = new Promise<void>(r => setTimeout(r, 1300));
+    const minBrandTime = new Promise<void>(r => setTimeout(r, 700));
 
     Promise.all([minBrandTime, preloadReady]).then(() => {
       // verbose: '[SPLASH] Assets ready'
@@ -39,9 +39,11 @@ export const SplashScreen: React.FC<Props> = ({ onComplete, authReady = true }) 
       const proceed = () => {
         // verbose: '[SPLASH] Proceeding'
         setPhase('ready');
-        setTimeout(() => setPhase('exit'), 320);
-        // onComplete just after the 500ms opacity fade finishes — no dead air.
-        setTimeout(() => onComplete(), 900);
+        setTimeout(() => setPhase('exit'), 200);
+        // onComplete just after the opacity fade finishes — no dead air. Tightened
+        // (was 320/900) to shave ~500ms of brand-hold off first-open boot; the
+        // reveal still reads as a deliberate brand moment, just snappier.
+        setTimeout(() => onComplete(), 520);
       };
       const waitForAuth = () => {
         if (authRef.current || Date.now() - authStart > 1800) {

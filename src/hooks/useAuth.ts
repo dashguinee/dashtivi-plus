@@ -1,6 +1,14 @@
 import { useSyncExternalStore } from 'react';
 import { getItem, setItem, removeItem } from '@/lib/storage';
 import type { XtreamCredentials } from '@/lib/xtream';
+import {
+  getDashSession,
+  handleHubCallback,
+  hasHubCallbackParam,
+  signOutDashSession,
+  redirectToHub,
+  type DashCitizen,
+} from '@/lib/dash-auth';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -24,8 +32,12 @@ const SB_ANON = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 //  - method 'code' : legacy DASH-XXXX access code (lookup_access_code)
 //  - method 'pin'  : DASH ID + PIN (login_with_pin); persists the PIN so the
 //                    secret xtream creds can be re-fetched (never stored).
+//  - method 'hub'  : auto-authed from an existing DASH Hub session (SSO). No
+//                    PIN is held — identity comes from the shared
+//                    'dash_citizen_storage'. Re-derived on every reload; if the
+//                    Hub session is gone, this session is dropped.
 interface StoredAuth {
-  method?: 'code' | 'pin';
+  method?: 'code' | 'pin' | 'hub';
   code: string;          // the access code (legacy) OR the DASH ID for pin method
   pin?: string;          // pin method only — secret, re-validated on reload
   coreId?: string;
@@ -137,6 +149,48 @@ async function lookupPin(id: string, pin: string): Promise<PinResult> {
   }
 }
 
+// ── resolveMemberByCoreId — entitlement from a trusted Hub session ───
+// The SSO rail (dashAuth / sso_token) carries IDENTITY only (core_id + name);
+// it does NOT carry Tivi+ streaming entitlement. To upgrade a Hub-authed member
+// from free/guest to their real paid tier WITHOUT a PIN, the server must resolve
+// entitlement by core_id. This calls an OPTIONAL RPC `tivi_resolve_member`.
+//
+// Until that RPC is deployed it 404s and we silently stay guest — the member is
+// still logged in (no PIN), just on the free tier. When the RPC ships, full
+// streaming auto-login lights up with ZERO client change. The RPC SHOULD be
+// SECURITY DEFINER and ideally gated (it returns secret xtream creds), see
+// supabase/migrations/tivi_resolve_member.sql.
+async function resolveMemberByCoreId(coreId: string): Promise<PinRpcResponse | null> {
+  try {
+    const res = await fetch(`${SB_URL}/rpc/tivi_resolve_member`, {
+      method: 'POST',
+      headers: {
+        apikey: SB_ANON,
+        Authorization: `Bearer ${SB_ANON}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ p_core_id: coreId.trim().toUpperCase() }),
+    });
+    if (!res.ok) return null; // not deployed / not found → stay guest
+    const body = await res.json();
+    const data = (Array.isArray(body) ? body[0] : body) as PinRpcResponse | null;
+    if (!data || data.ok !== true) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+// True if there's anything to auto-auth from the Hub: a live shared session, or
+// a fresh callback param in the URL the Hub just bounced us back with.
+function hasHubEntry(): boolean {
+  try {
+    return getDashSession() !== null || hasHubCallbackParam();
+  } catch {
+    return false;
+  }
+}
+
 // Rate limit: track failed attempts
 const FAIL_KEY = 'tivi_login_fails';
 
@@ -186,8 +240,10 @@ const UNAUTHENTICATED: AuthState = {
 
 let authState: AuthState = {
   ...UNAUTHENTICATED,
-  // Start in loading state if there's a stored code to re-validate (first-load gate).
-  isLoading: loadStoredCode() !== null,
+  // Start in loading state if there's a stored session to re-validate, OR a DASH
+  // Hub session / SSO callback to consume — so the login screen never flashes
+  // before auto-auth resolves (first-load gate).
+  isLoading: loadStoredCode() !== null || hasHubEntry(),
 };
 
 const listeners = new Set<() => void>();
@@ -210,6 +266,61 @@ function getSnapshot(): AuthState {
   return authState;
 }
 
+// ── DASH Hub auto-auth (SSO) ─────────────────────────────────────────
+// Apply an identity captured from the Hub session. `ent` is the optional paid
+// entitlement (from resolveMemberByCoreId); when absent the member lands as a
+// free/guest member (no xtream creds) — still fully logged in, no PIN.
+function applyHubSession(session: DashCitizen, ent: PinRpcResponse | null): void {
+  const isGuest = !ent || ent.guest === true;
+  const coreId = ent?.core_id || session.coreId;
+  const name = ent?.name || session.fullName || '';
+  setAuthState({
+    isAuthenticated: true,
+    credentials: isGuest ? null : { username: ent?.username || '', password: ent?.password || '' },
+    tier: isGuest ? 'guest' : (ent?.tier || ''),
+    code: coreId,
+    coreId,
+    customerName: name,
+    expires: isGuest ? '' : (ent?.expires_at || ''),
+    isLoading: false,
+  });
+  setItem(AUTH_KEY, {
+    method: 'hub',
+    code: coreId,
+    coreId,
+    tier: isGuest ? 'guest' : (ent?.tier || ''),
+    expires: isGuest ? '' : (ent?.expires_at || ''),
+    customerName: name,
+    guest: isGuest,
+  } satisfies StoredAuth);
+}
+
+// Consume any Hub callback param, then auto-authenticate from the shared Hub
+// session. Lands the member immediately (identity), then upgrades to paid tier
+// if the entitlement RPC is available. Falls back to UNAUTHENTICATED (→ login
+// screen with the ID+PIN gate) when there's no Hub session.
+async function bootstrapFromHub(): Promise<void> {
+  try {
+    await handleHubCallback();
+  } catch {
+    /* ignore — fall through to whatever's in localStorage */
+  }
+
+  const session = getDashSession();
+  if (!session) {
+    removeItem(AUTH_KEY); // drop any stale method:'hub' record
+    setAuthState({ ...UNAUTHENTICATED, isLoading: false });
+    return;
+  }
+
+  // Identity in hand (no PIN) — open the app now as a free/guest member…
+  applyHubSession(session, null);
+  // …then try to upgrade to their real paid entitlement (silent until the RPC
+  // ships; see resolveMemberByCoreId).
+  const entitlement = await resolveMemberByCoreId(session.coreId);
+  if (entitlement) applyHubSession(session, entitlement);
+}
+
 // One-time bootstrap: re-validate the stored session ONCE and install the single
 // app-lifetime expiry interval. Guarded so repeated useAuth() mounts can't re-run it.
 let bootstrapped = false;
@@ -219,7 +330,12 @@ function ensureBootstrap() {
 
   const stored = loadStoredCode();
   if (!stored) {
-    setAuthState({ ...UNAUTHENTICATED, isLoading: false });
+    // No local session — try DASH Hub auto-auth before showing the login gate.
+    void bootstrapFromHub();
+  } else if (stored.method === 'hub') {
+    // Reload of a Hub-authed session — re-derive from the shared Hub session
+    // (and re-attempt the entitlement upgrade).
+    void bootstrapFromHub();
   } else if (stored.method === 'pin' && stored.pin) {
     // PIN method — re-validate DASH ID + PIN via login_with_pin so the secret
     // xtream creds (never persisted) come back fresh. Guests have no creds but a
@@ -417,8 +533,17 @@ async function loginWithPin(
   return { success: true, guest: isGuest };
 }
 
+// Send the user to the DASH Hub to sign in, then bounce back here auto-authed.
+// One tap if they're already signed into the Hub.
+function signInWithHub() {
+  redirectToHub();
+}
+
 function logout() {
   removeItem(AUTH_KEY);
+  // Also clear the shared DASH Hub session so a Hub-authed member who signs out
+  // here isn't immediately auto-re-logged-in on the next boot.
+  signOutDashSession();
   clearFails();
   // Clear ONLY transient xtream_* API caches + the auth/credential keys above.
   // PRESERVE user data with no DB mirror (tivi_likes / tivi_downloads /
@@ -450,6 +575,7 @@ export function useAuth() {
     expires: state.expires,
     login,
     loginWithPin,
+    signInWithHub,
     logout,
   };
 }

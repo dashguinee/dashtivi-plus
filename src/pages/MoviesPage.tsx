@@ -596,10 +596,16 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         )
       )}
 
-      {/* ── Hero Billboard — dynamic 3-tier resolver (resume → affinity → editorial) ── */}
-      {heroItem && heroEntry?.p ? (
-        <div className="relative overflow-hidden" style={{ height: 'clamp(170px, 36vh, 300px)' }}>
-          {/* Backdrop — candle-warm cross-dissolve on rotation */}
+      {/* ── Hero Billboard — dynamic 3-tier resolver (resume → affinity → editorial) ──
+          ONE container that is ALWAYS mounted (box + static vignette layers) so the
+          data-resolve swap never INSERTS absolute children. Inserting an absolute
+          inset-0 layer registers a phantom layout-shift entry (the layer's own
+          h0→h300 appearance) even though no sibling moves — that was the residual
+          ~0.037 cold-load CLS. Keeping the vignettes mounted and only filling the
+          backdrop image + content on resolve = zero phantom shift, identical look. */}
+      <div className="relative overflow-hidden" style={{ height: 'clamp(170px, 36vh, 300px)' }}>
+        {/* Backdrop — candle-warm cross-dissolve, keyed so rotation re-dissolves */}
+        {heroItem && heroEntry?.p && (
           <div
             key={heroItem.stream_id}
             className="absolute inset-0 bg-cover bg-center"
@@ -609,10 +615,19 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               animation: 'vee-card-in 1.4s cubic-bezier(0.16,1,0.3,1) both',
             }}
           />
-          {/* Warm vignette — brown-black, left-to-dark so the title floats on warmth */}
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #161210 2%, rgba(22,18,16,0.55) 38%, transparent 78%)' }} />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(22,18,16,0.82) 0%, rgba(22,18,16,0.25) 42%, transparent 70%)' }} />
-          {/* Content — bottom left */}
+        )}
+        {/* Warm vignette — ALWAYS mounted (no insert on resolve) */}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #161210 2%, rgba(22,18,16,0.55) 38%, transparent 78%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(22,18,16,0.82) 0%, rgba(22,18,16,0.25) 42%, transparent 70%)' }} />
+        {/* Pre-resolve title — same box, no layout change when rich content swaps in */}
+        {!(heroItem && heroEntry?.p) && (
+          <div className="absolute top-0 left-0 right-0 pt-16 pb-5 px-5">
+            <h1 className="text-[22px] font-semibold text-white/85 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.02em' }}>Cinéma</h1>
+            <div className="w-16 h-[2px] rounded-full mt-2" style={{ background: `linear-gradient(90deg, ${GOLD}88 0%, ${GOLD}26 60%, transparent 100%)` }} />
+          </div>
+        )}
+        {/* Content — bottom left */}
+        {heroItem && heroEntry?.p && (
           <div className="absolute bottom-0 left-0 right-0 p-5 pb-6">
             <span className="inline-flex items-center gap-1.5 mb-2 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide"
               style={{ background: `${GOLD}1f`, color: GOLD, border: `1px solid ${GOLD}33` }}>
@@ -665,17 +680,8 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
               </button>
             </div>
           </div>
-        </div>
-      ) : (
-        // Reserve the hero's EXACT FINAL box — identical `height` (not minHeight)
-        // and overflow as the resolved billboard — so the fallback→billboard swap
-        // on data-resolve changes ZERO layout and the sections below never move.
-        // (minHeight could grow past the clamp on some viewports → residual CLS.)
-        <div className="relative overflow-hidden pt-16 pb-5 px-5" style={{ height: 'clamp(170px, 36vh, 300px)' }}>
-          <h1 className="text-[22px] font-semibold text-white/85 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.02em' }}>Cinéma</h1>
-          <div className="w-16 h-[2px] rounded-full mt-2" style={{ background: `linear-gradient(90deg, ${GOLD}88 0%, ${GOLD}26 60%, transparent 100%)` }} />
-        </div>
-      )}
+        )}
+      </div>
 
       {/* ── Cinéma en direct (live cinema-TV channels) ── */}
       {/* While the catalog is still resolving, reserve this section's EXACT box (minHeight 200)

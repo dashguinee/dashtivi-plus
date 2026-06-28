@@ -529,8 +529,27 @@ export const LiveTVPage: React.FC<Props> = ({ credentials, onPlay }) => {
         <>
           {/* ── Theme Rows (Discover) ──────────────────────────── */}
           {themesLoading ? (
-            <div className="flex items-center justify-center py-24">
-              <LoadingSpinner size="lg" text={t(lang, 'loadingChannels')} />
+            // CLS RESERVE: a short centered spinner here used to be replaced by the
+            // full (tall) theme list on data-resolve, shoving the WorldEX portal +
+            // Stream-More chrome below it DOWN by the whole list height — the dominant
+            // ~0.13 Live cold-load shift. Instead reserve the area with one skeleton
+            // row PER theme (same count + ~height as the resolved rows) so when the
+            // real rows land they fill these boxes in place and nothing below moves.
+            <div className="pt-4" aria-hidden>
+              {smartThemeOrder.map((theme) => (
+                <div key={theme.id} className="mb-7" style={{ height: 196 }}>
+                  <div className="px-4 mb-3.5 flex items-center gap-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/15" />
+                    <div className="h-4 w-32 rounded bg-white/[0.06] animate-pulse" />
+                  </div>
+                  <div className="flex gap-3 px-4 overflow-hidden">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="flex-shrink-0 rounded-xl bg-white/[0.04] animate-pulse"
+                        style={{ width: i === 0 ? 150 : 125, aspectRatio: '16 / 10' }} />
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="pt-4">
