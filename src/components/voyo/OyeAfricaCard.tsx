@@ -83,7 +83,7 @@ export function OyeAfricaCard({ className = '' }: OyeAfricaCardProps) {
             Oyé Africa
           </h3>
           <p className="text-white/70 text-sm font-medium mt-0.5 line-clamp-1">
-            The cheer of the continent — tap in.
+            African music, always on.
           </p>
         </div>
 

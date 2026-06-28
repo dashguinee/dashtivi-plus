@@ -56,16 +56,23 @@ function formatRuntime(minutes: number): string {
   return `${h}h ${m}m`;
 }
 
+// Process-wide cache of poster URLs that have painted once. Lets a card that
+// re-mounts (content-visibility reveal, grid re-render, re-entered route) show
+// its poster instantly at full opacity — no second shimmer, no re-fade pop.
+const POSTER_PAINTED = new Set<string>();
+
 export const PosterCard = memo(function PosterCard({ title, poster, rating, categoryId, onClick, tmdbData, onTrailer, rank }: Props) {
   const badge = categoryId ? PLATFORM_BADGES[categoryId] : undefined;
   const platformLogo = categoryId ? PLATFORM_LOGOS[categoryId] : undefined;
   const [imgFailed, setImgFailed] = useState(false);
   const [tmdbFailed, setTmdbFailed] = useState(false);
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const onImgLoad = useCallback(() => setImgLoaded(true), []);
   const safePoster = getSafePoster(poster);
   // TMDB poster fallback — uses poster_path from enrichment
   const tmdbPoster = tmdbData?.p ? `https://image.tmdb.org/t/p/w342${tmdbData.p}` : null;
+  // The poster URL actually being shown right now (first choice, then fallback).
+  const activePoster = (safePoster && !imgFailed) ? safePoster : (tmdbPoster && !tmdbFailed) ? tmdbPoster : null;
+  const [imgLoaded, setImgLoaded] = useState(() => (activePoster ? POSTER_PAINTED.has(activePoster) : false));
+  const onImgLoad = useCallback(() => { if (activePoster) POSTER_PAINTED.add(activePoster); setImgLoaded(true); }, [activePoster]);
   const hasPoster = (safePoster && !imgFailed) || (tmdbPoster && !tmdbFailed);
   const { clean: cleanTitle } = parseTitle(title);
 

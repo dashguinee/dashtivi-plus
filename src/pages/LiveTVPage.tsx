@@ -1003,7 +1003,7 @@ const ThemeRow = React.memo(function ThemeRow({
             <div className={`relative rounded-xl flex items-center justify-center overflow-hidden
                             group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/10 group-hover:scale-[1.03]
                             active:scale-95 transition-all duration-300 ${i === 0 ? 'w-[140px] h-[90px] card-hero' : 'w-[110px] h-[72px] card-surface'}`}>
-              <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" />
+              <ChannelIcon src={stream.stream_icon} name={stream.name} size="sm" eager />
               <ChannelBadge streamId={stream.stream_id} compact />
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-xl">
                 <Play className="w-4 h-4 text-white" />

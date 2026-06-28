@@ -31,7 +31,7 @@ export function OfflineBanner() {
       <span>
         {isOnline
           ? 'Back online'
-          : "You're offline — some features may not work"}
+          : "You're offline."}
       </span>
     </div>
   );

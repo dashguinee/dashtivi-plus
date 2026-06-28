@@ -403,7 +403,7 @@ function MyPassCard({
               style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', color: '#fcd34d' }}
             >
               <Clock size={14} />
-              {daysLeft != null && daysLeft <= 0 ? 'Your pass has expired — renew to keep watching.' : 'Your pass expires soon — renew now to avoid interruption.'}
+              {daysLeft != null && daysLeft <= 0 ? 'Pass expired. Renew to keep watching.' : 'Pass expires soon. Renew now.'}
             </div>
           )}
 

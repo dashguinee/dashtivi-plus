@@ -738,7 +738,7 @@
   }
 
   .card-og:hover {
-    box-shadow: 0 12px 48px rgba(157, 78, 221, 0.3);
+    box-shadow: 0 10px 36px rgba(157, 78, 221, 0.18);
     background: #2E2E2E;
   }
 
@@ -852,8 +852,8 @@
   .reveal {
     opacity: 0;
     transform: scale(0.995);
-    transition: opacity 2.2s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 2.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .reveal.visible {
@@ -863,18 +863,18 @@
   }
 
   /* --- Cascading reveal delays — slow guided entrance --- */
-  .reveal[data-reveal-delay="1"] { transition-delay: 100ms; }
-  .reveal[data-reveal-delay="2"] { transition-delay: 200ms; }
-  .reveal[data-reveal-delay="3"] { transition-delay: 350ms; }
-  .reveal[data-reveal-delay="4"] { transition-delay: 500ms; }
-  .reveal[data-reveal-delay="5"] { transition-delay: 650ms; }
+  .reveal[data-reveal-delay="1"] { transition-delay: 70ms; }
+  .reveal[data-reveal-delay="2"] { transition-delay: 140ms; }
+  .reveal[data-reveal-delay="3"] { transition-delay: 220ms; }
+  .reveal[data-reveal-delay="4"] { transition-delay: 300ms; }
+  .reveal[data-reveal-delay="5"] { transition-delay: 380ms; }
 
   /* --- Staggered card entrance --- */
   .stagger-card {
     opacity: 0;
     transform: scale(0.985);
-    transition: opacity 1.6s cubic-bezier(0.4, 0, 0.2, 1),
-                transform 1.6s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .stagger-card.visible {
@@ -882,7 +882,7 @@
     transform: scale(1);
   }
 
-  .stagger-card { transition-delay: calc(var(--i, 0) * 120ms); }
+  .stagger-card { transition-delay: calc(var(--i, 0) * 60ms); }
 
   /* --- VEE / Originals cinematic card entrance --- */
   /* V2 SOUL RESTORE: scale-based entrances — no layout shift, premium depth */
@@ -909,7 +909,7 @@
   /* --- Image settle — fade only (no scale — scale shifts cause visual jank with lazy loading) --- */
   .img-settle {
     opacity: 0;
-    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .img-settle.loaded {
@@ -1254,7 +1254,7 @@
   box-shadow:
     0 2px 8px rgba(0,0,0,0.4),
     0 0 0 0.5px rgba(255,255,255,0.05),
-    0 0 calc(var(--pulse) * 16px) rgba(157,78,221, calc(var(--pulse) * 0.14));
+    0 0 calc(var(--pulse) * 12px) rgba(157,78,221, calc(var(--pulse) * 0.10));
 }
 
 /* Smooth glow transition on cards — slow enough to feel like breathing */

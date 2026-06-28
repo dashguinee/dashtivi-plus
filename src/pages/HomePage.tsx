@@ -404,7 +404,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
               style={{ background: '#9D4EDD', boxShadow: '0 0 6px rgba(157,78,221,0.6)' }}
             />
             <h2 className="text-[19px] font-black tracking-tight text-white">
-              {lang === 'fr' ? 'VOYO · Le continent' : 'VOYO · The continent'}
+              {lang === 'fr' ? 'VOYO · Son africain' : 'VOYO · African sound'}
             </h2>
           </div>
           <div className="space-y-4">
@@ -419,11 +419,11 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
         </section>
       )}
 
-      {/* ── EXPLORATION beat — Movies, with auto-playing trailers. "Home is
-          THE happening place." Free = loud (featured 3); premium = present
-          but calmer (featured 2). One live trailer at a time, shared with the
-          free-HLS focus engine (a playing trailer = THE one live surface). */}
-      <MoviesExploration credentials={credentials} onPlay={onPlay} featured={isFree ? 3 : 2} />
+      {/* EXPLORATION beat — Movies with auto-playing trailers. A little vertical
+          breathing room so Films à la Une + the VOYO sections aren't cramped. */}
+      <div className="py-4">
+        <MoviesExploration credentials={credentials} onPlay={onPlay} featured={isFree ? 3 : 2} />
+      </div>
 
       {/* PREMIUM: the village, embedded SUBTLY — restraint = premium. No neon
           grid; just a low-key, calm door into BOTH Oyé Africa + Stations (both

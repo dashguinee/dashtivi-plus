@@ -97,9 +97,12 @@ export const Navbar: React.FC = () => {
     const isDahub = item.path === '/hub';
     // Graft 1: drop the whole icon row down ~4px so nothing touches the bar edge
     // (baseline +4px; active still lifts 2px relative to that for the label room).
+    // Alignment pass: Dahub's Users glyph optically reads a touch low, so it rests
+    // ~2px higher than the others to sit level with Home/Biblio on ONE baseline.
+    const restY = isDahub ? 2 : 4;
     const iconTransform = active
-      ? 'translateY(2px) scale(1.12)'
-      : 'translateY(4px)';
+      ? `translateY(${restY - 2}px) scale(1.12)`
+      : `translateY(${restY}px)`;
     // Graft 3: Dahub wears the silver (same metal palette as the channel-count badge).
     const iconColor = isDahub
       ? (active ? '#e6eaf0' : '#aab1bd')
@@ -113,6 +116,9 @@ export const Navbar: React.FC = () => {
         onPointerDown={() => tap()}
         onClick={() => handleTap(item.path)}
         className="relative flex flex-col items-center justify-center w-12 h-full"
+        // Alignment pass: pull Dahub left off the right edge. Via justify-between this
+        // also nudges the V pebble toward center and tightens the V↔Dahub gap.
+        style={isDahub ? { marginRight: 40 } : undefined}
       >
         {/* Icon — lifts up when active */}
         <div

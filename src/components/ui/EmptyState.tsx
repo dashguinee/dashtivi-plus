@@ -1,11 +1,11 @@
 import React from 'react';
 
 const VARIANTS: Record<string, { title: string; subtitle: string }> = {
-  search: { title: 'No signal on that frequency', subtitle: 'Try different keywords or browse our experiences' },
-  tv: { title: 'No signal on that frequency', subtitle: 'Try a different search or filter' },
-  film: { title: 'No titles in this sector', subtitle: 'Try different keywords or browse genres' },
-  browse: { title: 'This sector is uncharted', subtitle: 'New content arrives regularly' },
-  offline: { title: 'Signal interrupted', subtitle: 'Check your connection and try again' },
+  search: { title: 'No signal on that frequency', subtitle: 'Try another search.' },
+  tv: { title: 'No signal on that frequency', subtitle: 'Try another search.' },
+  film: { title: 'No titles in this sector', subtitle: 'Try another search.' },
+  browse: { title: 'This sector is uncharted', subtitle: 'More lands here regularly.' },
+  offline: { title: 'Signal interrupted', subtitle: 'Check your connection.' },
 };
 
 interface EmptyStateAction {

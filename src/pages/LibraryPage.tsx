@@ -80,8 +80,8 @@ export const LibraryPage: React.FC<Props> = ({ onPlay }) => {
             icon="film"
             title={lang === 'fr' ? 'Aucun favori pour le moment' : 'No likes yet'}
             subtitle={lang === 'fr'
-              ? 'Touchez le cœur sur un film ou une série pour le retrouver ici.'
-              : 'Tap the heart on a movie or series to keep it here.'}
+              ? 'Touchez le cœur pour le garder ici.'
+              : 'Tap the heart to save it here.'}
             action={{
               label: lang === 'fr' ? 'Explorer les films' : 'Browse movies',
               onClick: () => navigate('/movies'),
@@ -113,8 +113,8 @@ export const LibraryPage: React.FC<Props> = ({ onPlay }) => {
             icon="tv"
             title={lang === 'fr' ? 'Rien dans l\'historique' : 'Nothing watched yet'}
             subtitle={lang === 'fr'
-              ? 'Vos lectures récentes apparaîtront ici pour reprendre en un geste.'
-              : 'What you play shows up here so you can jump back in.'}
+              ? 'Reprenez où vous vous êtes arrêté.'
+              : 'Pick up where you left off.'}
             action={{
               label: lang === 'fr' ? 'Voir la TV en direct' : 'Watch Live TV',
               onClick: () => navigate('/live'),
@@ -146,8 +146,8 @@ export const LibraryPage: React.FC<Props> = ({ onPlay }) => {
             icon="browse"
             title={lang === 'fr' ? 'Aucun téléchargement' : 'No downloads yet'}
             subtitle={lang === 'fr'
-              ? 'Les films et épisodes que vous téléchargez se rangent ici.'
-              : 'Movies and episodes you download are kept here.'}
+              ? 'Vos téléchargements sont ici.'
+              : 'Your downloads live here.'}
             action={{
               label: lang === 'fr' ? 'Explorer les films' : 'Browse movies',
               onClick: () => navigate('/movies'),

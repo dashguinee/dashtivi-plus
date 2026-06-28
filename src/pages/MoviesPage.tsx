@@ -788,7 +788,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
       {isSearching && searchContextRow && (
         <div className="pt-4 pb-1 row-tier-featured">
           <VeeCollectionRow
-            name={lang === 'fr' ? 'Recommandé pour cette recherche' : 'Recommended for this search'}
+            name={lang === 'fr' ? 'Pour cette recherche' : 'For this search'}
             tagline={searchContextRow.tagline}
             items={searchContextRow.items}
             tmdbMap={tmdbMap}

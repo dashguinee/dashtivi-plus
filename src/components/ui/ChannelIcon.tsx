@@ -502,10 +502,18 @@ const sizes = {
   lg: 'w-[104px] h-[104px] text-2xl',
 };
 
+// ── Painted-source cache ─────────────────────────────────────────────
+// Channel logos are tiny and immutable. Once a given URL has painted once,
+// we remember it process-wide so ANY later mount of the same logo (a memo
+// drop, a content-visibility reveal, a parent re-render, a re-entered row)
+// renders it INSTANTLY at full opacity — no re-fetch, no re-fade, no jerky
+// pop while scrolling a horizontal channel strip. This is the core fix for
+// "logos keep reloading / popping in" on horizontal scroll.
+const PAINTED_SRC = new Set<string>();
+
 export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', className = '', eager = false }: Props) {
   const [failed, setFailed] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
-  const [loaded, setLoaded] = useState(false);
   const initials = getInitials(name);
 
   // Priority: 1. safeImageUrl (handles dead domains, HTTP proxy)  2. tv-logo CDN  3. Letter avatar
@@ -516,6 +524,10 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
       safeSrc = findLogoUrl(name);
     }
   }
+
+  // Seed the fade-in from the painted cache: if this exact logo has already
+  // shown once this session, start fully-loaded so it never fades/pops again.
+  const [loaded, setLoaded] = useState(() => (safeSrc ? PAINTED_SRC.has(safeSrc) : false));
 
   // Premium branded placeholder — used during load AND as the final, never-blank
   // fallback. Stable hue from the name + clean initials + top-shine + inner border,
@@ -554,14 +566,14 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
       {/* Placeholder behind — sizes the tile (no layout shift) but FADES OUT the
           instant the icon paints, so the letters never show through the logo.
           Stays fully visible if the image fails (never blank). */}
-      <div className={`transition-opacity duration-300 ${loaded ? 'opacity-0' : 'opacity-100'}`}>
+      <div className={`transition-opacity duration-200 ${loaded ? 'opacity-0' : 'opacity-100'}`}>
         {placeholderEl}
       </div>
       <img
         src={safeSrc}
         alt={name}
-        className={`absolute inset-0 w-full h-full rounded-xl object-contain bg-white/5 p-1 transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-        onLoad={() => setLoaded(true)}
+        className={`absolute inset-0 w-full h-full rounded-xl object-contain bg-white/5 p-1 transition-opacity duration-200 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        onLoad={() => { if (safeSrc) PAINTED_SRC.add(safeSrc); setLoaded(true); }}
         onError={() => {
           if (import.meta.env.DEV) console.warn('[ICON] Failed:', name, safeSrc?.slice(0, 60));
           if (safeSrc?.includes('tv-logos')) setLogoFailed(true);
