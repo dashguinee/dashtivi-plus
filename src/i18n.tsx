@@ -403,6 +403,8 @@ const translations = {
 
     // ── Go Premium modal ──────────────────────────────────────
     goPremiumTitle: 'Passer en Premium',
+    premiumChannelTitle: 'Chaîne Premium',
+    premiumHaveCode: 'Déjà un code ?',
     goPremiumSubtitle: 'Toutes les chaînes premium. La Coupe du Monde. Le cercle DASH.',
     goPremiumCta: 'Devenir Premium sur WhatsApp →',
     goPremiumCodePlaceholder: 'Déjà un code ? DASH-XXXXXX',
@@ -822,6 +824,8 @@ const translations = {
 
     // ── Go Premium modal ──────────────────────────────────────
     goPremiumTitle: 'Go Premium',
+    premiumChannelTitle: 'Premium Channel',
+    premiumHaveCode: 'Already have a code?',
     goPremiumSubtitle: 'Every premium channel. The World Cup. The DASH inner circle.',
     goPremiumCta: 'Become Premium on WhatsApp →',
     goPremiumCodePlaceholder: 'Already have a code? DASH-XXXXXX',

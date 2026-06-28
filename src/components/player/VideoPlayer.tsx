@@ -1345,7 +1345,7 @@ function ChannelCarousel({
 
   return (
     <div
-      className={`absolute bottom-[164px] sm:bottom-[176px] left-0 right-0 z-30 transition-[opacity,transform] duration-300
+      className={`absolute bottom-[164px] sm:bottom-[176px] left-0 right-0 z-40 transition-[opacity,transform] duration-300
                   ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
     >
       {/* Glass background */}

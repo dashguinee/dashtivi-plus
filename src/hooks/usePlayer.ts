@@ -1039,19 +1039,24 @@ export function usePlayer() {
     };
   }, []);
 
-  // ── PiP SURVIVES BACKGROUNDING ────────────────────────────────────────────
-  // When the document goes hidden (app backgrounded / screen locked) while the
-  // <video> is the active Picture-in-Picture element, the OS keeps the floating
-  // window alive — but ONLY if we don't pause or tear the stream down. We never
-  // pause on hide; this is a belt-and-suspenders that re-asserts playback if
-  // browser throttling / a transient stall paused it while hidden, UNLESS the user
-  // deliberately paused. Non-PiP backgrounding behavior is left completely untouched.
+  // ── PLAYBACK + PiP SURVIVE BACKGROUNDING ──────────────────────────────────
+  // When the document goes hidden (tab switch / app backgrounded / screen lock)
+  // the stream must keep running. The shell <video> is NEVER display:none'd while
+  // a channel is live — it lives in the persistent shell, not inside a keep-alive
+  // route pane — and nothing in this hook pauses on hide. This is a belt-and-
+  // suspenders that RE-ASSERTS playback if a platform throttle (notably the Android
+  // WebView) or a transient stall paused it while hidden, UNLESS the user
+  // deliberately paused. It covers BOTH the floating PiP window AND normal
+  // background playback (e.g. keeping a news/sports channel audible while the app
+  // is backgrounded). A deliberate user pause is always respected, so this never
+  // fights the user; it only nudges an *unintended* hidden-state pause back to life.
   useEffect(() => {
     const onVisibility = () => {
       if (!document.hidden) return;
       const video = videoRef.current;
-      if (!video || document.pictureInPictureElement !== video) return; // only when WE are PiP
-      if (userPausedRef.current) return; // respect a deliberate pause
+      if (!video) return;
+      if (userPausedRef.current) return;            // respect a deliberate pause
+      if (!video.currentSrc && !video.src) return;  // nothing loaded — leave it
       if (video.paused) video.play().catch(() => {});
     };
     document.addEventListener('visibilitychange', onVisibility);

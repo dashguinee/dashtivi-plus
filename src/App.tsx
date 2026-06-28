@@ -6,6 +6,7 @@ import { CosmicBackground } from '@/components/ui/CosmicBackground';
 import { SplashScreen } from '@/components/ui/SplashScreen';
 import { AccessCodeLogin } from '@/components/ui/AccessCodeLogin';
 import { VideoPlayer } from '@/components/player/VideoPlayer';
+import { PremiumNotice } from '@/components/player/PremiumNotice';
 import { StreamLimitOverlay } from '@/components/player/StreamLimitOverlay';
 import { MiniPlayer } from '@/components/player/MiniPlayer';
 import { FullPageLoader } from '@/components/ui/LoadingSpinner';
@@ -27,7 +28,6 @@ import type { Channel } from '@/types';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { useScrollAmbient } from '@/hooks/useScrollAmbient';
 import { DynamicIsland } from '@/components/ui/DynamicIsland';
-import { Crown, X } from 'lucide-react';
 import { SurfaceProvider, useSurfaces, useSurfacePortalTarget } from '@/components/system/SurfaceStack';
 import { useBackGuard } from '@/hooks/useBackGuard';
 import { createPortal } from 'react-dom';
@@ -290,7 +290,12 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
   // were (the page never unmounted; this guards against the <video> taking
   // focus and nudging the document scroll to 0 when it fills the screen).
   const worldScrollRef = React.useRef(0);
-  const [showCodeOverlay, setShowCodeOverlay] = useState(false);
+  // Premium gate: a free/guest member tapped a paid stream. Instead of a
+  // blocking full-screen modal, we rise the PLAYER surface and paint a minimal,
+  // non-blocking premium notice in place of the video. Closing the player (back
+  // button / system back) recedes the surface and returns them to the grid —
+  // they keep browsing and naturally land on a free channel.
+  const [premiumGate, setPremiumGate] = useState(false);
   const [pendingChannel, setPendingChannel] = useState<Channel | null>(null);
   const [codeInput, setCodeInput] = useState('');
 
@@ -334,10 +339,24 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [miniVp]);
 
-  // Layered back: system/browser BACK closes the Go-Premium modal (pops the top
-  // layer) instead of leaving the app.
-  const closeCodeOverlay = useCallback(() => setShowCodeOverlay(false), []);
-  useBackGuard(showCodeOverlay, closeCodeOverlay, 'go-premium');
+  // True when a channel is a real stream (not a trailer/preview) — the kind a
+  // free/guest member must be Premium to watch.
+  const isGatedStream = useCallback(
+    (channel: Channel) =>
+      !!(channel.url?.includes('/live?') || channel.url?.includes('/vod?') || channel.url?.includes('/movie/') || channel.url?.includes('/series/')),
+    []
+  );
+
+  // Rise the player surface over the world showing ONLY the premium notice (no
+  // stream plays). This reuses the player surface's own back/recede + scroll
+  // restore, so it is non-blocking: closing it drops the member back onto the
+  // grid exactly where they were.
+  const openPremiumGate = useCallback((channel: Channel) => {
+    setPendingChannel(channel);
+    setPremiumGate(true);
+    if (!surfaces.has(PLAYER_SURFACE_ID)) worldScrollRef.current = window.scrollY;
+    surfaces.push({ id: PLAYER_SURFACE_ID, portal: true });
+  }, [surfaces]);
 
   const handleAmbientStart = React.useCallback(() => {
     if (!ambientStartedRef.current && isAmbientEnabled()) {
@@ -348,13 +367,15 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
 
   const handlePlayChannel = useCallback(
     (channel: Channel) => {
-      // Guest mode: gate only actual streams, not trailers/previews
-      if (guestMode && (channel.url?.includes('/live?') || channel.url?.includes('/vod?') || channel.url?.includes('/movie/') || channel.url?.includes('/series/'))) {
-        setPendingChannel(channel);
-        setShowCodeOverlay(true);
+      // Guest mode: gate only actual streams, not trailers/previews. Rise the
+      // player surface with a minimal in-player premium notice instead of a
+      // blocking modal.
+      if (guestMode && isGatedStream(channel)) {
+        openPremiumGate(channel);
         return;
       }
       // Free channels + trailers play immediately for guests
+      setPremiumGate(false); // a real stream is starting — clear any gate notice
       const isVod = channel.category === 'movie' || channel.category === 'series';
       if (isVod) playDashCinemaSound();
       muteAmbient();
@@ -369,7 +390,7 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
       // Rise the player surface over the world (no-op if already up).
       surfaces.push({ id: PLAYER_SURFACE_ID, portal: true });
     },
-    [player, addToHistory, getResume, guestMode, surfaces]
+    [player, addToHistory, getResume, guestMode, surfaces, isGatedStream, openPremiumGate]
   );
 
   // Smart-resume — persist VOD playback position as it plays, so reopening a
@@ -394,7 +415,7 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
     if (onRequestCode && codeInput.trim()) {
       const ok = await onRequestCode(codeInput.trim());
       if (ok) {
-        setShowCodeOverlay(false);
+        setPremiumGate(false);
         if (pendingChannel) handlePlayChannel(pendingChannel);
       }
     }
@@ -431,6 +452,7 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
   useEffect(() => {
     if (playerWasUpRef.current && !playerSurfaceUp) {
       restoreWorldScroll();
+      setPremiumGate(false); // surface receded → tear down the premium notice
     }
     playerWasUpRef.current = playerSurfaceUp;
   }, [playerSurfaceUp, restoreWorldScroll]);
@@ -452,15 +474,14 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
   // the existing play path; just skips the surface push that handlePlayChannel
   // does. Guest-gated streams still go through the code overlay.
   const handleMiniSurf = useCallback((channel: Channel) => {
-    if (guestMode && (channel.url?.includes('/live?') || channel.url?.includes('/vod?') || channel.url?.includes('/movie/') || channel.url?.includes('/series/'))) {
-      setPendingChannel(channel);
-      setShowCodeOverlay(true);
+    if (guestMode && isGatedStream(channel)) {
+      openPremiumGate(channel);
       return;
     }
     player.playChannel(channel).catch(() => {});
     addToHistory(channel);
     setCurrentChannel(channel.id);
-  }, [player, addToHistory, guestMode]);
+  }, [player, addToHistory, guestMode, isGatedStream, openPremiumGate]);
 
   // Unlock screen orientation — overrides manifest (works without reinstall)
   React.useEffect(() => {
@@ -642,6 +663,21 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
               credentials={credentials} />,
             playerPortalTarget
           )}
+        {/* In-player Premium notice — non-blocking. Rendered into the SAME player
+            surface (where the video would be) when a free/guest member taps a
+            paid stream. No app-wide overlay: back recedes the surface and the
+            member keeps browsing. Replaces the old full-screen Go-Premium modal. */}
+        {premiumGate && playerPortalTarget &&
+          createPortal(
+            <PremiumNotice
+              channelName={pendingChannel?.name}
+              onBack={handleClosePlayer}
+              codeInput={codeInput}
+              setCodeInput={setCodeInput}
+              onSubmitCode={handleCodeSubmit}
+            />,
+            playerPortalTarget
+          )}
         {player.streamLimit && (
           <StreamLimitOverlay
             info={player.streamLimit}
@@ -704,100 +740,6 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
           />
         )}
         <UpdateButton />
-
-        {/* ── GO PREMIUM modal — gold-shimmer exclusive invitation ──────────
-            Color law: GOLD #FFD700 = premium/pride/exclusive (NOT green —
-            green is reserved for the free gift). Primary CTA opens WhatsApp
-            with a premium-interest prefill (the upsell moment). Members who
-            already hold a code can still redeem it (secondary). */}
-        {showCodeOverlay && (
-          <div className="fixed inset-0 z-[99] flex items-center justify-center bg-black/35 backdrop-blur-sm" onClick={() => setShowCodeOverlay(false)}>
-            <style>{`
-              @keyframes gold-shimmer { 0% { background-position: -180% 0; } 100% { background-position: 180% 0; } }
-              .gold-cta-shimmer::after {
-                content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-                background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.55) 48%, transparent 66%);
-                background-size: 220% 100%; animation: gold-shimmer 2.6s ease-in-out infinite;
-              }
-            `}</style>
-            <div
-              className="relative mx-4 w-full max-w-sm rounded-2xl p-6 overflow-hidden"
-              onClick={e => e.stopPropagation()}
-              style={{
-                background: 'linear-gradient(160deg, #14110a 0%, #0c0a06 60%, #0a0a0d 100%)',
-                border: '1px solid rgba(255,215,0,0.35)',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 44px rgba(255,215,0,0.10), inset 0 1px 0 rgba(255,215,0,0.12)',
-              }}
-            >
-              {/* gold corner wash — the exclusive/pride glow */}
-              <div className="absolute -top-10 -right-10 w-40 h-40 pointer-events-none"
-                style={{ background: 'radial-gradient(circle, rgba(255,215,0,0.22) 0%, transparent 70%)' }} />
-              {/* Visible close — no modal wall. */}
-              <button
-                onClick={() => setShowCodeOverlay(false)}
-                aria-label="Close"
-                className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center active:scale-90 transition-transform"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,215,0,0.25)' }}
-              >
-                <X className="w-4 h-4 text-white/70" />
-              </button>
-              <div className="relative text-center mb-5">
-                <span
-                  className="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-2"
-                  style={{
-                    background: 'linear-gradient(135deg, #FFE680 0%, #FFD700 45%, #C9A100 100%)',
-                    boxShadow: '0 6px 18px rgba(201,161,0,0.45), inset 0 1px 0 rgba(255,255,255,0.6)',
-                  }}
-                >
-                  <Crown className="w-6 h-6" style={{ color: '#1a1400' }} />
-                </span>
-                <h3 className="text-xl font-black tracking-tight mt-1"
-                  style={{ fontFamily: "'Outfit', sans-serif", background: 'linear-gradient(135deg,#FFE680,#FFD700,#C9A100)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                  {t('goPremiumTitle')}
-                </h3>
-                <p className="text-[12.5px] text-white/55 mt-1.5 leading-snug px-2">
-                  {t('goPremiumSubtitle')}
-                </p>
-              </div>
-              <a
-                href={`https://wa.me/224611361300?text=${encodeURIComponent(t('goPremiumWhatsappPrefill'))}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="gold-cta-shimmer relative block w-full text-center py-3.5 rounded-xl text-sm font-black mb-3 active:scale-[0.98] transition-transform overflow-hidden"
-                style={{
-                  color: '#1a1400',
-                  background: 'linear-gradient(135deg, #FFE680 0%, #FFD700 48%, #E6B800 100%)',
-                  boxShadow: '0 8px 22px rgba(201,161,0,0.4), inset 0 1px 0 rgba(255,255,255,0.55)',
-                }}
-              >
-                {t('goPremiumCta')}
-              </a>
-              {/* Secondary — already have a code? redeem it. */}
-              <input
-                type="text"
-                value={codeInput}
-                onChange={e => setCodeInput(e.target.value)}
-                placeholder={t('goPremiumCodePlaceholder')}
-                className="w-full px-4 py-2.5 rounded-xl text-[13px] text-white bg-white/[0.04] border border-white/10 focus:border-[rgba(255,215,0,0.45)] focus:outline-none mb-2 text-center tracking-wider placeholder:text-white/25"
-                style={{ fontFamily: "'Space Grotesk', monospace" }}
-                onKeyDown={e => e.key === 'Enter' && handleCodeSubmit()}
-              />
-              <button
-                onClick={handleCodeSubmit}
-                className="w-full py-2.5 rounded-xl text-[13px] font-semibold text-white/70 bg-white/[0.04] border border-white/10 hover:bg-white/[0.07] hover:text-white transition-colors active:scale-95"
-              >
-                {t('goPremiumUnlock')}
-              </button>
-              {/* Soft escape — never trap the member on the upsell. */}
-              <button
-                onClick={() => setShowCodeOverlay(false)}
-                className="w-full mt-2.5 py-2 text-[12.5px] font-medium text-white/40 hover:text-white/70 transition-colors"
-              >
-                {t('goPremiumLater')}
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
