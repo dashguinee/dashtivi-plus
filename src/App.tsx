@@ -216,7 +216,11 @@ function ScrollToTop() {
 // a purple breath dissolves the live world and the cinema condenses out of it.
 // Routing is untouched (real route, back/forward intact); only the *transition*
 // becomes a breath. Respects prefers-reduced-motion (the CSS no-ops the breath).
-function MergeTransition({ children, pathname }: { children: React.ReactNode; pathname: string }) {
+// Bloom-breath ONLY (no content remount). Fires the ambient #merge-breath on each
+// route change. The old keyed `merge-infuse` wrapper is GONE for the primary tabs —
+// they're kept ALIVE (not remounted), so on a tab switch the section headers don't
+// replay their entrance, the pills don't re-animate, and the cards don't re-fade.
+function MergeBreath({ pathname }: { pathname: string }) {
   React.useEffect(() => {
     const el = document.getElementById('merge-breath');
     if (el) {
@@ -227,7 +231,29 @@ function MergeTransition({ children, pathname }: { children: React.ReactNode; pa
       el.classList.remove('breathe'); void el.offsetWidth; el.classList.add('breathe');
     }
   }, [pathname]);
-  return <div key={pathname} className="merge-infuse">{children}</div>;
+  return null;
+}
+
+// ── KEEP-ALIVE pane ──────────────────────────────────────────────────────────
+// Mounts its page on FIRST activation, then keeps it mounted forever and only
+// toggles visibility (display:none when inactive). Switching tabs therefore
+// REVEALS an already-built, already-painted page instead of unmounting one and
+// rebuilding the other — which is what caused "reloads on carousel change":
+//   · headers/pills flickered  = entrance animations replaying on a fresh mount
+//   · cards re-faded            = images re-painting from opacity 0 on remount
+//   · layout shifted ~0.27      = the destination rebuilding from scratch
+// Kept alive, none of that happens — the page is already there, just hidden.
+function KeepAlivePane({ active, children }: { active: boolean; children: React.ReactNode }) {
+  const [mounted, setMounted] = React.useState(active);
+  React.useEffect(() => { if (active) setMounted(true); }, [active]);
+  if (!mounted) return null;
+  return (
+    <div style={{ display: active ? 'block' : 'none' }} aria-hidden={!active}>
+      <ErrorBoundary>
+        <Suspense fallback={null}>{children}</Suspense>
+      </ErrorBoundary>
+    </div>
+  );
 }
 
 function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolean; onRequestCode?: (code: string) => Promise<unknown>; onLogout?: () => void }) {
@@ -559,30 +585,45 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
         {(credentials || guestMode) && <SearchWidget credentials={credentials} onPlay={handlePlayChannel} />}
         <main className="pb-20 lg:pb-0 lg:pl-[72px] safe-bottom-content">
           <ErrorBoundary>
-            <Suspense fallback={<div className="pt-20 px-4 space-y-6 animate-pulse"><div className="h-[22vh] rounded-2xl bg-white/[0.02]" /><div className="flex gap-2">{[1,2,3,4].map(i=><div key={i} className="h-8 w-16 rounded-full bg-white/[0.03]" />)}</div><div className="space-y-4">{[1,2,3].map(i=><div key={i} className="h-32 rounded-xl bg-white/[0.02]" />)}</div></div>}>
-              <MergeTransition pathname={deferredRouteLoc.pathname}>
+            {/* Ambient bloom-breath on every route change (no content remount). */}
+            <MergeBreath pathname={deferredRouteLoc.pathname} />
+
+            {/* PRIMARY TABS — KEPT ALIVE. Mounted once on first visit, then only
+                shown/hidden. Switching Home↔Movies↔Series↔Live reveals an
+                already-built, already-painted page: headers don't re-animate, cards
+                don't re-fade, pills stay, and there's zero rebuild/layout-shift. */}
+            <KeepAlivePane active={deferredRouteLoc.pathname === '/'}>
+              <HomePage credentials={credentials} onPlay={handlePlayChannel} />
+            </KeepAlivePane>
+            <KeepAlivePane active={deferredRouteLoc.pathname === '/movies'}>
+              <MoviesPage credentials={credentials} onPlay={handlePlayChannel} />
+            </KeepAlivePane>
+            <KeepAlivePane active={deferredRouteLoc.pathname === '/series'}>
+              <SeriesPage credentials={credentials} onPlay={handlePlayChannel} />
+            </KeepAlivePane>
+            <KeepAlivePane active={deferredRouteLoc.pathname === '/live'}>
+              <LiveTVPage credentials={credentials} onPlay={handlePlayChannel} />
+            </KeepAlivePane>
+
+            {/* SECONDARY routes — visited less often; normal mount/unmount. Only
+                rendered when NOT on a primary tab (so they never overlay them). */}
+            {!['/', '/movies', '/series', '/live'].includes(deferredRouteLoc.pathname) && (
+              <Suspense fallback={<div className="pt-20 px-4 space-y-6 animate-pulse"><div className="h-[22vh] rounded-2xl bg-white/[0.02]" /><div className="flex gap-2">{[1,2,3,4].map(i=><div key={i} className="h-8 w-16 rounded-full bg-white/[0.03]" />)}</div><div className="space-y-4">{[1,2,3].map(i=><div key={i} className="h-32 rounded-xl bg-white/[0.02]" />)}</div></div>}>
                 <Routes location={deferredRouteLoc}>
-                  <Route path="/" element={<ErrorBoundary><HomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/live/:experienceId" element={<ErrorBoundary><ExperienceHomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
-                  <Route path="/live" element={<ErrorBoundary><LiveTVPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/nba" element={<ErrorBoundary><NbaPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
-                  <Route path="/movies" element={<ErrorBoundary><MoviesPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
-                  <Route path="/series" element={<ErrorBoundary><SeriesPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/french" element={<ErrorBoundary><FrenchPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/hub" element={<ErrorBoundary><DaHubPage /></ErrorBoundary>} />
                   <Route path="/library" element={<ErrorBoundary><LibraryPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/explore" element={<ErrorBoundary><ExplorePage /></ErrorBoundary>} />
-                  {/* /streamore retired — Stream+ is now the continuation of the ONE
-                      home canvas (woven free + village), not a separate page/tab.
-                      Old deep-links redirect home. */}
+                  {/* /streamore + /originals retired → redirect home / series. */}
                   <Route path="/streamore" element={<Navigate to="/" replace />} />
-                  {/* /originals (PlatformsPage) was data-less after the static migration ("No series found"); /series already does platform-organized series. Redirect to the working page. */}
                   <Route path="/originals" element={<Navigate to="/series" replace />} />
                   <Route path="/test" element={<ErrorBoundary><TestChannelsPage onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
-              </MergeTransition>
-            </Suspense>
+              </Suspense>
+            )}
           </ErrorBoundary>
         </main>
         {/* Player controls ride the RISING SURFACE: rendered here (so player.state

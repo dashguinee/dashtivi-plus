@@ -579,12 +579,21 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
         }}
       />
       {!isSearching && (
-        <FloatingMoviesShowcase
-          credentials={credentials}
-          movies={movies}
-          tmdbMap={tmdbMap}
-          onPlay={onPlay}
-        />
+        loading ? (
+          // CLS RESERVE: FloatingMoviesShowcase returns null until `movies` loads,
+          // then renders a TALL clamp(360px,64vh,560px) stage — that ~500px growth
+          // was shoving the billboard + live-cinema + grid down (the dominant Movies
+          // cold-load shift). Reserve its EXACT final height while loading so when
+          // the showcase lands it fills the box and nothing below moves.
+          <div style={{ height: 'clamp(360px, 64vh, 560px)' }} aria-hidden />
+        ) : (
+          <FloatingMoviesShowcase
+            credentials={credentials}
+            movies={movies}
+            tmdbMap={tmdbMap}
+            onPlay={onPlay}
+          />
+        )
       )}
 
       {/* ── Hero Billboard — dynamic 3-tier resolver (resume → affinity → editorial) ── */}
