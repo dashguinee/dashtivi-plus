@@ -143,8 +143,8 @@ export function CategoryHero({
       <style>{`
         @keyframes hero-sweep-${uid} { 0%{transform:translateX(-40%)} 100%{transform:translateX(140%)} }
         @keyframes hero-play-aura-${uid} {
-          0%,100% { transform: scale(0.94); opacity: 0.5; }
-          50%     { transform: scale(1.12); opacity: 0.85; }
+          0%,100% { transform: scale(0.96); opacity: 0.42; }
+          50%     { transform: scale(1.08); opacity: 0.66; }
         }
         @keyframes hero-play-spin-${uid} { to { transform: rotate(360deg); } }
         @keyframes hero-marquee-in-${uid} { from { opacity: 0; } to { opacity: 1; } }
@@ -254,12 +254,12 @@ export function CategoryHero({
             aria-hidden
             className="absolute inset-0 w-full h-full pointer-events-none"
             viewBox="0 0 56 56"
-            style={{ animation: `hero-play-spin-${uid} 2.4s linear infinite`, willChange: 'transform' }}
+            style={{ animation: `hero-play-spin-${uid} 3s linear infinite`, willChange: 'transform' }}
           >
             <circle
               cx="28" cy="28" r="24" fill="none"
               stroke={accent} strokeWidth="2" strokeLinecap="round"
-              strokeDasharray="30 200" opacity="0.7"
+              strokeDasharray="112 45" opacity="0.6"
             />
           </svg>
           {/* The mark — a single gradient play triangle with SOFTENED corners
