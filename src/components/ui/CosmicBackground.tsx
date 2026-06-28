@@ -27,16 +27,57 @@ export const CosmicBackground: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
 
-  // Ambient backdrop glow — AUTONOMOUS. It used to drift with window.scrollY
-  // (parallax) and brighten via a scroll "boost", forcing a transform/opacity
-  // write on every scroll frame. That scroll coupling is removed: the glow now
-  // drifts + breathes on its own clock via the `cosmic-glow-drift` CSS keyframe
-  // (class .cosmic-glow-auto). GPU-composited, no scroll listener, no rAF.
-  // We only seed a randomized start phase so it never looks mechanical.
+  // Mobile-safe ambient response: the backdrop drifts with scroll (parallax depth),
+  // intensifies while moving, and settles when you pause. The place responds to you.
+  //
+  // PERF: This rAF is purely scroll-reactive — at rest (boost ~0, no scroll) it has
+  // nothing to do. It now only runs while there is settling work to do, and re-arms
+  // on scroll. Idle = zero rAF. Honors reduced-motion + tab visibility.
   useEffect(() => {
-    if (glowRef.current) {
-      glowRef.current.style.animationDelay = `${(-Math.random() * 22).toFixed(2)}s`;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      // Static state — apply scroll-position transform once, no loop.
+      if (glowRef.current) {
+        const y = window.scrollY || 0;
+        glowRef.current.style.transform = `translate3d(0, ${-(y * 0.06)}px, 0)`;
+        glowRef.current.style.opacity = '0.6';
+      }
+      return;
     }
+
+    let raf = 0, target = 0, boost = 0, idle: ReturnType<typeof setTimeout>;
+    const EPS = 0.001;
+
+    const tick = () => {
+      if (document.hidden) { raf = 0; return; } // never animate offscreen
+      boost += (target - boost) * 0.07;
+      const y = window.scrollY || 0;
+      if (glowRef.current) {
+        glowRef.current.style.transform = `translate3d(0, ${-(y * 0.06) - boost * 14}px, 0)`;
+        glowRef.current.style.opacity = String(0.6 + boost * 0.4);
+      }
+      // Stop the loop once settled — nothing more to converge toward.
+      if (target === 0 && boost < EPS) { boost = 0; raf = 0; return; }
+      raf = requestAnimationFrame(tick);
+    };
+    const ensureRunning = () => { if (!raf && !document.hidden) raf = requestAnimationFrame(tick); };
+    const onScroll = () => {
+      target = 1;
+      clearTimeout(idle);
+      idle = setTimeout(() => { target = 0; ensureRunning(); }, 550);
+      ensureRunning();
+    };
+    const onVisible = () => { if (!document.hidden && target !== 0) ensureRunning(); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('visibilitychange', onVisible);
+    // Prime once so the initial scroll offset is applied.
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', onScroll);
+      document.removeEventListener('visibilitychange', onVisible);
+      clearTimeout(idle);
+    };
   }, []);
 
   useEffect(() => {
@@ -150,13 +191,12 @@ export const CosmicBackground: React.FC = () => {
       {/* Star field canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 opacity-60" />
 
-      {/* Autonomous ambient glow — drifts + breathes on its own CSS clock
-          (cosmic-glow-drift), fully decoupled from scroll. */}
+      {/* Scroll-reactive ambient glow — drifts + breathes with motion (mobile-safe) */}
       <div
         ref={glowRef}
-        className="cosmic-glow-auto absolute left-1/2 -translate-x-1/2 pointer-events-none"
+        className="absolute left-1/2 -translate-x-1/2 pointer-events-none will-change-transform"
         style={{
-          top: '-12%', width: '140%', height: '70%',
+          top: '-12%', width: '140%', height: '70%', opacity: 0.45,
           background: theme.glow,
           transition: 'background 2s ease',
         }}

@@ -199,14 +199,12 @@ const NavbarImpl: React.FC = () => {
             filter: iconFilter,
             // One consistent DASH ease for every nav micro-motion.
             transition: 'transform 0.3s cubic-bezier(0.22,1,0.36,1), color 0.25s cubic-bezier(0.22,1,0.36,1), filter 0.3s cubic-bezier(0.22,1,0.36,1)',
-            willChange: 'transform',
+            willChange: 'transform, filter',
             backfaceVisibility: 'hidden',
           }}
         >
           {/* Graft 3: frosted silver chip behind Dahub — reuses .tivi-nav-silver
-              (the tivi-count-metal palette + shimmer). The class already paints its
-              own solid metal gradient, so the old backdrop-blur(4px) was redundant
-              screen-sampling — dropped; a hair more opacity keeps the same read. */}
+              (the tivi-count-metal palette + shimmer), low opacity + backdrop-blur. */}
           {isDahub && (
             <div
               className="tivi-nav-silver absolute left-1/2 top-1/2 rounded-[11px] pointer-events-none"
@@ -214,7 +212,9 @@ const NavbarImpl: React.FC = () => {
                 width: 34,
                 height: 34,
                 transform: 'translate(-50%, -50%)',
-                opacity: 0.13,
+                opacity: 0.11,
+                backdropFilter: 'blur(4px)',
+                WebkitBackdropFilter: 'blur(4px)',
                 boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18)',
               }}
             />
@@ -274,17 +274,13 @@ const NavbarImpl: React.FC = () => {
       >
         <div
           ref={navRef}
-          className="max-w-[400px] mx-auto h-[62px] rounded-2xl flex items-center justify-between px-4 pointer-events-auto"
+          className="backdrop-blur-lg max-w-[400px] mx-auto h-[62px] rounded-2xl flex items-center justify-between px-4 pointer-events-auto"
           style={{
-            // STATIC FROSTED LOOK — no live backdrop-filter. A rich translucent dark
-            // base + a subtle top→bottom gradient reads ~identical to the old frosted
-            // glass at a glance, but samples NOTHING behind it, so it can never
-            // "unfill"/flicker as content scrolls underneath. (TV-standard steady bar.)
             background: navGlow === 'full'
-              ? 'linear-gradient(135deg, rgba(157,78,221,0.14) 0%, rgba(13,12,19,0.90) 50%, rgba(157,78,221,0.10) 100%)'
+              ? 'linear-gradient(135deg, rgba(157,78,221,0.12) 0%, rgba(10,10,15,0.65) 50%, rgba(157,78,221,0.08) 100%)'
               : navGlow === 'soft'
-                ? 'linear-gradient(135deg, rgba(157,78,221,0.08) 0%, rgba(13,12,19,0.92) 50%, rgba(157,78,221,0.05) 100%)'
-                : 'linear-gradient(180deg, rgba(24,22,33,0.90) 0%, rgba(11,11,16,0.94) 100%)',
+                ? 'linear-gradient(135deg, rgba(157,78,221,0.06) 0%, rgba(10,10,15,0.58) 50%, rgba(157,78,221,0.04) 100%)'
+                : 'rgba(10, 10, 15, 0.55)',
             border: navGlow === 'full'
               ? '1px solid rgba(157, 78, 221, 0.5)'
               : navGlow === 'soft'
@@ -299,13 +295,14 @@ const NavbarImpl: React.FC = () => {
               ? 'background 0.08s ease-out, border-color 0.08s ease-out, box-shadow 0.08s ease-out'
               : 'background 1.2s cubic-bezier(0.16,1,0.3,1), border-color 1.2s cubic-bezier(0.16,1,0.3,1), box-shadow 1.2s cubic-bezier(0.16,1,0.3,1)',
             // Tiny whole-bar rightward bias (~2px) to emulate the V pebble's bias.
-            // translateZ(0) gives the bar its own composited layer so the tap-glow
-            // background/box-shadow transition stays silky without repainting siblings.
+            // translateZ(0) gives the bar its own composited layer so the glow /
+            // background transitions stay silky without repainting siblings.
             transform: 'translateX(2px) translateZ(0)',
-            // Only `transform` is composited; the bar no longer reads the screen, so
-            // `contain: paint` (which previously fought the live blur) is gone and
-            // will-change is trimmed to the one property that earns its own layer.
-            willChange: 'transform',
+            willChange: 'background, box-shadow',
+            // STEADY-NAV: self-contain the bar's rendering so a repaint behind it
+            // (scrolling content / drifting bloom sampled by the backdrop-blur)
+            // can't invalidate or re-raster the bar's own layer → no flicker.
+            contain: 'layout paint style',
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
           }}
@@ -325,8 +322,9 @@ const NavbarImpl: React.FC = () => {
         className="hidden lg:flex fixed left-0 top-0 bottom-0 z-40 flex-col transition-[width] duration-300 ease-out"
         style={{
           width: sidebarHover ? 220 : 72,
-          // STATIC frosted panel (no live backdrop-filter) — steady on scroll.
-          background: 'linear-gradient(180deg, rgba(20,18,28,0.93) 0%, rgba(10,10,15,0.96) 100%)',
+          background: 'rgba(10, 10, 15, 0.60)',
+          backdropFilter: 'blur(16px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(16px) saturate(150%)',
           borderRight: '1px solid rgba(157, 78, 221, 0.1)',
         }}
         onMouseEnter={() => { sidebarHoverRef.current = true; setSidebarHoverState(true); }}

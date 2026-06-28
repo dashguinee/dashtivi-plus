@@ -190,7 +190,7 @@ function UpdateButton() {
     <button
       onClick={() => window.location.reload()}
       className="fixed bottom-20 right-4 z-[9998] flex items-center gap-2 px-4 py-2.5 rounded-full
-                 bg-[rgba(46,20,74,0.92)] border border-primary/30
+                 bg-primary/15 border border-primary/30 backdrop-blur-md
                  shadow-lg shadow-primary/20
                  animate-pulse hover:animate-none hover:bg-primary/25 hover:border-primary/50
                  transition-colors duration-300"
@@ -560,10 +560,11 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
           </div>
           <div className="brand-atmosphere" />
           <div className="goggle-lens" />
-          {/* Ambient glow — drifts up/down on its own CSS clock (autonomous,
-              decoupled from scroll). See #scroll-ambient in globals.css. */}
+          {/* Scroll ambient — radial glow that follows scroll position */}
           <div id="scroll-ambient" className="fixed inset-0 pointer-events-none z-[1]" style={{
-            background: 'radial-gradient(ellipse 60% 35% at 50% 30%, rgba(157,78,221,0.04) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse 60% 35% at 50% var(--ambient-y, 30%), rgba(157,78,221,0.04) 0%, transparent 70%)',
+            transition: 'none',
+            willChange: 'background',
           }} />
         </>
       )}
