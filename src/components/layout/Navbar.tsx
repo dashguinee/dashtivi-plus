@@ -118,7 +118,7 @@ export const Navbar: React.FC = () => {
         className="relative flex flex-col items-center justify-center w-12 h-full"
         // Alignment pass: pull Dahub left off the right edge. Via justify-between this
         // also nudges the V pebble toward center and tightens the V↔Dahub gap.
-        style={isDahub ? { marginRight: 40 } : undefined}
+        style={isDahub ? { marginRight: 26 } : undefined}
       >
         {/* Icon — lifts up when active */}
         <div
@@ -206,7 +206,7 @@ export const Navbar: React.FC = () => {
       >
         <div
           ref={navRef}
-          className="backdrop-blur-lg max-w-[400px] mx-auto h-[62px] rounded-2xl flex items-center justify-between px-4 pointer-events-auto"
+          className="backdrop-blur-lg max-w-[346px] mx-auto h-[62px] rounded-2xl flex items-center justify-between px-4 pointer-events-auto"
           style={{
             background: navGlow === 'full'
               ? 'linear-gradient(135deg, rgba(157,78,221,0.12) 0%, rgba(10,10,15,0.65) 50%, rgba(157,78,221,0.08) 100%)'
