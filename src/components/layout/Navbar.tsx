@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Tv, Users, Library, Sparkles } from 'lucide-react';
+import { Home, Tv, Users, BookOpen, Sparkles } from 'lucide-react';
 import { useLanguage } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
 import { tap } from '@/lib/haptics';
@@ -19,7 +19,7 @@ interface NavItem {
 // each tap advances Movies → Series → Live → Home (TiviModeToggle).
 const NAV_ITEMS: NavItem[] = [
   { path: '/', labelKey: 'navHome', icon: Home },
-  { path: '/library', labelKey: 'navBiblio', icon: Library },
+  { path: '/library', labelKey: 'navBiblio', icon: BookOpen },
   { path: '/__vee__', labelKey: 'navVee', icon: Sparkles, isVee: true },
   { path: '/hub', labelKey: 'navDahub', icon: Users },
 ];
@@ -95,14 +95,16 @@ export const Navbar: React.FC = () => {
     const active = isActive(item.path);
     const Icon = item.icon;
     const isDahub = item.path === '/hub';
-    // Graft 1: drop the whole icon row down ~4px so nothing touches the bar edge
-    // (baseline +4px; active still lifts 2px relative to that for the label room).
-    // Alignment pass: Dahub's Users glyph optically reads a touch low, so it rests
-    // ~2px higher than the others to sit level with Home/Biblio on ONE baseline.
-    const restY = isDahub ? 2 : 4;
+    const isBiblio = item.path === '/library';
+    // Vertical: the non-V items sit a few px lower than V's baseline so only V pops.
+    // Dahub's Users glyph optically reads a touch high relative to that, so it rests
+    // ~2px higher than Home/Biblio to keep all three level on ONE baseline.
+    const restY = isDahub ? 5 : 7;
     const iconTransform = active
       ? `translateY(${restY - 2}px) scale(1.12)`
       : `translateY(${restY}px)`;
+    // Biblio's BookOpen reads a hair smaller than the other glyphs (premium rhythm).
+    const iconSize = isBiblio ? 20 : 22;
     // Graft 3: Dahub wears the silver (same metal palette as the channel-count badge).
     const iconColor = isDahub
       ? (active ? '#e6eaf0' : '#aab1bd')
@@ -116,9 +118,6 @@ export const Navbar: React.FC = () => {
         onPointerDown={() => tap()}
         onClick={() => handleTap(item.path)}
         className="relative flex flex-col items-center justify-center w-12 h-full"
-        // Alignment pass: pull Dahub left off the right edge. Via justify-between this
-        // also nudges the V pebble toward center and tightens the V↔Dahub gap.
-        style={isDahub ? { marginRight: 26 } : undefined}
       >
         {/* Icon — lifts up when active */}
         <div
@@ -147,7 +146,7 @@ export const Navbar: React.FC = () => {
             />
           )}
           <Icon
-            style={{ width: 22, height: 22, position: 'relative' }}
+            style={{ width: iconSize, height: iconSize, position: 'relative' }}
             strokeWidth={active ? 2.4 : 1.8}
           />
         </div>
@@ -206,7 +205,7 @@ export const Navbar: React.FC = () => {
       >
         <div
           ref={navRef}
-          className="backdrop-blur-lg max-w-[346px] mx-auto h-[62px] rounded-2xl flex items-center justify-between px-4 pointer-events-auto"
+          className="backdrop-blur-lg max-w-[400px] mx-auto h-[62px] rounded-2xl flex items-center justify-between px-4 pointer-events-auto"
           style={{
             background: navGlow === 'full'
               ? 'linear-gradient(135deg, rgba(157,78,221,0.12) 0%, rgba(10,10,15,0.65) 50%, rgba(157,78,221,0.08) 100%)'
@@ -228,22 +227,13 @@ export const Navbar: React.FC = () => {
               : 'background 1.2s cubic-bezier(0.16,1,0.3,1), border-color 1.2s cubic-bezier(0.16,1,0.3,1), box-shadow 1.2s cubic-bezier(0.16,1,0.3,1)',
           }}
         >
-          {/* Asymmetric OPTICAL balance (not 4 even slots):
-              [Home·Biblio] tight-left group …… Vee near-center …… Dahub right.
-              justify-between → equal voids on each side of Vee, while content
-              leans left, so the Vee pebble optically reads slightly-right-of-center. */}
-
-          {/* Left group — Home + Biblio clustered tight together */}
-          <div className="flex items-center gap-1">
-            {renderMobileItem(NAV_ITEMS[0])}
-            {renderMobileItem(NAV_ITEMS[1])}
-          </div>
-
-          {/* Vee — the cycling pebble, near-center */}
-          <TiviModeToggle />
-
-          {/* Dahub — right */}
-          {renderMobileItem(NAV_ITEMS[3])}
+          {/* Even rhythm: 4 items equally spaced via justify-between, breathing
+              symmetrically off BOTH edges (Home off the left mirrors Dahub off the
+              right). Only V pops above the lowered baseline. */}
+          {renderMobileItem(NAV_ITEMS[0]) /* Home */}
+          {renderMobileItem(NAV_ITEMS[1]) /* Biblio */}
+          <TiviModeToggle /> {/* Vee — the cycling pebble */}
+          {renderMobileItem(NAV_ITEMS[3]) /* Dahub */}
         </div>
       </div>
 
