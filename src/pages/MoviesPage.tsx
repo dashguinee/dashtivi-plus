@@ -963,17 +963,8 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 <button onClick={e => {
                     e.stopPropagation();
                     const url = buildVodUrl(credentials, movie.stream_id, movie.container_extension || 'mp4');
-                    const a = document.createElement('a');
-                    a.href = url;
-                    const safeName = (movie.name || 'movie').replace(/[^a-zA-Z0-9\s\-_.()]/g, '').replace(/\s+/g, '_').substring(0, 100);
-                    a.download = `${safeName}.${movie.container_extension || 'mp4'}`;
-                    a.target = '_blank';
-                    a.rel = 'noopener noreferrer';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    import('@/lib/downloads').then(({ recordDownload }) => {
-                      recordDownload({ title: movie.name, poster: movie.stream_icon, url, type: 'movie' });
+                    import('@/lib/downloads').then(({ triggerDownload }) => {
+                      triggerDownload({ url, baseName: movie.name || 'movie', title: movie.name, poster: movie.stream_icon, type: 'movie' });
                     });
                   }}
                   className="absolute top-1.5 right-1.5 w-8 h-8 rounded-full flex items-center justify-center z-10 opacity-50 sm:opacity-0 sm:group-hover/card:opacity-70 hover:!opacity-100 transition-opacity active:scale-90"

@@ -216,20 +216,11 @@ export const SeriesExplorer: React.FC<Props> = ({ series, info, tmdbData, creden
   const handleDownload = useCallback((ep: Episode) => {
     const ext = ep.container_extension || 'mp4';
     const url = buildSeriesUrl(credentials, ep.id, ext);
-    const a = document.createElement('a');
-    a.href = url;
-    const sName = (series.name || 'series').replace(/[^a-zA-Z0-9\s\-_.()]/g, '').replace(/\s+/g, '_').substring(0, 60);
-    const eName = (ep.title || `E${ep.episode_num}`).replace(/[^a-zA-Z0-9\s\-_.()]/g, '').replace(/\s+/g, '_').substring(0, 40);
-    a.download = `${sName}_S${ep.season}_${eName}.${ext}`;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    // Record to the Library "My Downloads" store
+    const sName = (series.name || 'series').substring(0, 60);
+    const eName = (ep.title || `E${ep.episode_num}`).substring(0, 40);
     const epTitle = `${series.name.replace(/\s*\(\d{4}\)\s*$/, '')} · S${ep.season}E${ep.episode_num}`;
-    import('@/lib/downloads').then(({ recordDownload }) => {
-      recordDownload({ title: epTitle, poster: seriesCover ?? undefined, url, type: 'episode' });
+    import('@/lib/downloads').then(({ triggerDownload }) => {
+      triggerDownload({ url, baseName: `${sName}_S${ep.season}_${eName}`, title: epTitle, poster: seriesCover ?? undefined, type: 'episode' });
     });
   }, [credentials, series.name, seriesCover]);
 

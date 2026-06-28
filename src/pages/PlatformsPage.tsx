@@ -332,16 +332,12 @@ export const PlatformsPage: React.FC<Props> = ({ credentials, onPlay }) => {
                         onClick={(e) => {
                           e.stopPropagation();
                           const url = buildSeriesUrl(credentials, ep.id, ep.container_extension || 'mp4');
-                          const a = document.createElement('a');
-                          a.href = url;
-                          const sName = (selectedSeries?.name || 'series').replace(/[^a-zA-Z0-9\s\-_.()]/g, '').replace(/\s+/g, '_').substring(0, 60);
-                          const eName = (ep.title || `E${ep.episode_num}`).replace(/[^a-zA-Z0-9\s\-_.()]/g, '').replace(/\s+/g, '_').substring(0, 40);
-                          a.download = `${sName}_S${ep.season}_${eName}.${ep.container_extension || 'mp4'}`;
-                          a.target = '_blank';
-                          a.rel = 'noopener noreferrer';
-                          document.body.appendChild(a);
-                          a.click();
-                          document.body.removeChild(a);
+                          const sName = (selectedSeries?.name || 'series').substring(0, 60);
+                          const eName = (ep.title || `E${ep.episode_num}`).substring(0, 40);
+                          const epTitle = `${(selectedSeries?.name || 'Series').replace(/\s*\(\d{4}\)\s*$/, '')} · S${ep.season}E${ep.episode_num}`;
+                          import('@/lib/downloads').then(({ triggerDownload }) => {
+                            triggerDownload({ url, baseName: `${sName}_S${ep.season}_${eName}`, title: epTitle, poster: undefined, type: 'episode' });
+                          });
                         }}
                         className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 hover:bg-white/10 transition-colors"
                         title="Download"

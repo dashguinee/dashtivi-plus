@@ -343,28 +343,13 @@ export const PlayerControls: React.FC<Props> = ({
                 onClick={(e) => {
                   e.stopPropagation();
                   if (state.channel?.url) {
-                    // Use anchor + download attribute for proper file download
-                    const a = document.createElement('a');
-                    a.href = state.channel.url;
-                    // Generate filename from channel name
-                    const safeName = (state.channel.name || 'video')
-                      .replace(/[^a-zA-Z0-9\s\-_.()]/g, '')
-                      .replace(/\s+/g, '_')
-                      .substring(0, 100);
-                    // Detect extension from URL
-                    const urlExt = state.channel.url.match(/\.(\w{2,4})(?:\?|$)/)?.[1] || 'mp4';
-                    a.download = `${safeName}.${urlExt}`;
-                    a.target = '_blank';
-                    a.rel = 'noopener noreferrer';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    // Record to the Library "My Downloads" store
-                    import('@/lib/downloads').then(({ recordDownload }) => {
-                      recordDownload({
+                    // Unified, save-reliable download (proxy Content-Disposition; real ext).
+                    import('@/lib/downloads').then(({ triggerDownload }) => {
+                      triggerDownload({
+                        url: state.channel!.url,
+                        baseName: state.channel!.name || 'video',
                         title: state.channel!.name || 'Video',
                         poster: state.channel!.logo,
-                        url: state.channel!.url,
                         type: category === 'series' ? 'episode' : 'movie',
                       });
                     });
