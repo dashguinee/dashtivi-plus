@@ -247,20 +247,41 @@ export function CategoryHero({
               willChange: 'transform, opacity',
             }}
           />
-          {/* Orbiting loader trail — a thin accent arc that loops continuously
-              around the Beacon. Rotate transform on its OWN layer, infinite
-              linear, seamless (360 == 0). No box-shadow/pattern → zero crawl. */}
+          {/* Orbiting WATER-DROP COMET — a bright accent droplet (head) with a
+              tail that FADES to transparent behind it, looping around the Beacon.
+              The whole SVG rotates as ONE GPU layer (transform only, seamless
+              360==0) so the gradient/head/tail move together — zero flicker. */}
           <svg
             aria-hidden
             className="absolute inset-0 w-full h-full pointer-events-none"
             viewBox="0 0 56 56"
             style={{ animation: `hero-play-spin-${uid} 3s linear infinite`, willChange: 'transform' }}
           >
-            <circle
-              cx="28" cy="28" r="24" fill="none"
-              stroke={accent} strokeWidth="2" strokeLinecap="round"
-              strokeDasharray="112 45" opacity="0.6"
+            <defs>
+              {/* Tail fade — transparent at the tail end → accent at the drop. */}
+              <linearGradient id={`comet-${uid}`} gradientUnits="userSpaceOnUse" x1="48.8" y1="40" x2="28" y2="4">
+                <stop offset="0%" stopColor={accent} stopOpacity="0" />
+                <stop offset="60%" stopColor={accent} stopOpacity="0.32" />
+                <stop offset="100%" stopColor={accent} stopOpacity="0.95" />
+              </linearGradient>
+              {/* Wet droplet — white core → accent → dark rim. */}
+              <radialGradient id={`drop-${uid}`} cx="0.42" cy="0.4" r="0.62">
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="50%" stopColor={accent} />
+                <stop offset="100%" stopColor={dark} />
+              </radialGradient>
+            </defs>
+            {/* The tail — a curved stroke that tapers off into nothing. */}
+            <path
+              d="M48.8 40 A 24 24 0 0 1 28 4"
+              fill="none"
+              stroke={`url(#comet-${uid})`}
+              strokeWidth="3.4"
+              strokeLinecap="round"
             />
+            {/* The drop — soft glow halo + the bright wet head. */}
+            <circle cx="28" cy="4" r="6" fill={accent} opacity="0.22" />
+            <circle cx="28" cy="4" r="3.1" fill={`url(#drop-${uid})`} />
           </svg>
           {/* The mark — a single gradient play triangle with SOFTENED corners
               (round joins/caps). Light top edge → accent → dark = depth. */}

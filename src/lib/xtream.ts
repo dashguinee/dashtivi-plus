@@ -240,7 +240,7 @@ function evictOldestCaches(): void {
 function enc(s: string) { return encodeURIComponent(s); }
 
 function apiUrl(c: XtreamCredentials, action: string, extra = ''): string {
-  return `${PROXY}/api?action=${action}&u=${enc(c.username)}&p=${enc(c.password)}${extra}`;
+  return `${PROXY}/api?action=${action}&u=${enc(c?.username ?? '')}&p=${enc(c?.password ?? '')}${extra}`;
 }
 
 async function cachedFetch<T>(key: string, url: string): Promise<T> {
@@ -497,36 +497,36 @@ export function buildLiveUrl(c: XtreamCredentials, streamId: number, quality?: F
   if (ch) {
     if (ch.plays === 'direct') return ch.url || '';
     const q = quality || 'hd720';
-    return `${PROXY}/live?id=${ch.ext_id}&u=${enc(c.username)}&p=${enc(c.password)}&q=${q}`;
+    return `${PROXY}/live?id=${ch.ext_id}&u=${enc(c?.username ?? '')}&p=${enc(c?.password ?? '')}&q=${q}`;
   }
   // Fallback (unknown id) — proxy with hd720 default.
   const q = quality || 'hd720';
-  return `${PROXY}/live?id=${streamId}&u=${enc(c.username)}&p=${enc(c.password)}&q=${q}`;
+  return `${PROXY}/live?id=${streamId}&u=${enc(c?.username ?? '')}&p=${enc(c?.password ?? '')}&q=${q}`;
 }
 
 export function buildVodUrl(c: XtreamCredentials, streamId: number, ext = 'mp4'): string {
   const mode = getStreamQuality();
   const qParam = (mode !== 'auto' && mode !== 'source') ? `&q=${mode}` : '';
   if (ext === 'mkv' || ext === 'avi' || ext === 'ts') {
-    return `${PROXY}/vod?id=${streamId}&u=${enc(c.username)}&p=${enc(c.password)}&ext=${ext}&type=movie${qParam}`;
+    return `${PROXY}/vod?id=${streamId}&u=${enc(c?.username ?? '')}&p=${enc(c?.password ?? '')}&ext=${ext}&type=movie${qParam}`;
   }
-  const url = `${STREAM_BASE}/movie/${enc(c.username)}/${enc(c.password)}/${streamId}.${ext}`;
+  const url = `${STREAM_BASE}/movie/${enc(c?.username ?? '')}/${enc(c?.password ?? '')}/${streamId}.${ext}`;
   return `${PROXY}?url=${encodeURIComponent(url)}`;
 }
 
 export function buildVodFallbackUrl(c: XtreamCredentials, streamId: number, ext = 'mp4', type: 'movie' | 'series' = 'movie'): string {
   const mode = getStreamQuality();
   const qParam = (mode !== 'auto' && mode !== 'source') ? `&q=${mode}` : '';
-  return `${PROXY}/vod?id=${streamId}&u=${enc(c.username)}&p=${enc(c.password)}&ext=${ext}&type=${type}${qParam}`;
+  return `${PROXY}/vod?id=${streamId}&u=${enc(c?.username ?? '')}&p=${enc(c?.password ?? '')}&ext=${ext}&type=${type}${qParam}`;
 }
 
 export function buildSeriesUrl(c: XtreamCredentials, episodeId: number, ext = 'mp4'): string {
   const mode = getStreamQuality();
   const qParam = (mode !== 'auto' && mode !== 'source') ? `&q=${mode}` : '';
   if (ext === 'mkv' || ext === 'avi' || ext === 'ts') {
-    return `${PROXY}/vod?id=${episodeId}&u=${enc(c.username)}&p=${enc(c.password)}&ext=${ext}&type=series${qParam}`;
+    return `${PROXY}/vod?id=${episodeId}&u=${enc(c?.username ?? '')}&p=${enc(c?.password ?? '')}&ext=${ext}&type=series${qParam}`;
   }
-  const url = `${STREAM_BASE}/series/${enc(c.username)}/${enc(c.password)}/${episodeId}.${ext}`;
+  const url = `${STREAM_BASE}/series/${enc(c?.username ?? '')}/${enc(c?.password ?? '')}/${episodeId}.${ext}`;
   return `${PROXY}?url=${encodeURIComponent(url)}`;
 }
 

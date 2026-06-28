@@ -630,33 +630,13 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
     return () => window.removeEventListener('sports-play-channel', handler);
   }, [allStreams, handlePlay, onPlay, credentials]);
 
-  // Unknown experience — a calm inline bridge while we glide to All Channels
-  // (never a black void or a silent hard swap).
-  if (!config) {
-    return (
-      <div className="pt-24 pb-32 min-h-screen flex flex-col items-center justify-center px-8 text-center reveal">
-        <div className="relative w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
-          style={{ background: 'rgba(157,78,221,0.12)', border: '1px solid rgba(157,78,221,0.25)' }}>
-          {/* gentle breathing ring — visible feedback during the glide, never a frozen void */}
-          <span className="absolute inset-0 rounded-2xl animate-ping" style={{ background: 'rgba(157,78,221,0.10)', animationDuration: '1.6s' }} />
-          <Globe className="relative w-6 h-6 text-white/50 animate-pulse" style={{ animationDuration: '1.6s' }} />
-        </div>
-        <p className="text-[15px] font-semibold text-white/70">Taking you to all channels…</p>
-        <p className="text-[12px] text-white/30 mt-1.5 max-w-[260px]">That district moved — gliding you to the full live lineup.</p>
-        <button
-          onClick={() => navigate('/live', { replace: true })}
-          className="mt-5 px-5 py-2.5 rounded-full text-[12px] font-semibold text-white/80 active:scale-95 transition-transform"
-          style={{ background: 'linear-gradient(135deg, rgba(157,78,221,0.18), rgba(157,78,221,0.08))', border: '1px solid rgba(157,78,221,0.3)' }}
-        >
-          Go now →
-        </button>
-      </div>
-    );
-  }
+  // NOTE: the "unknown experience" early return lives BELOW all hooks (just before
+  // the main render) so every hook runs unconditionally on every render
+  // (react-hooks/rules-of-hooks — a conditional hook already bricked the home once).
 
   // Filter by sub-tab
   let filtered = allStreams;
-  if (activeSubTab !== 'all' && config.subtypes.length > 0) {
+  if (activeSubTab !== 'all' && config && config.subtypes.length > 0) {
     const sub = config.subtypes.find(s => s.id === activeSubTab);
     if (sub) {
       const catSet = new Set(sub.categoryIds);
@@ -691,7 +671,7 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
 
   // World Cup — featured collection (sports experience only). Deduped by quality so a
   // featured row doesn't show every HD/4K variant of the same channel.
-  const isSports = config.id === 'sports';
+  const isSports = config?.id === 'sports';
   const worldCupStreams = useMemo(() => {
     if (!isSports) return [];
     const wc = allStreams.filter(s => isWorldCupStream(s) && isChannelPlayable(s.stream_id));
@@ -806,6 +786,31 @@ export const ExperienceHomePage: React.FC<Props> = ({ credentials, onPlay }) => 
     }
     return ordered;
   }, [searchFiltered, isSports]);
+
+  // Unknown experience — a calm inline bridge while we glide to All Channels
+  // (never a black void or a silent hard swap). Placed AFTER all hooks so hook
+  // order stays stable every render (react-hooks/rules-of-hooks).
+  if (!config) {
+    return (
+      <div className="pt-24 pb-32 min-h-screen flex flex-col items-center justify-center px-8 text-center reveal">
+        <div className="relative w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+          style={{ background: 'rgba(157,78,221,0.12)', border: '1px solid rgba(157,78,221,0.25)' }}>
+          {/* gentle breathing ring — visible feedback during the glide, never a frozen void */}
+          <span className="absolute inset-0 rounded-2xl animate-ping" style={{ background: 'rgba(157,78,221,0.10)', animationDuration: '1.6s' }} />
+          <Globe className="relative w-6 h-6 text-white/50 animate-pulse" style={{ animationDuration: '1.6s' }} />
+        </div>
+        <p className="text-[15px] font-semibold text-white/70">Taking you to all channels…</p>
+        <p className="text-[12px] text-white/30 mt-1.5 max-w-[260px]">That district moved — gliding you to the full live lineup.</p>
+        <button
+          onClick={() => navigate('/live', { replace: true })}
+          className="mt-5 px-5 py-2.5 rounded-full text-[12px] font-semibold text-white/80 active:scale-95 transition-transform"
+          style={{ background: 'linear-gradient(135deg, rgba(157,78,221,0.18), rgba(157,78,221,0.08))', border: '1px solid rgba(157,78,221,0.3)' }}
+        >
+          Go now →
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-14 pb-32 min-h-screen">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { Play, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { t, useLanguage } from '@/i18n';
 import type { Lang } from '@/i18n';
@@ -655,14 +655,6 @@ function KeepWatchingRow({ onPlay, lang }: { onPlay: (ch: Channel) => void; lang
                 )}
                 <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 40%, rgba(6,6,9,0.85) 100%)` }} />
 
-                {/* Resume affordance on hover/press */}
-                <div className="absolute inset-0 z-[3] flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200"
-                  style={{ background: 'rgba(0,0,0,0.42)' }}>
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center"
-                    style={{ background: 'rgba(255,255,255,0.16)', border: '1px solid rgba(255,255,255,0.32)', backdropFilter: 'blur(6px)' }}>
-                    <Play className="w-3.5 h-3.5 text-white ml-0.5" fill="white" />
-                  </div>
-                </div>
 
                 {/* Resume progress bar */}
                 <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/15 z-[2]">
@@ -826,14 +818,6 @@ const ExperienceRow = React.memo(function ExperienceRow({
                 </div>
               )}
 
-              {/* glassy play affordance on hover/press */}
-              <div className="absolute inset-0 z-[3] flex items-center justify-center opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity duration-200"
-                style={{ background: 'rgba(0,0,0,0.42)' }}>
-                <div className="w-9 h-9 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(255,255,255,0.16)', border: '1px solid rgba(255,255,255,0.32)', backdropFilter: 'blur(6px)' }}>
-                  <Play className="w-3.5 h-3.5 text-white ml-0.5" fill="white" />
-                </div>
-              </div>
             </div>
             {/* FULL clean channel name — refined, wraps to 2 lines */}
             <p className="text-[10.5px] leading-tight text-white/60 text-center mt-1.5 px-0.5 line-clamp-2 font-medium tracking-tight group-hover:text-white/90 transition-colors">

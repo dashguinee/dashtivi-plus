@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { Play, Search, X, ChevronRight, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart, ArrowRight } from 'lucide-react';
+import { Search, X, ChevronRight, Trophy, Sparkles, Radio, Baby, Film, Music, Globe, Heart, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { NeonGate } from '@/components/ui/NeonGate';
 import { useFocalLens } from '@/lib/useFocalLens';
@@ -888,6 +888,7 @@ const ThemeRow = React.memo(function ThemeRow({
   const [expanded, setExpanded] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<string>('all');
   const lensRef = useFocalLens<HTMLDivElement>();
+  const navigate = useNavigate();
 
   const alive = streams.filter((s) => isChannelPlayable(s.stream_id));
   if (alive.length === 0) return null;
@@ -929,7 +930,6 @@ const ThemeRow = React.memo(function ThemeRow({
 
   // Experience page route (if one exists)
   const expRoute = SHOWCASE_CONFIG[theme.id]?.route;
-  const navigate = useNavigate();
 
   return (
     <div className="mb-10">
@@ -1181,11 +1181,6 @@ function SearchGrid({ streams, credentials, onPlay, freeUrlMap }: {
             <p className="text-xs text-text-secondary text-center truncate w-full group-hover:text-white transition-colors">
               {stream.name}
             </p>
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="w-10 h-10 rounded-full bg-primary/80 backdrop-blur-sm flex items-center justify-center shadow-lg shadow-primary/30">
-                <Play className="w-5 h-5 text-white ml-0.5" />
-              </div>
-            </div>
           </button>
         ))}
       </div>
@@ -1374,9 +1369,6 @@ function StreamMoreSection({
                     {isFree ? 'free' : 'premium'}
                   </span>
                 </div>
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 rounded-xl">
-                <Play className="w-5 h-5 text-white" fill="white" />
               </div>
             </button>
           );

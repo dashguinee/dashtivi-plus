@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { Play, Star, ChevronRight } from 'lucide-react';
+import { Star, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/i18n';
 import type { XtreamCredentials, VodStream } from '@/lib/xtream';
@@ -342,14 +342,6 @@ function TrailerExploreCard({
               ))}
             </div>
           </div>
-          {/* Ghost play affordance — barely a whisper (7% opacity, soft, no hard
-              gradient/shadow). Content is the hero; restraint = premium. */}
-          <span
-            className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: '#9D4EDD', opacity: 0.07, filter: 'blur(0.3px)' }}
-          >
-            <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
-          </span>
         </div>
       </button>
     </div>

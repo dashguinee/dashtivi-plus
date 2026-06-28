@@ -711,7 +711,10 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
           </div>
         </div>
       ) : (
-        <div className="pt-16 pb-5 px-5">
+        // Reserve the hero's FINAL box (same clamp as the resolved billboard) so the
+        // fallback→billboard swap on data-resolve animates content in WITHOUT pushing
+        // the reveal rows below — kills the measured route-load CLS (was 0.12).
+        <div className="pt-16 pb-5 px-5" style={{ minHeight: 'clamp(170px, 36vh, 300px)' }}>
           <h1 className="text-[22px] font-semibold text-white/85 tracking-tight" style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.02em' }}>Séries</h1>
           <div className="w-16 h-[2px] rounded-full mt-2" style={{ background: `linear-gradient(90deg, ${GOLD}88 0%, ${GOLD}26 60%, transparent 100%)` }} />
         </div>

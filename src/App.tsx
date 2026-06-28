@@ -779,17 +779,18 @@ function AppRouter() {
     document.getElementById('pre-splash')?.remove();
   }, []);
 
-  if (location.pathname === '/welcome') {
-    return (<Suspense fallback={<FullPageLoader />}><WelcomePage /></Suspense>);
-  }
-
-  // Failsafe: if stuck loading for 4s, force show login
+  // Failsafe: if stuck loading for 4s, force show login.
+  // MUST run unconditionally (above the /welcome early return) so hook order is stable.
   const [forceReady, setForceReady] = useState(false);
   useEffect(() => {
     if (!auth.isLoading) return;
     const t = setTimeout(() => setForceReady(true), 4000);
     return () => clearTimeout(t);
   }, [auth.isLoading]);
+
+  if (location.pathname === '/welcome') {
+    return (<Suspense fallback={<FullPageLoader />}><WelcomePage /></Suspense>);
+  }
 
   const effectiveLoading = auth.isLoading && !forceReady;
 
