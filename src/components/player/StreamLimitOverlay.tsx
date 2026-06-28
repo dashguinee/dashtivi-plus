@@ -24,12 +24,14 @@ export function StreamLimitOverlay({ info, onDismiss, onUpgrade }: Props) {
               <Tv className="w-5 h-5 text-primary-light" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Screen in use</h3>
-              <p className="text-xs text-white/40">Another device is streaming right now</p>
+              <h3 className="text-base font-bold text-white">{info.atCapacity ? 'Streams are busy' : 'Screen in use'}</h3>
+              <p className="text-xs text-white/40">{info.atCapacity ? 'All streams are full right now' : 'Another device is streaming right now'}</p>
             </div>
           </div>
           <p className="text-sm text-white/60 leading-relaxed">
-            Your account supports 1 screen. Upgrade to watch on multiple devices at the same time.
+            {info.atCapacity
+              ? 'We’re at capacity at the moment. Try again in a minute, or go premium for priority access.'
+              : 'Your account supports 1 screen. Upgrade to watch on multiple devices at the same time.'}
           </p>
         </div>
 

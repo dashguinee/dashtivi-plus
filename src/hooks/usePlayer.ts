@@ -13,7 +13,17 @@ export interface StreamLimitInfo {
     secondScreen: { label: string; discount: string; screens: number };
     familyPlan: { label: string; discount: string; screens: number };
   };
+  /** True when the proxy returned 503 "at capacity" (server full) rather than a
+   *  409 per-account stream limit — the overlay reframes its copy accordingly. */
+  atCapacity?: boolean;
 }
+
+// Fallback upgrade shape for a 503 at-capacity response (the proxy's 503 body may
+// not carry the rich `upgrade` block that the 409 stream_limit response does).
+const DEFAULT_UPGRADE: StreamLimitInfo['upgrade'] = {
+  secondScreen: { label: 'Second Screen', discount: '', screens: 2 },
+  familyPlan: { label: 'Family Plan', discount: '', screens: 5 },
+};
 
 export function usePlayer() {
   const [state, setState] = useState<PlayerState>({
@@ -44,6 +54,7 @@ export function usePlayer() {
   const abortRef = useRef<AbortController | null>(null);
   const fadeInRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const snapshotTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined); // Safety: auto-clears frozen-frame overlay if stream never renders
+  const liveStallTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined); // Live-only: fires a reconnect if a stalled live stream never resumes (upstream death)
   const playGeneration = useRef(0); // Guards against stale handlers from rapid channel switches
   const userMutedRef = useRef(false); // Tracks explicit user mute — respected across channel switches
   const userPausedRef = useRef(false); // Tracks explicit user pause — so PiP keep-alive never fights a deliberate pause
@@ -89,6 +100,10 @@ export function usePlayer() {
     if (snapshotTimerRef.current) {
       clearTimeout(snapshotTimerRef.current);
       snapshotTimerRef.current = undefined;
+    }
+    if (liveStallTimerRef.current) {
+      clearTimeout(liveStallTimerRef.current);
+      liveStallTimerRef.current = undefined;
     }
     if (hlsRef.current) {
       hlsRef.current.destroy();
@@ -182,9 +197,12 @@ export function usePlayer() {
         video.oncanplay = null;
         video.onpause = null;
         video.onwaiting = null;
+        video.onended = null;
         video.ontimeupdate = null;
         video.ondurationchange = null;
       }
+      // Cancel any pending live-stall watchdog from the stream we're replacing.
+      if (liveStallTimerRef.current) { clearTimeout(liveStallTimerRef.current); liveStallTimerRef.current = undefined; }
 
       // Cleanup HLS/destroy refs but DON'T clear video.src yet
       if (hlsRef.current) { hlsRef.current.destroy(); hlsRef.current = null; }
@@ -303,10 +321,22 @@ export function usePlayer() {
             try {
               const probe = await fetch(url, { method: 'GET', signal });
               probeStatus = probe.status;
-              if (probe.status === 409) {
-                const data = await probe.json();
-                if (data.error === 'stream_limit') {
-                  setStreamLimit({ activeChannel: data.activeChannel, upgrade: data.upgrade });
+              // 409 = per-account stream limit · 503 = server at capacity. BOTH surface
+              // the upgrade modal (not a black error). Without the 503 branch the
+              // at-capacity case fell through to a generic black screen.
+              if (probe.status === 409 || probe.status === 503) {
+                const data = await probe.json().catch(() => ({} as Record<string, unknown>));
+                if (probe.status === 409 && data.error === 'stream_limit') {
+                  setStreamLimit({ activeChannel: data.activeChannel as string, upgrade: data.upgrade as StreamLimitInfo['upgrade'] });
+                  setState((prev) => ({ ...prev, isLoading: false, isSwitching: false, error: null }));
+                  return;
+                }
+                if (probe.status === 503) {
+                  setStreamLimit({
+                    activeChannel: (data.activeChannel as string) || channel.name || '',
+                    upgrade: (data.upgrade as StreamLimitInfo['upgrade']) || DEFAULT_UPGRADE,
+                    atCapacity: true,
+                  });
                   setState((prev) => ({ ...prev, isLoading: false, isSwitching: false, error: null }));
                   return;
                 }
@@ -437,7 +467,9 @@ export function usePlayer() {
           destroyRef.current = () => {
             clearTimeout(connectionTimeout);
             if (fadeInRef.current) { clearInterval(fadeInRef.current); fadeInRef.current = undefined; }
+            if (liveStallTimerRef.current) { clearTimeout(liveStallTimerRef.current); liveStallTimerRef.current = undefined; }
             video.onerror = null;
+            video.onended = null;
             // Don't video.src=''+load() — it pops the audio chain.
             // The new src assignment in playChannel will replace cleanly.
             video.pause();
@@ -467,6 +499,8 @@ export function usePlayer() {
         video.onplaying = () => {
           if (isStale()) return;
           retryCount = 0;
+          // Recovered — cancel the live-stall watchdog.
+          if (liveStallTimerRef.current) { clearTimeout(liveStallTimerRef.current); liveStallTimerRef.current = undefined; }
           // New stream is painting — fade out / remove the frozen-frame overlay
           if (snapshotTimerRef.current) { clearTimeout(snapshotTimerRef.current); snapshotTimerRef.current = undefined; }
           setSwitchSnapshot(null);
@@ -521,9 +555,44 @@ export function usePlayer() {
           }
         };
         video.onpause = () => setState((prev) => ({ ...prev, isPlaying: false }));
+
+        // ── P0: live disconnect recovery (proxied-live upstream death) ──────────
+        // A LIVE stream must never "end". When the proxy's upstream source dies its
+        // ffmpeg exits cleanly → the <video> fires `ended` (or stalls on the last
+        // frame) → frozen frame, no error, no Reconnect. The old code had NO `ended`
+        // handler for the proxied/direct path, so live stranded silently. Treat an
+        // unexpected LIVE `ended` (and a never-resuming LIVE stall, below) as a
+        // disconnect and route into the SAME auto-reconnect path the error flow uses:
+        // set the error → VideoPlayer shows the connecting/Reconnect state and its
+        // auto-retry re-attaches the src. A VOD `ended` (movie genuinely finished) is
+        // left alone — gated on category, not on the URL shape (direct-mp4 VOD has no
+        // /vod? marker, so url-based isVod would misclassify it). `isVodContent` is
+        // already derived above (smart-resume) from channel.category — reuse it.
+        const flagLiveDisconnect = (reason: string) => {
+          if (isStale()) return;
+          if (liveStallTimerRef.current) { clearTimeout(liveStallTimerRef.current); liveStallTimerRef.current = undefined; }
+          if (snapshotTimerRef.current) { clearTimeout(snapshotTimerRef.current); snapshotTimerRef.current = undefined; }
+          setSwitchSnapshot(null);
+          markDead(channel.id, reason);
+          setState((prev) => ({ ...prev, isPlaying: false, isLoading: false, isSwitching: false, error: 'Stream interrupted — reconnecting…' }));
+        };
+        video.onended = () => {
+          if (isStale() || isVodContent) return; // VOD finished legitimately — leave it
+          flagLiveDisconnect('upstream ended');
+        };
+
         video.onwaiting = () => {
           if (isStale()) return;
           setState((prev) => ({ ...prev, isLoading: true }));
+          // Live-stall watchdog: if a live stream stalls and `playing` never resumes
+          // within the window, the upstream is dead with no clean `ended`. Conservative
+          // 15s so a slow-but-recovering buffer is never false-tripped (onplaying clears
+          // it the instant playback resumes). VOD stalls are left alone (long buffers on
+          // big files are normal).
+          if (!isVodContent) {
+            if (liveStallTimerRef.current) clearTimeout(liveStallTimerRef.current);
+            liveStallTimerRef.current = setTimeout(() => flagLiveDisconnect('live stall (upstream dead)'), 15000);
+          }
         };
 
         // ── Flow v3: Multi-tier adaptive streaming ──
