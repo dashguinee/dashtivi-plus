@@ -474,7 +474,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
   // ── Genre-active context rows (design §4 — context is never fully lost) ──
   const genreContextRows = useMemo<RankedRow[]>(() => {
     if (activeGenre === 0 || !hasTmdb || isSearching) return [];
-    const pool = seriesList.filter(s => tmdbMap[`s:${s.series_id}`]?.g?.includes(activeGenre));
+    const pool = deferredSeries.filter(s => tmdbMap[`s:${s.series_id}`]?.g?.includes(activeGenre));
     if (pool.length < 4) return [];
     const label = genreLabel(activeGenre, lang);
     const out: RankedRow[] = [];
@@ -483,7 +483,7 @@ export const SeriesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     const gem = dashCurated(pool, 'series', tmdbMap, { gemSet: gemSet.size ? gemSet : undefined });
     if (gem) out.push({ ...gem, id: 'genre-ctx-gem', name: `Pépites · ${label}`, tagline: '' });
     return out;
-  }, [activeGenre, seriesList, tmdbMap, gemSet, hasTmdb, isSearching, lang]);
+  }, [activeGenre, deferredSeries, tmdbMap, gemSet, hasTmdb, isSearching, lang]);
 
   // ── Search context strip (design §4) ──
   const searchContextRow = useMemo<RankedRow | null>(() => {
