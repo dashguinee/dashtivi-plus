@@ -21,25 +21,39 @@ interface NavItem {
 // silhouette and one subtle low-opacity "structure" line each — clean, premium,
 // a touch intergalactic (DBS visual language).
 
-// HOME — the refined geometric house (peaked roof, soft-radius base, slim arched
-// door), now with CHARACTER: golden DASH shades on the house + door (a top-lit
-// gold gradient, not a flat fill) and a tiny warm neon glow inside the doorway —
-// the home lit from within. Unique gradient ids per instance (useId) so the
-// mobile + desktop copies never collide as paint servers.
-const HomeGlyph: React.FC<GlyphProps> = ({ strokeWidth = 1.8, size: _s, ...props }) => {
+// HOME — the refined house, now with OyeAfrica CHARACTER: a warm gold→bronze
+// metallic bed (the same DASH golden-bronze family as OyeAfricaCard, dark-middle
+// 135° gradient for depth), a subtle warm-sparkle GRAIN clipped to the house so
+// it reads as a textured surface (not flat), a soft AMBIENT halo spilling behind
+// it (the doorway light on the bar), the lit-from-within neon doorway, and a tiny
+// spark at the peak. Unique ids per instance (useId) so mobile + desktop copies
+// never collide as paint servers.
+const HomeGlyph: React.FC<GlyphProps> = ({ strokeWidth = 1.8, size: _s, style, ...props }) => {
   const uid = React.useId();
-  const gGold = `hgGold-${uid}`;
-  const gDoor = `hgDoor-${uid}`;
+  const gBed = `hgBed-${uid}`;     // OyeAfrica metallic bed (gold→dark→bronze, 135°)
+  const gGold = `hgGold-${uid}`;   // lit gold → bronze, for the outline shades
+  const gDoor = `hgDoor-${uid}`;   // warm neon inside the doorway
+  const gHalo = `hgHalo-${uid}`;   // ambient warm spill
   const fBlur = `hgBlur-${uid}`;
+  const fGrain = `hgGrain-${uid}`;
+  const cHouse = `hgClip-${uid}`;
   const house = 'M3.5 11 L12 3.7 L20.5 11 V18.7 Q20.5 21 18.3 21 H5.7 Q3.5 21 3.5 18.7 Z';
+  const doorOutline = 'M9.7 21 V15.8 Q9.7 13.2 12 13.2 Q14.3 13.2 14.3 15.8 V21';
   return (
-    <svg viewBox="0 0 24 24" fill="none" {...props}>
+    <svg viewBox="0 0 24 24" fill="none" style={{ overflow: 'visible', ...style }} {...props}>
       <defs>
-        {/* DASH gold, top-lit → bronze base, for depth (not flat) */}
+        {/* OyeAfrica bed — gold corner → warm dark middle → bronze (135°, depth) */}
+        <linearGradient id={gBed} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#E0A93E" stopOpacity="0.16" />
+          <stop offset="45%" stopColor="#1C1208" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#8A5A1E" stopOpacity="0.22" />
+        </linearGradient>
+        {/* lit gold at the peak → bronze at the base (outline shades) */}
         <linearGradient id={gGold} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FFE9A8" />
-          <stop offset="42%" stopColor="#FFD700" />
-          <stop offset="100%" stopColor="#E0A93E" />
+          <stop offset="34%" stopColor="#FFD700" />
+          <stop offset="70%" stopColor="#E0A93E" />
+          <stop offset="100%" stopColor="#8A5A1E" />
         </linearGradient>
         {/* warm neon — lit from within the doorway */}
         <radialGradient id={gDoor} cx="50%" cy="74%" r="72%">
@@ -47,21 +61,40 @@ const HomeGlyph: React.FC<GlyphProps> = ({ strokeWidth = 1.8, size: _s, ...props
           <stop offset="50%" stopColor="#FFD24A" stopOpacity="0.85" />
           <stop offset="100%" stopColor="#E0A93E" stopOpacity="0.1" />
         </radialGradient>
+        {/* ambient warm halo — soft, fades to nothing */}
+        <radialGradient id={gHalo} cx="50%" cy="58%" r="62%">
+          <stop offset="0%" stopColor="#E0A93E" stopOpacity="0.42" />
+          <stop offset="48%" stopColor="#8A5A1E" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="#8A5A1E" stopOpacity="0" />
+        </radialGradient>
         <filter id={fBlur} x="-60%" y="-60%" width="220%" height="220%">
           <feGaussianBlur stdDeviation="0.5" />
         </filter>
+        {/* fine warm sparkle grain → textured metallic surface */}
+        <filter id={fGrain} x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" result="n" />
+          <feColorMatrix in="n" type="matrix"
+            values="0 0 0 0 1  0 0 0 0 0.86  0 0 0 0 0.55  0.7 0.7 0.7 0 0" />
+        </filter>
+        <clipPath id={cHouse}><path d={house} /></clipPath>
       </defs>
-      {/* gold wash over the whole house — golden warmth on roof + body */}
-      <path d={house} fill={`url(#${gGold})`} fillOpacity="0.17" />
+      {/* ambient warm halo — doorway light spilling onto the bar (overflow visible) */}
+      <ellipse cx="12" cy="14.5" rx="15" ry="13" fill={`url(#${gHalo})`} opacity="0.7" />
+      {/* OyeAfrica metallic bed inside the house */}
+      <path d={house} fill={`url(#${gBed})`} />
+      {/* warm sparkle grain, clipped to the house — texture, not flat */}
+      <g clipPath={`url(#${cHouse})`}>
+        <rect x="0" y="0" width="24" height="24" filter={`url(#${fGrain})`} opacity="0.13" />
+      </g>
       {/* neon-lit doorway — soft glowing fill */}
-      <path d="M9.7 21 V15.8 Q9.7 13.2 12 13.2 Q14.3 13.2 14.3 15.8 V21 Z"
-        fill={`url(#${gDoor})`} filter={`url(#${fBlur})`} />
-      {/* house outline — golden shades */}
+      <path d={`${doorOutline} Z`} fill={`url(#${gDoor})`} filter={`url(#${fBlur})`} />
+      {/* tiny warm spark near the roof peak (the OyeAfrica spark nod) */}
+      <circle cx="12" cy="6.6" r="0.65" fill="#FFF6CC" opacity="0.85" />
+      {/* house outline — golden → bronze shades */}
       <path d={house} fill="none" stroke={`url(#${gGold})`} strokeWidth={strokeWidth as number}
         strokeLinecap="round" strokeLinejoin="round" />
       {/* arched door outline — golden */}
-      <path d="M9.7 21 V15.8 Q9.7 13.2 12 13.2 Q14.3 13.2 14.3 15.8 V21"
-        fill="none" stroke={`url(#${gGold})`} strokeWidth={strokeWidth as number}
+      <path d={doorOutline} fill="none" stroke={`url(#${gGold})`} strokeWidth={strokeWidth as number}
         strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -190,7 +223,7 @@ export const Navbar: React.FC = () => {
         <span
           className="text-[10px] font-medium tracking-wide"
           style={{
-            color: active ? '#C77DFF' : 'rgba(255,255,255,0.35)',
+            color: active ? (item.path === '/' ? '#D4A053' : '#C77DFF') : 'rgba(255,255,255,0.35)',
             opacity: active ? 1 : 0,
             marginTop: active ? 3 : 0,
             height: active ? 'auto' : 0,
