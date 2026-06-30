@@ -508,7 +508,17 @@ export function usePlayer() {
           connectBoost(video);
           // Switch transition is over — frozen frame + connecting card come down here
           // (snapshot cleared just above). isSwitching:false reveals sharp controls.
-          setState((prev) => ({ ...prev, isPlaying: true, isLoading: false, isSwitching: false, error: null }));
+          // Single setState — was two sequential calls causing a double render right
+          // at the moment the stream starts, producing a visible control-layer flicker.
+          setState((prev) => ({
+            ...prev,
+            isPlaying: true,
+            isLoading: false,
+            isSwitching: false,
+            error: null,
+            isMuted: userMutedRef.current ? prev.isMuted : false,
+          }));
+          if (!userMutedRef.current) video.muted = false;
 
           // Best-effort: if the user was in PiP and the source just changed (PiP dropped
           // when video.src was reassigned), re-enter PiP now that the new stream paints.
@@ -524,12 +534,6 @@ export function usePlayer() {
               .finally(() => { switchingPiPRef.current = false; });
           } else {
             switchingPiPRef.current = false;
-          }
-          // Unmute now that new source is playing (was muted during source switch to prevent audio leak)
-          // Respect user's explicit mute preference
-          if (!userMutedRef.current) {
-            video.muted = false;
-            setState((prev) => ({ ...prev, isMuted: false }));
           }
           // Smooth fade-in: 12 steps × 40ms = 480ms
           const targetVol = userMutedRef.current ? 0 : 1;
@@ -588,7 +592,7 @@ export function usePlayer() {
           // big files are normal).
           if (!isVodContent) {
             if (liveStallTimerRef.current) clearTimeout(liveStallTimerRef.current);
-            liveStallTimerRef.current = setTimeout(() => flagLiveDisconnect('live stall (upstream dead)'), 15000);
+            liveStallTimerRef.current = setTimeout(() => flagLiveDisconnect('live stall (upstream dead)'), 8000);
           }
         };
 

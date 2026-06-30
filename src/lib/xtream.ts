@@ -319,7 +319,7 @@ let logoMapCache: Record<string, string> | null = null;
 
 function getLogoMap(): Promise<Record<string, string>> {
   if (logoMapCache) return Promise.resolve(logoMapCache);
-  return fetch('/logo-map.json')
+  return fetch('/logo-map.json', { signal: AbortSignal.timeout(5000) })
     .then(r => r.json())
     .then(data => { logoMapCache = data as Record<string, string>; return logoMapCache; })
     .catch(() => ({}));

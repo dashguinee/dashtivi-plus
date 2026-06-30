@@ -125,12 +125,16 @@ export async function createMpegTsPlayer(
   }, {
     enableWorker: true,
     enableStashBuffer: true,
-    stashInitialSize: 512,              // was 384 — slightly more initial buffer
+    stashInitialSize: 512,
+    // Parallelizes MSE SourceOpen event and first network request instead of
+    // serializing them. Safe because stash buffer holds incoming data until MSE ready.
+    deferLoadAfterSourceOpen: false,
     liveBufferLatencyChasing: true,
-    liveBufferLatencyMaxLatency: 7.0,  // was 6.0 — more cushion before chasing live edge
-    liveBufferLatencyMinRemain: 2.0,   // was 1.5 — keep a bit more buffer before catch-up
-    // Prevents memory growth on long sessions (30+ min). Without this the SourceBuffer
-    // keeps accumulating decoded frames → sluggish video/audio decoder over time.
+    liveBufferLatencyMaxLatency: 7.0,
+    liveBufferLatencyMinRemain: 2.0,
+    // Don't chase the live edge while the video is paused (e.g. blocked autoplay).
+    // Avoids burning 3G bandwidth accumulating segments that get discarded on resume.
+    liveBufferLatencyChasingOnPaused: false,
     autoCleanupSourceBuffer: true,
     autoCleanupMinBackwardDuration: 30,
     autoCleanupMaxBackwardDuration: 60,
@@ -140,8 +144,17 @@ export async function createMpegTsPlayer(
   player.load();
   try { player.play(); } catch { /* autoplay may be blocked */ }
 
-  player.on(mpegts.Events.ERROR, () => {
-    onError?.('Stream error — channel may be offline');
+  let mpegtsRetries = 0;
+  player.on(mpegts.Events.ERROR, (_errType: any, _detail: any) => {
+    if (mpegtsRetries < 4) {
+      mpegtsRetries++;
+      const delay = Math.min(600 * mpegtsRetries, 5000);
+      setTimeout(() => {
+        try { player.unload(); player.load(); } catch { /* player mid-teardown */ }
+      }, delay);
+    } else {
+      onError?.('Stream error — channel may be offline');
+    }
   });
 
   return {
@@ -213,6 +226,7 @@ export async function createHlsPlayer(
     maxBufferLength: 60,
     maxMaxBufferLength: 120,
     backBufferLength: 12,
+    maxBufferSize: 20 * 1024 * 1024, // 20MB cap — prevents GC pauses on low-end Android
     // 1.0s (was 0.5 → too tight, IPTV segments have natural ~0.5-1s boundary gaps.
     // At 0.5 HLS.js was detecting normal gaps as holes and seeking to patch = stall.
     maxBufferHole: 1.0,
@@ -318,11 +332,14 @@ export async function createHlsPlayer(
         break;
 
       default:
-        if (retryCount === 0) {
+        // Codec negotiation failures and other unknown fatals are often transient
+        // on Android WebViews — retry up to 4 times with exponential backoff.
+        if (retryCount < 4) {
+          const delay = retryCount === 0 ? 500 : Math.min(Math.pow(2, retryCount) * 800, 12000);
           retryCount++;
           setTimeout(() => {
             if (!destroyed) { hls.loadSource(url); hls.startLoad(); }
-          }, 2000);
+          }, delay);
         } else {
           onError?.('Channel is currently unavailable');
           hls.destroy();
