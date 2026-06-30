@@ -136,7 +136,12 @@ export function usePlayer() {
       const signal = abortRef.current.signal;
 
       const video = videoRef.current;
-      const isSwitch = !!video && !!video.src && !video.paused;
+      // A "switch" is any channel change when a stream is already loaded —
+      // paused state is irrelevant (error recovery, hold gesture, blocked autoplay
+      // all leave the stream paused but still loaded). The old !video.paused check
+      // silently skipped the frozen-frame capture and the early isSwitching:true
+      // whenever the video happened to be paused → black flash, no connecting card.
+      const isSwitch = !!video && !!video.src;
 
       // On a channel switch, snapshot the currently-painted frame BEFORE any teardown.
       // We overlay it (blurred) to mask the black gap until the new stream renders.
