@@ -3,6 +3,82 @@ export interface HlsInstance {
   destroy: () => void;
 }
 
+// ── Network-aware ABR seeding ──────────────────────────────────────────────────
+// The Network Information API (Android Chrome, Edge) exposes real measured
+// downlink speed. We seed HLS.js's EWMA estimate with it so ABR starts at the
+// CORRECT quality for THIS user's connection — no more "starts blurry → climbs."
+// Bandwidth is also persisted across sessions so repeat viewers skip the warm-up.
+
+const BW_STORAGE_KEY = 'dash_bw_est_bps';
+const BW_MAX_AGE_MS  = 30 * 60 * 1000; // 30 min — stale after that
+
+// Effective-type → conservative baseline in bps (floor when no downlink reading)
+const EFFECTIVE_TYPE_BPS: Record<string, number> = {
+  'slow-2g': 100_000,
+  '2g':      300_000,
+  '3g':    1_500_000,
+  '4g':    4_000_000,
+};
+
+/**
+ * Returns the best available bandwidth estimate in bps, in priority order:
+ * 1. navigator.connection.downlink  (live, most accurate)
+ * 2. localStorage persisted value   (last good session, < 30 min old)
+ * 3. effectiveType baseline         (coarse but real)
+ * 4. 2 Mbps static fallback
+ */
+export function getNetworkEstimate(): number {
+  const conn = (navigator as any).connection
+    ?? (navigator as any).mozConnection
+    ?? (navigator as any).webkitConnection;
+
+  // Live reading — use 85% for headroom
+  if (conn?.downlink && conn.downlink > 0) {
+    const bps = conn.downlink * 1_000_000 * 0.85;
+    persistBandwidth(bps);
+    return bps;
+  }
+
+  // Persisted last-session value
+  try {
+    const raw = localStorage.getItem(BW_STORAGE_KEY);
+    if (raw) {
+      const { bps, ts } = JSON.parse(raw);
+      if (Date.now() - ts < BW_MAX_AGE_MS && bps > 0) return bps;
+    }
+  } catch { /* localStorage unavailable */ }
+
+  // effectiveType baseline
+  if (conn?.effectiveType && EFFECTIVE_TYPE_BPS[conn.effectiveType]) {
+    return EFFECTIVE_TYPE_BPS[conn.effectiveType];
+  }
+
+  return 2_000_000; // static fallback
+}
+
+/** Call when HLS measures a good playback bandwidth — persists for next session. */
+export function persistBandwidth(bps: number): void {
+  if (bps <= 0) return;
+  try {
+    localStorage.setItem(BW_STORAGE_KEY, JSON.stringify({ bps, ts: Date.now() }));
+  } catch { /* quota exceeded / private mode */ }
+}
+
+/**
+ * Listen for network-type changes (WiFi ↔ 4G ↔ 3G) and call back with new estimate.
+ * Returns a cleanup function — call it when the player is destroyed.
+ */
+export function watchNetworkChanges(onEstimate: (bps: number) => void): () => void {
+  const conn = (navigator as any).connection
+    ?? (navigator as any).mozConnection
+    ?? (navigator as any).webkitConnection;
+  if (!conn) return () => {};
+
+  const handler = () => onEstimate(getNetworkEstimate());
+  conn.addEventListener('change', handler);
+  return () => conn.removeEventListener('change', handler);
+}
+
 /**
  * Create an MPEG-TS player for raw .ts streams (proxied from Starshare)
  * Used for Live TV — needed for every live channel (primary use case)
@@ -87,17 +163,18 @@ export async function createHlsPlayer(
   let mediaErrorRecoveryAttempt = 0;
   let destroyed = false;
 
+  // Seed ABR with the real measured network bandwidth — no more cold-start quality climb.
+  const initialEstimate = getNetworkEstimate();
+
   const hls = new Hls({
     enableWorker: true,
     lowLatencyMode: false,
     progressive: true,
     testBandwidth: true,
-    startLevel: -1,                    // was 0 — auto-select best quality at start (ABR-driven)
+    startLevel: -1,                    // auto-select best quality at start (ABR-driven)
     capLevelToPlayerSize: true,
     startFragPrefetch: true,
-    // was 300_000 (300kbps) — caused HLS to always start at lowest quality then climb.
-    // 2Mbps default = jump straight to good quality on typical DASH member connections.
-    abrEwmaDefaultEstimate: 2_000_000,
+    abrEwmaDefaultEstimate: initialEstimate,  // real network speed, not a static guess
     abrEwmaFastLive: 2.0,
     abrEwmaSlowLive: 6.0,
     abrEwmaFastVoD: 2.0,
@@ -134,6 +211,17 @@ export async function createHlsPlayer(
 
   hls.loadSource(url);
   hls.attachMedia(videoEl);
+
+  // Persist real measured bandwidth after each fragment loads — seeds the next session.
+  hls.on(Hls.Events.FRAG_LOADED, (_event: any, data: any) => {
+    const bw = data?.stats?.bwEstimate;
+    if (bw && bw > 100_000) persistBandwidth(bw);
+  });
+
+  // React to network type changes mid-session (WiFi → 4G, etc.)
+  const stopWatchingNetwork = watchNetworkChanges((bps) => {
+    if (!destroyed) hls.bandwidthEstimate = bps;
+  });
 
   hls.on(Hls.Events.MANIFEST_PARSED, (_event: any, data: any) => {
     const levels = data.levels.map((l: any) => {
@@ -215,6 +303,7 @@ export async function createHlsPlayer(
     hls,
     destroy: () => {
       destroyed = true;
+      stopWatchingNetwork();
       hls.destroy();
     },
   };
