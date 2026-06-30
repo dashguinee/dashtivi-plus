@@ -181,56 +181,73 @@ export const VideoPlayer: React.FC<Props> = ({
   const liveCatchupTimerRef = useRef<ReturnType<typeof setInterval>>();
   const [liveHolding, setLiveHolding] = useState(false);
   const [liveCatchingUp, setLiveCatchingUp] = useState(false);
+  // Ref mirrors state so closures always read the live value (no stale capture).
+  const liveCatchingUpRef = useRef(false);
 
   const catchupFadeTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const catchupFadeIntervalRef = useRef<ReturnType<typeof setInterval>>();
+  const catchupHardCapRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Abort any in-progress catchup — call on channel switch or any action that supersedes it.
   const abortCatchup = useCallback(() => {
     clearInterval(liveCatchupTimerRef.current);
     clearTimeout(catchupFadeTimerRef.current);
     clearInterval(catchupFadeIntervalRef.current);
+    clearTimeout(catchupHardCapRef.current);
+    liveCatchingUpRef.current = false;
     setLiveCatchingUp(false);
     const v = videoRef.current;
     if (v) { v.playbackRate = 1.0; }
   }, [videoRef]);
 
-  // Poll while catching up at 7x: detect live edge, restore 1x.
-  // Audio: stays at full volume for 7s — if still catching up after that, fade out then back in.
   const startCatchup = useCallback((v: HTMLVideoElement) => {
+    // Guard: don't stack multiple catchups
+    if (liveCatchingUpRef.current) return;
+    liveCatchingUpRef.current = true;
     setLiveCatchingUp(true);
     v.playbackRate = 7.0;
-    const originalVol = v.volume;
+    const originalVol = v.volume > 0 ? v.volume : 1;
 
-    // Only fade audio if still catching up after 7s (most catches are <1s — no dip)
+    const done = () => {
+      clearTimeout(catchupFadeTimerRef.current);
+      clearInterval(catchupFadeIntervalRef.current);
+      clearInterval(liveCatchupTimerRef.current);
+      clearTimeout(catchupHardCapRef.current);
+      liveCatchingUpRef.current = false;
+      v.playbackRate = 1.0;
+      setLiveCatchingUp(false);
+      if (v.volume < originalVol - 0.05) {
+        const fadeIn = setInterval(() => {
+          if (v.volume < originalVol - 0.05) v.volume = Math.min(originalVol, v.volume + 0.07);
+          else { v.volume = originalVol; clearInterval(fadeIn); }
+        }, 50);
+      } else {
+        v.volume = originalVol;
+      }
+    };
+
+    // Fade audio only if STILL catching up after 7s (most catches are <1s)
     catchupFadeTimerRef.current = setTimeout(() => {
-      if (!liveCatchingUp) return;
+      if (!liveCatchingUpRef.current) return; // ref — never stale
       catchupFadeIntervalRef.current = setInterval(() => {
         if (v.volume > 0.04) v.volume = Math.max(0, v.volume - 0.05);
         else { v.volume = 0; clearInterval(catchupFadeIntervalRef.current); }
       }, 60);
     }, 7000);
 
-    liveCatchupTimerRef.current = setInterval(() => {
-      if (!v || v.paused) { abortCatchup(); v.volume = originalVol; return; }
+    // Hard cap: 25s → force-seek to live edge, give up
+    catchupHardCapRef.current = setTimeout(() => {
+      if (!liveCatchingUpRef.current) return;
       const buffEnd = v.buffered.length > 0 ? v.buffered.end(v.buffered.length - 1) : 0;
-      if (buffEnd > 0 && buffEnd - v.currentTime < 1.5) {
-        // Caught up — stop 7x, cancel any pending fade
-        clearTimeout(catchupFadeTimerRef.current);
-        clearInterval(catchupFadeIntervalRef.current);
-        clearInterval(liveCatchupTimerRef.current);
-        v.playbackRate = 1.0;
-        setLiveCatchingUp(false);
-        // Restore volume smoothly if it was already fading
-        if (v.volume < originalVol) {
-          const fadeIn = setInterval(() => {
-            if (v.volume < originalVol - 0.05) v.volume = Math.min(originalVol, v.volume + 0.06);
-            else { v.volume = originalVol; clearInterval(fadeIn); }
-          }, 50);
-        }
-      }
+      if (buffEnd > 0) { try { v.currentTime = buffEnd; } catch {} }
+      done();
+    }, 25000);
+
+    liveCatchupTimerRef.current = setInterval(() => {
+      if (!v || v.paused) { done(); v.volume = originalVol; return; }
+      const buffEnd = v.buffered.length > 0 ? v.buffered.end(v.buffered.length - 1) : 0;
+      if (buffEnd > 0 && buffEnd - v.currentTime < 1.5) done();
     }, 200);
-  }, [abortCatchup, liveCatchingUp]);
+  }, [abortCatchup]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
@@ -239,11 +256,12 @@ export const VideoPlayer: React.FC<Props> = ({
       liveHoldActiveRef.current = false;
       clearTimeout(liveHoldTimerRef.current);
       liveHoldTimerRef.current = setTimeout(() => {
+        // Double-check there was no movement before committing to hold
         liveHoldActiveRef.current = true;
         liveHoldStartRef.current = Date.now();
         setLiveHolding(true);
         videoRef.current?.pause();
-      }, 500);
+      }, 650); // 650ms — avoids accidental triggers on slow taps/scrolls
     }
   }, [isVod, videoRef]);
 
@@ -264,20 +282,27 @@ export const VideoPlayer: React.FC<Props> = ({
 
     if (!isVod && liveHoldActiveRef.current) {
       liveHoldActiveRef.current = false;
-      holdJustFiredRef.current = true; // block the upcoming onClick
+      holdJustFiredRef.current = true;
+      const heldMs = Date.now() - liveHoldStartRef.current; // capture before any async
       setLiveHolding(false);
       const v = videoRef.current;
       if (v) {
-        // Always resume — HLS.js will rebuffer if needed
-        v.play().then(() => {
-          const heldMs = Date.now() - liveHoldStartRef.current;
+        if (heldMs > 6000) {
+          // Long hold (6s+): skip straight to live edge, no 7x needed
           const buffEnd = v.buffered.length > 0 ? v.buffered.end(v.buffered.length - 1) : 0;
-          if (heldMs > 7000 && buffEnd > 0) {
-            try { v.currentTime = buffEnd; } catch { /* ignore */ }
-          } else if (heldMs > 2000) {
-            startCatchup(v);
+          if (buffEnd > 0) { try { v.currentTime = buffEnd; } catch {} }
+          v.play().catch(() => {});
+        } else {
+          // Resume first — give HLS 200ms to start buffering, then decide on catchup
+          v.play().catch(() => {});
+          if (heldMs > 1500) {
+            // Behind live: kick off 7x catchup shortly after resume
+            setTimeout(() => {
+              const vid = videoRef.current;
+              if (vid && !vid.paused) startCatchup(vid);
+            }, 250);
           }
-        }).catch(() => {});
+        }
       }
       return;
     }
@@ -324,7 +349,7 @@ export const VideoPlayer: React.FC<Props> = ({
       }
       lastTapRef.current = { x: touch.clientX, t: now };
     }
-  }, [isVod, onSeek, state.duration, state.currentTime, adjPrev, adjNext, setCurrentChannel, onRetry]);
+  }, [isVod, onSeek, state.duration, state.currentTime, adjPrev, adjNext, setCurrentChannel, onRetry, startCatchup, videoRef]);
 
   // Auto-retry with backoff: 3s → 6s → 10s, then give up to manual
   const autoRetryRef = useRef(0);
