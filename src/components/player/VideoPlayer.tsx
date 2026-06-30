@@ -559,7 +559,7 @@ export const VideoPlayer: React.FC<Props> = ({
       // Auto-hide only while actively watching — never mid-switch (controls must
       // stay sharp on top through the whole transition).
       if (isPlayingRef.current && !isSwitchingRef.current) setControlsVisible(false);
-    }, 5000);
+    }, 3700);
   }, [pokeSuggestions]);
 
   // Controls lifecycle:
