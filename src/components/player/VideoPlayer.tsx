@@ -1411,6 +1411,9 @@ function LandscapeGenreBar({
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           border: '1px solid rgba(255, 255, 255, 0.06)',
+          transform: hasSibling ? undefined : 'scale(1.2)',
+          transformOrigin: 'bottom center',
+          transition: 'transform 300ms',
         }}
         onClick={(e) => e.stopPropagation()}
       >
