@@ -64,6 +64,27 @@ export function persistBandwidth(bps: number): void {
   } catch { /* quota exceeded / private mode */ }
 }
 
+// ── Quality level memory ───────────────────────────────────────────────────────
+// Survives channel switches within a session. On switch, HLS starts at the LAST
+// known-good quality level instead of crawling up from 0 every time.
+// Separate from bandwidth — level index is stream-specific, bps is universal.
+const QL_STORAGE_KEY = 'dash_last_quality_level';
+
+let _sessionQualityLevel = (() => {
+  try {
+    const v = sessionStorage.getItem(QL_STORAGE_KEY);
+    return v ? parseInt(v, 10) : 0;
+  } catch { return 0; }
+})();
+
+export function getLastQualityLevel(): number { return _sessionQualityLevel; }
+
+export function rememberQualityLevel(level: number): void {
+  if (level < 0) return;
+  _sessionQualityLevel = level;
+  try { sessionStorage.setItem(QL_STORAGE_KEY, String(level)); } catch { /* noop */ }
+}
+
 /**
  * Listen for network-type changes (WiFi ↔ 4G ↔ 3G) and call back with new estimate.
  * Returns a cleanup function — call it when the player is destroyed.
@@ -171,23 +192,21 @@ export async function createHlsPlayer(
     lowLatencyMode: false,
     progressive: true,
     testBandwidth: true,
-    // Progressive: start at lowest quality and climb — no overshoot, no downward stall.
-    // startLevel:-1 picks quality before real buffer data exists → overshoots → stalls.
-    // startLevel:0 = smooth progressive climb only.
-    startLevel: 0,
+    // Start at the last quality level that worked — skips the climb on channel switches.
+    // First load in session = 0 (safe floor). After first channel plays successfully,
+    // LEVEL_SWITCHED writes to sessionStorage. Next switch starts there instantly.
+    startLevel: getLastQualityLevel(),
     capLevelToPlayerSize: true,
     startFragPrefetch: true,
     abrEwmaDefaultEstimate: initialEstimate, // Network Info API seed — still used for ongoing ABR
     // ── THE MICRO-STALL FIX ──────────────────────────────────────────────────────────
-    // Fast 3.0 (was 2.0): less reactive to momentary dips → fewer quality drops
-    // Slow 12.0 (was 6.0): ABR recalculates upgrade eligibility every ~12s of sustained
-    // bandwidth, not 6s. With 4-6s IPTV segments that's 2-3 segments per cycle = 8-18s
-    // = the exact micro-stall pattern. At 12.0, quality only upgrades when bandwidth is
-    // clearly stable, eliminating the oscillation.
+    // Fast 3.0: less reactive to momentary dips → fewer panic drops
+    // Slow 7.0: 7s of sustained bandwidth required before ABR earns an upgrade.
+    // Tight enough to respond to real improvement, slow enough to stop oscillation.
     abrEwmaFastLive: 3.0,
-    abrEwmaSlowLive: 12.0,
+    abrEwmaSlowLive: 7.0,
     abrEwmaFastVoD: 3.0,
-    abrEwmaSlowVoD: 12.0,
+    abrEwmaSlowVoD: 7.0,
     abrBandWidthUpFactor: 0.68,   // needs clear headroom before upgrading quality
     abrBandWidthFactor: 0.82,
     // ── Pre-buffer: deep cushion for weak GN/SL mobile networks
@@ -224,6 +243,11 @@ export async function createHlsPlayer(
   hls.on(Hls.Events.FRAG_LOADED, (_event: any, data: any) => {
     const bw = data?.stats?.bwEstimate;
     if (bw && bw > 100_000) persistBandwidth(bw);
+  });
+
+  // Remember the quality level that actually played — next channel switch starts here.
+  hls.on(Hls.Events.LEVEL_SWITCHED, (_event: any, data: any) => {
+    rememberQualityLevel(data.level);
   });
 
   // React to network type changes mid-session (WiFi → 4G, etc.)
