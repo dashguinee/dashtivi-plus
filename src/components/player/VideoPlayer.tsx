@@ -501,6 +501,7 @@ export const VideoPlayer: React.FC<Props> = ({
   // only the thin top beam remains. Computed in an effect so the render stays
   // a pure read (no side effect during render).
   const [showConnectCard, setShowConnectCard] = useState(false);
+  const [hasSmartMatch, setHasSmartMatch] = useState(false);
   const connectDecidedForRef = useRef<string | null>(null);
   useEffect(() => {
     const id = state.channel?.id ?? null;
@@ -986,6 +987,7 @@ export const VideoPlayer: React.FC<Props> = ({
           visible={controlsVisible || state.isSwitching}
           isLive={isLiveStream}
           onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
+          onHasContent={setHasSmartMatch}
         />
       )}
 
@@ -1033,6 +1035,7 @@ export const VideoPlayer: React.FC<Props> = ({
           isFullscreen={state.isFullscreen}
           isLive={isLiveStream}
           onGenreSwitch={onGenreSwitch}
+          hasSibling={hasSmartMatch}
         />
       )}
 
@@ -1365,11 +1368,13 @@ function LandscapeGenreBar({
   isFullscreen,
   isLive,
   onGenreSwitch,
+  hasSibling,
 }: {
   visible: boolean;
   isFullscreen: boolean;
   isLive: boolean;
   onGenreSwitch?: (themeId: string) => void;
+  hasSibling?: boolean;
 }) {
   const themes = [
     { id: 'sports',        name: 'Sports',        gradient: 'from-red-500 to-orange-700' },
@@ -1394,9 +1399,9 @@ function LandscapeGenreBar({
 
   return (
     <div
-      className={`absolute bottom-[130px] sm:bottom-[140px] left-0 right-0 z-30
-                  transition-[opacity,transform] duration-300
+      className={`absolute left-0 right-0 z-30 transition-[opacity,transform] duration-300
                   ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}
+      style={{ bottom: hasSibling ? 130 : 92, transition: 'opacity 300ms, transform 300ms, bottom 300ms' }}
     >
       {/* Glass container */}
       <div
@@ -1434,11 +1439,13 @@ function SmartMatchOverlay({
   visible,
   isLive,
   onSwitch,
+  onHasContent,
 }: {
   channel: Channel | null;
   visible: boolean;
   isLive: boolean;
   onSwitch: (channel: Channel) => void;
+  onHasContent?: (has: boolean) => void;
 }) {
   const { channels } = usePlaylistState();
 
@@ -1450,6 +1457,7 @@ function SmartMatchOverlay({
       allChannels={channels}
       onSwitch={onSwitch}
       visible={visible}
+      onHasContent={onHasContent}
     />
   );
 }

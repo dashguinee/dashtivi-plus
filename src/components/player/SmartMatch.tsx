@@ -7,6 +7,7 @@ interface SmartMatchProps {
   allChannels: Channel[];
   onSwitch: (channel: Channel) => void;
   visible: boolean;
+  onHasContent?: (has: boolean) => void;
 }
 
 // --- Quality detection (mirrors xtream.ts logic but works on Channel.name) ---
@@ -90,6 +91,7 @@ export const SmartMatch: React.FC<SmartMatchProps> = ({
   allChannels,
   onSwitch,
   visible,
+  onHasContent,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const currentNorm = useMemo(() => normalizeChannelName(currentChannel.name), [currentChannel.name]);
@@ -146,7 +148,14 @@ export const SmartMatch: React.FC<SmartMatchProps> = ({
   // Don't render if nothing to show
   const hasVariants = qualityVariants.length > 0;
   const hasFamily = familyChannels.length > 0;
-  if (!hasVariants && !hasFamily) return null;
+  const hasContent = hasVariants || hasFamily;
+
+  useEffect(() => {
+    onHasContent?.(hasContent);
+    return () => { onHasContent?.(false); };
+  }, [hasContent, onHasContent]);
+
+  if (!hasContent) return null;
 
   return (
     <div
