@@ -286,65 +286,91 @@ export const DynamicIsland = ({ appCode = 'tivi', dashId: dashIdProp = null, gue
     setTimeout(() => dropCurrentAndAdvance(), DEFLATE_MS);
   };
 
-  // ── Collapsed pointer swipe (real finger-follow, no framer) ─────────────
+  // ── Collapsed swipe — touch + pointer (touch for iOS reliability) ────────
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const swipeActive = useRef(false);
+  // Track drag delta via ref so onEnd always reads the latest value without
+  // relying on stale closure state (critical on iOS where events batch differently).
+  const dragRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  const onCollapsedPointerDown = (e: React.PointerEvent) => {
-    swipeStart.current = { x: e.clientX, y: e.clientY };
+  const SWIPE = 24; // px — reduced so a 22px pill is actually swipeable
+
+  const startGesture = (cx: number, cy: number) => {
+    swipeStart.current = { x: cx, y: cy };
     swipeActive.current = true;
-    setPressed(true); // touch → purple
-    clearTimers();    // pause auto-deflate while the finger is down
-    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    setPressed(true);
+    clearTimers();
   };
 
-  const onCollapsedPointerMove = (e: React.PointerEvent) => {
+  const moveGesture = (cx: number, cy: number) => {
     if (!swipeActive.current || !swipeStart.current) return;
-    setDrag({
-      x: e.clientX - swipeStart.current.x,
-      y: e.clientY - swipeStart.current.y,
-    });
+    const dx = cx - swipeStart.current.x;
+    const dy = cy - swipeStart.current.y;
+    dragRef.current = { x: dx, y: dy };
+    setDrag({ x: dx, y: dy });
   };
 
-  const onCollapsedPointerUp = () => {
+  const endGesture = () => {
     setPressed(false);
-    const { x, y } = drag;
     swipeActive.current = false;
     swipeStart.current = null;
+    const { x, y } = dragRef.current;
+    dragRef.current = { x: 0, y: 0 };
 
-    const SWIPE = 36; // px threshold
     if (y < -SWIPE && Math.abs(y) > Math.abs(x)) {
-      // Swipe up → dismiss
       setDrag({ x: 0, y: 0 });
       dismissCurrent();
       return;
     }
     if (Math.abs(x) > SWIPE && Math.abs(x) > Math.abs(y)) {
-      // Swipe left/right → navigate
-      if (x > 0 && currentIndex > 0) {
-        setCurrentIndex(currentIndex - 1);
-      } else if (x < 0 && currentIndex < notifications.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-      }
+      if (x > 0 && currentIndex > 0) setCurrentIndex(currentIndex - 1);
+      else if (x < 0 && currentIndex < notifications.length - 1) setCurrentIndex(currentIndex + 1);
       setDrag({ x: 0, y: 0 });
       restartHold();
       return;
     }
-    // Not a swipe → treat as a tap (expand in place).
     setDrag({ x: 0, y: 0 });
-    if (Math.abs(x) < 8 && Math.abs(y) < 8) {
-      handleTap();
-    } else {
-      restartHold();
-    }
+    if (Math.abs(x) < 8 && Math.abs(y) < 8) handleTap();
+    else restartHold();
   };
 
-  const onCollapsedPointerCancel = () => {
+  const cancelGesture = () => {
     setPressed(false);
     swipeActive.current = false;
     swipeStart.current = null;
+    dragRef.current = { x: 0, y: 0 };
     setDrag({ x: 0, y: 0 });
     restartHold();
+  };
+
+  // Touch handlers (iOS-reliable)
+  const onCollapsedTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    startGesture(t.clientX, t.clientY);
+  };
+  const onCollapsedTouchMove = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    moveGesture(t.clientX, t.clientY);
+  };
+  const onCollapsedTouchEnd = () => endGesture();
+
+  // Pointer handlers (desktop fallback)
+  const onCollapsedPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === 'touch') return; // handled by touch events
+    startGesture(e.clientX, e.clientY);
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+  };
+  const onCollapsedPointerMove = (e: React.PointerEvent) => {
+    if (e.pointerType === 'touch') return;
+    moveGesture(e.clientX, e.clientY);
+  };
+  const onCollapsedPointerUp = (e: React.PointerEvent) => {
+    if (e.pointerType === 'touch') return;
+    endGesture();
+  };
+  const onCollapsedPointerCancel = (e: React.PointerEvent) => {
+    if (e.pointerType === 'touch') return;
+    cancelGesture();
   };
 
   // Re-arm the auto-deflate hold (used after a swipe that didn't dismiss).
@@ -634,6 +660,9 @@ export const DynamicIsland = ({ appCode = 'tivi', dashId: dashIdProp = null, gue
             key="collapsed"
             className="cursor-pointer select-none touch-none"
             style={{ transform: dragTransform, transition: dragTransform ? 'none' : 'transform 220ms cubic-bezier(0.34,1.56,0.64,1)' }}
+            onTouchStart={onCollapsedTouchStart}
+            onTouchMove={onCollapsedTouchMove}
+            onTouchEnd={onCollapsedTouchEnd}
             onPointerDown={onCollapsedPointerDown}
             onPointerMove={onCollapsedPointerMove}
             onPointerUp={onCollapsedPointerUp}

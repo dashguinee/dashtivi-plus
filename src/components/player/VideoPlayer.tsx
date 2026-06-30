@@ -894,7 +894,7 @@ export const VideoPlayer: React.FC<Props> = ({
                 {/* Only surfaces on genuinely slow connections — 4s delay means fast switches never see it. */}
                 <p className="text-[11px] text-white/40 text-center -mt-1.5"
                    style={{ animation: 'fade-in 0.6s ease-out 4s both' }}>
-                  Flow is finding you…
+                  Low network? Turn on FLOW
                 </p>
               </div>
             )}
