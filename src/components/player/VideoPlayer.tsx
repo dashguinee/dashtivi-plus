@@ -95,12 +95,12 @@ export const VideoPlayer: React.FC<Props> = ({
 
   const isVod = detectVod(state);
 
-  // Ambient breathing layer — guides on control show, retreats on hide
+  // Ambient breathing layer — soothes while buffering, whispers under content
   const [ambientOn, setAmbientOn] = useState(() => isAmbientEnabled());
   useEffect(() => {
     if (!ambientOn) return;
-    setAmbientPlayerState(controlsVisible, isVod);
-  }, [controlsVisible, isVod, ambientOn]);
+    setAmbientPlayerState(state.isPlaying);
+  }, [state.isPlaying, ambientOn]);
 
   // ── Live continuity (Bug #1) ──────────────────────────────────────────────
   // The player chrome (channel carousel, edge arrows, corner hints, SmartMatch,

@@ -66,11 +66,14 @@ const STORAGE_KEY = 'tivi_ambient_enabled';
 const ENTRY_VOLUME = 0.32;   // warm welcome on first start
 const CRUISE_VOLUME = 0.20;  // settled level after the first play / one cycle
 
-// Player ambient levels — the ambient "guides" you, then retreats into the content.
-const PLAYER_GUIDE = 0.22;   // controls visible: soft guiding presence
-const PLAYER_LIVE  = 0.14;   // controls hidden + live: atmospheric residue
-const PLAYER_VOD   = 0.05;   // controls hidden + VOD: near silence
-const STREAM_DUCK  = 0.0;    // legacy — kept for non-ambient-aware callers
+// Player ambient levels — one continuous breath, three moments.
+const PLAYER_SOOTHE  = 0.22;  // channel selected / buffering: warm welcome while it loads
+const PLAYER_WHISPER = 0.06;  // stream locked in: near-silence presence under content
+const STREAM_DUCK    = 0.0;   // legacy — kept for non-ambient-aware callers
+
+const SOOTHE_FADE_MS  = 1800;  // rise to soothe on channel open
+const WHISPER_FADE_MS = 4200;  // slow descent when stream locks in — barely perceptible
+const CRUISE_RISE_MS  = 3000;  // gentle rise back to cruise on player close
 
 // `targetVolume` is the LIVE envelope base. The swing breathes ±10% around it,
 // and every fade resolves to it. Starts at ENTRY, eases to CRUISE, recycles.
@@ -98,18 +101,18 @@ export function isAmbientEnabled(): boolean {
 }
 
 /**
- * Called by VideoPlayer whenever controlsVisible or isVod changes.
- * Drives the "guiding presence" pattern:
- *   controls show  → fade to PLAYER_GUIDE (soft guide)
- *   controls hide  → fade to PLAYER_LIVE (live) or PLAYER_VOD (movie/series)
- * The ~ button on/off gates this entire behavior.
+ * Called by VideoPlayer whenever isPlaying changes.
+ * Two moments in one breath:
+ *   isPlaying=false → soothe (stream loading, ambient guides you in)
+ *   isPlaying=true  → whisper (stream locked in, ambient retreats under content)
  */
-export function setAmbientPlayerState(controlsVisible: boolean, isVod: boolean): void {
+export function setAmbientPlayerState(isPlaying: boolean): void {
   if (!audio || !isEnabled) return;
   inPlayer = true;
-  const target = controlsVisible ? PLAYER_GUIDE : (isVod ? PLAYER_VOD : PLAYER_LIVE);
-  isMutedForStream = true; // keep swing paused
-  fadeVolume(audio.volume, target, controlsVisible ? 1200 : 3500, undefined, true);
+  isMutedForStream = true; // keep swing paused throughout
+  const target = isPlaying ? PLAYER_WHISPER : PLAYER_SOOTHE;
+  const ms     = isPlaying ? WHISPER_FADE_MS : SOOTHE_FADE_MS;
+  fadeVolume(audio.volume, target, ms, undefined, true);
 }
 
 export function initAmbient(): void {
@@ -220,32 +223,31 @@ export function muteAmbient(): void {
   if (!audio) return;
   isMutedForStream = true;
   inPlayer = true;
-  // First channel play = the session has begun in earnest → settle to cruise.
-  enterCruise();
+  enterCruise(); // first play settles the session envelope
   if (transitionInterval) { clearInterval(transitionInterval); transitionInterval = null; }
-  // Start at PLAYER_GUIDE — controls are visible on first open.
-  // setAmbientPlayerState() will refine as controls show/hide.
-  fadeVolume(audio.volume, PLAYER_GUIDE, STREAM_FADE_MS, undefined, true);
+  // Soothe immediately — warm welcome while the stream buffers.
+  // setAmbientPlayerState(isPlaying) will drive the whisper descent once it locks in.
+  fadeVolume(audio.volume, PLAYER_SOOTHE, SOOTHE_FADE_MS, undefined, true);
 }
 
-// Player EXIT — fade the ambient back UP smoothly to the current envelope target.
+// Player EXIT — rise smoothly back to cruise. Never a cut, always a flow.
 export function unmuteAmbient(): void {
   if (!audio || !isEnabled) return;
   isMutedForStream = false;
   inPlayer = false;
-  // If the track ran out while ducked, advance to the next one before resuming.
+  // Override the standard restore with our timed cruise rise
+  const resume = () => {
+    if (!audio || isMutedForStream) return;
+    audio.playbackRate = currentSpeed;
+    fadeVolume(audio.volume, targetVolume, CRUISE_RISE_MS, () => {
+      if (typeof document === 'undefined' || !document.hidden) startSwing();
+    }, true);
+  };
   if (audio.ended || (audio.duration > 0 && audio.currentTime >= audio.duration - 0.05)) {
     rotationIndex = (rotationIndex + 1) % HOME_ROTATION.length;
     audio.src = HOME_ROTATION[rotationIndex];
     audio.volume = 0;
   }
-  const resume = () => {
-    if (!audio || isMutedForStream) return;
-    audio.playbackRate = currentSpeed;
-    fadeVolume(audio.volume, targetVolume, STREAM_FADE_MS, () => {
-      if (typeof document === 'undefined' || !document.hidden) startSwing();
-    }, true);
-  };
   if (audio.paused) audio.play().then(resume).catch(() => {});
   else resume();
 }
