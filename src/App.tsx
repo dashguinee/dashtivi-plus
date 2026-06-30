@@ -600,7 +600,7 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
         {/* ONE pill up there — the Dynamic Island. The standalone purple
             "Turn on alerts" pill is gone; the alerts opt-in re-homes inside the
             island next. */}
-        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[9997] pointer-events-auto flex items-center gap-2">
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[99999] pointer-events-auto flex items-center gap-2">
           <DynamicIsland appCode="tivi" guestMode={guestMode} />
         </div>
         <Header onLogout={handleLogout} />

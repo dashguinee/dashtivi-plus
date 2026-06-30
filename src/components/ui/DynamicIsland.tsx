@@ -286,91 +286,139 @@ export const DynamicIsland = ({ appCode = 'tivi', dashId: dashIdProp = null, gue
     setTimeout(() => dropCurrentAndAdvance(), DEFLATE_MS);
   };
 
-  // ── Collapsed swipe — touch + pointer (touch for iOS reliability) ────────
+  // ── Collapsed swipe — non-passive DOM listeners so preventDefault() stops
+  //    page scroll from eating the drag (React touch events are always passive).
+  const pillRef = useRef<HTMLDivElement>(null);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const swipeActive = useRef(false);
-  // Track drag delta via ref so onEnd always reads the latest value without
-  // relying on stale closure state (critical on iOS where events batch differently).
   const dragRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  const SWIPE = 24; // px — reduced so a 22px pill is actually swipeable
+  const SWIPE = 22;
 
-  const startGesture = (cx: number, cy: number) => {
-    swipeStart.current = { x: cx, y: cy };
-    swipeActive.current = true;
-    setPressed(true);
-    clearTimers();
+  const haptic = (pattern: number | number[]) => {
+    try { navigator.vibrate?.(pattern); } catch { /* not supported */ }
   };
 
-  const moveGesture = (cx: number, cy: number) => {
-    if (!swipeActive.current || !swipeStart.current) return;
-    const dx = cx - swipeStart.current.x;
-    const dy = cy - swipeStart.current.y;
+  // Refs to stable callbacks so the effect closure stays fresh
+  const dismissRef = useRef(dismissCurrent);
+  const handleTapRef = useRef<() => void>(() => {});
+  const restartHoldRef = useRef<() => void>(() => {});
+  const notifLenRef = useRef(notifications.length);
+  const currentIndexRef = useRef(currentIndex);
+  useEffect(() => { dismissRef.current = dismissCurrent; }, [dismissCurrent]);
+  useEffect(() => { notifLenRef.current = notifications.length; }, [notifications.length]);
+  useEffect(() => { currentIndexRef.current = currentIndex; }, [currentIndex]);
+
+  useEffect(() => {
+    const el = pillRef.current;
+    if (!el) return;
+
+    const onStart = (e: TouchEvent) => {
+      const t = e.touches[0];
+      swipeStart.current = { x: t.clientX, y: t.clientY };
+      swipeActive.current = true;
+      dragRef.current = { x: 0, y: 0 };
+      setPressed(true);
+      clearTimers();
+      haptic(8);
+    };
+
+    const onMove = (e: TouchEvent) => {
+      if (!swipeActive.current || !swipeStart.current) return;
+      const t = e.touches[0];
+      const dx = t.clientX - swipeStart.current.x;
+      const dy = t.clientY - swipeStart.current.y;
+      dragRef.current = { x: dx, y: dy };
+      setDrag({ x: dx, y: dy });
+      // Prevent page scroll once we detect a clear gesture direction
+      if (Math.abs(dx) > 6 || Math.abs(dy) > 6) e.preventDefault();
+    };
+
+    const onEnd = () => {
+      setPressed(false);
+      swipeActive.current = false;
+      swipeStart.current = null;
+      const { x, y } = dragRef.current;
+      dragRef.current = { x: 0, y: 0 };
+
+      if (y < -SWIPE && Math.abs(y) > Math.abs(x)) {
+        setDrag({ x: 0, y: 0 });
+        haptic([10, 30, 10]);
+        dismissRef.current();
+        return;
+      }
+      if (Math.abs(x) > SWIPE && Math.abs(x) > Math.abs(y)) {
+        if (x > 0 && currentIndexRef.current > 0) setCurrentIndex(ci => ci - 1);
+        else if (x < 0 && currentIndexRef.current < notifLenRef.current - 1) setCurrentIndex(ci => ci + 1);
+        setDrag({ x: 0, y: 0 });
+        haptic(6);
+        restartHoldRef.current();
+        return;
+      }
+      setDrag({ x: 0, y: 0 });
+      if (Math.abs(x) < 8 && Math.abs(y) < 8) handleTapRef.current();
+      else restartHoldRef.current();
+    };
+
+    const onCancel = () => {
+      setPressed(false);
+      swipeActive.current = false;
+      swipeStart.current = null;
+      dragRef.current = { x: 0, y: 0 };
+      setDrag({ x: 0, y: 0 });
+      restartHoldRef.current();
+    };
+
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onEnd, { passive: true });
+    el.addEventListener('touchcancel', onCancel, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+      el.removeEventListener('touchcancel', onCancel);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Pointer handlers — desktop mouse only (touch handled above)
+  const onCollapsedPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === 'touch') return;
+    swipeStart.current = { x: e.clientX, y: e.clientY };
+    swipeActive.current = true;
+    dragRef.current = { x: 0, y: 0 };
+    setPressed(true);
+    clearTimers();
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+  };
+  const onCollapsedPointerMove = (e: React.PointerEvent) => {
+    if (e.pointerType === 'touch' || !swipeActive.current || !swipeStart.current) return;
+    const dx = e.clientX - swipeStart.current.x;
+    const dy = e.clientY - swipeStart.current.y;
     dragRef.current = { x: dx, y: dy };
     setDrag({ x: dx, y: dy });
   };
-
-  const endGesture = () => {
+  const onCollapsedPointerUp = (e: React.PointerEvent) => {
+    if (e.pointerType === 'touch') return;
     setPressed(false);
     swipeActive.current = false;
     swipeStart.current = null;
     const { x, y } = dragRef.current;
     dragRef.current = { x: 0, y: 0 };
-
-    if (y < -SWIPE && Math.abs(y) > Math.abs(x)) {
-      setDrag({ x: 0, y: 0 });
-      dismissCurrent();
-      return;
-    }
+    if (y < -SWIPE && Math.abs(y) > Math.abs(x)) { setDrag({ x: 0, y: 0 }); dismissCurrent(); return; }
     if (Math.abs(x) > SWIPE && Math.abs(x) > Math.abs(y)) {
-      if (x > 0 && currentIndex > 0) setCurrentIndex(currentIndex - 1);
-      else if (x < 0 && currentIndex < notifications.length - 1) setCurrentIndex(currentIndex + 1);
-      setDrag({ x: 0, y: 0 });
-      restartHold();
-      return;
+      if (x > 0 && currentIndex > 0) setCurrentIndex(ci => ci - 1);
+      else if (x < 0 && currentIndex < notifications.length - 1) setCurrentIndex(ci => ci + 1);
+      setDrag({ x: 0, y: 0 }); restartHold(); return;
     }
     setDrag({ x: 0, y: 0 });
-    if (Math.abs(x) < 8 && Math.abs(y) < 8) handleTap();
-    else restartHold();
-  };
-
-  const cancelGesture = () => {
-    setPressed(false);
-    swipeActive.current = false;
-    swipeStart.current = null;
-    dragRef.current = { x: 0, y: 0 };
-    setDrag({ x: 0, y: 0 });
-    restartHold();
-  };
-
-  // Touch handlers (iOS-reliable)
-  const onCollapsedTouchStart = (e: React.TouchEvent) => {
-    const t = e.touches[0];
-    startGesture(t.clientX, t.clientY);
-  };
-  const onCollapsedTouchMove = (e: React.TouchEvent) => {
-    const t = e.touches[0];
-    moveGesture(t.clientX, t.clientY);
-  };
-  const onCollapsedTouchEnd = () => endGesture();
-
-  // Pointer handlers (desktop fallback)
-  const onCollapsedPointerDown = (e: React.PointerEvent) => {
-    if (e.pointerType === 'touch') return; // handled by touch events
-    startGesture(e.clientX, e.clientY);
-    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
-  };
-  const onCollapsedPointerMove = (e: React.PointerEvent) => {
-    if (e.pointerType === 'touch') return;
-    moveGesture(e.clientX, e.clientY);
-  };
-  const onCollapsedPointerUp = (e: React.PointerEvent) => {
-    if (e.pointerType === 'touch') return;
-    endGesture();
+    if (Math.abs(x) < 8 && Math.abs(y) < 8) handleTap(); else restartHold();
   };
   const onCollapsedPointerCancel = (e: React.PointerEvent) => {
     if (e.pointerType === 'touch') return;
-    cancelGesture();
+    setPressed(false); swipeActive.current = false; swipeStart.current = null;
+    dragRef.current = { x: 0, y: 0 }; setDrag({ x: 0, y: 0 }); restartHold();
   };
 
   // Re-arm the auto-deflate hold (used after a swipe that didn't dismiss).
@@ -385,12 +433,16 @@ export const DynamicIsland = ({ appCode = 'tivi', dashId: dashIdProp = null, gue
   const handleTap = () => {
     clearTimers();
     if (!isExpanded) {
-      setIsExpanded(true); // grows to reveal detail right here
+      setIsExpanded(true);
     } else {
       setIsExpanded(false);
       restartHold();
     }
   };
+
+  // Keep effect refs in sync after functions are defined
+  useEffect(() => { handleTapRef.current = handleTap; });
+  useEffect(() => { restartHoldRef.current = restartHold; });
 
   // Manual resurface - tap header dot when notifications exist but not visible
   const handleResurface = () => {
@@ -632,15 +684,16 @@ export const DynamicIsland = ({ appCode = 'tivi', dashId: dashIdProp = null, gue
     <div className="z-20">
       <style>{`
         @keyframes di-inflate {
-          0%   { transform: scale(0.2); opacity: 0; }
-          60%  { transform: scale(1.06); opacity: 1; }
-          80%  { transform: scale(0.98); }
+          0%   { transform: scale(0.15); opacity: 0; }
+          55%  { transform: scale(1.10); opacity: 1; }
+          72%  { transform: scale(0.96); }
+          86%  { transform: scale(1.04); }
           100% { transform: scale(1); opacity: 1; }
         }
         @keyframes di-deflate {
           0%   { transform: scale(1); opacity: 1; }
-          35%  { transform: scale(1.12); opacity: 1; }
-          100% { transform: scale(0.1); opacity: 0; }
+          30%  { transform: scale(1.10); opacity: 1; }
+          100% { transform: scale(0.08); opacity: 0; }
         }
         .di-inflate { animation: di-inflate 360ms cubic-bezier(0.34,1.56,0.64,1) both; }
         .di-deflate { animation: di-deflate 320ms cubic-bezier(0.5,0,0.75,0) both; }
@@ -657,12 +710,10 @@ export const DynamicIsland = ({ appCode = 'tivi', dashId: dashIdProp = null, gue
         {!isExpanded ? (
           // ── COLLAPSED — black glass at rest, purple ONLY while pressed ──
           <div
+            ref={pillRef}
             key="collapsed"
             className="cursor-pointer select-none touch-none"
             style={{ transform: dragTransform, transition: dragTransform ? 'none' : 'transform 220ms cubic-bezier(0.34,1.56,0.64,1)' }}
-            onTouchStart={onCollapsedTouchStart}
-            onTouchMove={onCollapsedTouchMove}
-            onTouchEnd={onCollapsedTouchEnd}
             onPointerDown={onCollapsedPointerDown}
             onPointerMove={onCollapsedPointerMove}
             onPointerUp={onCollapsedPointerUp}
@@ -678,9 +729,11 @@ export const DynamicIsland = ({ appCode = 'tivi', dashId: dashIdProp = null, gue
                 transition: 'background 200ms ease, border-color 200ms ease, box-shadow 200ms ease',
                 background: pressed
                   ? 'linear-gradient(110deg, #5b21b6 0%, #7c3aed 35%, #a78bfa 55%, #7c3aed 75%, #5b21b6 100%)'
-                  : 'rgba(0,0,0,0.55)',
-                borderColor: pressed ? 'rgba(216,180,254,0.55)' : 'rgba(255,255,255,0.10)',
-                boxShadow: pressed ? '0 0 18px rgba(139,92,246,0.45)' : 'none',
+                  : 'rgba(0,0,0,0.72)',
+                borderColor: pressed ? 'rgba(216,180,254,0.55)' : 'rgba(255,255,255,0.12)',
+                boxShadow: pressed
+                  ? '0 0 22px rgba(139,92,246,0.55), 0 4px 24px rgba(0,0,0,0.5)'
+                  : '0 2px 16px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04)',
               }}
             >
               {/* Type dot — turns white over the purple pressed skin */}
