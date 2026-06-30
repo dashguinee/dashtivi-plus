@@ -1049,7 +1049,7 @@ export const VideoPlayer: React.FC<Props> = ({
       {/* Permanent ambient aurora tint — always on for live channels, very soft.
           The controls gradient (below) blooms stronger on tap; this is the baseline. */}
       {!isVod && !showCinemaIntro && !postCinemaBlackout && (
-        <div className="player-ambient-tint absolute bottom-0 left-0 right-0 h-[20%] z-[19] pointer-events-none" />
+        <div className="player-ambient-tint absolute bottom-0 left-0 right-0 h-[7%] z-[19] pointer-events-none" />
       )}
 
       {/* Controls overlay — hidden during cinema intro and post-cinema blackout.
