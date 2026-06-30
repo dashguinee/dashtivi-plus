@@ -1383,33 +1383,87 @@ function LandscapeGenreBar({
   hasSibling?: boolean;
 }) {
   const themes = [
-    { id: 'sports',        name: 'Sports',        gradient: 'from-red-500 to-orange-700' },
-    { id: 'news',          name: 'News',           gradient: 'from-blue-500 to-sky-700' },
-    { id: 'entertainment', name: 'Entertainment',  gradient: 'from-purple-500 to-violet-700' },
-    { id: 'kids',          name: 'Kids',           gradient: 'from-pink-500 to-rose-600' },
-    { id: 'movies247',     name: 'Movies',         gradient: 'from-red-500 to-rose-700' },
-    { id: 'documentary',   name: 'Discovery',      gradient: 'from-blue-500 to-indigo-700' },
-    { id: 'music',         name: 'Music',           gradient: 'from-fuchsia-500 to-pink-700' },
+    { id: 'sports',        name: 'Sports' },
+    { id: 'news',          name: 'News' },
+    { id: 'entertainment', name: 'Entertainment' },
+    { id: 'kids',          name: 'Kids' },
+    { id: 'movies247',     name: 'Movies' },
+    { id: 'documentary',   name: 'Discovery' },
+    { id: 'music',         name: 'Music' },
   ];
 
-  // Only visible in fullscreen live mode
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const pillRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [focusIdx, setFocusIdx] = useState(0);
+  const rafRef = useRef(0);
+
+  // Dismissed by swipe-down — resets whenever the bar becomes visible again
+  const [dismissed, setDismissed] = useState(false);
+  useEffect(() => { if (visible) setDismissed(false); }, [visible]);
+
+  // Track focused pill based on scroll position
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const update = () => {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        const containerRect = el.getBoundingClientRect();
+        const center = containerRect.left + containerRect.width / 2;
+        let bestIdx = 0, bestDist = Infinity;
+        pillRefs.current.forEach((pill, i) => {
+          if (!pill) return;
+          const r = pill.getBoundingClientRect();
+          const dist = Math.abs((r.left + r.width / 2) - center);
+          if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+        });
+        setFocusIdx(bestIdx);
+      });
+    };
+    el.addEventListener('scroll', update, { passive: true });
+    update(); // run once on mount
+    return () => { el.removeEventListener('scroll', update); cancelAnimationFrame(rafRef.current); };
+  }, []);
+
+  // Swipe-down to dismiss — non-passive so we can prevent scroll bleed
+  const swipeDownRef = useRef<{ startY: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const onStart = (e: TouchEvent) => { swipeDownRef.current = { startY: e.touches[0].clientY }; };
+    const onMove = (e: TouchEvent) => {
+      if (!swipeDownRef.current) return;
+      const dy = e.touches[0].clientY - swipeDownRef.current.startY;
+      if (dy > 8) e.preventDefault(); // prevent page scroll during downward intent
+    };
+    const onEnd = (e: TouchEvent) => {
+      if (!swipeDownRef.current) return;
+      const dy = e.changedTouches[0].clientY - swipeDownRef.current.startY;
+      swipeDownRef.current = null;
+      if (dy > 36) setDismissed(true);
+    };
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onEnd, { passive: true });
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+    };
+  }, []);
+
   if (!isFullscreen || !isLive) return null;
 
-  const handlePill = (themeId: string) => {
-    if (onGenreSwitch) {
-      onGenreSwitch(themeId);
-    } else {
-      // No-op: brief visual flash handled via CSS active state
-    }
-  };
+  const isShown = visible && !dismissed;
 
   return (
     <div
+      ref={containerRef}
       className={`absolute left-0 right-0 z-30 transition-[opacity,transform] duration-300
-                  ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}
+                  ${isShown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'}`}
       style={{ bottom: hasSibling ? 130 : 70, transition: 'opacity 300ms, transform 300ms, bottom 300ms' }}
     >
-      {/* Glass container */}
       <div
         className="mx-3 rounded-xl px-1 py-2 flex justify-center"
         style={{
@@ -1423,25 +1477,33 @@ function LandscapeGenreBar({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Fade masks hide sharp pill clip at scroll edges */}
         <div
           className="relative overflow-hidden"
           style={{ maskImage: 'linear-gradient(to right, transparent 0px, black 14px, black calc(100% - 14px), transparent 100%)' }}
         >
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide px-3">
-          {themes.map((theme) => (
-            <button
-              key={theme.id}
-              onClick={() => handlePill(theme.id)}
-              className={`flex-shrink-0 text-[12px] px-4 py-2 rounded-full font-medium
-                          transition-[transform,color,border-color] duration-300 active:scale-95
-                          bg-black/30 backdrop-blur-sm text-white/50 border border-white/[0.08]
-                          hover:text-white/80 hover:border-white/20`}
-            >
-              {theme.name}
-            </button>
-          ))}
-        </div>
+          <div ref={scrollRef} className="flex gap-2 overflow-x-auto scrollbar-hide px-3">
+            {themes.map((theme, i) => {
+              const isFocal = i === focusIdx;
+              return (
+                <button
+                  key={theme.id}
+                  ref={el => { pillRefs.current[i] = el; }}
+                  onClick={() => { if (onGenreSwitch) onGenreSwitch(theme.id); }}
+                  style={{
+                    transform: isFocal ? 'scale(1.12)' : 'scale(0.92)',
+                    transition: 'transform 250ms cubic-bezier(0.34,1.56,0.64,1), opacity 250ms, color 250ms, border-color 250ms',
+                  }}
+                  className={`flex-shrink-0 text-[12px] px-4 py-2 rounded-full font-medium active:scale-95
+                              bg-black/30 backdrop-blur-sm border
+                              ${isFocal
+                                ? 'text-white border-white/30'
+                                : 'text-white/40 border-white/[0.06]'}`}
+                >
+                  {theme.name}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
