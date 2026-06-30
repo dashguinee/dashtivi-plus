@@ -1462,7 +1462,7 @@ function LandscapeGenreBar({
       ref={containerRef}
       className={`absolute left-0 right-0 z-30 transition-[opacity,transform] duration-300
                   ${isShown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'}`}
-      style={{ bottom: hasSibling ? 130 : 70, transition: 'opacity 300ms, transform 300ms, bottom 300ms' }}
+      style={{ bottom: hasSibling ? 130 : 48, transition: 'opacity 300ms, transform 300ms, bottom 300ms' }}
     >
       <div
         className="mx-3 rounded-xl px-1 py-2 flex justify-center"
@@ -1471,7 +1471,7 @@ function LandscapeGenreBar({
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           border: '1px solid rgba(255, 255, 255, 0.06)',
-          transform: hasSibling ? undefined : 'scale(1.2)',
+          transform: hasSibling ? undefined : 'scale(1.15)',
           transformOrigin: 'bottom center',
           transition: 'transform 300ms',
         }}
