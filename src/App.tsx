@@ -707,7 +707,7 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
         <video
           ref={player.videoRef as React.RefObject<HTMLVideoElement>}
           className={showFullPlayer && player.state.channel
-            ? `fixed inset-0 z-50 w-full h-full object-contain bg-black transition-[filter,transform] duration-500 ${
+            ? `fixed inset-0 z-50 w-full h-full object-cover bg-black transition-[filter,transform] duration-500 ${
                 player.state.isLoading && !player.state.isPlaying ? 'blur-sm scale-[1.01]' : ''
               }`
             : player.state.channel
@@ -732,7 +732,7 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
             src={player.switchSnapshot}
             alt=""
             aria-hidden="true"
-            className="fixed inset-0 z-50 w-full h-full object-contain bg-black pointer-events-none transition-opacity duration-300"
+            className="fixed inset-0 z-50 w-full h-full object-cover bg-black pointer-events-none transition-opacity duration-300"
             style={{
               filter: 'blur(14px) brightness(0.7)',
               transform: 'scale(1.06)',

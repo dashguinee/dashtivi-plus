@@ -550,7 +550,7 @@ export const VideoPlayer: React.FC<Props> = ({
       // Auto-hide only while actively watching — never mid-switch (controls must
       // stay sharp on top through the whole transition).
       if (isPlayingRef.current && !isSwitchingRef.current) setControlsVisible(false);
-    }, 4500);
+    }, 3000);
   }, [pokeSuggestions]);
 
   // Controls lifecycle:
@@ -1401,11 +1401,11 @@ function LandscapeGenreBar({
     <div
       className={`absolute left-0 right-0 z-30 transition-[opacity,transform] duration-300
                   ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}
-      style={{ bottom: hasSibling ? 130 : 92, transition: 'opacity 300ms, transform 300ms, bottom 300ms' }}
+      style={{ bottom: hasSibling ? 130 : 70, transition: 'opacity 300ms, transform 300ms, bottom 300ms' }}
     >
       {/* Glass container */}
       <div
-        className="mx-4 rounded-2xl px-3 py-2 flex justify-center"
+        className="mx-3 rounded-xl px-1 py-2 flex justify-center"
         style={{
           background: 'rgba(0, 0, 0, 0.4)',
           backdropFilter: 'blur(12px)',
@@ -1417,12 +1417,17 @@ function LandscapeGenreBar({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+        {/* Fade masks hide sharp pill clip at scroll edges */}
+        <div
+          className="relative overflow-hidden"
+          style={{ maskImage: 'linear-gradient(to right, transparent 0px, black 14px, black calc(100% - 14px), transparent 100%)' }}
+        >
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide px-3">
           {themes.map((theme) => (
             <button
               key={theme.id}
               onClick={() => handlePill(theme.id)}
-              className={`flex-shrink-0 text-[10px] px-3 py-1.5 rounded-full font-medium
+              className={`flex-shrink-0 text-[12px] px-4 py-2 rounded-full font-medium
                           transition-[transform,color,border-color] duration-300 active:scale-95
                           bg-black/30 backdrop-blur-sm text-white/50 border border-white/[0.08]
                           hover:text-white/80 hover:border-white/20`}
@@ -1430,6 +1435,7 @@ function LandscapeGenreBar({
               {theme.name}
             </button>
           ))}
+        </div>
         </div>
       </div>
     </div>
