@@ -7,10 +7,12 @@ import type { Channel } from '@/types';
 
 let _playlist: Channel[] = [];
 let _currentId: string | null = null;
+let _playlistVersion = 0; // increments ONLY when the list itself changes, not on channel switch
 const _listeners = new Set<() => void>();
 
 export function setPlaylist(channels: Channel[]) {
   _playlist = channels;
+  _playlistVersion++;
   notify();
 }
 
@@ -46,11 +48,22 @@ export function useAdjacentChannels() {
 
 /** React hook — full playlist + current ID for the channel carousel */
 export function usePlaylistState() {
-  const [state, setState] = useState({ channels: _playlist, currentId: _currentId });
+  const [state, setState] = useState(() => ({
+    channels: _playlist,
+    currentId: _currentId,
+    _v: _playlistVersion,
+  }));
   useEffect(() => {
-    const fn = () => setState({ channels: [..._playlist], currentId: _currentId });
+    const fn = () => setState(prev => ({
+      // Only create a new array when the playlist content changed (version bump).
+      // On a plain channel switch, version is unchanged → same ref → ChannelCarousel
+      // children see identical props → React skips re-rendering all 600 items.
+      channels: prev._v === _playlistVersion ? prev.channels : [..._playlist],
+      currentId: _currentId,
+      _v: _playlistVersion,
+    }));
     _listeners.add(fn);
     return () => { _listeners.delete(fn); };
   }, []);
-  return state;
+  return { channels: state.channels, currentId: state.currentId };
 }

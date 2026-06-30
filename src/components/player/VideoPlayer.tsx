@@ -1513,6 +1513,16 @@ function ChannelCarousel({
               <button
                 key={ch.id}
                 data-chid={ch.id}
+                onPointerDown={() => {
+                  // Pre-warm the HLS manifest on first touch — by the time the player
+                  // is created (~100ms later), the 1KB .m3u8 is already in browser cache.
+                  // Never fire on proxy .ts streams (would start VPS transcoding early).
+                  if (!isCurrent && ch.url?.includes('.m3u8')) {
+                    fetch(ch.url, { signal: AbortSignal.timeout(3000) })
+                      .then(r => r.body?.cancel())
+                      .catch(() => {});
+                  }
+                }}
                 onClick={() => { if (!isCurrent) onSwitch(ch); }}
                 className={`flex-shrink-0 flex items-center gap-1.5 pl-1 pr-2.5 py-1.5 rounded-xl transition-[transform,background-color,border-color,box-shadow] duration-300
                   ${isCurrent
