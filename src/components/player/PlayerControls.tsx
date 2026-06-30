@@ -162,22 +162,20 @@ export const PlayerControls: React.FC<Props> = ({
         </button>
       </div>
 
-      {/* Center play button — ghost for live TV, visible for VOD */}
+      {/* Center play button — VOD only. Live uses hold gesture on the video surface. */}
       <div className="flex-1 flex items-center justify-center">
-        <button
-          onClick={onTogglePlay}
-          className={`rounded-full flex items-center justify-center transition-[transform,background-color,box-shadow] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-90 ${
-            isVod
-              ? 'w-16 h-16 bg-primary/80 backdrop-blur-sm hover:bg-primary hover:scale-105 shadow-lg shadow-primary/30'
-              : 'w-12 h-12 bg-white/[0.07] hover:bg-white/[0.12]'
-          }`}
-        >
-          {state.isPlaying ? (
-            <Pause className={isVod ? 'w-8 h-8 text-white' : 'w-5 h-5 text-white/30'} />
-          ) : (
-            <Play className={isVod ? 'w-8 h-8 text-white ml-1' : 'w-5 h-5 text-white/30 ml-0.5'} />
-          )}
-        </button>
+        {isVod && (
+          <button
+            onClick={onTogglePlay}
+            className="w-16 h-16 rounded-full flex items-center justify-center bg-primary/80 backdrop-blur-sm hover:bg-primary hover:scale-105 shadow-lg shadow-primary/30 transition-[transform,background-color,box-shadow] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-90"
+          >
+            {state.isPlaying ? (
+              <Pause className="w-8 h-8 text-white" />
+            ) : (
+              <Play className="w-8 h-8 text-white ml-1" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* Bottom controls */}
@@ -230,20 +228,20 @@ export const PlayerControls: React.FC<Props> = ({
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {/* Play/Pause — ghost on live, visible on VOD */}
-            <button
-              onClick={onTogglePlay}
-              className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${
-                isVod ? 'hover:bg-white/10' : 'hover:bg-white/5'
-              }`}
-              aria-label={state.isPlaying ? 'Pause' : 'Play'}
-            >
-              {state.isPlaying ? (
-                <Pause className={isVod ? 'w-5 h-5' : 'w-4 h-4 text-white/20'} />
-              ) : (
-                <Play className={isVod ? 'w-5 h-5 ml-0.5' : 'w-4 h-4 text-white/20 ml-0.5'} />
-              )}
-            </button>
+            {/* Play/Pause — VOD only. Live: hold gesture on video surface (no button). */}
+            {isVod && (
+              <button
+                onClick={onTogglePlay}
+                className="w-11 h-11 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
+                aria-label={state.isPlaying ? 'Pause' : 'Play'}
+              >
+                {state.isPlaying ? (
+                  <Pause className="w-5 h-5" />
+                ) : (
+                  <Play className="w-5 h-5 ml-0.5" />
+                )}
+              </button>
+            )}
 
             {/* Volume */}
             <div

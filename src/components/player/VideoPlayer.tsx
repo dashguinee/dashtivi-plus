@@ -161,14 +161,82 @@ export const VideoPlayer: React.FC<Props> = ({
     onDrag: setSurfDragX,
   });
 
+  // ── Live hold-to-freeze + smart catch-up ──────────────────────────────────
+  // Hold (500ms) on live → freezes frame. Release:
+  //   < 8s held → 2x playback catch-up to live edge, then back to 1x (replay the blink)
+  //   > 8s held → jump directly to live edge (too much to replay)
+  const liveHoldTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const liveHoldActiveRef = useRef(false);
+  const liveHoldStartRef = useRef(0);
+  const liveCatchupTimerRef = useRef<ReturnType<typeof setInterval>>();
+  const [liveHolding, setLiveHolding] = useState(false);
+  const [liveCatchingUp, setLiveCatchingUp] = useState(false);
+
+  // Poll while catching up: detect when we've reached the live edge and restore 1x.
+  const startCatchup = useCallback((v: HTMLVideoElement) => {
+    setLiveCatchingUp(true);
+    v.playbackRate = 2.0;
+    liveCatchupTimerRef.current = setInterval(() => {
+      if (!v || v.paused) { clearInterval(liveCatchupTimerRef.current); setLiveCatchingUp(false); return; }
+      const buffEnd = v.buffered.length > 0 ? v.buffered.end(v.buffered.length - 1) : 0;
+      // Caught up = within 1.5s of the buffered edge
+      if (buffEnd > 0 && buffEnd - v.currentTime < 1.5) {
+        v.playbackRate = 1.0;
+        clearInterval(liveCatchupTimerRef.current);
+        setLiveCatchingUp(false);
+      }
+    }, 250);
+  }, []);
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
     tapStartRef.current = { x: touch.clientX, y: touch.clientY };
-  }, []);
+    if (!isVod) {
+      liveHoldActiveRef.current = false;
+      clearTimeout(liveHoldTimerRef.current);
+      liveHoldTimerRef.current = setTimeout(() => {
+        liveHoldActiveRef.current = true;
+        liveHoldStartRef.current = Date.now();
+        setLiveHolding(true);
+        videoRef.current?.pause();
+      }, 500);
+    }
+  }, [isVod, videoRef]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isVod && !liveHoldActiveRef.current && liveHoldTimerRef.current) {
+      const start = tapStartRef.current;
+      const touch = e.touches[0];
+      if (start && (Math.abs(touch.clientX - start.x) > 15 || Math.abs(touch.clientY - start.y) > 15)) {
+        clearTimeout(liveHoldTimerRef.current); // swipe detected — cancel the hold
+      }
+    }
+  }, [isVod]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    clearTimeout(liveHoldTimerRef.current);
     const start = tapStartRef.current;
     tapStartRef.current = null;
+
+    if (!isVod && liveHoldActiveRef.current) {
+      liveHoldActiveRef.current = false;
+      setLiveHolding(false);
+      const heldMs = Date.now() - liveHoldStartRef.current;
+      const v = videoRef.current;
+      if (v) {
+        const buffEnd = v.buffered.length > 0 ? v.buffered.end(v.buffered.length - 1) : 0;
+        if (heldMs < 8000 && buffEnd > 0) {
+          // Short hold: 2x catch-up to live edge, then restore 1x
+          v.play().then(() => startCatchup(v)).catch(() => {});
+        } else {
+          // Long hold: jump straight to live edge
+          try { if (buffEnd > 0) v.currentTime = buffEnd; } catch { /* ignore */ }
+          v.play().catch(() => {});
+        }
+      }
+      return;
+    }
+
     // VOD double-tap seek (the only touch gesture VideoPlayer still owns —
     // channel surfing is handled by useSwipeSurf via pointer events).
     if (!isVod || !start) return;
@@ -607,6 +675,7 @@ export const VideoPlayer: React.FC<Props> = ({
       style={{ touchAction: 'manipulation' }}
       onMouseMove={showControls}
       onTouchStart={(e) => { showControls(); handleTouchStart(e); }}
+      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onPointerDown={surfHandlers.onPointerDown}
       onPointerMove={surfHandlers.onPointerMove}
@@ -723,6 +792,35 @@ export const VideoPlayer: React.FC<Props> = ({
             <svg width="14" height="14" viewBox="0 0 14 14" fill="white"><rect x="2" y="1" width="3.5" height="12" rx="1"/><rect x="8.5" y="1" width="3.5" height="12" rx="1"/></svg>
           </button>
         </>
+      )}
+
+      {/* Live hold indicator */}
+      {(liveHolding || liveCatchingUp) && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div style={{
+            background: 'rgba(5,3,15,0.55)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            borderRadius: 20,
+            padding: '10px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            border: '1px solid rgba(255,255,255,0.10)',
+          }}>
+            {liveHolding ? (
+              <>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
+                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 500, letterSpacing: '0.02em' }}>PAUSED — release to catch up</span>
+              </>
+            ) : (
+              <>
+                <span style={{ color: '#a855f7', fontSize: 14 }}>▶▶</span>
+                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 500, letterSpacing: '0.02em' }}>Catching up to live…</span>
+              </>
+            )}
+          </div>
+        </div>
       )}
 
       {seekIndicator && (
