@@ -30,6 +30,7 @@ let targetSpeed = 0.8;
 let transitionInterval: ReturnType<typeof setInterval> | null = null;
 let isEnabled = false;
 let isMutedForStream = false;
+let inPlayer = false; // currently inside the video player
 
 const VPS = 'https://stream.zionsynapse.online/ambient';
 
@@ -64,7 +65,12 @@ const STORAGE_KEY = 'tivi_ambient_enabled';
 // ── Session volume envelope levels (all tunable — owner dials the feel) ──
 const ENTRY_VOLUME = 0.32;   // warm welcome on first start
 const CRUISE_VOLUME = 0.20;  // settled level after the first play / one cycle
-const STREAM_DUCK = 0.0;     // near-silence under the player (no leak)
+
+// Player ambient levels — the ambient "guides" you, then retreats into the content.
+const PLAYER_GUIDE = 0.22;   // controls visible: soft guiding presence
+const PLAYER_LIVE  = 0.14;   // controls hidden + live: atmospheric residue
+const PLAYER_VOD   = 0.05;   // controls hidden + VOD: near silence
+const STREAM_DUCK  = 0.0;    // legacy — kept for non-ambient-aware callers
 
 // `targetVolume` is the LIVE envelope base. The swing breathes ±10% around it,
 // and every fade resolves to it. Starts at ENTRY, eases to CRUISE, recycles.
@@ -89,6 +95,21 @@ let cruiseTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function isAmbientEnabled(): boolean {
   try { return localStorage.getItem(STORAGE_KEY) !== 'off'; } catch { return true; }
+}
+
+/**
+ * Called by VideoPlayer whenever controlsVisible or isVod changes.
+ * Drives the "guiding presence" pattern:
+ *   controls show  → fade to PLAYER_GUIDE (soft guide)
+ *   controls hide  → fade to PLAYER_LIVE (live) or PLAYER_VOD (movie/series)
+ * The ~ button on/off gates this entire behavior.
+ */
+export function setAmbientPlayerState(controlsVisible: boolean, isVod: boolean): void {
+  if (!audio || !isEnabled) return;
+  inPlayer = true;
+  const target = controlsVisible ? PLAYER_GUIDE : (isVod ? PLAYER_VOD : PLAYER_LIVE);
+  isMutedForStream = true; // keep swing paused
+  fadeVolume(audio.volume, target, controlsVisible ? 1200 : 3500, undefined, true);
 }
 
 export function initAmbient(): void {
@@ -198,17 +219,20 @@ export function setAmbientSpeed(speed: number): void {
 export function muteAmbient(): void {
   if (!audio) return;
   isMutedForStream = true;
+  inPlayer = true;
   // First channel play = the session has begun in earnest → settle to cruise.
   enterCruise();
   if (transitionInterval) { clearInterval(transitionInterval); transitionInterval = null; }
-  // Long, eased fade to near-silence (fadeVolume clears any prior fade itself).
-  fadeVolume(audio.volume, STREAM_DUCK, STREAM_FADE_MS, undefined, true);
+  // Start at PLAYER_GUIDE — controls are visible on first open.
+  // setAmbientPlayerState() will refine as controls show/hide.
+  fadeVolume(audio.volume, PLAYER_GUIDE, STREAM_FADE_MS, undefined, true);
 }
 
 // Player EXIT — fade the ambient back UP smoothly to the current envelope target.
 export function unmuteAmbient(): void {
   if (!audio || !isEnabled) return;
   isMutedForStream = false;
+  inPlayer = false;
   // If the track ran out while ducked, advance to the next one before resuming.
   if (audio.ended || (audio.duration > 0 && audio.currentTime >= audio.duration - 0.05)) {
     rotationIndex = (rotationIndex + 1) % HOME_ROTATION.length;

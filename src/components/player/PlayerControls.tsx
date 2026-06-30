@@ -41,6 +41,9 @@ interface Props {
   hasSubs?: boolean;
   subsOn?: boolean;
   onToggleSubs?: () => void;
+  isSports?: boolean;
+  ambientOn?: boolean;
+  onToggleAmbient?: () => void;
 }
 
 export const PlayerControls: React.FC<Props> = ({
@@ -58,6 +61,9 @@ export const PlayerControls: React.FC<Props> = ({
   hasSubs,
   subsOn,
   onToggleSubs,
+  isSports,
+  ambientOn,
+  onToggleAmbient,
 }) => {
   const [showVolume, setShowVolume] = useState(false);
   const volumeRef = useRef<HTMLDivElement>(null);
@@ -323,8 +329,6 @@ export const PlayerControls: React.FC<Props> = ({
                 }}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-full ml-2 bg-white/[0.03] border transition-[transform,border-color,background-color] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95"
                 style={{
-                  // Color law: PRIMARY only. Full strength = best flow (AUTO/Source),
-                  // dimmer = degraded — quiet status, never a cyan/orange shout.
                   borderColor: (state.quality?.startsWith('AUTO') || state.quality?.startsWith('Source'))
                     ? 'rgba(157,78,221,0.3)'
                     : 'rgba(157,78,221,0.2)',
@@ -335,6 +339,21 @@ export const PlayerControls: React.FC<Props> = ({
                 <span className="text-[10px] font-semibold tracking-wide text-primary-light">
                   {state.quality || 'AUTO'}
                 </span>
+              </button>
+            )}
+
+            {/* ~ Ambient toggle — subtle wave icon, lives next to FLOW */}
+            {onToggleAmbient && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onToggleAmbient(); }}
+                className="flex items-center justify-center w-7 h-7 rounded-full ml-1 transition-[opacity,background-color] duration-300 active:scale-90"
+                style={{
+                  background: ambientOn ? 'rgba(157,78,221,0.12)' : 'transparent',
+                  opacity: ambientOn ? 1 : 0.35,
+                }}
+                title="Ambient sound"
+              >
+                <Waves className="w-3.5 h-3.5 text-primary-light" strokeWidth={1.8} />
               </button>
             )}
           </div>

@@ -11,6 +11,7 @@ import {
   accentForExperience,
 } from '@/lib/catalog';
 import { tap } from '@/lib/haptics';
+import { setAmbientPlayerState, toggleAmbient, isAmbientEnabled } from '@/lib/ambient-audio';
 import { useLanguage } from '@/i18n';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
 import { SmartMatch } from './SmartMatch';
@@ -93,6 +94,14 @@ export const VideoPlayer: React.FC<Props> = ({
   const [seekDirection, setSeekDirection] = useState<'forward' | 'backward'>('forward');
 
   const isVod = detectVod(state);
+
+  // Ambient breathing layer — guides on control show, retreats on hide
+  const [ambientOn, setAmbientOn] = useState(() => isAmbientEnabled());
+  useEffect(() => {
+    if (!ambientOn) return;
+    setAmbientPlayerState(controlsVisible, isVod);
+  }, [controlsVisible, isVod, ambientOn]);
+
   // ── Live continuity (Bug #1) ──────────────────────────────────────────────
   // The player chrome (channel carousel, edge arrows, corner hints, SmartMatch,
   // landscape genre bar, EPG) used to gate on `url.includes('/live?')`. Premium
@@ -1073,6 +1082,11 @@ export const VideoPlayer: React.FC<Props> = ({
             hasSubs={hasSubs}
             subsOn={subsOn}
             onToggleSubs={toggleSubs}
+            ambientOn={ambientOn}
+            onToggleAmbient={() => {
+              const next = toggleAmbient();
+              setAmbientOn(next);
+            }}
           />
         </div>
       )}
