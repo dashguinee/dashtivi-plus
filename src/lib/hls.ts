@@ -28,10 +28,15 @@ export async function createMpegTsPlayer(
   }, {
     enableWorker: true,
     enableStashBuffer: true,
-    stashInitialSize: 384,
+    stashInitialSize: 512,              // was 384 — slightly more initial buffer
     liveBufferLatencyChasing: true,
-    liveBufferLatencyMaxLatency: 6.0,
-    liveBufferLatencyMinRemain: 1.5,
+    liveBufferLatencyMaxLatency: 7.0,  // was 6.0 — more cushion before chasing live edge
+    liveBufferLatencyMinRemain: 2.0,   // was 1.5 — keep a bit more buffer before catch-up
+    // Prevents memory growth on long sessions (30+ min). Without this the SourceBuffer
+    // keeps accumulating decoded frames → sluggish video/audio decoder over time.
+    autoCleanupSourceBuffer: true,
+    autoCleanupMinBackwardDuration: 30,
+    autoCleanupMaxBackwardDuration: 60,
   });
 
   player.attachMediaElement(videoEl);
@@ -87,15 +92,17 @@ export async function createHlsPlayer(
     lowLatencyMode: false,
     progressive: true,
     testBandwidth: true,
-    startLevel: 0,
+    startLevel: -1,                    // was 0 — auto-select best quality at start (ABR-driven)
     capLevelToPlayerSize: true,
     startFragPrefetch: true,
-    abrEwmaDefaultEstimate: 300_000,
+    // was 300_000 (300kbps) — caused HLS to always start at lowest quality then climb.
+    // 2Mbps default = jump straight to good quality on typical DASH member connections.
+    abrEwmaDefaultEstimate: 2_000_000,
     abrEwmaFastLive: 2.0,
     abrEwmaSlowLive: 6.0,
     abrEwmaFastVoD: 2.0,
     abrEwmaSlowVoD: 6.0,
-    abrBandWidthUpFactor: 0.7,
+    abrBandWidthUpFactor: 0.82,        // was 0.70 — upgrade quality less conservatively
     abrBandWidthFactor: 0.8,
     // ── Pre-buffer: deeper cushion so transient network dips don't surface as stalls.
     // Soft target 60s (was 45); hard ceiling kept at 120s to bound memory on low-end
@@ -103,7 +110,7 @@ export async function createHlsPlayer(
     maxBufferLength: 60,
     maxMaxBufferLength: 120,
     backBufferLength: 12,
-    maxBufferHole: 1.5,
+    maxBufferHole: 0.5,                // was 1.5 — patch gaps faster → fewer micro-freezes
     maxStarvationDelay: 4,
     maxLoadingDelay: 2,
     // ── Auto-heal small stalls: let hls.js nudge the playhead more before giving up.
