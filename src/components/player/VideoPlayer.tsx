@@ -891,10 +891,10 @@ export const VideoPlayer: React.FC<Props> = ({
                 <p className="text-[13px] text-white/85 font-medium tracking-wide max-w-xs text-center line-clamp-1 px-4">
                   {state.channel?.name || '…'}
                 </p>
-                {/* Reassurance on weak networks — appears after a beat so a fast connect never shows it. */}
+                {/* Only surfaces on genuinely slow connections — 4s delay means fast switches never see it. */}
                 <p className="text-[11px] text-white/40 text-center -mt-1.5"
-                   style={{ animation: 'fade-in 0.6s ease-out 2s both' }}>
-                  Slow connection? Check your network.
+                   style={{ animation: 'fade-in 0.6s ease-out 4s both' }}>
+                  Flow is finding you…
                 </p>
               </div>
             )}
