@@ -1,5 +1,5 @@
 import React, { useCallback, useRef } from 'react';
-import { Play, Pause, X, Maximize2 } from 'lucide-react';
+import { Play, X, Maximize2 } from 'lucide-react';
 import type { Channel, PlayerState } from '@/types';
 import { useAdjacentChannels, setCurrentChannel } from '@/lib/playlist';
 import { useSwipeSurf } from '@/hooks/useSwipeSurf';
@@ -154,17 +154,15 @@ export const MiniPlayer: React.FC<Props> = ({
 
         {/* Top scrim + controls — play/pause, expand, close, overlaid compactly. */}
         <div className="absolute top-0 inset-x-0 z-20 flex items-start justify-end gap-1 p-1.5 bg-gradient-to-b from-black/60 via-black/20 to-transparent pointer-events-none">
-          <button
-            onClick={onTogglePlay}
-            aria-label={state.isPlaying ? 'Pause' : 'Play'}
-            className="pointer-events-auto w-8 h-8 rounded-full bg-primary/30 backdrop-blur-sm flex items-center justify-center hover:bg-primary/45 transition-colors"
-          >
-            {state.isPlaying ? (
-              <Pause className="w-4 h-4 text-primary-light" />
-            ) : (
+          {!state.isPlaying && (
+            <button
+              onClick={onTogglePlay}
+              aria-label="Play"
+              className="pointer-events-auto w-8 h-8 rounded-full bg-primary/30 backdrop-blur-sm flex items-center justify-center hover:bg-primary/45 transition-colors"
+            >
               <Play className="w-4 h-4 text-primary-light ml-0.5" />
-            )}
-          </button>
+            </button>
+          )}
           <button
             onClick={onExpand}
             aria-label="Expand"

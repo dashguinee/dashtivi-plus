@@ -1,0 +1,5357 @@
+{
+ "ts": "2026-06-29T19:25:41.581Z",
+ "total": 552,
+ "done": 552,
+ "summary": {
+  "healthy": 108,
+  "no_audio": 8,
+  "weak": 12,
+  "dead": 424
+ },
+ "results": {
+  "L11": {
+   "name": "beIN Sport Max 4K",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "747283",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 6109,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L19": {
+   "name": "beIN Sports Max 1",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "744523",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5999,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L20": {
+   "name": "beIN Sports Max 2",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "744524",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 6689,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L21": {
+   "name": "beIN Sports Max 3",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "744525",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4075,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L22": {
+   "name": "beIN Sports Max 4",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "744526",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4409,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L23": {
+   "name": "beIN Sports Max 5",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "744527",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4441,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L24": {
+   "name": "beIN Sports Max 6",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "744528",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4263,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L3": {
+   "name": "Fusball TV 1 World Cup 2026 [HD]",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "742610",
+   "status": "weak",
+   "reason": "slow / buffering (7841ms)",
+   "ms": 7841,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L4": {
+   "name": "Fusball TV 2 World Cup 2026 [HD]",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "742611",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 6837,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L5": {
+   "name": "Ss World Cup Central",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "745149",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 1099
+  },
+  "L6": {
+   "name": "Ss World Cup Pass",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "745195",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 1072
+  },
+  "L1": {
+   "name": "Super Sports Fifa",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "741566",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3088,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L2": {
+   "name": "Unite8 Sports 1 HD",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "741567",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3839,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L7": {
+   "name": "Unite8 Sports 2 HD",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "745202",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 1063
+  },
+  "L1083": {
+   "name": "beIN Sports English 1",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "652345",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 2852,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L1084": {
+   "name": "beIN Sports English 2",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "652346",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5090,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L1085": {
+   "name": "beIN Sports French HD1",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "652347",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12882
+  },
+  "L1086": {
+   "name": "beIN Sports French HD2",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "652348",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12901
+  },
+  "L1074": {
+   "name": "beIN Sports HD4",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "652336",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3881,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L1075": {
+   "name": "beIN Sports HD5",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "652337",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4748,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L1076": {
+   "name": "beIN Sports HD6",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "652338",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3398,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L931": {
+   "name": "Dstv : SuperSport Action .",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "157948",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4620,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L919": {
+   "name": "Dstv : SuperSport Tennis",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "7603",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3376,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L926": {
+   "name": "Dstv : Supersports Football .",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "157942",
+   "status": "no_audio",
+   "reason": "video only, no audio",
+   "ms": 3046,
+   "res": "1280x720",
+   "vcodec": "h264"
+  },
+  "L927": {
+   "name": "Dstv : Supersports Football Plus",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "157943",
+   "status": "no_audio",
+   "reason": "video only, no audio",
+   "ms": 3184,
+   "res": "1280x720",
+   "vcodec": "h264"
+  },
+  "L925": {
+   "name": "Dstv : Supersports Laliga .",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "157941",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3219,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L924": {
+   "name": "Dstv : Supersports Premier League .",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "157940",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3650,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L928": {
+   "name": "Dstv : Supersports PSL .",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "157944",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3079,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L935": {
+   "name": "Dstv : Supersports Variety 2 .",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "157952",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4051,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L176": {
+   "name": "Eurosport 2",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "23348",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3674,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L5897": {
+   "name": "beIN Sports 1 HD",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "659037",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3181,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L5898": {
+   "name": "beIN Sports 2 HD",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "659038",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5026,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L5899": {
+   "name": "beIN Sports 3 HD",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "659039",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3678,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L6045": {
+   "name": "beIN Sports Max 10 HD",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "659185",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5821,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L6040": {
+   "name": "beIN Sports Max 5 HD",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "659180",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 6260,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L6041": {
+   "name": "beIN Sports Max 6 HD",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "659181",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 13581
+  },
+  "L6043": {
+   "name": "beIN Sports Max 8 HD",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "659183",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5137,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L6044": {
+   "name": "beIN Sports Max 9 HD",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "659184",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5634,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L5896": {
+   "name": "Eurosport 1 HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659036",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5353,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L786": {
+   "name": "ITV",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "15",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3029,
+   "res": "1282x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L870": {
+   "name": "Premier Sport 1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "186639",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4300,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L871": {
+   "name": "Premier Sport 2",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "186640",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3173,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L798": {
+   "name": "Sky Sports Action",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "186618",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3650,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L172": {
+   "name": "Sky Sports Football",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "23334",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3577,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L852": {
+   "name": "Sky Sports Golf",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "186614",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3983,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L844": {
+   "name": "Sky Sports Main Event",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "186597",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3709,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L857": {
+   "name": "Sky Sports Mix",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "186622",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3945,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L855": {
+   "name": "Sky Sports Plus",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "186620",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 2810,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L173": {
+   "name": "Sky Sports Premier League",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "23342",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4088,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L787": {
+   "name": "SuperSport Rugby",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "777",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3584,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L862": {
+   "name": "TNT Sport 2",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "186628",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4528,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L799": {
+   "name": "TNT Sport 4",
+   "collection": "worldcup",
+   "tier": "full",
+   "ext_id": "255259",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3304,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L865": {
+   "name": "TNT Sport 5 HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "186631",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3625,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L922": {
+   "name": "Sky Sports Tennis",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "428098",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3234,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L824": {
+   "name": "Sky Sports F1 HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "144581",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 2996,
+   "res": "900x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L2749": {
+   "name": "ESPN 1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "52",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3552,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L2750": {
+   "name": "ESPN 2 HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "53",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3701,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L2751": {
+   "name": "Fox Sport 1 HD (Fs1)",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "54",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3460,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L5943": {
+   "name": "Drive In Movie Channel HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659083",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5686,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L5946": {
+   "name": "TCM Cinema HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659086",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 6115,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L5948": {
+   "name": "Wester Cinema+ HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659088",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5065,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L2883": {
+   "name": "AMC+",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "142160",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4040,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L2762": {
+   "name": "HBO HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1007",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3624,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L2810": {
+   "name": "Retro Plex HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3395",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3204,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L2867": {
+   "name": "IFC",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "7418",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4158,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L2747": {
+   "name": "Showtime HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "48",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3986,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L2617": {
+   "name": "BBC One",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148219",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4320,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L2620": {
+   "name": "BBC Three",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148236",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3035,
+   "res": "1282x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L2615": {
+   "name": "Itv2",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148197",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3667,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L2434": {
+   "name": "Channel 4 HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "258",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3178,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L2435": {
+   "name": "Channel 5 HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "259",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4550,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L2600": {
+   "name": "ITV 3 HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "31",
+   "status": "weak",
+   "reason": "slow / buffering (15557ms)",
+   "ms": 15557,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "L2601": {
+   "name": "ITV 4 HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "32",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12362
+  },
+  "L2621": {
+   "name": "Ukfhd : BBC 4",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148238",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12356
+  },
+  "L2852": {
+   "name": "A&E HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "7350",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 13200
+  },
+  "L2875": {
+   "name": "BBC America HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "23843",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12348
+  },
+  "L2847": {
+   "name": "Bet HD*",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "7345",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12352
+  },
+  "L2803": {
+   "name": "Bravo",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "3363",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 13131
+  },
+  "L2858": {
+   "name": "FX HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "7356",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12349
+  },
+  "L2853": {
+   "name": "Fxx HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "7351",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 13187
+  },
+  "L2788": {
+   "name": "Hgtv HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "1132",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12345
+  },
+  "L2764": {
+   "name": "Tbs HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "1009",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12354
+  },
+  "L2851": {
+   "name": "TNT HD*",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "7349",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 13226
+  },
+  "L2856": {
+   "name": "TV Land HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "7354",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12348
+  },
+  "L2739": {
+   "name": "Comedy Central",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "9",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12356
+  },
+  "L2791": {
+   "name": "Hallmark Channel",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "1135",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 13325
+  },
+  "L2744": {
+   "name": "Tlc HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "36",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12352
+  },
+  "L2746": {
+   "name": "USA Network",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "47",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 13304
+  },
+  "L5938": {
+   "name": "Ciné+ Emotion HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659078",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12357
+  },
+  "L5940": {
+   "name": "Ciné+ frisson HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659080",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12354
+  },
+  "L5910": {
+   "name": "National Geographic HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659050",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 13450
+  },
+  "L5941": {
+   "name": "OCS HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659081",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12343
+  },
+  "L5907": {
+   "name": "Warner TV HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659047",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "L5866": {
+   "name": "Arte HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659006",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "L5872": {
+   "name": "BFM TV HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659012",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 225
+  },
+  "L5876": {
+   "name": "Cstar HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659016",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "L5900": {
+   "name": "Disney Channel",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659040",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 227
+  },
+  "L5970": {
+   "name": "France 24 HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659110",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "L5862": {
+   "name": "France 3 HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659002",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "L5863": {
+   "name": "France 4 HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659003",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "L5864": {
+   "name": "France 5 HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659004",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "L5875": {
+   "name": "franceinfo HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659015",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 225
+  },
+  "L5871": {
+   "name": "Gulli HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659011",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 214
+  },
+  "L5874": {
+   "name": "LCI HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659014",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "L5865": {
+   "name": "M6 HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659005",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "L5917": {
+   "name": "Tv5 Monde HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659057",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "L5868": {
+   "name": "W9 HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659008",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "F11980": {
+   "name": "A2i TV",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-1687",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "F12769": {
+   "name": "Adinkra TV",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-3973",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 232
+  },
+  "F12052": {
+   "name": "Africa 24 English",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-1881",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "F12869": {
+   "name": "AfroLandTV",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-4259",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 230
+  },
+  "F12650": {
+   "name": "Afroturk TV",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-3594",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "F11398": {
+   "name": "CRTV",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-253",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "F11370": {
+   "name": "Ibn TV Africa",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-179",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "F12616": {
+   "name": "Medi1TV Afrique",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-3510",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 235
+  },
+  "F11921": {
+   "name": "Mta4 Africa",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-1538",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 225
+  },
+  "F11932": {
+   "name": "Mta5 Africa",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-1577",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 207
+  },
+  "F11721": {
+   "name": "Overtime",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-1002",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 230
+  },
+  "F11415": {
+   "name": "RTG 1",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-286",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 208
+  },
+  "F11412": {
+   "name": "RTI 1",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-280",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 224
+  },
+  "F11410": {
+   "name": "RTI 2",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-276",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "F11409": {
+   "name": "RTS 1",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-275",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "F11850": {
+   "name": "SABC Lehae",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-1338",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 221
+  },
+  "F11403": {
+   "name": "TFM",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-263",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "F12041": {
+   "name": "TV Brics Africa",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-1852",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "F11401": {
+   "name": "VoxAfrica",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-261",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 230
+  },
+  "F11421": {
+   "name": "Walf TV",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-302",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 232
+  },
+  "F12726": {
+   "name": "Wazobia Max TV Nigeria",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-3834",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 228
+  },
+  "F11584": {
+   "name": "WeertFM TV",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-665",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "F11601": {
+   "name": "MBC 1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "free-705",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 231
+  },
+  "L6112": {
+   "name": "MBC 2 HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "308906",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 226
+  },
+  "L6114": {
+   "name": "MBC 3",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "308908",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 209
+  },
+  "L6115": {
+   "name": "MBC 4 HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "308909",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "L6118": {
+   "name": "MBC Action HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "308912",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 224
+  },
+  "L6120": {
+   "name": "MBC Max HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "308914",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 239
+  },
+  "L6046": {
+   "name": "Rotana+ HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "309045",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "L6048": {
+   "name": "Rotana Aflam+ HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "309047",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 209
+  },
+  "L6049": {
+   "name": "Rotana Clip HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "309048",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "L6052": {
+   "name": "Rotana Drama HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "309051",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "L6053": {
+   "name": "Rotana Khalijiah HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "309052",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "F12183": {
+   "name": "Al Arabiya",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-2209",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 1218
+  },
+  "L5445": {
+   "name": "Algeria TV Coran [ Algerie 5 ]",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319336",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "L6957": {
+   "name": "Al Jazeera HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319639",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 221
+  },
+  "L5370": {
+   "name": "Abu Dhabi HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319613",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 228
+  },
+  "L5367": {
+   "name": "Dubai One",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319610",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 228
+  },
+  "L5366": {
+   "name": "Dubai TV",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319609",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "L5385": {
+   "name": "SpaceToon TV",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319628",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "F11324": {
+   "name": "Cartoon Network HD+",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-69",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "F11325": {
+   "name": "Cartoonito",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-70",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 226
+  },
+  "L2407": {
+   "name": "NickToons HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319416",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 226
+  },
+  "L2396": {
+   "name": "Kids: SpaceToon TV",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319404",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "L2402": {
+   "name": "Kids: Baby TV",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319410",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "F11357": {
+   "name": "Nickelodeon",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-156",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "F11366": {
+   "name": "Nickelodeon Junior",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-169",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 242
+  },
+  "F11957": {
+   "name": "PBS Kids Eastern/Central",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-1636",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "F12325": {
+   "name": "Tom And Jerry",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-2596",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 227
+  },
+  "L2531": {
+   "name": "CBeebies",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148212",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 229
+  },
+  "L2319": {
+   "name": "Cartoon Network",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "951",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 228
+  },
+  "L2310": {
+   "name": "Disney Jr HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "49",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "L2308": {
+   "name": "Nick Jr",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "38",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 211
+  },
+  "L2417": {
+   "name": "TRT World HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "5175",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "F12009": {
+   "name": "Africanews French",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-1758",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "F12228": {
+   "name": "Al Arabiya English",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-2321",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 221
+  },
+  "F12395": {
+   "name": "Al Jazeera English",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-2778",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 229
+  },
+  "F11752": {
+   "name": "Bloomberg TV",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-1080",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 211
+  },
+  "F11570": {
+   "name": "Euronews",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-644",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 212
+  },
+  "F11876": {
+   "name": "Euronews Français",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-1423",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 212
+  },
+  "L5873": {
+   "name": "Cnews HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659013",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 230
+  },
+  "F12080": {
+   "name": "France 24 Arabic",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-1928",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 210
+  },
+  "F12084": {
+   "name": "France 24 English",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-1936",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 228
+  },
+  "L6059": {
+   "name": "News Ar: Al Jazeera HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319260",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 230
+  },
+  "F11798": {
+   "name": "SABC News",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-1195",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 225
+  },
+  "L2412": {
+   "name": "BBC News HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "1059",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 214
+  },
+  "L2426": {
+   "name": "CNN International",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "31944",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "F11416": {
+   "name": "Discovery",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-290",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 231
+  },
+  "F11358": {
+   "name": "Nat Geo HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-157",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 212
+  },
+  "L2653": {
+   "name": "Discovery Science",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148448",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "L2642": {
+   "name": "Id",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "5026",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 207
+  },
+  "L2647": {
+   "name": "Nat Geo Wild",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148315",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 215
+  },
+  "L2742": {
+   "name": "History HD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "34",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "L2745": {
+   "name": "Discovery channel",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "44",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 207
+  },
+  "L1472": {
+   "name": "Animal Planet",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "98873",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 200
+  },
+  "L1475": {
+   "name": "BBC Earth",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "98871",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 201
+  },
+  "L1495": {
+   "name": "Investigation Discovery",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "23790",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 209
+  },
+  "F12046": {
+   "name": "Xtreme Outdoor",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "free-1862",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 209
+  },
+  "L2453": {
+   "name": "Crime Investigation",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148207",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "L2753": {
+   "name": "Lifetime",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "202",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 207
+  },
+  "L1456": {
+   "name": "HBO 2",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "185",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "L2466": {
+   "name": "Pop Max",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148498",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 206
+  },
+  "L2528": {
+   "name": "Sky Cinema Animation",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "34171",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 208
+  },
+  "L2558": {
+   "name": "Sky Cinema Action",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "273",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 208
+  },
+  "L2559": {
+   "name": "Sky Cinema Family",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "274",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 204
+  },
+  "L2560": {
+   "name": "Sky Cinema Greats",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "275",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 200
+  },
+  "L2561": {
+   "name": "Sky Cinema Drama",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "276",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 207
+  },
+  "L2562": {
+   "name": "Sky Cinema Sci-Fi",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "277",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 200
+  },
+  "L2563": {
+   "name": "Sky Cinema Thriller",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "278",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 199
+  },
+  "L2564": {
+   "name": "Sky Cinema Premiere",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "279",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "L2569": {
+   "name": "Sky Cinema Hits",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "34162",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "L2576": {
+   "name": "Sky Cinema Comedy",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "34169",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 207
+  },
+  "L2582": {
+   "name": "Sky Crime",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "148267",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "L2593": {
+   "name": "Sony Movies",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "148468",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "L2779": {
+   "name": "HBO 2 Comedy",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1025",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 224
+  },
+  "L2824": {
+   "name": "Showtime",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3410",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 221
+  },
+  "L2828": {
+   "name": "VH1",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "3414",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "L2879": {
+   "name": "Starz",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "33890",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 224
+  },
+  "L5887": {
+   "name": "TF1 Series Films",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659027",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 224
+  },
+  "L5919": {
+   "name": "Syfy",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659059",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 236
+  },
+  "L5923": {
+   "name": "Warner TV Next",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659063",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 1250
+  },
+  "L5924": {
+   "name": "M6 Music",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659064",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 235
+  },
+  "L6180": {
+   "name": "beIN Movies HD1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "274199",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 235
+  },
+  "L6181": {
+   "name": "beIN Movies HD2",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "274200",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 221
+  },
+  "L6182": {
+   "name": "beIN Movies HD3",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "274201",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "L6183": {
+   "name": "beIN Movies HD4",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "274202",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 226
+  },
+  "G800005": {
+   "name": "SKY SPORTS MAIN EVENTS",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "384215",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 233
+  },
+  "G800006": {
+   "name": "SKY SPORTS 2",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "384216",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 236
+  },
+  "G800007": {
+   "name": "SKY SPORTS 1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "384222",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "G800011": {
+   "name": "FASHION TV",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "688306",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 227
+  },
+  "G800012": {
+   "name": "SUPERSPORTS HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "158442",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 226
+  },
+  "G800013": {
+   "name": "SKY SPORTS CRIC HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "12",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 226
+  },
+  "G800014": {
+   "name": "TNT SPORTS 3 ᶠHD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "148090",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "G800015": {
+   "name": "SONY ESPN",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "155",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 213
+  },
+  "G800017": {
+   "name": "SKY SPORT 3 ᶠHD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "24018",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 213
+  },
+  "G800018": {
+   "name": "EUROSPORTS HD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "216",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 215
+  },
+  "G800019": {
+   "name": "TNT SPORTS 1 ᶠHD",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "186627",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "G800020": {
+   "name": "SUPERSPORTS PSL",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "770",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 231
+  },
+  "G800022": {
+   "name": "SUPERSPORTS FOOTBALL",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "776",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "G800023": {
+   "name": "SUPERSPORTS LALIGA",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "768",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 215
+  },
+  "G800024": {
+   "name": "SUPERSPORTS PREMIER LEAGUE",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "771",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 235
+  },
+  "G800055": {
+   "name": "Sky Sport 4",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "24000",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 230
+  },
+  "G800056": {
+   "name": "SKY Sport SELECT",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "34152",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "G800057": {
+   "name": "SuperSport Grandstand",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "158441",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 212
+  },
+  "G800058": {
+   "name": "Sky Sport 5",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "343019",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "G800059": {
+   "name": "Sky Sport 6",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "343020",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "G800060": {
+   "name": "Sky Sport 7",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "343021",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "G800061": {
+   "name": "Sky Sport 9",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "343023",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 405
+  },
+  "G800063": {
+   "name": "SKY SPORTS NEWS",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "186624",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 215
+  },
+  "G800064": {
+   "name": "SKY SPORTS CRICKET",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "186606",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 228
+  },
+  "G800065": {
+   "name": "SKY SPORTS RACING",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "186643",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 221
+  },
+  "G800066": {
+   "name": "SKY SPORTS BOX OFFICE",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "186626",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "G800067": {
+   "name": "TNT SPORT 6",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "186632",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 232
+  },
+  "G800068": {
+   "name": "TNT SPORT 9",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "186635",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 226
+  },
+  "G800070": {
+   "name": "ESPN SPORTS 1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "503",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 212
+  },
+  "G800071": {
+   "name": "ESPN SPORTS 3",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "505",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "G800072": {
+   "name": "RMC SPORTS 3",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "615",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 228
+  },
+  "G800074": {
+   "name": "BeIN SPORTS",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "18451",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "G800075": {
+   "name": "SuperSport Golf",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "778",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "G800076": {
+   "name": "SUPERSPORT CRICKET",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "157939",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "G800078": {
+   "name": "SUPERSPORTS VARIETY 1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "157951",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 233
+  },
+  "G800079": {
+   "name": "SUPERSPORTS VARIETY 3",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "157953",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "G800080": {
+   "name": "SUPERSPORTS VARIETY 4",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "157954",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "G800081": {
+   "name": "Supersport blitz",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "157955",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 212
+  },
+  "G800082": {
+   "name": "ESPN",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "157959",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 212
+  },
+  "G800091": {
+   "name": "Supersport Schools",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "157969",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "G800092": {
+   "name": "Ar: Abu Dhabi Sports 1",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "309006",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "G800093": {
+   "name": "Ar: Abu Dhabi Sports 2",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "309007",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 213
+  },
+  "G800099": {
+   "name": "beIN SPORTS 7",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "652316",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 214
+  },
+  "G800100": {
+   "name": "beIN SPORTS 8",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "652317",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "G800101": {
+   "name": "beIN SPORTS 9",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "652318",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 215
+  },
+  "G800105": {
+   "name": "beIN Sports Global",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "652322",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 211
+  },
+  "G800109": {
+   "name": "beIN Sport NBA",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "652332",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "G800110": {
+   "name": "beIN Sport News",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "652349",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 245
+  },
+  "G800122": {
+   "name": "BeIN Alkass 1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "652411",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 228
+  },
+  "G800123": {
+   "name": "BeIN Alkass 2",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "652412",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "G800133": {
+   "name": "Discovery Channel Hindi",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "5250",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "G800134": {
+   "name": "Discovery Turbo",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "23917",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "G800135": {
+   "name": "NICK",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "98880",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 221
+  },
+  "G800138": {
+   "name": "Boomerang",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659100",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "G800139": {
+   "name": "Discovery Kids 1",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "208",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 232
+  },
+  "G800141": {
+   "name": "BABY TV",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "1069",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 226
+  },
+  "G800143": {
+   "name": "Disney Junior",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "35713",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "G800144": {
+   "name": "DISNEY INTERNATIONAL",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "20925",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "G800145": {
+   "name": "Cartoon Network Arabia",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319402",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 229
+  },
+  "G800146": {
+   "name": "Rotana Kids",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319405",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "G800148": {
+   "name": "OSN Nickelodeon",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319409",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 207
+  },
+  "G800149": {
+   "name": "CNN",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148282",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "G800150": {
+   "name": "AL JAZEERA",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "5666",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 212
+  },
+  "G800151": {
+   "name": "SKY NEWS",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "1060",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 215
+  },
+  "G800152": {
+   "name": "DW NEWS",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "5715",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 221
+  },
+  "G800155": {
+   "name": "CNN News 18",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "371446",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "G800158": {
+   "name": "Film4",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "148201",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 214
+  },
+  "G800159": {
+   "name": "DMAX",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148538",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 221
+  },
+  "G800162": {
+   "name": "Nick Jr. Too",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148506",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 1260
+  },
+  "G800163": {
+   "name": "Boomerang +1",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148563",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 228
+  },
+  "G800174": {
+   "name": "SKY CINEMA SELECT",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "34168",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 225
+  },
+  "G800175": {
+   "name": "Sky Cinema Sci-Fi Horror",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "148332",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 229
+  },
+  "G800178": {
+   "name": "MTV",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "5809",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "G800181": {
+   "name": "Sky History",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148198",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 224
+  },
+  "G800182": {
+   "name": "Sky History 2",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148199",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 227
+  },
+  "G800186": {
+   "name": "Discovery History",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148449",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "G800189": {
+   "name": "Discovery Turbo +1",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148710",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "G800190": {
+   "name": "Animal Planet +1",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148713",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "G800191": {
+   "name": "Discovery Science +1",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148728",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 234
+  },
+  "G800192": {
+   "name": "Investigation Discovery +1",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148729",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 231
+  },
+  "G800193": {
+   "name": "Discovery History +1",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148733",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 225
+  },
+  "G800195": {
+   "name": "HBO COMEDY",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "50",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 235
+  },
+  "G800198": {
+   "name": "OWN",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "1004",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 224
+  },
+  "G800201": {
+   "name": "HBO East",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1023",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 229
+  },
+  "G800202": {
+   "name": "Cinemax West",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1024",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 221
+  },
+  "G800203": {
+   "name": "HBO Family",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1026",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 212
+  },
+  "G800204": {
+   "name": "HBO Signature",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1027",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 224
+  },
+  "G800205": {
+   "name": "HBO Zone",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1028",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 214
+  },
+  "G800206": {
+   "name": "Starz Black",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1029",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 225
+  },
+  "G800207": {
+   "name": "Starz Cinema",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1030",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 233
+  },
+  "G800216": {
+   "name": "DISCOVERY LIFE",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "3401",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4886,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800219": {
+   "name": "beIN SPORTS La Liga",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "6625",
+   "status": "no_audio",
+   "reason": "video only, no audio",
+   "ms": 3096,
+   "res": "1280x720",
+   "vcodec": "h264"
+  },
+  "G800221": {
+   "name": "ESPN News",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "7371",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3141,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800223": {
+   "name": "ESPN U",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "88177",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3516,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800233": {
+   "name": "ENGLISH-DISNEY MOVIES",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "135885",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 6321,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800234": {
+   "name": "ENGLISH-HISTORY MOVIES 1",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "135939",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 6251,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800236": {
+   "name": "CGTN",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "23966",
+   "status": "no_audio",
+   "reason": "video only, no audio",
+   "ms": 3894,
+   "res": "900x720",
+   "vcodec": "h264"
+  },
+  "G800240": {
+   "name": "Sky Sport 8",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "24004",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3955,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800297": {
+   "name": "Abu Dhabi Al Emarat",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319615",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 2976,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800298": {
+   "name": "MBC FM",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319383",
+   "status": "no_audio",
+   "reason": "video only, no audio",
+   "ms": 9210,
+   "res": "1280x720",
+   "vcodec": "h264"
+  },
+  "G800300": {
+   "name": "Rotana Music",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319388",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4632,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800321": {
+   "name": "Sky Sport 24",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1288",
+   "status": "no_audio",
+   "reason": "video only, no audio",
+   "ms": 2906,
+   "res": "1280x720",
+   "vcodec": "h264"
+  },
+  "G800334": {
+   "name": "Novelas",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659048",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4250,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800335": {
+   "name": "Discovery Investigation",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659054",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5787,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800336": {
+   "name": "E!",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659060",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5497,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800337": {
+   "name": "Novelas Frequency",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659090",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4204,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800339": {
+   "name": "Nickelodeon Teen",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659095",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5168,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800340": {
+   "name": "Tiji",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659096",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4987,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800341": {
+   "name": "Piwi +",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659097",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5273,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800343": {
+   "name": "BFM 2",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659105",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 6562,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800344": {
+   "name": "BFM Business",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659106",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5444,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800345": {
+   "name": "CStar Hits",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659156",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5753,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800348": {
+   "name": "Trace Africa",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659163",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4335,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800349": {
+   "name": "Trace Urban",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659164",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5532,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800350": {
+   "name": "Trace Gospel",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659166",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5025,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800351": {
+   "name": "BFM Alsace",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659169",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 6508,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800352": {
+   "name": "BFM D!CI Haute Provence",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659170",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5214,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800353": {
+   "name": "BFM DICI Alpes Sud",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659171",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5212,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800354": {
+   "name": "BFM Grand Lille",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659172",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4543,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800355": {
+   "name": "BFM Grand Littoral",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659173",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 6227,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800356": {
+   "name": "BFM Lyon",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659174",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4946,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800357": {
+   "name": "BFM Marseille Provence",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659175",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 6237,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800358": {
+   "name": "BFM Nice C te d'Azur",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659176",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 6696,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800359": {
+   "name": "BFM Normandie",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659177",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5808,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800360": {
+   "name": "BFM Toulon Var",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659178",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 5245,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800364": {
+   "name": "Rotana Classic",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "309057",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4377,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800365": {
+   "name": "Rotana Comedy",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "309056",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4523,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800366": {
+   "name": "Rotana Cinema Egy",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "309054",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 13859
+  },
+  "G800367": {
+   "name": "Rotana Cinema KSA",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "309055",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3740,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800368": {
+   "name": "Ar: Al Jazeera ✦",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319261",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 6912,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800370": {
+   "name": "Ar: Al Jazeera Mubasher 2 ✦",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319264",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4985,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800371": {
+   "name": "En: Al Jazeera English ✦",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319265",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3371,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800372": {
+   "name": "Ar: Al Arabiya ✦",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319267",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3440,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800373": {
+   "name": "Ar: Sky News Arabic ✦",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319272",
+   "status": "weak",
+   "reason": "slow / buffering (10846ms)",
+   "ms": 10846,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800374": {
+   "name": "En: CNN International ✦",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319284",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 2906
+  },
+  "G800375": {
+   "name": "Ar: France 24 Arabic ✦",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319285",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3301,
+   "res": "900x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800376": {
+   "name": "En: France 24 English ✦",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319287",
+   "status": "weak",
+   "reason": "slow / buffering (10814ms)",
+   "ms": 10814,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800377": {
+   "name": "Ar: DW Arabic ✦",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319288",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 5380
+  },
+  "G800378": {
+   "name": "En: DW English ✦",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319289",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4499,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800382": {
+   "name": "MBC 5",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "308935",
+   "status": "weak",
+   "reason": "slow / buffering (7591ms)",
+   "ms": 7591,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800384": {
+   "name": "MBC Bollywood",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "308937",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3146,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800385": {
+   "name": "MBC Variety",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "308946",
+   "status": "weak",
+   "reason": "slow / buffering (12705ms)",
+   "ms": 12705,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800386": {
+   "name": "MBC Drama +",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "308938",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3827,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800387": {
+   "name": "MBC Iraq",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "308940",
+   "status": "weak",
+   "reason": "slow / buffering (9689ms)",
+   "ms": 9689,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800388": {
+   "name": "MBC Masr 1",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "308941",
+   "status": "weak",
+   "reason": "slow / buffering (9630ms)",
+   "ms": 9630,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800389": {
+   "name": "MBC Masr 2",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "308942",
+   "status": "weak",
+   "reason": "slow / buffering (10956ms)",
+   "ms": 10956,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800390": {
+   "name": "MBC Wanasah",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "308947",
+   "status": "no_audio",
+   "reason": "video only, no audio",
+   "ms": 12189,
+   "res": "1280x720",
+   "vcodec": "h264"
+  },
+  "G800391": {
+   "name": "MBC Panorama",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "308944",
+   "status": "weak",
+   "reason": "slow / buffering (8880ms)",
+   "ms": 8880,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800393": {
+   "name": "MBC Persia",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "308930",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 4074,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800394": {
+   "name": "MBC Persian",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "308945",
+   "status": "weak",
+   "reason": "slow / buffering (9126ms)",
+   "ms": 9126,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800399": {
+   "name": "beIN FOX MOVIES",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "274152",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3673,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800400": {
+   "name": "beIN BBC EARTH",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "274155",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 6513,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800403": {
+   "name": "Shahid Al Arabiya Business",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "308997",
+   "status": "no_audio",
+   "reason": "video only, no audio",
+   "ms": 3072,
+   "res": "1280x720",
+   "vcodec": "h264"
+  },
+  "G800447": {
+   "name": "Al Jazeera Documentary ✦",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "319635",
+   "status": "healthy",
+   "reason": "ok",
+   "ms": 3521,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800448": {
+   "name": "Sky Cinema Premieren - ''hevc h.265''",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659187",
+   "status": "weak",
+   "reason": "slow / buffering (14635ms)",
+   "ms": 14635,
+   "res": "1280x720",
+   "vcodec": "h264",
+   "acodec": "aac"
+  },
+  "G800450": {
+   "name": "Sky Cinema Action - ''hevc h.265''",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659189",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 13291
+  },
+  "G800451": {
+   "name": "Sky Cinema Best Of - ''hevc h.265''",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659190",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12346
+  },
+  "G800454": {
+   "name": "SYFY - ''hevc h.265''",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659205",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12348
+  },
+  "G800455": {
+   "name": "Discovery - ''hevc h.265''",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659208",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 13281
+  },
+  "G800458": {
+   "name": "Crime + Investigation - ''hevc h.265''",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659211",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12353
+  },
+  "G800461": {
+   "name": "Sky Cinema Premieren - ''H.264''",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659216",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 13297
+  },
+  "G800463": {
+   "name": "Sky Cinema Action - ''H.264''",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659218",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12352
+  },
+  "G800464": {
+   "name": "Sky Cinema Special - ''H.264''",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659219",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12361
+  },
+  "G800465": {
+   "name": "Sky Cinema Classics - ''H.264''",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659220",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 13288
+  },
+  "G800477": {
+   "name": "Nick/Comedy - Magneta",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659327",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12360
+  },
+  "G800483": {
+   "name": "Sky Sport News- ''hevc h.265''",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659428",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 12350
+  },
+  "G800486": {
+   "name": "Sky Sport Premier League - ''hevc h.265''",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659431",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 13274
+  },
+  "G800490": {
+   "name": "Sky Sport Golf - ''hevc h.265''",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659436",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 10802
+  },
+  "G800501": {
+   "name": "SKY Sport NEWS - ''H.264''",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659465",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "G800502": {
+   "name": "Sky Sport Premier League - ''H.264''",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659466",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "G800504": {
+   "name": "Sky Sport Mix - ''H.264''",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659468",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "G800505": {
+   "name": "Sky Sport Tennis - ''H.264''",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659469",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "G800506": {
+   "name": "Sky Sport F1 - ''H.264''",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659470",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 221
+  },
+  "G800507": {
+   "name": "Sky Sport Golf - ''H.264''",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659471",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "G800518": {
+   "name": "Paramount Network",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659532",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 221
+  },
+  "G800519": {
+   "name": "ESPN 3",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659541",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 214
+  },
+  "G800520": {
+   "name": "ESPN 4",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659542",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "G800521": {
+   "name": "National Geographic WILD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659548",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "G800522": {
+   "name": "Love Nature",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "659560",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "G800576": {
+   "name": "CA Starz 1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "616018",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 215
+  },
+  "G800580": {
+   "name": "CA HBO 1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "616046",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "G800582": {
+   "name": "CA E! Entertainment",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "616257",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "G800586": {
+   "name": "CA Discovery Velocity",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "616287",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 208
+  },
+  "G800587": {
+   "name": "CA History 2",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "616288",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "G800588": {
+   "name": "CA History Channel",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "616289",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 224
+  },
+  "G800845": {
+   "name": "SKY News Extra",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "415575",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "G800847": {
+   "name": "HBO 3",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "661259",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 225
+  },
+  "G800848": {
+   "name": "Cinemax 1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "661266",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 227
+  },
+  "G800849": {
+   "name": "Cinemax 2",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "661267",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "G800850": {
+   "name": "Nick Junior",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "661296",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "G800851": {
+   "name": "Euronews Tv",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "661312",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "G800852": {
+   "name": "MTV Club",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "661348",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "G800853": {
+   "name": "Vh1 Classic Music",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "661351",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 215
+  },
+  "G800854": {
+   "name": "Discovery ID Xtra",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "661374",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "G800855": {
+   "name": "Viasat History",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "661382",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 229
+  },
+  "G800856": {
+   "name": "History Channel 2",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "661384",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "G800858": {
+   "name": "Fashion TV Asia",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "637991",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "F659000": {
+   "name": "TF1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659000",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 227
+  },
+  "F659001": {
+   "name": "France 2",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659001",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 207
+  },
+  "F659021": {
+   "name": "Canal+ Sport 360",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659021",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 214
+  },
+  "F659010": {
+   "name": "TFX",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659010",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "F659031": {
+   "name": "RMC Decouverte",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659031",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 215
+  },
+  "F659045": {
+   "name": "Polar+",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659045",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 229
+  },
+  "F659032": {
+   "name": "Cherie25",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659032",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "F659030": {
+   "name": "RMC Story",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659030",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "F659029": {
+   "name": "6ter",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659029",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "F659033": {
+   "name": "Paris Premiere",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659033",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "F659043": {
+   "name": "TEVA",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659043",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 210
+  },
+  "F659117": {
+   "name": "Equidia",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659117",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "F659062": {
+   "name": "Comedie+",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659062",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "F659069": {
+   "name": "MCM TOP",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659069",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "F659072": {
+   "name": "Mangas",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659072",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 1146
+  },
+  "F659102": {
+   "name": "Canal J",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659102",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "F659118": {
+   "name": "Automoto",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659118",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 231
+  },
+  "F659129": {
+   "name": "Crime District",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659129",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 226
+  },
+  "F659138": {
+   "name": "Trace Sport Stars",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659138",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 214
+  },
+  "F659167": {
+   "name": "Trace Toca",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659167",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "F659165": {
+   "name": "Trace Caribbean",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659165",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 232
+  },
+  "F659159": {
+   "name": "Clubbing TV",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659159",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 211
+  },
+  "F659182": {
+   "name": "beIN SPORTS MAX 7",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "659182",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 210
+  },
+  "U23564": {
+   "name": "TNT SPORT 1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "23564",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "U283": {
+   "name": "TNT Sport 3",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "283",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 231
+  },
+  "U149": {
+   "name": "Fight Network",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "149",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 213
+  },
+  "U1062": {
+   "name": "DAVE",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "1062",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 207
+  },
+  "U1071": {
+   "name": "EDEN",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "1071",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "U148304": {
+   "name": "Sky Max",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148304",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "U1072": {
+   "name": "ALiBi",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "1072",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "U148200": {
+   "name": "Gold",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148200",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 221
+  },
+  "U148187": {
+   "name": "Sky Arts",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148187",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "U34158": {
+   "name": "SKY ATLANTIC",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "34158",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "U148313": {
+   "name": "Sky Nature",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148313",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 221
+  },
+  "U148177": {
+   "name": "Sky Witness",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148177",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "U268": {
+   "name": "YESTERDAY",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "268",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 227
+  },
+  "U280": {
+   "name": "ITV Be",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "280",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "U148170": {
+   "name": "Sky Comedy",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148170",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "U148188": {
+   "name": "Quest",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148188",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "U55": {
+   "name": "Fox Sport 2",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "55",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 229
+  },
+  "U148265": {
+   "name": "Sky Documentaries",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148265",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 215
+  },
+  "U1015": {
+   "name": "NFL Network",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1015",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 225
+  },
+  "U1010": {
+   "name": "NBA TV",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1010",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 214
+  },
+  "U1012": {
+   "name": "NBA Network",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1012",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "U1057": {
+   "name": "UFC Fight pass",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1057",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "U148443": {
+   "name": "Sky Documentaries SD",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148443",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 214
+  },
+  "U3420": {
+   "name": "FOX SPORTS 1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3420",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 227
+  },
+  "U23550": {
+   "name": "NFL RedZone",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "23550",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "U26393": {
+   "name": "NBC Sports Bay Area",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "26393",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 225
+  },
+  "U3421": {
+   "name": "FOX SPORTS 2",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3421",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 227
+  },
+  "UK1064": {
+   "name": "CBS DRAMA",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1064",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 215
+  },
+  "UK148171": {
+   "name": "TLC",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "148171",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "UK148488": {
+   "name": "Really",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "148488",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "UK144123": {
+   "name": "TINY POP",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "144123",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 214
+  },
+  "UK148243": {
+   "name": "GB News",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148243",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "UK148214": {
+   "name": "Bloomberg",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148214",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "UK148537": {
+   "name": "Drama",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "148537",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 227
+  },
+  "UK148230": {
+   "name": "Talk TV",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148230",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "UK1068": {
+   "name": "DISNEY JR",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "1068",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "UK148227": {
+   "name": "CNBC",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148227",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "UK24": {
+   "name": "Sky Movies Drama",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "24",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 228
+  },
+  "UK148342": {
+   "name": "Nat Geo",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "148342",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 228
+  },
+  "UK148224": {
+   "name": "NBC News Now",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148224",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 229
+  },
+  "US3364": {
+   "name": "FOOD NETWORK",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3364",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "US3392": {
+   "name": "GRIT TV MOVIES",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3392",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 213
+  },
+  "US51": {
+   "name": "Fox News",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "51",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 232
+  },
+  "US1132": {
+   "name": "HGTV",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1132",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 267
+  },
+  "US1009": {
+   "name": "TBS",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1009",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 207
+  },
+  "US7349": {
+   "name": "TNT",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "7349",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "US871": {
+   "name": "MSNBC",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "871",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 237
+  },
+  "US7350": {
+   "name": "A&E",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "7350",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 264
+  },
+  "US23430": {
+   "name": "COZI TV",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "23430",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 263
+  },
+  "US34": {
+   "name": "HISTORY",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "34",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 208
+  },
+  "US9461": {
+   "name": "HALLMARK MOVIES & MYSTERIES",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "9461",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 211
+  },
+  "US23845": {
+   "name": "CBSN",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "23845",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "US7355": {
+   "name": "Oxygen",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "7355",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 226
+  },
+  "UK122181": {
+   "name": "Sky Sports F1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "122181",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 236
+  },
+  "UK1059": {
+   "name": "BBC NEWS",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "1059",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 207
+  },
+  "US56": {
+   "name": "NBC GOLF",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "56",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 224
+  },
+  "UK284": {
+   "name": "BBC World News",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "284",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "UK259": {
+   "name": "CHANNEL 5",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "259",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 215
+  },
+  "US712": {
+   "name": "Tennis Channel",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "712",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 210
+  },
+  "UK148270": {
+   "name": "LA LIGA TV",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "148270",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "UK258": {
+   "name": "CHANNEL 4",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "258",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "UK148546": {
+   "name": "Comedy Extra",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "148546",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 229
+  },
+  "UK148169": {
+   "name": "WATCH",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "148169",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "UK148204": {
+   "name": "E4",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "148204",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "UK277": {
+   "name": "Sky Cinema Sky-fi",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "277",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 209
+  },
+  "UK148192": {
+   "name": "More4",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "148192",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "UK13": {
+   "name": "BBC 1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "13",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 224
+  },
+  "UK14": {
+   "name": "BBC 2",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "14",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 222
+  },
+  "UK148222": {
+   "name": "Sky Kids",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "148222",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 209
+  },
+  "UK31": {
+   "name": "ITV 3",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "31",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "UK351": {
+   "name": "TRAVEL CHANNEL",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "351",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 209
+  },
+  "UK32": {
+   "name": "ITV 4",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "32",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "UK148181": {
+   "name": "Sky Showcase",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "148181",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 213
+  },
+  "UK148238": {
+   "name": "BBC 4",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "148238",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "UK5810": {
+   "name": "MTV Music",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "5810",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "UK5808": {
+   "name": "MTV Classic",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "5808",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 214
+  },
+  "US53": {
+   "name": "ESPN 2",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "53",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 210
+  },
+  "US1001": {
+   "name": "NBCSN",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1001",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "US202": {
+   "name": "Lifetime Movies",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "202",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 211
+  },
+  "US711": {
+   "name": "WWE NETWORK",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "711",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 228
+  },
+  "US1014": {
+   "name": "MLB Network",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1014",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 210
+  },
+  "US17": {
+   "name": "National Geographic",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "17",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "US1007": {
+   "name": "HBO",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1007",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "US54": {
+   "name": "Fox Sport 1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "54",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 213
+  },
+  "US1013": {
+   "name": "NHL Network",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1013",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "US1016": {
+   "name": "RED BULL TV",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1016",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 213
+  },
+  "US1017": {
+   "name": "TSN 5",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1017",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 219
+  },
+  "US1018": {
+   "name": "TSN 4",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1018",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 214
+  },
+  "US1019": {
+   "name": "TSN 3",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1019",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 224
+  },
+  "US1031": {
+   "name": "Starz Cinema East",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1031",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "US1134": {
+   "name": "Lifetime Movie Network",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1134",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 235
+  },
+  "US1033": {
+   "name": "Starz Edge",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1033",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 213
+  },
+  "US1021": {
+   "name": "TSN 1",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1021",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "US3366": {
+   "name": "The BLAZE",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3366",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "US1020": {
+   "name": "TSN 2",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "1020",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 220
+  },
+  "US3396": {
+   "name": "NASA TV",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3396",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 208
+  },
+  "US3395": {
+   "name": "RETRO PLEX",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3395",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 208
+  },
+  "US3398": {
+   "name": "DESTINATION AMERICA",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3398",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 206
+  },
+  "US3394": {
+   "name": "MovieMax",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3394",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "US3405": {
+   "name": "MTV LIVE",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3405",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 221
+  },
+  "US3410": {
+   "name": "SHOWTIME EXTREME",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3410",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 227
+  },
+  "US3411": {
+   "name": "SHOWTIME FAMILY ZONE",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3411",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 215
+  },
+  "US3417": {
+   "name": "STARZENCORE ACTION",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3417",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 225
+  },
+  "US3406": {
+   "name": "MTV U",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3406",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 208
+  },
+  "US3418": {
+   "name": "STARZENCORE CLASSIC",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3418",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 207
+  },
+  "US3409": {
+   "name": "SHOWTIME EAST",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3409",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 215
+  },
+  "US3419": {
+   "name": "STARZENCORE FAMILY",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3419",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "US3412": {
+   "name": "SHOWTIME WOMEN",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3412",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 214
+  },
+  "US7345": {
+   "name": "BET",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "7345",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  },
+  "US3416": {
+   "name": "STARZENCORE",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "3416",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 209
+  },
+  "US7354": {
+   "name": "TV Land",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "7354",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 229
+  },
+  "US7351": {
+   "name": "FXX",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "7351",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 218
+  },
+  "US7353": {
+   "name": "CW",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "7353",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 216
+  },
+  "US7356": {
+   "name": "FX",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "7356",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 206
+  },
+  "US7357": {
+   "name": "Tru TV",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "7357",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 238
+  },
+  "US7348": {
+   "name": "WGN NETWORK",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "7348",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 229
+  },
+  "US33890": {
+   "name": "STARZ East",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "33890",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 217
+  },
+  "US49614": {
+   "name": "The Weather Channel",
+   "collection": null,
+   "tier": "starter",
+   "ext_id": "49614",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 210
+  },
+  "US23431": {
+   "name": "Antenna TV",
+   "collection": null,
+   "tier": "full",
+   "ext_id": "23431",
+   "status": "dead",
+   "reason": "ffprobe error",
+   "ms": 223
+  }
+ }
+}

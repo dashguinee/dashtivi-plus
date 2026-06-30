@@ -488,6 +488,7 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
     try { screen.orientation?.unlock?.(); } catch {}
   }, []);
 
+
   // Ambient blobs — organic morphing glow + audio-reactive scale
   // PERF FIX: throttled rAF loop — only runs when scrolled past threshold (blobs visible).
   // When hidden (opacity 0), loop yields to save GPU frames.
@@ -707,9 +708,7 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
         <video
           ref={player.videoRef as React.RefObject<HTMLVideoElement>}
           className={showFullPlayer && player.state.channel
-            ? `fixed inset-0 z-50 w-full h-full object-cover bg-black transition-[filter,transform] duration-500 ${
-                player.state.isLoading && !player.state.isPlaying ? 'blur-sm scale-[1.01]' : ''
-              }`
+            ? `fixed inset-0 z-50 w-full h-full bg-black ${player.state.isFullscreen ? 'object-cover' : 'object-contain'}`
             : player.state.channel
               ? 'fixed z-40 w-72 sm:w-80 aspect-video rounded-2xl object-cover bg-black'
               : 'hidden'
@@ -719,7 +718,9 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
           // full-player mode — inset-0 classes win.)
           style={!showFullPlayer && player.state.channel
             ? { left: effectiveMiniPos.x, top: effectiveMiniPos.y, transition: miniPos ? 'none' : undefined }
-            : undefined}
+            : (showFullPlayer && !player.state.isFullscreen)
+              ? { objectPosition: 'center 42%' }
+              : undefined}
           crossOrigin="anonymous"
           playsInline
           autoPlay
@@ -732,7 +733,7 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
             src={player.switchSnapshot}
             alt=""
             aria-hidden="true"
-            className="fixed inset-0 z-50 w-full h-full object-cover bg-black pointer-events-none transition-opacity duration-300"
+            className="fixed inset-0 z-50 w-full h-full object-cover bg-black pointer-events-none transition-opacity duration-500"
             style={{
               filter: 'blur(14px) brightness(0.7)',
               transform: 'scale(1.06)',

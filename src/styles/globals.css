@@ -667,6 +667,13 @@
     100% { background-position: 200% 0; }
   }
 
+  @keyframes genre-gleam {
+    0%   { transform: translateX(-120%); opacity: 0; }
+    15%  { opacity: 1; }
+    85%  { opacity: 1; }
+    100% { transform: translateX(120%); opacity: 0; }
+  }
+
   /* ═══ WELCOME — gentle blink fade ═══ */
   @keyframes welcome-blink {
     0%, 100% { opacity: 0.35; }

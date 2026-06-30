@@ -954,6 +954,27 @@ export function usePlayer() {
     }
   }, []);
 
+  const portraitFullscreen = useCallback(() => {
+    const doc = document as Document & { webkitFullscreenElement?: Element };
+    const fsElement = doc.fullscreenElement || doc.webkitFullscreenElement;
+    if (fsElement) {
+      if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+      setState((prev) => ({ ...prev, isFullscreen: false }));
+      return;
+    }
+    const root = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => void };
+    const req = root.requestFullscreen || root.webkitRequestFullscreen;
+    if (req) {
+      try {
+        const p = req.call(root);
+        if (p && typeof (p as Promise<void>).then === 'function') {
+          (p as Promise<void>).catch(() => {});
+        }
+      } catch { /* ignore */ }
+      setState((prev) => ({ ...prev, isFullscreen: true }));
+    }
+  }, []);
+
   const togglePiP = useCallback(async () => {
     const video = videoRef.current;
     if (!video) return;
@@ -1127,11 +1148,12 @@ export function usePlayer() {
     toggleMute,
     setVolume,
     toggleFullscreen,
+    portraitFullscreen,
     togglePiP,
     changeQuality,
     seek,
     stop,
     streamLimit,
     dismissStreamLimit,
-  }), [state, switchSnapshot, playChannel, togglePlay, toggleMute, setVolume, toggleFullscreen, togglePiP, changeQuality, seek, stop, streamLimit, dismissStreamLimit]);
+  }), [state, switchSnapshot, playChannel, togglePlay, toggleMute, setVolume, toggleFullscreen, portraitFullscreen, togglePiP, changeQuality, seek, stop, streamLimit, dismissStreamLimit]);
 }

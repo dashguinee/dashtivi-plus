@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
+import { experienceForChannelId } from '@/lib/catalog';
 import type { Channel } from '@/types';
 
 interface SmartMatchProps {
@@ -7,16 +8,18 @@ interface SmartMatchProps {
   allChannels: Channel[];
   onSwitch: (channel: Channel) => void;
   visible: boolean;
+  isFullscreen?: boolean;
   onHasContent?: (has: boolean) => void;
+  activeGenre?: string;
 }
 
 // --- Quality detection (mirrors xtream.ts logic but works on Channel.name) ---
 
-type Quality = '4K' | 'UHD' | 'FHD' | 'HD' | 'SD';
+export type Quality = '4K' | 'UHD' | 'FHD' | 'HD' | 'SD';
 
-const QUALITY_ORDER: Record<Quality, number> = { SD: 0, HD: 1, FHD: 2, '4K': 3, UHD: 4 };
+export const QUALITY_ORDER: Record<Quality, number> = { SD: 0, HD: 1, FHD: 2, '4K': 3, UHD: 4 };
 
-function detectQuality(name: string): Quality {
+export function detectQuality(name: string): Quality {
   if (name.includes('4K') || name.includes('(4K)')) return '4K';
   if (/\bUHD\b/i.test(name)) return 'UHD';
   if (/\bFHD\b/i.test(name)) return 'FHD';
@@ -24,7 +27,7 @@ function detectQuality(name: string): Quality {
   return 'HD';
 }
 
-function normalizeChannelName(name: string): string {
+export function normalizeChannelName(name: string): string {
   let n = name;
   // Strip prefixes: "UK || ", "UK : ", "UHD |", "|AF| ", "FR (C+AF) "
   n = n.replace(/^(UK\s*[\|:]+\s*|UHD\s*▎\s*|\|[A-Z]+\|\s*|FR\s*\([^)]*\)\s*)/i, '');
@@ -42,7 +45,7 @@ function normalizeChannelName(name: string): string {
 
 // --- Network family detection ---
 
-function getNetworkFamily(name: string): string | null {
+export function getNetworkFamily(name: string): string | null {
   const nl = name.toLowerCase();
   if (nl.includes('bein') || nl.includes('alkass')) return 'beIN';
   if (nl.includes('sky sport')) return 'Sky Sports';
@@ -91,7 +94,9 @@ export const SmartMatch: React.FC<SmartMatchProps> = ({
   allChannels,
   onSwitch,
   visible,
+  isFullscreen = false,
   onHasContent,
+  activeGenre,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const currentNorm = useMemo(() => normalizeChannelName(currentChannel.name), [currentChannel.name]);
@@ -145,10 +150,22 @@ export const SmartMatch: React.FC<SmartMatchProps> = ({
     }
   }, [currentChannel.id]);
 
+  // Genre filter channels — when a genre pill is active, show matching channels instead of quality variants
+  const genreChannels = useMemo(() => {
+    if (!activeGenre) return [];
+    return allChannels
+      .filter(ch => {
+        if (ch.id === currentChannel.id) return false;
+        const exp = experienceForChannelId(ch.id);
+        return exp?.toLowerCase() === activeGenre.toLowerCase();
+      })
+      .slice(0, 18);
+  }, [allChannels, activeGenre, currentChannel.id]);
+
   // Don't render if nothing to show
   const hasVariants = qualityVariants.length > 0;
   const hasFamily = familyChannels.length > 0;
-  const hasContent = hasVariants || hasFamily;
+  const hasContent = hasVariants || hasFamily || (activeGenre ? genreChannels.length > 0 : false);
 
   useEffect(() => {
     onHasContent?.(hasContent);
@@ -159,26 +176,35 @@ export const SmartMatch: React.FC<SmartMatchProps> = ({
 
   return (
     <div
-      className={`absolute bottom-[92px] sm:bottom-[100px] left-0 right-0 z-30 transition-[opacity,transform] duration-300
+      className={`absolute left-0 right-0 z-30 bottom-[8px] transition-[opacity,transform] duration-300
                   ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'}`}
     >
       <div
         className="mx-2 rounded-2xl overflow-hidden"
         style={{
-          background: 'rgba(255, 255, 255, 0.05)',
+          background: 'linear-gradient(135deg, rgba(30,27,75,0.68) 0%, rgba(4,2,20,0.65) 40%, rgba(12,30,58,0.68) 100%)',
           backdropFilter: 'blur(16px) saturate(180%)',
           WebkitBackdropFilter: 'blur(16px) saturate(180%)',
-          border: '1px solid rgba(157, 78, 221, 0.12)',
+          border: '1px solid rgba(157,78,221,0.16)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <div
           ref={scrollRef}
-          className="flex items-center gap-2 overflow-x-auto scrollbar-hide px-3 py-2"
-          style={{ minHeight: 48 }}
+          className="flex items-center gap-2 overflow-x-auto scrollbar-hide px-3 py-3"
+          style={{ minHeight: 64 }}
         >
-          {/* Section 1: Quality variants */}
-          {hasVariants && (
+          {/* Section 1: Genre channels when active, else quality variants */}
+          {activeGenre && genreChannels.length > 0 ? (
+            <>
+              <span className="text-[9px] text-white/30 uppercase tracking-wider font-medium flex-shrink-0 mr-0.5">
+                {activeGenre}
+              </span>
+              {genreChannels.map((ch) => (
+                <FamilyCard key={ch.id} channel={ch} onClick={() => onSwitch(ch)} />
+              ))}
+            </>
+          ) : hasVariants ? (
             <>
               <span className="text-[9px] text-white/30 uppercase tracking-wider font-medium flex-shrink-0 mr-0.5">
                 Quality
@@ -205,14 +231,14 @@ export const SmartMatch: React.FC<SmartMatchProps> = ({
                 />
               ))}
             </>
-          )}
+          ) : null}
 
           {/* Divider between sections */}
-          {hasVariants && hasFamily && (
+          {(activeGenre ? genreChannels.length > 0 : hasVariants) && hasFamily && (
             <div className="w-px h-8 bg-white/[0.08] flex-shrink-0 mx-1" />
           )}
 
-          {/* Section 2: Family channels */}
+          {/* Section 2: Family channels — always show after genre or quality variants */}
           {hasFamily && (
             <>
               <span className="text-[9px] text-white/30 uppercase tracking-wider font-medium flex-shrink-0 mr-0.5">

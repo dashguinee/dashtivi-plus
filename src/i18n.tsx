@@ -32,7 +32,7 @@ const translations = {
     enterCodeFromDash: 'Entrez votre code DASH.',
     pleaseEnterCode: 'Entrez votre code.',
     invalidCode: 'Code d\'accès invalide',
-    connectionError: 'Connexion perdue. Vérifiez votre réseau.',
+    connectionError: 'Activez FLOW.',
 
     // ── Guest Entry Modal ─────────────────────────────────────
     'guestModal.title': 'Regardez gratuitement pendant 24h',
@@ -456,7 +456,7 @@ const translations = {
     enterCodeFromDash: 'Enter your DASH code.',
     pleaseEnterCode: 'Enter your code.',
     invalidCode: 'Invalid access code',
-    connectionError: 'Connection lost. Check your network.',
+    connectionError: 'Turn on FLOW.',
 
     // ── Guest Entry Modal ─────────────────────────────────────
     'guestModal.title': 'Watch free for 24 hours',

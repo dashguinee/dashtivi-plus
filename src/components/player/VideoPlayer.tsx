@@ -14,7 +14,7 @@ import { tap } from '@/lib/haptics';
 import { setAmbientPlayerState, toggleAmbient, isAmbientEnabled } from '@/lib/ambient-audio';
 import { useLanguage } from '@/i18n';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
-import { SmartMatch } from './SmartMatch';
+import { UnifiedChannelBar } from './UnifiedChannelBar';
 import { EpgWidget } from './EpgWidget';
 import type { Channel, PlayerState } from '@/types';
 
@@ -47,23 +47,9 @@ interface Props {
 }
 
 // ── Connecting-card throttle ──────────────────────────────────────────────
-// Show the logo + channel-name "connecting" block only the FIRST few times per
-// session (weak-network reassurance is most valuable early). After that the
-// thin top beam alone signals the switch — no full card. Module-level so it
-// survives player remounts within a session, resets on full reload.
-const CONNECT_CARD_MAX = 3;
-let _connectCardSeen = 0;
-const _connectCardChannels = new Set<string>();
-/** Returns true if the full connecting card should render for this channel. */
+/** Always show the full connecting card — consistent pill on every switch. */
 function shouldShowConnectCard(channelId: string | null | undefined): boolean {
-  if (!channelId) return false;
-  // Count each distinct channel once — re-buffering the same channel doesn't
-  // burn a slot, and a quick A→B→A surf doesn't either.
-  if (_connectCardChannels.has(channelId)) return _connectCardSeen <= CONNECT_CARD_MAX;
-  if (_connectCardSeen >= CONNECT_CARD_MAX) return false;
-  _connectCardSeen += 1;
-  _connectCardChannels.add(channelId);
-  return true;
+  return !!channelId;
 }
 
 export const VideoPlayer: React.FC<Props> = ({
@@ -92,15 +78,18 @@ export const VideoPlayer: React.FC<Props> = ({
   const isSwitchingRef = useRef(false);
   const [seekIndicator, setSeekIndicator] = useState(false);
   const [seekDirection, setSeekDirection] = useState<'forward' | 'backward'>('forward');
-
+  const [activeGenre, setActiveGenre] = useState<string | null>(null);
+  const handleGenreSwitch = useCallback((themeId: string | null) => {
+    setActiveGenre(themeId);
+  }, []);
   const isVod = detectVod(state);
 
-  // Ambient breathing layer — soothes while buffering, whispers under content
+  // Ambient breathing layer — soothes while controls visible, fades to 0 with them
   const [ambientOn, setAmbientOn] = useState(() => isAmbientEnabled());
   useEffect(() => {
     if (!ambientOn) return;
-    setAmbientPlayerState(state.isPlaying);
-  }, [state.isPlaying, ambientOn]);
+    setAmbientPlayerState(controlsVisible);
+  }, [controlsVisible, ambientOn]);
 
   // ── Live continuity (Bug #1) ──────────────────────────────────────────────
   // The player chrome (channel carousel, edge arrows, corner hints, SmartMatch,
@@ -117,6 +106,17 @@ export const VideoPlayer: React.FC<Props> = ({
   // re-shows it (wired through showControls below) and resets the 15s timer.
   const [suggestionsVisible, setSuggestionsVisible] = useState(true);
   const suggestTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // SmartMatch: show with controls, linger 7s after controls hide
+  useEffect(() => {
+    clearTimeout(suggestTimerRef.current);
+    if (controlsVisible) {
+      setSuggestionsVisible(true);
+    } else {
+      suggestTimerRef.current = setTimeout(() => setSuggestionsVisible(false), 7000);
+    }
+    return () => { clearTimeout(suggestTimerRef.current); };
+  }, [controlsVisible]);
 
   const lastTapRef = useRef<{ x: number; t: number }>({ x: 0, t: 0 });
   const tapStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -172,30 +172,65 @@ export const VideoPlayer: React.FC<Props> = ({
 
   // ── Live hold-to-freeze + smart catch-up ──────────────────────────────────
   // Hold (500ms) on live → freezes frame. Release:
-  //   < 8s held → 2x playback catch-up to live edge, then back to 1x (replay the blink)
-  //   > 8s held → jump directly to live edge (too much to replay)
+  //   ≤ 7s held → 7x playback catch-up to live edge (volume fades out, back in on lock)
+  //   > 7s held → jump directly to live edge (seamless, no audio noise)
   const liveHoldTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const liveHoldActiveRef = useRef(false);
   const liveHoldStartRef = useRef(0);
+  const holdJustFiredRef = useRef(false); // blocks onClick after hold release
   const liveCatchupTimerRef = useRef<ReturnType<typeof setInterval>>();
   const [liveHolding, setLiveHolding] = useState(false);
   const [liveCatchingUp, setLiveCatchingUp] = useState(false);
 
-  // Poll while catching up: detect when we've reached the live edge and restore 1x.
+  const catchupFadeTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const catchupFadeIntervalRef = useRef<ReturnType<typeof setInterval>>();
+
+  // Abort any in-progress catchup — call on channel switch or any action that supersedes it.
+  const abortCatchup = useCallback(() => {
+    clearInterval(liveCatchupTimerRef.current);
+    clearTimeout(catchupFadeTimerRef.current);
+    clearInterval(catchupFadeIntervalRef.current);
+    setLiveCatchingUp(false);
+    const v = videoRef.current;
+    if (v) { v.playbackRate = 1.0; }
+  }, [videoRef]);
+
+  // Poll while catching up at 7x: detect live edge, restore 1x.
+  // Audio: stays at full volume for 7s — if still catching up after that, fade out then back in.
   const startCatchup = useCallback((v: HTMLVideoElement) => {
     setLiveCatchingUp(true);
-    v.playbackRate = 2.0;
+    v.playbackRate = 7.0;
+    const originalVol = v.volume;
+
+    // Only fade audio if still catching up after 7s (most catches are <1s — no dip)
+    catchupFadeTimerRef.current = setTimeout(() => {
+      if (!liveCatchingUp) return;
+      catchupFadeIntervalRef.current = setInterval(() => {
+        if (v.volume > 0.04) v.volume = Math.max(0, v.volume - 0.05);
+        else { v.volume = 0; clearInterval(catchupFadeIntervalRef.current); }
+      }, 60);
+    }, 7000);
+
     liveCatchupTimerRef.current = setInterval(() => {
-      if (!v || v.paused) { clearInterval(liveCatchupTimerRef.current); setLiveCatchingUp(false); return; }
+      if (!v || v.paused) { abortCatchup(); v.volume = originalVol; return; }
       const buffEnd = v.buffered.length > 0 ? v.buffered.end(v.buffered.length - 1) : 0;
-      // Caught up = within 1.5s of the buffered edge
       if (buffEnd > 0 && buffEnd - v.currentTime < 1.5) {
-        v.playbackRate = 1.0;
+        // Caught up — stop 7x, cancel any pending fade
+        clearTimeout(catchupFadeTimerRef.current);
+        clearInterval(catchupFadeIntervalRef.current);
         clearInterval(liveCatchupTimerRef.current);
+        v.playbackRate = 1.0;
         setLiveCatchingUp(false);
+        // Restore volume smoothly if it was already fading
+        if (v.volume < originalVol) {
+          const fadeIn = setInterval(() => {
+            if (v.volume < originalVol - 0.05) v.volume = Math.min(originalVol, v.volume + 0.06);
+            else { v.volume = originalVol; clearInterval(fadeIn); }
+          }, 50);
+        }
       }
-    }, 250);
-  }, []);
+    }, 200);
+  }, [abortCatchup, liveCatchingUp]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
@@ -229,21 +264,35 @@ export const VideoPlayer: React.FC<Props> = ({
 
     if (!isVod && liveHoldActiveRef.current) {
       liveHoldActiveRef.current = false;
+      holdJustFiredRef.current = true; // block the upcoming onClick
       setLiveHolding(false);
-      const heldMs = Date.now() - liveHoldStartRef.current;
       const v = videoRef.current;
       if (v) {
-        const buffEnd = v.buffered.length > 0 ? v.buffered.end(v.buffered.length - 1) : 0;
-        if (heldMs < 8000 && buffEnd > 0) {
-          // Short hold: 2x catch-up to live edge, then restore 1x
-          v.play().then(() => startCatchup(v)).catch(() => {});
-        } else {
-          // Long hold: jump straight to live edge
-          try { if (buffEnd > 0) v.currentTime = buffEnd; } catch { /* ignore */ }
-          v.play().catch(() => {});
-        }
+        // Always resume — HLS.js will rebuffer if needed
+        v.play().then(() => {
+          const heldMs = Date.now() - liveHoldStartRef.current;
+          const buffEnd = v.buffered.length > 0 ? v.buffered.end(v.buffered.length - 1) : 0;
+          if (heldMs > 7000 && buffEnd > 0) {
+            try { v.currentTime = buffEnd; } catch { /* ignore */ }
+          } else if (heldMs > 2000) {
+            startCatchup(v);
+          }
+        }).catch(() => {});
       }
       return;
+    }
+
+    // Live swipe → channel switch (touch-event fallback alongside pointer-event surf)
+    if (!isVod && start) {
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - start.x;
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(touch.clientY - start.y);
+      if (absDx > 65 && absDx > absDy * 1.5) {
+        if (dx > 0 && adjPrev) { setCurrentChannel(adjPrev.id); onRetry(adjPrev); }
+        else if (dx < 0 && adjNext) { setCurrentChannel(adjNext.id); onRetry(adjNext); }
+        return;
+      }
     }
 
     // VOD double-tap seek (the only touch gesture VideoPlayer still owns —
@@ -275,7 +324,7 @@ export const VideoPlayer: React.FC<Props> = ({
       }
       lastTapRef.current = { x: touch.clientX, t: now };
     }
-  }, [isVod, onSeek, state.duration, state.currentTime]);
+  }, [isVod, onSeek, state.duration, state.currentTime, adjPrev, adjNext, setCurrentChannel, onRetry]);
 
   // Auto-retry with backoff: 3s → 6s → 10s, then give up to manual
   const autoRetryRef = useRef(0);
@@ -311,6 +360,37 @@ export const VideoPlayer: React.FC<Props> = ({
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current); // no idle-hide mid-switch
     }
   }, [state.isSwitching, isVod]);
+
+  // ── Audio crossfade on channel switch ─────────────────────────────────────
+  // Switch start  → fade current audio to 0 over 600ms (TV fade-out feel)
+  // Switch end    → new stream starts at 0, rises to target over 900ms (soft entrance)
+  // This also eliminates the micro-stutter perception on channel start — audio
+  // rising in over frames hides the buffer hiccup.
+  const switchFadeRef = useRef<ReturnType<typeof setInterval>>();
+  const switchTargetVolRef = useRef(1);
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || isVod) return;
+    clearInterval(switchFadeRef.current);
+    if (state.isSwitching) {
+      // Capture current target so we restore to it after switch
+      switchTargetVolRef.current = v.volume > 0 ? v.volume : 1;
+      // Fade out quickly
+      switchFadeRef.current = setInterval(() => {
+        if (v.volume > 0.04) v.volume = Math.max(0, v.volume - 0.12);
+        else { v.volume = 0; clearInterval(switchFadeRef.current); }
+      }, 40);
+    } else if (state.isPlaying && !state.isLoading) {
+      // New stream is up — fade in from 0 (or wherever volume is)
+      v.volume = 0;
+      const target = switchTargetVolRef.current;
+      switchFadeRef.current = setInterval(() => {
+        if (v.volume < target - 0.04) v.volume = Math.min(target, v.volume + 0.06);
+        else { v.volume = target; clearInterval(switchFadeRef.current); }
+      }, 50);
+    }
+    return () => clearInterval(switchFadeRef.current);
+  }, [state.isSwitching, state.isPlaying, state.isLoading, isVod, videoRef]);
 
   // Cinema intro — shows until video is READY (not a fixed timer)
   const [showCinemaIntro, setShowCinemaIntro] = useState(false);
@@ -386,6 +466,9 @@ export const VideoPlayer: React.FC<Props> = ({
     clearTimeout(cinemaMinTimerRef.current);
     clearTimeout(cinemaMaxTimerRef.current);
   }, []);
+
+  // Abort any 7x catchup when channel changes — prevents stale playbackRate on new stream.
+  useEffect(() => { abortCatchup(); }, [state.channel?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── SAFETY: a movie must NEVER sit behind a stuck black overlay. ───────────
   // The cinema intro + post-cinema blackout are black layers above the <video>. If
@@ -510,7 +593,6 @@ export const VideoPlayer: React.FC<Props> = ({
   // only the thin top beam remains. Computed in an effect so the render stays
   // a pure read (no side effect during render).
   const [showConnectCard, setShowConnectCard] = useState(false);
-  const [hasSmartMatch, setHasSmartMatch] = useState(false);
   const connectDecidedForRef = useRef<string | null>(null);
   useEffect(() => {
     const id = state.channel?.id ?? null;
@@ -684,7 +766,7 @@ export const VideoPlayer: React.FC<Props> = ({
       // double-tap seek gesture can't accidentally zoom the layout. Pan + pinch stay.
       style={{ touchAction: 'manipulation' }}
       onMouseMove={showControls}
-      onTouchStart={(e) => { showControls(); handleTouchStart(e); }}
+      onTouchStart={(e) => { if (controlsVisible) showControls(); handleTouchStart(e); }}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onPointerDown={surfHandlers.onPointerDown}
@@ -692,8 +774,8 @@ export const VideoPlayer: React.FC<Props> = ({
       onPointerUp={surfHandlers.onPointerUp}
       onPointerCancel={surfHandlers.onPointerCancel}
       onClick={() => {
-        if (controlsVisible) showControls();
-        else setControlsVisible(true);
+        if (holdJustFiredRef.current) { holdJustFiredRef.current = false; return; }
+        showControls();
       }}
     >
       {/* Video element lives in App.tsx (persistent, never unmounts).
@@ -794,41 +876,26 @@ export const VideoPlayer: React.FC<Props> = ({
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>
           </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
-            className="absolute bottom-6 left-6 z-[60] w-10 h-10 rounded-full bg-white/10 flex items-center justify-center active:scale-90 transition-transform"
-            aria-label="Pause"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="white"><rect x="2" y="1" width="3.5" height="12" rx="1"/><rect x="8.5" y="1" width="3.5" height="12" rx="1"/></svg>
-          </button>
         </>
       )}
 
-      {/* Live hold indicator */}
-      {(liveHolding || liveCatchingUp) && (
+      {/* Catchup pill — only during 7x catch-up, not during hold (hold is silent) */}
+      {liveCatchingUp && (
         <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
           <div style={{
-            background: 'rgba(5,3,15,0.55)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            borderRadius: 20,
-            padding: '10px 20px',
+            background: 'linear-gradient(135deg, rgba(88,28,220,0.18) 0%, rgba(30,10,80,0.22) 100%)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            borderRadius: 24,
+            padding: '9px 18px',
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            border: '1px solid rgba(255,255,255,0.10)',
+            border: '1px solid rgba(157,78,221,0.30)',
+            boxShadow: '0 0 20px rgba(139,92,246,0.12)',
           }}>
-            {liveHolding ? (
-              <>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
-                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 500, letterSpacing: '0.02em' }}>PAUSED — release to catch up</span>
-              </>
-            ) : (
-              <>
-                <span style={{ color: '#a855f7', fontSize: 14 }}>▶▶</span>
-                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: 500, letterSpacing: '0.02em' }}>Catching up to live…</span>
-              </>
-            )}
+            <span style={{ color: 'rgba(167,119,255,0.90)', fontSize: 13, letterSpacing: '0.05em' }}>▶▶▶</span>
+            <span style={{ color: 'rgba(220,200,255,0.85)', fontSize: 12, fontWeight: 500, letterSpacing: '0.03em' }}>Catching up…</span>
           </div>
         </div>
       )}
@@ -988,28 +1055,27 @@ export const VideoPlayer: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Smart Match — quality variants + family channels (live only, hidden for VOD) */}
-      {/* Stays visible during channel switch so user can keep browsing */}
+      {/* Unified channel bar — adjacent / brand (live only), genre driven by categories bar above */}
       {!isVod && (
-        <SmartMatchOverlay
-          channel={state.channel}
+        <UnifiedChannelBar
+          currentChannel={state.channel}
           visible={controlsVisible || state.isSwitching}
           isLive={isLiveStream}
+          activeGenre={activeGenre ?? undefined}
           onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
-          onHasContent={setHasSmartMatch}
         />
       )}
 
-      {/* Channel carousel = the channel-SUGGESTION grid. Rides its own 15s idle
-          fade (Bug #2): lingers after the controls hide, then fades to the clean
-          minimal look; any tap/move re-shows it. Still shows through a switch. */}
+
+      {/* Category dial — always visible, lives in the bottom shadow zone */}
       {!isVod && (
-        <ChannelCarousel
-          visible={suggestionsVisible || state.isSwitching}
-          isLive={isLiveStream}
-          onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
+        <CategoryDial
+          activeGenre={activeGenre ?? undefined}
+          onSelect={handleGenreSwitch}
         />
       )}
+
+      {/* ChannelCarousel removed — UnifiedChannelBar + CategoryDial own discovery */}
 
       {/* CC unavailable indicator — shown when subtitle fetch failed for a VOD */}
       {subsUnavailable && state.channel?.url?.includes('/vod?') && (
@@ -1034,17 +1100,6 @@ export const VideoPlayer: React.FC<Props> = ({
           visible={controlsVisible}
           isLive={isLiveStream}
           onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
-        />
-      )}
-
-      {/* Landscape genre quick-switch (live only, hidden for VOD) */}
-      {!isVod && (
-        <LandscapeGenreBar
-          visible={controlsVisible}
-          isFullscreen={state.isFullscreen}
-          isLive={isLiveStream}
-          onGenreSwitch={onGenreSwitch}
-          hasSibling={hasSmartMatch}
         />
       )}
 
@@ -1338,7 +1393,7 @@ function ChannelHints({
         <button
           onClick={(e) => { e.stopPropagation(); setCurrentChannel(prev.id); onSwitch(prev); }}
           title={`Previous: ${prev.name}`}
-          className={`absolute top-[56px] left-3 z-35 flex items-center gap-2 px-2 py-1.5 rounded-xl
+          className={`absolute top-[88px] left-3 z-35 flex items-center gap-2 px-2 py-1.5 rounded-xl
                       transition-opacity duration-300
                       ${visible ? 'opacity-70 hover:opacity-100' : 'opacity-0 pointer-events-none'}`}
           style={{
@@ -1361,7 +1416,7 @@ function ChannelHints({
         <button
           onClick={(e) => { e.stopPropagation(); setCurrentChannel(next.id); onSwitch(next); }}
           title={`Next: ${next.name}`}
-          className={`absolute top-[56px] right-[calc(2.75rem+0.5rem)] z-35 flex items-center gap-2 px-2 py-1.5 rounded-xl
+          className={`absolute top-[88px] right-[calc(2.75rem+0.5rem)] z-35 flex items-center gap-2 px-2 py-1.5 rounded-xl
                       transition-opacity duration-300
                       ${visible ? 'opacity-70 hover:opacity-100' : 'opacity-0 pointer-events-none'}`}
           style={{
@@ -1388,12 +1443,16 @@ function LandscapeGenreBar({
   isFullscreen,
   isLive,
   onGenreSwitch,
+  activeGenre,
+  onClose,
   hasSibling,
 }: {
   visible: boolean;
   isFullscreen: boolean;
   isLive: boolean;
   onGenreSwitch?: (themeId: string) => void;
+  activeGenre?: string;
+  onClose?: () => void;
   hasSibling?: boolean;
 }) {
   const themes = [
@@ -1440,16 +1499,17 @@ function LandscapeGenreBar({
   }, []);
 
   // Swipe-down to dismiss — non-passive so we can prevent scroll bleed
-  const swipeDownRef = useRef<{ startY: number } | null>(null);
+  const swipeDownRef = useRef<{ startY: number; startX: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const onStart = (e: TouchEvent) => { swipeDownRef.current = { startY: e.touches[0].clientY }; };
+    const onStart = (e: TouchEvent) => { swipeDownRef.current = { startY: e.touches[0].clientY, startX: e.touches[0].clientX }; };
     const onMove = (e: TouchEvent) => {
       if (!swipeDownRef.current) return;
       const dy = e.touches[0].clientY - swipeDownRef.current.startY;
-      if (dy > 8) e.preventDefault(); // prevent page scroll during downward intent
+      const dx = Math.abs(e.touches[0].clientX - swipeDownRef.current.startX);
+      if (dy > 12 && dy > dx * 1.5) e.preventDefault(); // only block clearly vertical swipes
     };
     const onEnd = (e: TouchEvent) => {
       if (!swipeDownRef.current) return;
@@ -1467,30 +1527,80 @@ function LandscapeGenreBar({
     };
   }, []);
 
-  if (!isFullscreen || !isLive) return null;
+  const [barTouched, setBarTouched] = useState(false);
+  const barSettleRef = useRef<ReturnType<typeof setTimeout>>();
+  // 2-phase exit: controls hide → drop immediately → linger 5-8s (random) → out
+  const [barPhase, setBarPhase] = useState<'visible' | 'dropped' | 'out'>('visible');
+  const barPhaseTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => {
+    barPhaseTimersRef.current.forEach(clearTimeout);
+    barPhaseTimersRef.current = [];
+    if (visible && !dismissed) {
+      setBarPhase('visible');
+    } else {
+      // Drop with controls, linger 2–4s then exit
+      setBarPhase('dropped');
+      const linger = 2000 + Math.floor(Math.random() * 2000);
+      const t1 = setTimeout(() => setBarPhase('out'), linger);
+      barPhaseTimersRef.current = [t1];
+    }
+    return () => { barPhaseTimersRef.current.forEach(clearTimeout); };
+  }, [visible, dismissed]);
 
-  const isShown = visible && !dismissed;
+  if (!isLive) return null;
+
+  const phaseStyle: React.CSSProperties =
+    barPhase === 'visible' ? { opacity: barTouched ? 1 : 0.62, transform: 'translateY(0)', pointerEvents: 'auto' } :
+    barPhase === 'dropped' ? { opacity: barTouched ? 0.75 : 0.40, transform: 'translateY(44px)', pointerEvents: 'auto' } :
+                             { opacity: 0, transform: 'translateY(44px)', pointerEvents: 'none' };
 
   return (
     <div
       ref={containerRef}
-      className={`absolute left-0 right-0 z-30 transition-[opacity,transform] duration-300
-                  ${isShown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'}`}
-      style={{ bottom: hasSibling ? 130 : 48, transition: 'opacity 300ms, transform 300ms, bottom 300ms' }}
+      className="absolute left-0 right-0 z-30 md:hidden landscape:hidden"
+      style={{
+        bottom: isFullscreen ? 70 : (hasSibling ? 70 : 72),
+        ...phaseStyle,
+        transition: 'opacity 600ms ease-out, transform 500ms cubic-bezier(0.4,0,0.2,1), bottom 300ms',
+      }}
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
     >
       <div
-        className="mx-3 rounded-xl px-1 py-2 flex justify-center"
+        className="mx-5 rounded-xl px-1 py-2 flex justify-center relative overflow-hidden"
         style={{
-          background: 'rgba(0, 0, 0, 0.4)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255, 255, 255, 0.06)',
+          background: 'linear-gradient(135deg, rgba(30,27,75,0.72) 0%, rgba(4,2,20,0.68) 40%, rgba(12,30,58,0.72) 100%)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: '1px solid rgba(157,78,221,0.18)',
           transform: hasSibling ? undefined : 'scale(1.35)',
           transformOrigin: 'bottom center',
-          transition: 'transform 300ms',
+          transition: 'background 400ms ease-out, border-color 400ms, transform 300ms',
+        }}
+        onTouchStart={() => {
+          clearTimeout(barSettleRef.current);
+          setBarTouched(true);
+          // Snap back to visible position on any touch
+          barPhaseTimersRef.current.forEach(clearTimeout);
+          barPhaseTimersRef.current = [];
+          setBarPhase('visible');
+        }}
+        onTouchEnd={() => {
+          barSettleRef.current = setTimeout(() => setBarTouched(false), 800);
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Glass gleam sweep on touch — only when bar container is visible */}
+        {barTouched && (
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'linear-gradient(105deg, transparent 20%, rgba(200,170,255,0.12) 50%, transparent 80%)',
+              animation: 'genre-gleam 500ms cubic-bezier(0.25,0,0.25,1) forwards',
+              zIndex: 10,
+            }}
+          />
+        )}
         <div
           className="relative overflow-hidden"
           style={{ maskImage: 'linear-gradient(to right, transparent 0px, black 14px, black calc(100% - 14px), transparent 100%)' }}
@@ -1505,13 +1615,15 @@ function LandscapeGenreBar({
                   onClick={() => { if (onGenreSwitch) onGenreSwitch(theme.id); }}
                   style={{
                     transform: isFocal ? 'scale(1.12)' : 'scale(0.92)',
-                    transition: 'transform 250ms cubic-bezier(0.34,1.56,0.64,1), opacity 250ms, color 250ms, border-color 250ms',
+                    transition: 'transform 250ms cubic-bezier(0.34,1.56,0.64,1), opacity 250ms, color 250ms, border-color 250ms, box-shadow 400ms',
                   }}
                   className={`flex-shrink-0 text-[12px] px-4 py-2 rounded-full font-medium active:scale-95
-                              bg-black/30 backdrop-blur-sm border
-                              ${isFocal
-                                ? 'text-white border-white/30'
-                                : 'text-white/40 border-white/[0.06]'}`}
+                              backdrop-blur-sm border transition-[background,border-color,color] duration-300
+                              ${activeGenre === theme.id
+                                ? 'bg-primary/30 text-primary-light border-primary/50'
+                                : isFocal
+                                  ? 'text-white border-primary/40 bg-primary/15'
+                                  : 'text-white/40 border-white/[0.06] bg-white/[0.04]'}`}
                 >
                   {theme.name}
                 </button>
@@ -1524,32 +1636,123 @@ function LandscapeGenreBar({
   );
 }
 
-/** SmartMatch overlay — bridges playlist state to SmartMatch component */
-function SmartMatchOverlay({
-  channel,
-  visible,
-  isLive,
-  onSwitch,
-  onHasContent,
-}: {
-  channel: Channel | null;
-  visible: boolean;
-  isLive: boolean;
-  onSwitch: (channel: Channel) => void;
-  onHasContent?: (has: boolean) => void;
-}) {
-  const { channels } = usePlaylistState();
 
-  if (!isLive || !channel || channels.length <= 1) return null;
+// position 0 = Now (no filter), 1-7 = categories
+const DIAL_ENTRIES: { id: string | null; name: string; neon: string }[] = [
+  { id: null,            name: 'Now',     neon: '157,78,221'  },
+  { id: 'sports',        name: 'Sports',  neon: '30,160,255'  },
+  { id: 'news',          name: 'News',    neon: '100,210,255' },
+  { id: 'entertainment', name: 'Live',    neon: '255,50,160'  },
+  { id: 'kids',          name: 'Kids',    neon: '80,230,80'   },
+  { id: 'movies247',     name: 'Movies',  neon: '255,195,0'   },
+  { id: 'documentary',   name: 'Docs',    neon: '0,210,195'   },
+  { id: 'music',         name: 'Music',   neon: '180,80,255'  },
+];
+
+function CategoryDial({
+  activeGenre,
+  onSelect,
+}: {
+  activeGenre?: string;
+  onSelect: (id: string | null) => void;
+}) {
+  const pos = activeGenre ? DIAL_ENTRIES.findIndex(e => e.id === activeGenre) : 0;
+  const touchStartX = useRef<number | null>(null);
+
+  const go = (dir: 1 | -1) => {
+    const next = (pos + dir + DIAL_ENTRIES.length) % DIAL_ENTRIES.length;
+    onSelect(DIAL_ENTRIES[next].id);
+  };
+
+  const entry = DIAL_ENTRIES[pos] ?? DIAL_ENTRIES[0];
+  const isNow = !activeGenre;
+  const neon = entry.neon;
 
   return (
-    <SmartMatch
-      currentChannel={channel}
-      allChannels={channels}
-      onSwitch={onSwitch}
-      visible={visible}
-      onHasContent={onHasContent}
-    />
+    <div
+      className="absolute left-1/2 -translate-x-1/2 md:hidden landscape:hidden"
+      style={{ zIndex: 35, bottom: 72 }}
+      onTouchStart={(e) => { e.stopPropagation(); touchStartX.current = e.touches[0].clientX; }}
+      onTouchEnd={(e) => {
+        e.stopPropagation();
+        if (touchStartX.current === null) return;
+        const dx = e.changedTouches[0].clientX - touchStartX.current;
+        if (Math.abs(dx) > 22) go(dx < 0 ? 1 : -1);
+        touchStartX.current = null;
+      }}
+      onTouchMove={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+      onPointerMove={(e) => e.stopPropagation()}
+      onPointerUp={(e) => e.stopPropagation()}
+    >
+      {/* Pill */}
+      <div
+        className="flex items-center select-none overflow-hidden"
+        style={{
+          borderRadius: 999,
+          background: isNow
+            ? 'linear-gradient(135deg, rgba(16,14,38,0.75) 0%, rgba(4,2,16,0.70) 50%, rgba(8,16,36,0.75) 100%)'
+            : `linear-gradient(135deg, rgba(${neon},0.12) 0%, rgba(4,2,16,0.82) 40%, rgba(${neon},0.08) 100%)`,
+          backdropFilter: 'blur(24px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(200%)',
+          border: isNow ? '1px solid rgba(157,78,221,0.20)' : `1px solid rgba(${neon},0.55)`,
+          boxShadow: isNow
+            ? 'none'
+            : `0 0 18px rgba(${neon},0.28), inset 0 1px 0 rgba(255,255,255,0.06)`,
+          transition: 'background 350ms, border-color 350ms, box-shadow 350ms',
+        }}
+      >
+        <button
+          onClick={() => go(-1)}
+          className="w-8 h-8 flex items-center justify-center active:scale-90 transition-transform"
+          style={{ color: isNow ? 'rgba(255,255,255,0.28)' : `rgba(${neon},0.70)` }}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M8 10L4 6l4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+
+        <button onClick={() => isNow ? go(1) : onSelect(null)} className="px-0.5 min-w-[72px] text-center py-1">
+          <span
+            className="text-[11px] font-semibold tracking-wider transition-all duration-300"
+            style={{
+              color: isNow ? 'rgba(255,255,255,0.40)' : `rgb(${neon})`,
+              textShadow: isNow ? 'none' : `0 0 12px rgba(${neon},0.75)`,
+            }}
+          >
+            {entry.name}
+          </span>
+        </button>
+
+        <button
+          onClick={() => go(1)}
+          className="w-8 h-8 flex items-center justify-center active:scale-90 transition-transform"
+          style={{ color: isNow ? 'rgba(255,255,255,0.28)' : `rgba(${neon},0.70)` }}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
+      {/* Dots — neon color tracks the active category */}
+      <div className="flex justify-center gap-[3px] mt-1.5">
+        {DIAL_ENTRIES.map((e, i) => (
+          <div
+            key={i}
+            className="rounded-full"
+            style={{
+              transition: 'width 250ms ease, background 250ms ease',
+              width:  i === pos ? (i === 0 ? 8 : 14) : 4,
+              height: 4,
+              background: i === pos
+                ? `rgba(${e.neon},0.95)`
+                : 'rgba(255,255,255,0.14)',
+            }}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 

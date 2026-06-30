@@ -101,17 +101,17 @@ export function isAmbientEnabled(): boolean {
 }
 
 /**
- * Called by VideoPlayer whenever isPlaying changes.
- * Two moments in one breath:
- *   isPlaying=false → soothe (stream loading, ambient guides you in)
- *   isPlaying=true  → whisper (stream locked in, ambient retreats under content)
+ * Called by VideoPlayer whenever controlsVisible changes.
+ * Controls show  → soothe at 0.22 (warm guide while you look)
+ * Controls hide  → fade to 0 completely over 5s (disappears with the UI)
+ * Player closes  → unmuteAmbient() rises back to cruise
  */
-export function setAmbientPlayerState(isPlaying: boolean): void {
+export function setAmbientPlayerState(controlsVisible: boolean): void {
   if (!audio || !isEnabled) return;
   inPlayer = true;
-  isMutedForStream = true; // keep swing paused throughout
-  const target = isPlaying ? PLAYER_WHISPER : PLAYER_SOOTHE;
-  const ms     = isPlaying ? WHISPER_FADE_MS : SOOTHE_FADE_MS;
+  isMutedForStream = true;
+  const target = controlsVisible ? PLAYER_SOOTHE : 0;
+  const ms     = controlsVisible ? SOOTHE_FADE_MS : 5000;
   fadeVolume(audio.volume, target, ms, undefined, true);
 }
 

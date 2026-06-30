@@ -1,16 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Play,
-  Pause,
   Volume2,
   VolumeX,
   Maximize,
   Minimize,
+  Smartphone,
   PictureInPicture2,
   X,
   ChevronLeft,
   Download,
-  Waves,
   Zap,
   Flag,
 } from 'lucide-react';
@@ -168,18 +167,14 @@ export const PlayerControls: React.FC<Props> = ({
         </button>
       </div>
 
-      {/* Center play button — VOD only. Live uses hold gesture on the video surface. */}
+      {/* Center play button — VOD only, only when paused. Hold = pause (no button). */}
       <div className="flex-1 flex items-center justify-center">
-        {isVod && (
+        {isVod && !state.isPlaying && (
           <button
             onClick={onTogglePlay}
             className="w-16 h-16 rounded-full flex items-center justify-center bg-primary/80 backdrop-blur-sm hover:bg-primary hover:scale-105 shadow-lg shadow-primary/30 transition-[transform,background-color,box-shadow] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-90"
           >
-            {state.isPlaying ? (
-              <Pause className="w-8 h-8 text-white" />
-            ) : (
-              <Play className="w-8 h-8 text-white ml-1" />
-            )}
+            <Play className="w-8 h-8 text-white ml-1" />
           </button>
         )}
       </div>
@@ -234,18 +229,14 @@ export const PlayerControls: React.FC<Props> = ({
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {/* Play/Pause — VOD only. Live: hold gesture on video surface (no button). */}
-            {isVod && (
+            {/* Play — VOD only, only when paused. Pause via hold gesture. */}
+            {isVod && !state.isPlaying && (
               <button
                 onClick={onTogglePlay}
                 className="w-11 h-11 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
-                aria-label={state.isPlaying ? 'Pause' : 'Play'}
+                aria-label="Play"
               >
-                {state.isPlaying ? (
-                  <Pause className="w-5 h-5" />
-                ) : (
-                  <Play className="w-5 h-5 ml-0.5" />
-                )}
+                <Play className="w-5 h-5 ml-0.5" />
               </button>
             )}
 
@@ -353,7 +344,7 @@ export const PlayerControls: React.FC<Props> = ({
                 }}
                 title="Ambient sound"
               >
-                <Waves className="w-3.5 h-3.5 text-primary-light" strokeWidth={1.8} />
+                <span className="text-primary-light font-medium" style={{ fontSize: 15, lineHeight: 1 }}>~</span>
               </button>
             )}
           </div>
@@ -404,17 +395,13 @@ export const PlayerControls: React.FC<Props> = ({
               <PictureInPicture2 className="w-5 h-5" />
             </button>
 
-            {/* Fullscreen */}
+            {/* Fullscreen toggle */}
             <button
               onClick={onToggleFullscreen}
               className="w-11 h-11 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
-              aria-label={state.isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+              aria-label={state.isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
             >
-              {state.isFullscreen ? (
-                <Minimize className="w-5 h-5" />
-              ) : (
-                <Maximize className="w-5 h-5" />
-              )}
+              <Smartphone className="w-5 h-5" />
             </button>
           </div>
         </div>

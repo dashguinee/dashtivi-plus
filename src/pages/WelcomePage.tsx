@@ -321,7 +321,11 @@ export const WelcomePage: React.FC = () => {
                 </button>
               </div>
 
-              {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+              {error && <p className="text-red-400 text-sm text-center">
+                {error.includes('FLOW')
+                  ? <>{error.split('FLOW')[0]}<span className="text-purple-400 font-bold">FLOW</span>{error.split('FLOW')[1]}</>
+                  : error}
+              </p>}
 
               <button
                 type="submit"
