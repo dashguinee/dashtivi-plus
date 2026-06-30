@@ -171,29 +171,37 @@ export async function createHlsPlayer(
     lowLatencyMode: false,
     progressive: true,
     testBandwidth: true,
-    startLevel: -1,                    // auto-select best quality at start (ABR-driven)
+    // Progressive: start at lowest quality and climb — no overshoot, no downward stall.
+    // startLevel:-1 picks quality before real buffer data exists → overshoots → stalls.
+    // startLevel:0 = smooth progressive climb only.
+    startLevel: 0,
     capLevelToPlayerSize: true,
     startFragPrefetch: true,
-    abrEwmaDefaultEstimate: initialEstimate,  // real network speed, not a static guess
-    abrEwmaFastLive: 2.0,
-    abrEwmaSlowLive: 6.0,
-    abrEwmaFastVoD: 2.0,
-    abrEwmaSlowVoD: 6.0,
-    abrBandWidthUpFactor: 0.82,        // was 0.70 — upgrade quality less conservatively
-    abrBandWidthFactor: 0.8,
-    // ── Pre-buffer: deeper cushion so transient network dips don't surface as stalls.
-    // Soft target 60s (was 45); hard ceiling kept at 120s to bound memory on low-end
-    // Android (the SL market). backBufferLength trimmed to 12 to claw that headroom back.
+    abrEwmaDefaultEstimate: initialEstimate, // Network Info API seed — still used for ongoing ABR
+    // ── THE MICRO-STALL FIX ──────────────────────────────────────────────────────────
+    // Fast 3.0 (was 2.0): less reactive to momentary dips → fewer quality drops
+    // Slow 12.0 (was 6.0): ABR recalculates upgrade eligibility every ~12s of sustained
+    // bandwidth, not 6s. With 4-6s IPTV segments that's 2-3 segments per cycle = 8-18s
+    // = the exact micro-stall pattern. At 12.0, quality only upgrades when bandwidth is
+    // clearly stable, eliminating the oscillation.
+    abrEwmaFastLive: 3.0,
+    abrEwmaSlowLive: 12.0,
+    abrEwmaFastVoD: 3.0,
+    abrEwmaSlowVoD: 12.0,
+    abrBandWidthUpFactor: 0.68,   // needs clear headroom before upgrading quality
+    abrBandWidthFactor: 0.82,
+    // ── Pre-buffer: deep cushion for weak GN/SL mobile networks
     maxBufferLength: 60,
     maxMaxBufferLength: 120,
     backBufferLength: 12,
-    maxBufferHole: 0.5,                // was 1.5 — patch gaps faster → fewer micro-freezes
+    // 1.0s (was 0.5 → too tight, IPTV segments have natural ~0.5-1s boundary gaps.
+    // At 0.5 HLS.js was detecting normal gaps as holes and seeking to patch = stall.
+    maxBufferHole: 1.0,
     maxStarvationDelay: 4,
     maxLoadingDelay: 2,
-    // ── Auto-heal small stalls: let hls.js nudge the playhead more before giving up.
-    nudgeMaxRetry: 8,            // was default 3 — recover micro-stalls instead of freezing
+    nudgeMaxRetry: 8,
     nudgeOffset: 0.2,
-    highBufferWatchdogPeriod: 1, // was default 2s — detect a stall sooner
+    highBufferWatchdogPeriod: 2, // 2s (was 1s) — 1s was triggering too aggressively
     // ── Live cushion (free .m3u8 live): a few segments of slack > chasing the edge.
     liveSyncDuration: 6,
     liveMaxLatencyDuration: 18,
