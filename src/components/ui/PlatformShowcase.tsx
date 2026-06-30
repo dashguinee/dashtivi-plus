@@ -147,7 +147,7 @@ const PlatformCard = React.memo(function PlatformCard({
               boxShadow: `0 0 16px ${platform.color}25, inset 0 0 8px ${platform.color}10`,
             }}
           >
-            <img src={platform.logo} alt={platform.name} className="h-[24px] w-auto" loading="lazy" />
+            <img src={platform.logo} alt={platform.name} width={48} height={24} className="h-[24px] w-auto" loading="lazy" />
           </div>
           <div className="flex-1 min-w-0">
             <span className="text-[15px] font-bold text-white/95 tracking-tight">{platform.name}</span>
@@ -194,9 +194,9 @@ function PosterPreview({ item, color, tmdbMap }: { item: { id: number; name: str
   return (
     <div className="flex-1 aspect-[2/3] rounded-xl overflow-hidden" style={{ background: `${color}06`, border: `1px solid ${color}10` }}>
       {safeSrc && !failed ? (
-        <img src={safeSrc} alt={item.name || 'Poster'} className="w-full h-full object-cover" loading="lazy" onError={() => setFailed(true)} />
+        <img src={safeSrc} alt={item.name || 'Poster'} width={120} height={180} className="w-full h-full object-cover" loading="lazy" onError={() => setFailed(true)} />
       ) : tmdbSrc && !tmdbFailed ? (
-        <img src={tmdbSrc} alt={item.name || 'Poster'} className="w-full h-full object-cover" loading="lazy" onError={() => setTmdbFailed(true)} />
+        <img src={tmdbSrc} alt={item.name || 'Poster'} width={120} height={180} className="w-full h-full object-cover" loading="lazy" onError={() => setTmdbFailed(true)} />
       ) : (
         <div className="w-full h-full flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${color}12, ${color}06)` }}>
           <span className="text-[8px] text-white/15 font-medium text-center px-1 line-clamp-2">{item.name?.replace(/\s*\(\d{4}\)\s*$/, '')}</span>

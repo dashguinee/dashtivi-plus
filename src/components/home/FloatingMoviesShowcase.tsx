@@ -126,7 +126,7 @@ export const FloatingMoviesShowcase: React.FC<Props> = ({ credentials, movies, t
               animation: `fm-drift-${slot.drift} ${slot.dur}s ease-in-out ${slot.delay}s infinite`,
             }}
           >
-            <img src={img} alt={cleanTitle} loading="lazy" draggable={false} />
+            <img src={img} alt={cleanTitle} width={340} height={510} loading="lazy" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             {/* Soft top-down dark wash so titles/dark posters still feel cinematic. */}
             <span
               aria-hidden="true"

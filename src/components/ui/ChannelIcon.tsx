@@ -489,6 +489,7 @@ const sizes = {
   md: 'w-[72px] h-[72px] text-lg',
   lg: 'w-[104px] h-[104px] text-2xl',
 };
+const sizePx = { sm: 52, md: 72, lg: 104 };
 
 // ── Painted-source cache ─────────────────────────────────────────────
 // Channel logos are tiny and immutable. Once a given URL has painted once it's
@@ -584,6 +585,8 @@ export const ChannelIcon = memo(function ChannelIcon({ src, name, size = 'md', c
         ref={imgRef}
         src={safeSrc}
         alt={name}
+        width={sizePx[size]}
+        height={sizePx[size]}
         className={`absolute inset-0 w-full h-full rounded-xl object-contain bg-white/5 p-1 transition-opacity duration-200 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         onLoad={() => { markPainted(safeSrc); setLoaded(true); }}
         onError={() => {

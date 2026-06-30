@@ -53,11 +53,11 @@ function RecentMatchesInner({ results, replayChannels, isLoading }: Props) {
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/[0.06]">
               <div className="flex items-center gap-3">
-                <img src={highlightsMatch.homeTeam.logo} alt="" className="w-6 h-6 rounded-full" />
+                <img src={highlightsMatch.homeTeam.logo} alt="" width={24} height={24} className="w-6 h-6 rounded-full" />
                 <span className="text-[13px] font-bold text-white/90">
                   {highlightsMatch.homeTeam.shortName} {highlightsMatch.homeScore} - {highlightsMatch.awayScore} {highlightsMatch.awayTeam.shortName}
                 </span>
-                <img src={highlightsMatch.awayTeam.logo} alt="" className="w-6 h-6 rounded-full" />
+                <img src={highlightsMatch.awayTeam.logo} alt="" width={24} height={24} className="w-6 h-6 rounded-full" />
               </div>
               <button onClick={() => setHighlightsMatch(null)} className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center text-white/50 text-lg">&times;</button>
             </div>
@@ -131,11 +131,11 @@ const ResultCard: React.FC<{ match: Fixture; index: number; replayChannels: Broa
         <div className="flex items-center gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 mb-1">
-              <img src={match.homeTeam.logo} alt="" loading="lazy" decoding="async" className="w-5 h-5 rounded-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <img src={match.homeTeam.logo} alt="" width={20} height={20} loading="lazy" decoding="async" className="w-5 h-5 rounded-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               <span className="text-[11px] text-white/70 truncate">{match.homeTeam.shortName}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <img src={match.awayTeam.logo} alt="" loading="lazy" decoding="async" className="w-5 h-5 rounded-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <img src={match.awayTeam.logo} alt="" width={20} height={20} loading="lazy" decoding="async" className="w-5 h-5 rounded-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               <span className="text-[11px] text-white/70 truncate">{match.awayTeam.shortName}</span>
             </div>
           </div>

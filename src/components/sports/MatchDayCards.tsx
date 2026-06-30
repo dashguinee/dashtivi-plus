@@ -50,6 +50,8 @@ const TeamCrest: React.FC<{ logo: string; name: string }> = ({ logo, name }) => 
     <img
       src={logo}
       alt={name}
+      width={36}
+      height={36}
       className="w-9 h-9 rounded-full object-contain"
       onError={() => setFailed(true)}
       loading="lazy"
