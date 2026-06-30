@@ -109,7 +109,7 @@ export const PlayerControls: React.FC<Props> = ({
 
   return (
     <div
-      className={`absolute inset-0 flex flex-col justify-between transition-opacity duration-[550ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${
+      className={`absolute inset-0 flex flex-col justify-between transition-opacity duration-[700ms] ease-[cubic-bezier(0.25,0,0.15,1)] ${
         visible ? 'opacity-100' : 'opacity-0 pointer-events-none'
       }`}
     >
@@ -124,7 +124,7 @@ export const PlayerControls: React.FC<Props> = ({
           // Staged exit: the top bar lifts up as it fades. Pairs with the bottom bar's
           // downward drift for an elegant, choreographed dissolve (not an abrupt vanish).
           transform: visible ? 'translateY(0)' : 'translateY(-14px)',
-          transition: 'transform 550ms cubic-bezier(0.4,0,0.2,1)',
+          transition: 'transform 700ms cubic-bezier(0.25,0,0.15,1)',
           willChange: 'transform',
         }}
       >
@@ -185,7 +185,7 @@ export const PlayerControls: React.FC<Props> = ({
           // Staged exit: the bottom bar drifts down as it fades, a beat behind the top
           // bar (40ms stagger) — the controls retreat gracefully instead of snapping off.
           transform: visible ? 'translateY(0)' : 'translateY(16px)',
-          transition: 'transform 550ms cubic-bezier(0.4,0,0.2,1) 40ms',
+          transition: 'transform 700ms cubic-bezier(0.25,0,0.15,1) 40ms',
           willChange: 'transform',
         }}
       >

@@ -329,9 +329,9 @@
   .player-controls-gradient {
     background: linear-gradient(
       to top,
-      rgba(88, 28, 135, 0.80) 0%,
-      rgba(45, 10, 95, 0.52) 40%,
-      rgba(18, 42, 130, 0.14) 65%,
+      rgba(88, 28, 135, 0.62) 0%,
+      rgba(45, 10, 95, 0.40) 40%,
+      rgba(18, 42, 130, 0.11) 65%,
       rgba(18, 52, 155, 0) 100%
     );
   }
@@ -339,8 +339,8 @@
   .player-top-gradient {
     background: linear-gradient(
       to bottom,
-      rgba(70, 20, 115, 0.72) 0%,
-      rgba(40, 10, 85, 0.38) 42%,
+      rgba(70, 20, 115, 0.55) 0%,
+      rgba(40, 10, 85, 0.29) 42%,
       rgba(18, 42, 130, 0) 100%
     );
   }
