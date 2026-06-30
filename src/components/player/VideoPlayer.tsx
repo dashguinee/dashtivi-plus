@@ -1046,6 +1046,12 @@ export const VideoPlayer: React.FC<Props> = ({
         isLive={isLiveStream}
       />
 
+      {/* Permanent ambient aurora tint — always on for live channels, very soft.
+          The controls gradient (below) blooms stronger on tap; this is the baseline. */}
+      {!isVod && !showCinemaIntro && !postCinemaBlackout && (
+        <div className="player-ambient-tint absolute bottom-0 left-0 right-0 h-[22%] z-[19] pointer-events-none" />
+      )}
+
       {/* Controls overlay — hidden during cinema intro and post-cinema blackout.
           Wrapped at z-30 so it renders SHARP above the switch blur (z-20) while the
           beam + connecting card (z-45) stay on top. This is the layer that must

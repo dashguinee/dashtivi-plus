@@ -323,13 +323,36 @@
     );
   }
 
-  /* ═══ VIDEO PLAYER ═══ */
+  /* ═══ VIDEO PLAYER — aurora gradients ═══
+     3-tone cozy: VOYO deep purple → richer dark violet → icy blue exit.
+     Shorter than VOYO (≤22% height) so video breathes more. */
   .player-controls-gradient {
-    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.7) 50%, rgba(0, 0, 0, 0.9) 100%);
+    background: linear-gradient(
+      to top,
+      rgba(88, 28, 135, 0.82) 0%,
+      rgba(45, 10, 95, 0.58) 38%,
+      rgba(18, 42, 130, 0.22) 68%,
+      rgba(18, 52, 155, 0) 100%
+    );
   }
 
   .player-top-gradient {
-    background: linear-gradient(0deg, transparent 0%, rgba(0, 0, 0, 0.7) 100%);
+    background: linear-gradient(
+      to bottom,
+      rgba(70, 20, 115, 0.72) 0%,
+      rgba(40, 10, 85, 0.38) 42%,
+      rgba(18, 42, 130, 0) 100%
+    );
+  }
+
+  /* Permanent ambient tint — always-on live channel baseline, very soft. */
+  .player-ambient-tint {
+    background: linear-gradient(
+      to top,
+      rgba(88, 28, 135, 0.28) 0%,
+      rgba(45, 10, 95, 0.12) 22%,
+      rgba(18, 42, 130, 0) 42%
+    );
   }
 
   /* ═══ SCROLL SNAP ═══ */
