@@ -558,6 +558,41 @@ function logout() {
   setAuthState({ ...UNAUTHENTICATED, isLoading: false });
 }
 
+// ── claimTrial ────────────────────────────────────────────────────────────────
+// Atomically bind a free TRIAL line (tier='TRIAL', core_id=null) to this member
+// for 24h. Calls the claim_trial RPC (SECURITY DEFINER, callable with anon key).
+// On success: updates in-memory auth state with trial creds so the player restarts.
+export async function claimTrial(
+  coreId: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const res = await fetch(`${SB_URL}/rpc/claim_trial`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SB_ANON,
+        'Authorization': `Bearer ${SB_ANON}`,
+      },
+      body: JSON.stringify({ p_core_id: coreId }),
+    });
+
+    const data = await res.json();
+    if (data.error) return { ok: false, error: data.error };
+
+    // Upgrade in-memory session to trial credentials — no reload needed
+    setAuthState({
+      ...authState,
+      credentials: { username: data.user_xtream, password: data.pass_xtream },
+      tier: 'TRIAL',
+      expires: data.expires_at,
+    });
+
+    return { ok: true };
+  } catch {
+    return { ok: false, error: 'network_error' };
+  }
+}
+
 export function useAuth() {
   // Kick off the single bootstrap (idempotent) the first time any component
   // reads auth, then subscribe all consumers to the one shared snapshot.

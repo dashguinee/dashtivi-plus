@@ -13,7 +13,7 @@ import { FullPageLoader } from '@/components/ui/LoadingSpinner';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
 import { usePlayer } from '@/hooks/usePlayer';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, claimTrial } from '@/hooks/useAuth';
 import { useWatchHistory } from '@/hooks/useWatchHistory';
 import { getItem, setItem } from '@/lib/storage';
 import { setCurrentChannel } from '@/lib/playlist';
@@ -256,8 +256,62 @@ function KeepAlivePane({ active, children }: { active: boolean; children: React.
   );
 }
 
+// ── TrialBanner ───────────────────────────────────────────────────────────────
+function TrialBanner({ coreId }: { coreId: string }) {
+  const [state, setState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [errMsg, setErrMsg] = useState('');
+
+  const claim = async () => {
+    setState('loading');
+    const res = await claimTrial(coreId);
+    if (res.ok) {
+      setState('done');
+    } else {
+      setState('error');
+      setErrMsg(
+        res.error === 'max_trials_reached'   ? '2 Teaser Pass déjà utilisés' :
+        res.error === 'no_trials_available'  ? 'Plus de pass disponibles' :
+        'Erreur — réessaie'
+      );
+    }
+  };
+
+  if (state === 'done') return null;
+
+  return (
+    <div
+      className="fixed top-3 left-1/2 z-[999] flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold shadow-lg"
+      style={{
+        transform: 'translateX(-50%)',
+        background: 'rgba(0,0,0,0.75)',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255,255,255,0.12)',
+        boxShadow: '0 0 20px rgba(157,78,221,0.3)',
+      }}
+    >
+      {state === 'error' ? (
+        <span className="text-red-400">{errMsg}</span>
+      ) : (
+        <>
+          <span>🎁</span>
+          <span className="text-white/70">Teaser Pass</span>
+          <span className="text-white/35 text-[10px]">24h</span>
+          <button
+            onClick={claim}
+            disabled={state === 'loading'}
+            className="px-3 py-1 rounded-full text-[11px] font-black text-white transition-opacity"
+            style={{ background: '#9D4EDD', opacity: state === 'loading' ? 0.6 : 1 }}
+          >
+            {state === 'loading' ? '…' : 'Activer'}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolean; onRequestCode?: (code: string) => Promise<unknown>; onLogout?: () => void }) {
-  const { credentials, logout, tier } = useAuth();
+  const { credentials, logout, tier, coreId } = useAuth();
   // Sign-out must reset the AUTH-GATING state (the one in AppRouter), not just this
   // component's own useAuth copy — otherwise the screen only flips on a manual
   // refresh. Prefer the threaded gating logout; fall back to local for safety.
@@ -545,8 +599,12 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
 
   if (!credentials && !guestMode) return null;
 
+  // Show trial CTA when member is logged in but has no paid creds (free/guest)
+  const showTrialBanner = !credentials && !!coreId && tier !== 'TRIAL';
+
   return (
     <div className="min-h-screen bg-bg relative" onClick={handleAmbientStart}>
+      {showTrialBanner && <TrialBanner coreId={coreId} />}
       <OfflineBanner />
       {/* Pull-to-refresh indicator */}
       {ptr.pulling && (

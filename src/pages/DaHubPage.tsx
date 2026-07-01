@@ -27,7 +27,7 @@ import {
 import { DirectMessageChat } from '@/components/dahub/DirectMessageChat';
 import { useBackGuard } from '@/hooks/useBackGuard';
 import { VoyoCloseX } from '@/components/ui/VoyoCloseX';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth, claimTrial } from '@/hooks/useAuth';
 
 const WA_NUMBER = '224611361300';
 
@@ -278,12 +278,32 @@ function MyPassCard({
   tier,
   expires,
   code,
+  coreId,
 }: {
   customerName: string;
   tier: string;
   expires: string;
   code: string;
+  coreId: string;
 }) {
+  const [teaserState, setTeaserState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [teaserErr, setTeaserErr] = useState('');
+
+  const claimTeaser = async () => {
+    if (!coreId) return;
+    setTeaserState('loading');
+    const res = await claimTrial(coreId);
+    if (res.ok) {
+      setTeaserState('done');
+    } else {
+      setTeaserState('error');
+      setTeaserErr(
+        res.error === 'max_trials_reached'  ? 'Teaser Pass déjà utilisé (max 2)' :
+        res.error === 'no_trials_available' ? 'Plus de pass disponibles' : 'Erreur'
+      );
+    }
+  };
+
   const greeting = customerName ? `Hi ${customerName.split(' ')[0]}` : 'Hi there';
   const isGuest = (tier || '').toLowerCase() === 'guest';
   const label = tierLabel(tier);
@@ -324,14 +344,38 @@ function MyPassCard({
               Activate to unlock World Cup, EPL, UCL, movies &amp; premium channels.
             </p>
 
+            {/* Teaser Pass — self-serve 24h trial */}
+            {teaserState === 'done' ? (
+              <div className="mt-5 w-full py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold"
+                style={{ background: 'rgba(0,201,167,0.15)', border: '1px solid rgba(0,201,167,0.4)', color: '#00C9A7' }}>
+                🎁 Teaser Pass activé — 24h de streaming
+              </div>
+            ) : (
+              <button
+                onClick={claimTeaser}
+                disabled={teaserState === 'loading'}
+                className="mt-5 w-full py-3.5 rounded-2xl font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.98] text-white"
+                style={{
+                  background: teaserState === 'error'
+                    ? 'rgba(239,68,68,0.2)'
+                    : 'linear-gradient(135deg, #00C9A7, #00A896)',
+                  opacity: teaserState === 'loading' ? 0.7 : 1,
+                }}
+              >
+                <span>🎁</span>
+                <span>{teaserState === 'loading' ? 'Activation…' : teaserState === 'error' ? teaserErr : 'Teaser Pass · 24h gratuit'}</span>
+              </button>
+            )}
+
             <a
               href={`https://wa.me/${WA_NUMBER}?text=${activateMsg}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 w-full py-3.5 rounded-2xl font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.98] bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/30"
+              className="mt-3 w-full py-3.5 rounded-2xl font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.98] text-white/70"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
             >
               <CreditCard size={18} />
-              <span>Activate your pass</span>
+              <span>Activate full pass</span>
             </a>
           </div>
         </div>
@@ -1013,7 +1057,7 @@ export function DaHubPage() {
       />
 
       {/* MY PASS — the real subscription (priority) */}
-      <MyPassCard customerName={customerName} tier={tier} expires={expires} code={code} />
+      <MyPassCard customerName={customerName} tier={tier} expires={expires} code={code} coreId={coreId} />
 
       {/* Following — DASH services */}
       <FollowingSection />
