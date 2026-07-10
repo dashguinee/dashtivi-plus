@@ -356,8 +356,14 @@ export function usePlayer() {
           video.src = url;
           video.play().catch(() => {});
 
-          // Connection timeout — VOD gets 15s (large files), live gets 7s.
-          const timeout = (isVod || url.includes('?url=')) ? 15000 : 7000;
+          // Connection timeout — VOD gets 15s (large files), live gets 12s.
+          // Live was 7s, which false-tripped heavy sports HD (e.g. beIN Sports Max 1,
+          // ext 744523): the upstream ffmpeg spins up in ~8–11s, so at 7s readyState is
+          // still 0 → the timeout painted "No active package" on a stream whose package
+          // IS active (verified: 744523 present in every pool account) and that then
+          // plays fine. 12s lets a valid slow-start stream resolve before we accuse the
+          // package. (Z 2026-07-10 — Aziz-reported "No active package… but it plays".)
+          const timeout = (isVod || url.includes('?url=')) ? 15000 : 12000;
           connectionTimeout = setTimeout(() => {
             if (!connectionResolved && !video.readyState && destroyRef.current) {
               // Zero data after the window = the stream is never coming. The common

@@ -86,7 +86,9 @@ async function checkSupabase() {
 }
 
 async function checkProduction() {
-  const res = await httpCheck('https://dashtivi.dasuperhub.com');
+  // Live user-facing domain. dashtivi.dasuperhub.com is a dead subdomain (ECONNRESET) —
+  // it produced a false "prod DOWN" while the real site was UP (Z 2026-07-10).
+  const res = await httpCheck('https://tivi.dasuperhub.com');
   return {
     name: 'DashTivi+ Prod',
     ok: res.ok,

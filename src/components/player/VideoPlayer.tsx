@@ -369,6 +369,71 @@ export const VideoPlayer: React.FC<Props> = ({
     if (state.isPlaying) autoRetryRef.current = 0;
     return () => { if (autoRetryTimerRef.current) clearTimeout(autoRetryTimerRef.current); };
   }, [state.error, state.isPlaying, state.channel, onRetry]);
+
+  // ── Live reconnect flow (Aziz 2026-07-10 spec) ─────────────────────────────
+  // reconnecting → (15s, no recover) → nostream (2s) → countdown 5,4,3 → auto-switch
+  // to the NEXT channel at 3. Cancellable: tap during nostream/countdown = stay &
+  // keep retrying the current channel. Runs alongside the auto-retry above (those
+  // are the actual reconnection attempts; a success flips isPlaying → flow resets).
+  const [rcPhase, setRcPhase] = useState<'idle' | 'reconnecting' | 'nostream' | 'countdown'>('idle');
+  const [rcCount, setRcCount] = useState(5);
+  const rcTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const clearRcTimers = useCallback(() => {
+    rcTimersRef.current.forEach(clearTimeout);
+    rcTimersRef.current = [];
+  }, []);
+  const doAutoSwitch = useCallback(() => {
+    clearRcTimers();
+    setRcPhase('idle');
+    if (adjNext) { setCurrentChannel(adjNext.id); onRetry(adjNext); }
+    else if (state.channel) { autoRetryRef.current = 0; onRetry(state.channel); }
+  }, [adjNext, onRetry, clearRcTimers, state.channel]);
+  const startCountdown = useCallback(() => {
+    setRcPhase('countdown');
+    setRcCount(5);
+    let n = 5;
+    const tick = () => {
+      n -= 1;
+      setRcCount(n);
+      if (n <= 3) { rcTimersRef.current.push(setTimeout(doAutoSwitch, 700)); return; } // show 3, then switch
+      rcTimersRef.current.push(setTimeout(tick, 1000));
+    };
+    rcTimersRef.current.push(setTimeout(tick, 1000));
+  }, [doAutoSwitch]);
+  const escalateNoStream = useCallback(() => {
+    setRcPhase('nostream');
+    rcTimersRef.current.push(setTimeout(startCountdown, 2000));
+  }, [startCountdown]);
+  const cancelAutoSwitch = useCallback(() => {
+    clearRcTimers();
+    setRcPhase('reconnecting');
+    if (state.channel) { autoRetryRef.current = 0; onRetry(state.channel); }
+    rcTimersRef.current.push(setTimeout(escalateNoStream, 15000));
+  }, [clearRcTimers, escalateNoStream, onRetry, state.channel]);
+
+  useEffect(() => {
+    const inReconnect = !!state.error && !state.isPlaying && !isVod
+      && !state.error.includes('package') && !!state.channel;
+    if (!inReconnect) {
+      if (rcTimersRef.current.length) clearRcTimers();
+      if (rcPhase !== 'idle') setRcPhase('idle');
+      return;
+    }
+    if (rcPhase === 'idle') {
+      setRcPhase('reconnecting');
+      rcTimersRef.current.push(setTimeout(escalateNoStream, 15000)); // 15s → escalate
+    }
+  }, [state.error, state.isPlaying, state.channel, isVod, rcPhase, clearRcTimers, escalateNoStream]);
+
+  // Keep controls up during the whole reconnect flow so switching is never a fight
+  // (Aziz: "controls tuck in… making it a fight to change channels").
+  useEffect(() => {
+    if (rcPhase !== 'idle') {
+      setControlsVisible(true);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    }
+  }, [rcPhase]);
+
   const [hasSubs, setHasSubs] = useState(false);
   const [subsOn, setSubsOn] = useState(false);
   const [subsUnavailable, setSubsUnavailable] = useState(false);
@@ -1040,7 +1105,70 @@ export const VideoPlayer: React.FC<Props> = ({
       )}
 
       {/* Unified reconnection flow — seamless between inner retries and outer retries */}
-      {state.error && !state.isPlaying && (
+      {/* ── LIVE RECONNECT FLOW (Aziz 2026-07-10 spec) ──────────────────────────
+          Transient live drop → channel loading pulse (blue→grey→white, distinct from
+          the purple fresh-load pulse) + "Reconnecting" + line. The wash is a
+          pointer-events-none dim at z-30 and controls are forced visible, so switching
+          stays a one-tap action (not a fight). No recovery in 15s → spinner ring +
+          "Sorry, no stream" (2s) → pulse the NEXT channel (purple) + "Switching in
+          5,4,3" → auto-switch at 3; tap to stay. Package/VOD fall to the screen below. */}
+      {state.error && !state.isPlaying && !isVod && !state.error.includes('package') && (
+        <>
+          <div className="absolute inset-0 z-30 bg-[#060609]/55 pointer-events-none" />
+          <div className="absolute inset-0 z-[46] flex items-center justify-center pointer-events-none">
+            <div
+              className="relative flex flex-col items-center gap-3 pointer-events-auto"
+              onClick={(rcPhase === 'countdown' || rcPhase === 'nostream') ? cancelAutoSwitch : undefined}
+            >
+              {(() => {
+                const showNext = rcPhase === 'countdown' || rcPhase === 'nostream';
+                const ch = showNext ? (adjNext || state.channel) : state.channel;
+                return (
+                  <>
+                    <div className="relative w-16 h-16">
+                      {showNext && (
+                        <div className="absolute -inset-2 rounded-full border-2 border-white/12 border-t-white/70 animate-spin" />
+                      )}
+                      <div className="absolute inset-0 rounded-2xl"
+                        style={{ animation: rcPhase === 'reconnecting'
+                          ? 'reconnect-pulse 1.6s ease-in-out infinite'
+                          : 'connect-pulse 1.7s ease-in-out infinite' }} />
+                      <div className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center"
+                        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(157,78,221,0.32)' }}>
+                        {ch?.logo
+                          ? <img src={ch.logo} alt="" className="w-full h-full object-contain p-1.5" />
+                          : <Tv className="w-7 h-7 text-white/40" />}
+                      </div>
+                    </div>
+                    <p className="text-[13px] text-white/85 font-medium tracking-wide max-w-xs text-center line-clamp-1 px-4">
+                      {ch?.name || '…'}
+                    </p>
+                  </>
+                );
+              })()}
+              {(rcPhase === 'idle' || rcPhase === 'reconnecting') && (
+                <div className="text-center">
+                  <p className="text-[12px] text-white/45 font-light tracking-wide">Reconnecting</p>
+                  <div className="mt-2 mx-auto w-8 h-[2px] rounded-full overflow-hidden bg-white/5">
+                    <div className="h-full w-full bg-primary/40 rounded-full" style={{ animation: 'loading-bar 1.2s ease-in-out infinite' }} />
+                  </div>
+                </div>
+              )}
+              {rcPhase === 'nostream' && (
+                <p className="text-[12px] text-white/45 font-light tracking-wide">Sorry, no stream</p>
+              )}
+              {rcPhase === 'countdown' && (
+                <p className="text-[12px] text-white/55 font-light tracking-wide">
+                  Switching in {rcCount}… <span className="text-white/30">tap to stay</span>
+                </p>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Package (the subtle screen you like) + VOD errors — unchanged. */}
+      {state.error && !state.isPlaying && (isVod || state.error.includes('package')) && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#060609]/90 z-40">
           {state.error.includes('Retry') || (autoRetryRef.current < 3 && !state.error.includes('package')) ? (
             <div className="text-center">

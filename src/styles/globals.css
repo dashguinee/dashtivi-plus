@@ -70,6 +70,15 @@
   50%      { box-shadow: 0 0 0 12px rgba(157, 78, 221, 0); }
 }
 
+/* Reconnect pulse — a colour-SHIFTING ring (blue → grey → white) so a reconnect
+   reads differently from the purple fresh-load pulse. (Aziz 2026-07-10.) */
+@keyframes reconnect-pulse {
+  0%   { box-shadow: 0 0 0 0   rgba(59, 130, 246, 0.55); }  /* blue  */
+  45%  { box-shadow: 0 0 0 9px  rgba(148, 163, 184, 0.22); } /* grey  */
+  75%  { box-shadow: 0 0 0 13px rgba(255, 255, 255, 0.10); } /* white */
+  100% { box-shadow: 0 0 0 16px rgba(255, 255, 255, 0); }
+}
+
 /* Category-surf bloom — vertical swipe switches category: wash + name blooms,
    holds ~0.6s, then fades into the new channel. One premium signature effect. */
 @keyframes cat-bloom {
