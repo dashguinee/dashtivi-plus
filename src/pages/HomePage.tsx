@@ -25,7 +25,7 @@ import { FreePill } from '@/components/ui/FreePill';
 import { tap } from '@/lib/haptics';
 import { setPlaylist, setCurrentChannel } from '@/lib/playlist';
 import { setAmbientSpeed } from '@/lib/ambient-audio';
-import { useWatchHistory, isInProgress, resumePosition } from '@/hooks/useWatchHistory';
+import { useWatchHistory, resumePosition } from '@/hooks/useWatchHistory';
 import type { Channel } from '@/types';
 
 /**
@@ -438,6 +438,9 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
 
       {/* ── The curated experiences, in experience_order, exact names ─── */}
       <div className="mt-5">
+        {/* Continue Watching — top of the feed (Netflix-style). Renders null when
+            there's nothing to resume, so the slot stays clean. (Z 2026-07-10.) */}
+        <KeepWatchingRow onPlay={onPlay} lang={lang} />
         {(() => {
           let rendered = 0;
           return catalog.experienceOrder.map((experience, idx) => {
@@ -477,10 +480,7 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                   <FreeHlsShowcaseCard channel={woven} />
                 </div>
               )}
-              {/* Keep Watching — woven MID-FEED after the 2nd rendered row.
-                  In-progress movies/series, tap resumes (#4). Renders nothing
-                  when there's nothing to resume, so the slot stays clean. */}
-              {rpos === 1 && <KeepWatchingRow onPlay={onPlay} lang={lang} />}
+              {/* Keep Watching moved to the TOP of the feed (Z 2026-07-10). */}
               {/* ── The "Featured Destination" gateway — ONE curated district at a
                   time (see `featured` below), tapping THROUGH to it. Anchored to the
                   3rd RENDERED row (rpos), so empty collections can't skip it. ── */}
@@ -645,9 +645,13 @@ function GiraLoopSentinel() {
 // history via getResume). Reuses the row grammar; portrait-leaning poster cards
 // with a thin progress bar. Renders null when there's nothing to resume.
 function KeepWatchingRow({ onPlay, lang }: { onPlay: (ch: Channel) => void; lang: Lang }) {
+  // Continue Watching = the last channels you actually watched — LIVE + in-progress
+  // VOD (Tivi+ is live-first, so VOD-only was almost always empty → the row looked
+  // "gone"). history is already most-recent-first; keep anything playable. In-progress
+  // VOD still shows its resume progress bar; live just shows the channel. (Z 2026-07-10.)
   const { history } = useWatchHistory();
   const items = useMemo(
-    () => history.filter((e) => isInProgress(e) && !!e.url).slice(0, 14),
+    () => history.filter((e) => !!e.url).slice(0, 14),
     [history]
   );
   if (items.length === 0) return null;
