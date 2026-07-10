@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Tv, LogOut, Volume2, VolumeX, Search } from 'lucide-react';
+import { Tv, Volume2, VolumeX, Search } from 'lucide-react';
 import { toggleAmbient, isAmbientEnabled } from '@/lib/ambient-audio';
-import { LangToggle } from '@/components/ui/LangToggle';
+import { ProfileMenu } from '@/components/layout/ProfileMenu';
 import { useLanguage } from '@/i18n';
 import { useSearchDocked } from '@/lib/searchDock';
 
@@ -152,17 +152,9 @@ export const Header: React.FC<Props> = ({ onLogout }) => {
               <Search className="w-[18px] h-[18px] text-text-secondary" />
             </button>
           )}
-          <LangToggle />
-          {onLogout && (
-            <button
-              onClick={onLogout}
-              className="w-9 h-9 rounded-xl glass-light flex items-center justify-center hover:bg-white/10 transition-colors"
-              aria-label="Logout"
-              title="Logout"
-            >
-              <LogOut className="w-4 h-4 text-text-secondary" />
-            </button>
-          )}
+          {/* Profile avatar — opens options (Change photo, Language, Logout).
+              Mirrors the Hub top-right avatar. (Aziz 2026-07-10.) */}
+          <ProfileMenu onLogout={onLogout} />
         </div>
       </div>
     </header>
