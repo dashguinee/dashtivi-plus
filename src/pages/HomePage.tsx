@@ -712,7 +712,7 @@ function KeepWatchingRow({ onPlay, lang }: { onPlay: (ch: Channel) => void; lang
                 }}
               >
                 {e.logo && (
-                  <img src={e.logo} alt="" className="absolute inset-0 w-full h-full object-cover opacity-90" loading="lazy" />
+                  <img src={e.logo} alt="" className="absolute inset-0 w-full h-full object-contain p-2 opacity-95" loading="lazy" />
                 )}
                 <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 40%, rgba(6,6,9,0.85) 100%)` }} />
 
