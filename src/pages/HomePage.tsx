@@ -639,6 +639,10 @@ function GiraLoopSentinel() {
   );
 }
 
+// Soft neon theme palette for the Continue Watching cards — each card gets its own
+// coloured, thick-but-soft neon glow (Aziz 2026-07-10: "themed coloured thick neon, soft").
+const NEON_THEME = ['#9D4EDD', '#22D3EE', '#F472B6', '#34D399', '#FBBF24', '#60A5FA', '#A78BFA', '#FB7185'];
+
 // ── Keep Watching ───────────────────────────────────────────────────
 // In-progress movies/series with a saved position (not finished). Tapping a
 // card resumes from where the member left off (the player reads the same watch
@@ -674,11 +678,12 @@ function KeepWatchingRow({ onPlay, lang }: { onPlay: (ch: Channel) => void; lang
         </div>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1">
-        {items.map((e) => {
+      <div className="flex gap-5 overflow-x-auto scrollbar-hide px-4 py-2.5">
+        {items.map((e, idx) => {
           const total = e.totalDuration ?? 0;
           const pos = resumePosition(e);
           const pct = total > 0 ? Math.min(100, Math.max(3, (pos / total) * 100)) : 0;
+          const c = NEON_THEME[idx % NEON_THEME.length];
           return (
             <button
               key={e.channelId}
@@ -702,7 +707,8 @@ function KeepWatchingRow({ onPlay, lang }: { onPlay: (ch: Channel) => void; lang
                   width: cardW,
                   height: cardH,
                   background: 'linear-gradient(157deg, rgba(255,255,255,0.085) 0%, rgba(255,255,255,0.025) 50%, rgba(255,255,255,0.012) 100%)',
-                  boxShadow: '0 4px 14px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1px rgba(255,255,255,0.045)',
+                  // Coloured thick-but-soft neon: a colour ring + broad soft bloom + tight glow.
+                  boxShadow: `0 0 0 1.5px ${c}66, 0 0 20px ${c}55, 0 0 6px ${c}40, 0 6px 16px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.12)`,
                 }}
               >
                 {e.logo && (
@@ -713,7 +719,7 @@ function KeepWatchingRow({ onPlay, lang }: { onPlay: (ch: Channel) => void; lang
 
                 {/* Resume progress bar */}
                 <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/15 z-[2]">
-                  <div className="h-full rounded-r-full" style={{ width: `${pct}%`, background: accent, boxShadow: `0 0 6px ${accent}` }} />
+                  <div className="h-full rounded-r-full" style={{ width: `${pct}%`, background: c, boxShadow: `0 0 6px ${c}` }} />
                 </div>
               </div>
               <p className="text-[10.5px] leading-tight text-white/60 text-center mt-1.5 px-0.5 line-clamp-2 font-medium tracking-tight group-hover:text-white/90 transition-colors">
