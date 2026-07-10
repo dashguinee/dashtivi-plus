@@ -1,6 +1,6 @@
 import React, { useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Tv, Users, Sparkles } from 'lucide-react';
+import { Tv, Users, Sparkles, LayoutGrid } from 'lucide-react';
 import { useLanguage } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
 import { tap } from '@/lib/haptics';
@@ -123,6 +123,8 @@ const NAV_ITEMS: NavItem[] = [
   { path: '/library', labelKey: 'navBiblio', icon: BiblioGlyph },
   { path: '/__vee__', labelKey: 'navVee', icon: Sparkles, isVee: true },
   { path: '/hub', labelKey: 'navDahub', icon: Users },
+  // WALL preview toggle — Le Mur cover-wall, opt-in beside the classic Movies page.
+  { path: '/wall', labelKey: 'navWall', icon: LayoutGrid },
 ];
 
 const NavbarImpl: React.FC = () => {
@@ -314,6 +316,7 @@ const NavbarImpl: React.FC = () => {
           {renderMobileItem(NAV_ITEMS[1]) /* Biblio */}
           <TiviModeToggle /> {/* Vee — the cycling pebble */}
           {renderMobileItem(NAV_ITEMS[3]) /* Dahub */}
+          {renderMobileItem(NAV_ITEMS[4]) /* Wall — Le Mur preview */}
         </div>
       </div>
 

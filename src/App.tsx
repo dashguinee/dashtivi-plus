@@ -58,6 +58,7 @@ const HomePage = lazyRetry(() => import('@/pages/HomePage').then((m) => ({ defau
 const LiveTVPage = lazyRetry(() => import('@/pages/LiveTVPage').then((m) => ({ default: m.LiveTVPage })));
 const MoviesPage = lazyRetry(() => import('@/pages/MoviesPage').then((m) => ({ default: m.MoviesPage })));
 const SeriesPage = lazyRetry(() => import('@/pages/SeriesPage').then((m) => ({ default: m.SeriesPage })));
+const CinemaWallPage = lazyRetry(() => import('@/pages/CinemaWallPage').then((m) => ({ default: m.CinemaWallPage })));
 const FrenchPage = lazyRetry(() => import('@/pages/FrenchPage').then((m) => ({ default: m.FrenchPage })));
 const DaHubPage = lazyRetry(() => import('@/pages/DaHubPage').then((m) => ({ default: m.DaHubPage })));
 const WelcomePage = lazyRetry(() => import('@/pages/WelcomePage').then((m) => ({ default: m.WelcomePage })));
@@ -686,10 +687,13 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
             <KeepAlivePane active={deferredRouteLoc.pathname === '/live'}>
               <LiveTVPage credentials={credentials} onPlay={handlePlayChannel} />
             </KeepAlivePane>
+            <KeepAlivePane active={deferredRouteLoc.pathname === '/wall'}>
+              <CinemaWallPage credentials={credentials} onPlay={handlePlayChannel} />
+            </KeepAlivePane>
 
             {/* SECONDARY routes — visited less often; normal mount/unmount. Only
                 rendered when NOT on a primary tab (so they never overlay them). */}
-            {!['/', '/movies', '/series', '/live'].includes(deferredRouteLoc.pathname) && (
+            {!['/', '/movies', '/series', '/live', '/wall'].includes(deferredRouteLoc.pathname) && (
               <Suspense fallback={<div className="pt-20 px-4 space-y-6 animate-pulse"><div className="h-[22vh] rounded-2xl bg-white/[0.02]" /><div className="flex gap-2">{[1,2,3,4].map(i=><div key={i} className="h-8 w-16 rounded-full bg-white/[0.03]" />)}</div><div className="space-y-4">{[1,2,3].map(i=><div key={i} className="h-32 rounded-xl bg-white/[0.02]" />)}</div></div>}>
                 <Routes location={deferredRouteLoc}>
                   <Route path="/live/:experienceId" element={<ErrorBoundary><ExperienceHomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
