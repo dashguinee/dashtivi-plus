@@ -298,10 +298,25 @@ export const PlayerControls: React.FC<Props> = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                if (state.channel?.id) {
+                const ch = state.channel;
+                if (ch?.id) {
+                  // Local: hide it 6h on this device.
                   import('@/hooks/useChannelHealth').then(({ markDead }) => {
-                    markDead(state.channel!.id, 'user_reported_offline');
+                    markDead(ch.id, 'user_reported_offline');
                   });
+                  // Persist so ops actually SEES the flag and fixes the channel
+                  // (Z 2026-07-10). Fire-and-forget — never block or error the UI.
+                  import('@/lib/supabase')
+                    .then(({ getSupabase }) => getSupabase())
+                    .then((sb) => sb.from('tivi_channel_flags').insert({
+                      channel_id: ch.id,
+                      channel_name: (ch as any).name ?? null,
+                      ext_id: (ch as any).ext_id != null ? String((ch as any).ext_id) : null,
+                      reason: 'user_reported_offline',
+                      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 200) : null,
+                    }))
+                    .then(() => {}, () => {})
+                    .catch(() => {});
                 }
               }}
               className="w-11 h-11 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
