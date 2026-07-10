@@ -125,13 +125,17 @@ export async function createMpegTsPlayer(
   }, {
     enableWorker: true,
     enableStashBuffer: true,
-    stashInitialSize: 512,
+    // Bigger stash + a fatter live buffer cushion (5–20s vs the old 2–7s) so a
+    // mid-stream upstream dip is ridden out from buffer instead of rebuffering the
+    // viewer. Costs a few more seconds behind live — smooth > low-latency for flaky
+    // IPTV feeds. (Z 2026-07-11 — Aziz "some buffers are mid-stream".)
+    stashInitialSize: 128 * 1024,
     // Parallelizes MSE SourceOpen event and first network request instead of
     // serializing them. Safe because stash buffer holds incoming data until MSE ready.
     deferLoadAfterSourceOpen: false,
     liveBufferLatencyChasing: true,
-    liveBufferLatencyMaxLatency: 7.0,
-    liveBufferLatencyMinRemain: 2.0,
+    liveBufferLatencyMaxLatency: 20.0,
+    liveBufferLatencyMinRemain: 5.0,
     // Don't chase the live edge while the video is paused (e.g. blocked autoplay).
     // Avoids burning 3G bandwidth accumulating segments that get discarded on resume.
     liveBufferLatencyChasingOnPaused: false,
