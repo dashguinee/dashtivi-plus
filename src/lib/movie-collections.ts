@@ -444,19 +444,23 @@ export const VEE_MOVIE_COLLECTIONS: VeeMovieCollection[] = [
 
 // ── Parent Tabs ────────────────────────────────────────────────────
 
+// DASH CINEMA — English-focused (Aziz 2026-07-10: "for cinema we focus EN").
+// Non-English tabs (Bollywood, African, Arabic, World Cinema) removed; French VOD is
+// empty in this catalog, so French lives in Series/Live only. All category IDs verified
+// live against fastshare1 (Z 2026-07-10).
 export const MOVIE_TABS: MovieParentTab[] = [
-  // 1. FOR YOU — smart rows load first, this tab anchors them
+  // 1. NEW & HOT — the fresh English drops anchor the smart rows
   {
     id: 'new',
     name: 'New & Hot',
     subtabs: [
-      { id: 'all-new', name: 'All New', categoryIds: ['749', '597', '766', '599'] },
-      { id: 'hollywood-new', name: 'Hollywood', categoryIds: ['749', '597'] },
-      { id: 'bollywood-new', name: 'Bollywood', categoryIds: ['766', '599'] },
+      { id: 'all-new', name: 'All New', categoryIds: ['749', '597'] },
+      { id: 'new-2024', name: '2024', categoryIds: ['525'] },
+      { id: 'new-4k', name: '4K', categoryIds: ['122'] },
     ],
-    searchCategoryIds: ['749', '597', '766', '599'],
+    searchCategoryIds: ['749', '597', '525'],
   },
-  // 2. HOLLYWOOD — English-language, mainstream
+  // 2. HOLLYWOOD — the English movie library (30k)
   {
     id: 'hollywood',
     name: 'Hollywood',
@@ -473,60 +477,19 @@ export const MOVIE_TABS: MovieParentTab[] = [
       { id: 'hw-older', name: '2020-2022', categoryIds: ['62', '128', '253'] },
       { id: 'hw-classic', name: 'Classic', categoryIds: ['423'] },
     ],
-    searchCategoryIds: ['749', '597', '525', '363', '122', '34', '240'],
+    searchCategoryIds: ['749', '597', '525', '363', '122', '34', '240', '423'],
   },
-  // 3. AFRICAN CINEMA — Nollywood, Afrikaans, continent-first
-  {
-    id: 'african',
-    name: 'African Cinema',
-    subtabs: [
-      { id: 'af-nollywood', name: 'Nollywood', categoryIds: ['580'] },
-      { id: 'af-new', name: 'Latest', categoryIds: ['580'] },
-    ],
-    searchCategoryIds: ['580'],
-  },
-  // 4. FRENCH CINEMA — for Francophone West Africa (Guinea, Senegal, Cote d'Ivoire)
-  {
-    id: 'french',
-    name: 'French Cinema',
-    subtabs: [
-      { id: 'fr-all', name: 'All French', categoryIds: ['11'] },
-    ],
-    searchCategoryIds: ['11'],
-  },
-  // 5. ARABIC — relevant for North and West Africa
-  {
-    id: 'arabic',
-    name: 'Arabic',
-    subtabs: [
-      { id: 'ar-all', name: 'All', categoryIds: ['88'] },
-    ],
-    searchCategoryIds: ['88'],
-  },
-  // 6. NETFLIX — recognized brand, trust anchor
+  // (African/French/Arabic/Bollywood/World removed — English focus)
+  // 3. NETFLIX — English, the trust-anchor brand
   {
     id: 'netflix',
     name: 'Netflix',
     subtabs: [
       { id: 'nf-english', name: 'English', categoryIds: ['169'] },
-      { id: 'nf-hindi', name: 'Hindi', categoryIds: ['168'] },
     ],
-    searchCategoryIds: ['169', '168'],
+    searchCategoryIds: ['169'],
   },
-  // 7. BOLLYWOOD — relevant for South Asian diaspora in West Africa
-  {
-    id: 'bollywood',
-    name: 'Bollywood',
-    subtabs: [
-      { id: 'bw-latest', name: 'Latest', categoryIds: ['766', '599'] },
-      { id: 'bw-2024', name: '2024', categoryIds: ['527'] },
-      { id: 'bw-4k', name: '4K', categoryIds: ['120'] },
-      { id: 'bw-classic', name: 'Classic', categoryIds: ['33'] },
-      { id: 'bw-comedy', name: 'Comedy', categoryIds: ['252'] },
-    ],
-    searchCategoryIds: ['766', '599', '527', '33', '120'],
-  },
-  // 8. COLLECTIONS — franchise binges
+  // 4. COLLECTIONS — franchise binges (all verified live)
   {
     id: 'collections',
     name: 'Collections',
@@ -545,7 +508,7 @@ export const MOVIE_TABS: MovieParentTab[] = [
     ],
     searchCategoryIds: ['147', '157', '146', '160', '153'],
   },
-  // 9. KIDS
+  // 5. KIDS
   {
     id: 'kids',
     name: 'Kids',
@@ -553,24 +516,5 @@ export const MOVIE_TABS: MovieParentTab[] = [
       { id: 'kids-all', name: 'All', categoryIds: ['69', '621'] },
     ],
     searchCategoryIds: ['69'],
-  },
-  // 10. WORLD CINEMA — everything else as options (not deleted, just lower priority)
-  {
-    id: 'world',
-    name: 'World Cinema',
-    subtabs: [
-      { id: 'wc-turkish', name: 'Turkish', categoryIds: ['772', '609', '537', '95'] },
-      { id: 'wc-tamil', name: 'Tamil', categoryIds: ['768', '602', '530', '89'] },
-      { id: 'wc-telugu', name: 'Telugu', categoryIds: ['770', '606', '534', '92'] },
-      { id: 'wc-malayalam', name: 'Malayalam', categoryIds: ['783', '604', '91'] },
-      { id: 'wc-kannada', name: 'Kannada', categoryIds: ['789', '608', '166'] },
-      { id: 'wc-bangla', name: 'Bangla', categoryIds: ['100', '792', '610'] },
-      { id: 'wc-punjabi', name: 'Punjabi', categoryIds: ['27', '784', '601'] },
-      { id: 'wc-marathi', name: 'Marathi', categoryIds: ['127'] },
-      { id: 'wc-gujarati', name: 'Gujarati', categoryIds: ['155'] },
-      { id: 'wc-pakistan', name: 'Pakistan', categoryIds: ['37', '434', '198', '150'] },
-      { id: 'wc-korean', name: 'Korean', categoryIds: ['267'] },
-    ],
-    searchCategoryIds: ['772', '768', '770', '783', '789', '100', '27'],
   },
 ];
