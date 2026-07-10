@@ -77,8 +77,10 @@ const GENRE_TAGLINES: Record<number, string> = {
   10751: 'Pour toute la famille', 36: "L'Histoire en grand", 10752: 'Au cœur du combat',
 };
 
-// African / Nollywood VOD category (the brand row — Afrikaans/African/Nollywood bucket).
-const AFRICAN_CATEGORY_ID = '580';
+// New Drops — the freshest English releases (ENG FHD 2026/2025/2024). Surfaces the
+// releases the nightly sync pulls in (Aziz "surface the releases"). Z 2026-07-11.
+const NEW_DROPS_CATEGORY_IDS = ['749', '597', '525'];
+const FRESH_ACCENT = '#34D399';
 
 function parseYear(name: string): number {
   const m = name.match(/\((\d{4})\)/);
@@ -92,7 +94,7 @@ const LADDER_SKELETON_WIDTHS = [140, 120, 120, 108, 108, 108, 108, 108, 108];
 
 /** Warm accent per ladder row, by driver/identity. Top-10 rows ignore this (stay red). */
 function rowAccent(row: RankedRow): string {
-  if (row.id === 'african-spotlight') return TERRACOTTA;
+  if (row.id === 'new-drops') return FRESH_ACCENT;
   if (row.id.startsWith('mood-')) return moodColor(row.id.slice(5));
   switch (row.driver) {
     case 'dash-curated':
@@ -108,7 +110,7 @@ function rowAccent(row: RankedRow): string {
 /** Editorial rows wear the warm display face + heavier title (curated-by-humans). */
 function isEditorialRow(row: RankedRow): boolean {
   return (
-    row.id === 'african-spotlight' ||
+    row.id === 'new-drops' ||
     row.driver === 'dash-curated' ||
     row.driver === 'gem-of-the-day' ||
     row.driver === 'because-you-watched'
@@ -230,20 +232,22 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     return () => { mounted = false; };
   }, [catalog]);
 
-  // African spotlight pool — one fetch, silent on failure (the row just won't render).
+  // New Drops pool — freshest English releases (2026/2025/2024), combined + deduped.
+  // Silent on failure (the row just won't render).
   useEffect(() => {
     let mounted = true;
-    getVodByCategory(AFRICAN_CATEGORY_ID, 200).then(rows => {
-      if (!mounted) return;
-      const seen = new Set<number>();
-      const out: VodStream[] = [];
-      for (const r of rows) {
-        if (seen.has(r.id)) continue;
-        seen.add(r.id);
-        out.push(vodDbToStream(r));
-      }
-      setAfricanPool(out);
-    }).catch(() => { /* spotlight is a bonus */ });
+    Promise.all(NEW_DROPS_CATEGORY_IDS.map(id => getVodByCategory(id, 120).catch(() => [])))
+      .then(lists => {
+        if (!mounted) return;
+        const seen = new Set<number>();
+        const out: VodStream[] = [];
+        for (const rows of lists) for (const r of rows) {
+          if (seen.has(r.id)) continue;
+          seen.add(r.id);
+          out.push(vodDbToStream(r));
+        }
+        setAfricanPool(out);
+      }).catch(() => { /* bonus row */ });
     return () => { mounted = false; };
   }, []);
 
@@ -433,7 +437,7 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
     let african: RankedRow | null = null;
     if (africanPool.length > 0) {
       const r = trendingNow(africanPool, 'movie', tmdbMap, { limit: 24 });
-      if (r) african = { ...r, id: 'african-spotlight', name: 'La Maison du Cinéma Africain', tagline: 'Nollywood, francophone, afro — la maison de la culture', driver: 'genre' };
+      if (r) african = { ...r, id: 'new-drops', name: 'New Drops', tagline: 'Fresh — les toutes dernières sorties', driver: 'genre' };
     }
 
     const moods = moodRows(movies, 'movie', tmdbMap, affinity, { maxRows: 3, packLabels });
@@ -911,8 +915,8 @@ export const MoviesPage: React.FC<Props> = ({ credentials, onPlay }) => {
                 const editorial = isEditorialRow(row);
                 return (
                   <section key={row.id} className={`${tierClass} reveal mb-1`}
-                    style={row.id === 'african-spotlight'
-                      ? { background: `radial-gradient(120% 80% at 0% 0%, ${TERRACOTTA}10, transparent 60%)` }
+                    style={row.id === 'new-drops'
+                      ? { background: `radial-gradient(120% 80% at 0% 0%, ${FRESH_ACCENT}12, transparent 60%)` }
                       : undefined}>
                     <VeeCollectionRow
                       name={row.name}
