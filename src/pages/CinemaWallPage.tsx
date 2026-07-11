@@ -120,7 +120,7 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
   useEffect(() => {
     const pool = pools[shelfIdx] ?? [];
     const cur = cursors[shelfIdx] ?? 0;
-    if (!exhausted[shelfIdx] && pool.length - cur < perPage * 6) loadMore(shelfIdx);
+    if (!exhausted[shelfIdx] && pool.length - cur < perPage * 3) loadMore(shelfIdx);
   }, [cursors, shelfIdx, pools, perPage, exhausted, loadMore]);
 
   // ── Keyboard: arrows flip / change shelf (desktop parity with gestures). ──
@@ -174,15 +174,17 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
       onWheel={onWheel}
       {...surf}
     >
-      {/* Ambient candle-warm wash — matches the Movies space depth. */}
+      {/* Ambient wash — the Tivi+ teal-green brand breath, with a violet cinema
+          undertone so it reads as OUR cinema, not a generic dark grid. */}
       <div
         aria-hidden
         className="fixed inset-0 pointer-events-none"
         style={{
           zIndex: -1,
           background:
-            'radial-gradient(115% 70% at 50% -8%, rgba(232,176,75,0.055), transparent 60%),' +
-            'radial-gradient(85% 60% at 92% 88%, rgba(157,78,221,0.04), transparent 60%)',
+            'radial-gradient(120% 72% at 50% -8%, rgba(0,168,150,0.10), transparent 62%),' +
+            'radial-gradient(85% 60% at 90% 90%, rgba(0,168,150,0.06), transparent 60%),' +
+            'radial-gradient(70% 50% at 12% 96%, rgba(157,78,221,0.035), transparent 60%)',
         }}
       />
 
@@ -195,7 +197,7 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
         </h1>
         {/* Vendor's line — the whole shop's scale. */}
         <p className="text-[12px] text-white/45 mt-0.5">
-          <span className="text-white/70 font-semibold">{frCount(CATALOG_TOTAL)} films &amp; séries</span>
+          <span className="font-bold" style={{ color: '#2DD4BF' }}>{frCount(CATALOG_TOTAL)} films &amp; séries</span>
           {' · flip librement · '}
           <span className="text-white/35">swipe pour feuilleter, tape pour ouvrir</span>
         </p>

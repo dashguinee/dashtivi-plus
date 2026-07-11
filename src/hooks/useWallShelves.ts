@@ -16,6 +16,10 @@ import { getVodByCategory, vodDbToStream, getSeriesByCategory, seriesDbToItem } 
 import type { WallShelf, WallItem } from '@/lib/wall-shelves';
 
 const PAGE = 500;
+// Curated depth per strip. The DB already orders gem → rating → recency, so the
+// first covers ARE the best; past this the tail is long, junky, and — loaded into
+// one array — janks the scroll. A vast-enough flip without the 20k dump.
+const MAX_POOL = 1500;
 
 interface ShelfLoader {
   catIndex: number;   // which categoryId we're currently paging
@@ -62,13 +66,19 @@ export function useWallShelves(shelves: WallShelf[]): WallShelvesState {
     const L = loaders.current[shelfIdx];
     const shelf = shelves[shelfIdx];
     if (!L || !shelf || L.inFlight || L.exhausted) return;
+    // Curated cap reached → this strip is "full"; stop loading, count is exact.
+    if (L.seen.size >= MAX_POOL) {
+      L.exhausted = true;
+      setExhausted(prev => { if (prev[shelfIdx]) return prev; const next = [...prev]; next[shelfIdx] = true; return next; });
+      return;
+    }
     L.inFlight = true;
 
     (async () => {
       const appended: WallItem[] = [];
       // Keep pulling pages until we surface at least one fresh cover (or run dry),
       // so a page full of dupes / short tail doesn't stall the flip.
-      while (appended.length === 0 && !L.exhausted) {
+      while (appended.length === 0 && !L.exhausted && L.seen.size < MAX_POOL) {
         if (L.catIndex >= shelf.categoryIds.length) { L.exhausted = true; break; }
         const cat = shelf.categoryIds[L.catIndex];
         const page = await fetchPage(shelf, cat, L.offset);
