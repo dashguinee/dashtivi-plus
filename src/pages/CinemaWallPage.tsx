@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import type { XtreamCredentials, VodStream, SeriesItem } from '@/lib/xtream';
-import { getTmdbMap } from '@/lib/xtream';
+import { getTmdbMap, buildVodUrl, buildVodFallbackUrl } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import type { Channel } from '@/types';
 import { useSwipeSurf } from '@/hooks/useSwipeSurf';
 import { useWallShelves } from '@/hooks/useWallShelves';
-import { MoviesTrailerSpace } from '@/components/home/MoviesTrailerSpace';
+import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
 import { SeriesDetailFlow } from '@/components/wall/SeriesDetailFlow';
 import { WallShelf } from '@/components/wall/WallShelf';
 import { SHELVES, CATALOG_TOTAL } from '@/lib/wall-shelves';
@@ -32,7 +32,7 @@ import type { WallItem } from '@/lib/wall-shelves';
 const CARD_WIDTH = 112;
 const CARD_STRIDE = CARD_WIDTH + 14; // must match WallShelf CARD_GAP
 // Fixed vertical slot per shelf so the stack snaps cleanly between strips.
-const SHELF_SLOT = 300;
+const SHELF_SLOT = 250;
 // Minimum covers advanced per flip — a brisk "binder page" even on narrow phones.
 const MIN_PAGE = 4;
 
@@ -159,12 +159,19 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
     setDetail(item);
   }, []);
 
-  const activePool = pools[shelfIdx] ?? [];
-  // Movie pool for the trailer-space spatial model — flatten the loaded movie
-  // strips so a movie detail can browse laterally even from a short shelf.
-  const moviePool: VodStream[] = (activePool.length ? activePool : pools[0] ?? [])
-    .filter(x => x.kind === 'movie')
-    .map(x => x.raw as VodStream);
+  // ── Play a movie: build the VOD channel + hand it to the player. ──
+  const playMovie = useCallback((m: VodStream) => {
+    const ext = m.container_extension || 'mp4';
+    onPlay({
+      id: `vod-${m.stream_id}`,
+      name: m.name,
+      url: buildVodUrl(credentials, m.stream_id, ext),
+      logo: m.stream_icon,
+      category: 'movie',
+      fallbackUrl: buildVodFallbackUrl(credentials, m.stream_id, ext, 'movie'),
+    });
+    setDetail(null);
+  }, [credentials, onPlay]);
 
   return (
     <div
@@ -243,15 +250,19 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
         ))}
       </div>
 
-      {/* Detail overlay — movies open the 4-direction trailer space; series open
-          the full detail → episode-picker → play flow. */}
+      {/* Detail overlay — one robust modal for both (works with or without a
+          trailer). Movies play the VOD directly; series open the episode picker. */}
       {detail && detail.kind === 'movie' && (
-        <MoviesTrailerSpace
+        <ContentDetailModal
+          streamId={detail.id}
+          name={detail.name}
+          poster={detail.poster}
+          rating={detail.rating}
+          containerExtension={(detail.raw as VodStream).container_extension}
+          type="movie"
+          tmdbData={tmdbMap[`m:${detail.id}`]}
           credentials={credentials}
-          initial={detail.raw as VodStream}
-          pool={moviePool.length > 0 ? moviePool : [detail.raw as VodStream]}
-          tmdbMap={tmdbMap}
-          onPlay={onPlay}
+          onPlay={() => playMovie(detail.raw as VodStream)}
           onClose={() => setDetail(null)}
         />
       )}

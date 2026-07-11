@@ -92,8 +92,11 @@ function buildShelves(): WallShelf[] {
   const shelves: WallShelf[] = [
     { id: 'new-drops', label: 'New Drops', accent: '#34D399', kind: 'movie', categoryIds: NEW_DROPS_CATEGORY_IDS, hot: true },
   ];
+  // New Drops OWNS the fresh-year categories — strip them from every other movie
+  // shelf so each strip is DISTINCT (else Hollywood etc. lead with the same covers).
+  const owned = new Set(NEW_DROPS_CATEGORY_IDS);
   for (const parentId of ['hollywood', 'netflix', 'collections', 'kids'] as const) {
-    const categoryIds = parentCategoryIds(parentId);
+    const categoryIds = parentCategoryIds(parentId).filter(id => !owned.has(id));
     if (categoryIds.length === 0) continue;
     shelves.push({
       id: parentId,
