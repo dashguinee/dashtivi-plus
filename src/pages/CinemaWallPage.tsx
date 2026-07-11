@@ -1,13 +1,15 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import type { XtreamCredentials, VodStream } from '@/lib/xtream';
+import type { XtreamCredentials, VodStream, SeriesItem } from '@/lib/xtream';
 import { getTmdbMap } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import type { Channel } from '@/types';
 import { useSwipeSurf } from '@/hooks/useSwipeSurf';
 import { useWallShelves } from '@/hooks/useWallShelves';
 import { MoviesTrailerSpace } from '@/components/home/MoviesTrailerSpace';
+import { SeriesDetailFlow } from '@/components/wall/SeriesDetailFlow';
 import { WallShelf } from '@/components/wall/WallShelf';
 import { SHELVES, CATALOG_TOTAL } from '@/lib/wall-shelves';
+import type { WallItem } from '@/lib/wall-shelves';
 
 /* ════════════════════════════════════════════════════════════════════
    LE MUR — the cinema cover-wall (v2, /wall).
@@ -50,7 +52,7 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
   const [shelfIdx, setShelfIdx] = useState(0);
   const [cursors, setCursors] = useState<number[]>(() => SHELVES.map(() => 0));
   const [dragDx, setDragDx] = useState(0);
-  const [detail, setDetail] = useState<VodStream | null>(null);
+  const [detail, setDetail] = useState<WallItem | null>(null);
 
   // Covers visible in one screen → the size of a "binder page" flip.
   const [perPage, setPerPage] = useState(MIN_PAGE);
@@ -147,12 +149,17 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
   }, [flip, changeShelf, detail]);
 
   // ── Open detail on a genuine tap (not the tail of a swipe). ──
-  const handleOpen = useCallback((movie: VodStream) => {
+  const handleOpen = useCallback((item: WallItem) => {
     if (Date.now() - swipedAtRef.current < 250) return;
-    setDetail(movie);
+    setDetail(item);
   }, []);
 
   const activePool = pools[shelfIdx] ?? [];
+  // Movie pool for the trailer-space spatial model — flatten the loaded movie
+  // strips so a movie detail can browse laterally even from a short shelf.
+  const moviePool: VodStream[] = (activePool.length ? activePool : pools[0] ?? [])
+    .filter(x => x.kind === 'movie')
+    .map(x => x.raw as VodStream);
 
   return (
     <div
@@ -183,7 +190,7 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
         </h1>
         {/* Vendor's line — the whole shop's scale. */}
         <p className="text-[12px] text-white/45 mt-0.5">
-          <span className="text-white/70 font-semibold">{frCount(CATALOG_TOTAL)} films</span>
+          <span className="text-white/70 font-semibold">{frCount(CATALOG_TOTAL)} films &amp; séries</span>
           {' · flip librement · '}
           <span className="text-white/35">swipe pour feuilleter, tape pour ouvrir</span>
         </p>
@@ -216,6 +223,7 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
               tmdbMap={tmdbMap}
               accent={shelf.accent}
               label={shelf.label}
+              noun={shelf.kind === 'series' ? 'séries' : 'films'}
               hot={shelf.hot}
               exhausted={exhausted[i] ?? false}
               active={i === shelfIdx}
@@ -228,13 +236,23 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
         ))}
       </div>
 
-      {/* Detail overlay — the existing 4-direction trailer space, verbatim. */}
-      {detail && (
+      {/* Detail overlay — movies open the 4-direction trailer space; series open
+          the full detail → episode-picker → play flow. */}
+      {detail && detail.kind === 'movie' && (
         <MoviesTrailerSpace
           credentials={credentials}
-          initial={detail}
-          pool={activePool.length > 0 ? activePool : pools[0] ?? []}
+          initial={detail.raw as VodStream}
+          pool={moviePool.length > 0 ? moviePool : [detail.raw as VodStream]}
           tmdbMap={tmdbMap}
+          onPlay={onPlay}
+          onClose={() => setDetail(null)}
+        />
+      )}
+      {detail && detail.kind === 'series' && (
+        <SeriesDetailFlow
+          series={detail.raw as SeriesItem}
+          credentials={credentials}
+          tmdbData={tmdbMap[`s:${detail.id}`]}
           onPlay={onPlay}
           onClose={() => setDetail(null)}
         />

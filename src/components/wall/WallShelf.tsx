@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
-import type { VodStream } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
+import type { WallItem } from '@/lib/wall-shelves';
 import { PosterCard } from '@/components/ui/PosterCard';
 import { tap } from '@/lib/haptics';
 
@@ -31,20 +31,22 @@ const CARD_GAP = 14;
 const RADIUS = 16;
 
 interface Props {
-  items: VodStream[];
+  items: WallItem[];
   cursor: number;
   tmdbMap: Record<string, TmdbEntry>;
   accent: string;
   label: string;
   active: boolean;
   cardWidth: number;
+  /** Noun for the count badge — "films" or "séries". */
+  noun?: string;
   /** Live rubber-band peek (px) while a horizontal gesture is in progress. */
   dragDx?: number;
   /** True once every category of this shelf is fully paged (count is exact). */
   exhausted?: boolean;
   /** Vendor's "🔥 Ce soir" accent — the freshest strip. */
   hot?: boolean;
-  onOpen: (movie: VodStream) => void;
+  onOpen: (item: WallItem) => void;
   /** Mark this shelf active (e.g. on pointer-down) so the flip drives it. */
   onActivate?: () => void;
 }
@@ -55,7 +57,7 @@ function frCount(n: number): string {
 }
 
 export const WallShelf = memo(function WallShelf({
-  items, cursor, tmdbMap, accent, label, active, cardWidth, dragDx = 0,
+  items, cursor, tmdbMap, accent, label, active, cardWidth, noun = 'films', dragDx = 0,
   exhausted = false, hot = false, onOpen, onActivate,
 }: Props) {
   const stride = cardWidth + CARD_GAP;
@@ -74,7 +76,7 @@ export const WallShelf = memo(function WallShelf({
   const translate = -((clamped - start) * stride) + peek;
 
   const countLabel = items.length > 0
-    ? `${frCount(items.length)}${exhausted ? '' : '+'} films`
+    ? `${frCount(items.length)}${exhausted ? '' : '+'} ${noun}`
     : '…';
 
   return (
@@ -126,13 +128,13 @@ export const WallShelf = memo(function WallShelf({
               />
             ))
           ) : (
-            windowItems.map(movie => (
+            windowItems.map(item => (
               <div
-                key={movie.stream_id}
+                key={`${item.kind}:${item.id}`}
                 role="button"
                 tabIndex={0}
-                aria-label={movie.name}
-                onClick={() => { tap(); onOpen(movie); }}
+                aria-label={item.name}
+                onClick={() => { tap(); onOpen(item); }}
                 className="flex-shrink-0"
                 style={{ width: cardWidth }}
               >
@@ -140,15 +142,15 @@ export const WallShelf = memo(function WallShelf({
                     the gesture target, so the surf engine reads the role=button div. */}
                 <div style={{ pointerEvents: 'none' }}>
                   <PosterCard
-                    title={movie.name}
-                    poster={movie.stream_icon}
-                    rating={movie.rating}
-                    tmdbData={tmdbMap[`m:${movie.stream_id}`]}
+                    title={item.name}
+                    poster={item.poster}
+                    rating={item.rating}
+                    tmdbData={tmdbMap[`${item.kind === 'movie' ? 'm' : 's'}:${item.id}`]}
                     onClick={() => {}}
                   />
                 </div>
                 <p className="text-[10.5px] leading-tight text-white/55 text-center mt-1.5 px-0.5 line-clamp-1 font-medium tracking-tight">
-                  {movie.name.replace(/\s*\(\d{4}\)\s*$/, '')}
+                  {item.name.replace(/\s*\(\d{4}\)\s*$/, '')}
                 </p>
               </div>
             ))

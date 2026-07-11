@@ -13,7 +13,7 @@ const translations = {
     navLibrary: 'Biblio',
     navBiblio: 'Biblio',
     navVee: 'Vee',
-    navWall: 'Mur',
+    navWall: 'Cinéma',
     navFrench: 'Français',
     navStreamore: 'Stream+',
 
@@ -438,7 +438,7 @@ const translations = {
     navLibrary: 'Library',
     navBiblio: 'Biblio',
     navVee: 'Vee',
-    navWall: 'Wall',
+    navWall: 'Cinema',
     navFrench: 'French',
     navStreamore: 'Stream+',
 

@@ -56,8 +56,8 @@ function lazyRetry(factory: () => Promise<{ default: React.ComponentType<any> }>
 
 const HomePage = lazyRetry(() => import('@/pages/HomePage').then((m) => ({ default: m.HomePage })));
 const LiveTVPage = lazyRetry(() => import('@/pages/LiveTVPage').then((m) => ({ default: m.LiveTVPage })));
-const MoviesPage = lazyRetry(() => import('@/pages/MoviesPage').then((m) => ({ default: m.MoviesPage })));
-const SeriesPage = lazyRetry(() => import('@/pages/SeriesPage').then((m) => ({ default: m.SeriesPage })));
+// Le Mur (CinemaWallPage) is now THE cinema — it merges the old Movies + Series
+// screens into one wall. /movies and /series redirect here (see Routes below).
 const CinemaWallPage = lazyRetry(() => import('@/pages/CinemaWallPage').then((m) => ({ default: m.CinemaWallPage })));
 const FrenchPage = lazyRetry(() => import('@/pages/FrenchPage').then((m) => ({ default: m.FrenchPage })));
 const DaHubPage = lazyRetry(() => import('@/pages/DaHubPage').then((m) => ({ default: m.DaHubPage })));
@@ -76,8 +76,7 @@ const TestChannelsPage = lazyRetry(() => import('@/pages/TestChannelsPage'));
 (() => {
   // Primary nav chunks — warmed first so the most-used switches are instant.
   const warm = () => {
-    import('@/pages/MoviesPage');
-    import('@/pages/SeriesPage');
+    import('@/pages/CinemaWallPage');
     import('@/pages/LiveTVPage');
     import('@/pages/ExperienceHomePage');
   };
@@ -225,8 +224,8 @@ function MergeBreath({ pathname }: { pathname: string }) {
   React.useEffect(() => {
     const el = document.getElementById('merge-breath');
     if (el) {
-      // Movies = the purple breath; everything else = the soft neutral whisper.
-      if (pathname.startsWith('/movies')) el.setAttribute('data-space', 'movies');
+      // Cinema (Le Mur) = the purple breath; everything else = the soft neutral whisper.
+      if (pathname.startsWith('/wall') || pathname.startsWith('/movies')) el.setAttribute('data-space', 'movies');
       else el.removeAttribute('data-space');
       // Restart the one-shot breath cycle (remove → reflow → add).
       el.classList.remove('breathe'); void el.offsetWidth; el.classList.add('breathe');
@@ -678,12 +677,6 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
             <KeepAlivePane active={deferredRouteLoc.pathname === '/'}>
               <HomePage credentials={credentials} onPlay={handlePlayChannel} />
             </KeepAlivePane>
-            <KeepAlivePane active={deferredRouteLoc.pathname === '/movies'}>
-              <MoviesPage credentials={credentials} onPlay={handlePlayChannel} />
-            </KeepAlivePane>
-            <KeepAlivePane active={deferredRouteLoc.pathname === '/series'}>
-              <SeriesPage credentials={credentials} onPlay={handlePlayChannel} />
-            </KeepAlivePane>
             <KeepAlivePane active={deferredRouteLoc.pathname === '/live'}>
               <LiveTVPage credentials={credentials} onPlay={handlePlayChannel} />
             </KeepAlivePane>
@@ -693,7 +686,7 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
 
             {/* SECONDARY routes — visited less often; normal mount/unmount. Only
                 rendered when NOT on a primary tab (so they never overlay them). */}
-            {!['/', '/movies', '/series', '/live', '/wall'].includes(deferredRouteLoc.pathname) && (
+            {!['/', '/live', '/wall'].includes(deferredRouteLoc.pathname) && (
               <Suspense fallback={<div className="pt-20 px-4 space-y-6 animate-pulse"><div className="h-[22vh] rounded-2xl bg-white/[0.02]" /><div className="flex gap-2">{[1,2,3,4].map(i=><div key={i} className="h-8 w-16 rounded-full bg-white/[0.03]" />)}</div><div className="space-y-4">{[1,2,3].map(i=><div key={i} className="h-32 rounded-xl bg-white/[0.02]" />)}</div></div>}>
                 <Routes location={deferredRouteLoc}>
                   <Route path="/live/:experienceId" element={<ErrorBoundary><ExperienceHomePage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
@@ -702,9 +695,12 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
                   <Route path="/hub" element={<ErrorBoundary><DaHubPage /></ErrorBoundary>} />
                   <Route path="/library" element={<ErrorBoundary><LibraryPage credentials={credentials} onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="/explore" element={<ErrorBoundary><ExplorePage /></ErrorBoundary>} />
-                  {/* /streamore + /originals retired → redirect home / series. */}
+                  {/* Movies + Series merged into Le Mur (/wall) — the one cinema.
+                      Old paths redirect so links, deep-links + resume all land there. */}
+                  <Route path="/movies" element={<Navigate to="/wall" replace />} />
+                  <Route path="/series" element={<Navigate to="/wall" replace />} />
                   <Route path="/streamore" element={<Navigate to="/" replace />} />
-                  <Route path="/originals" element={<Navigate to="/series" replace />} />
+                  <Route path="/originals" element={<Navigate to="/wall" replace />} />
                   <Route path="/test" element={<ErrorBoundary><TestChannelsPage onPlay={handlePlayChannel} /></ErrorBoundary>} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
