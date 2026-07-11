@@ -106,16 +106,21 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
     onUp: () => changeShelf(-1),  // swipe-down → previous shelf
     onDown: () => changeShelf(1), // swipe-up → next shelf
     onDrag: (dx) => {
-      if (Math.abs(dx) > 8) swipedAtRef.current = Date.now();
+      // Only a substantial drag counts as a "swipe" that should suppress the
+      // trailing click — a touch-tap jitters a few px and MUST still open the
+      // cover (else play/trailer are unreachable).
+      if (Math.abs(dx) > 30) swipedAtRef.current = Date.now();
       setDragDx(dx);
     },
   });
 
-  // ── Lazy-load ahead: when the cursor nears the loaded tail, fetch more. ──
+  // ── Lazy-load ahead: keep a deep buffer of covers past the cursor so flipping
+  // ALWAYS reveals more — never a dead end. Re-fires as the pool grows (pools in
+  // deps) until the buffer is deep or the shelf is exhausted. ──
   useEffect(() => {
     const pool = pools[shelfIdx] ?? [];
     const cur = cursors[shelfIdx] ?? 0;
-    if (!exhausted[shelfIdx] && pool.length - cur < perPage * 2) loadMore(shelfIdx);
+    if (!exhausted[shelfIdx] && pool.length - cur < perPage * 6) loadMore(shelfIdx);
   }, [cursors, shelfIdx, pools, perPage, exhausted, loadMore]);
 
   // ── Keyboard: arrows flip / change shelf (desktop parity with gestures). ──
@@ -186,7 +191,7 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
           className="text-[24px] font-black text-white tracking-tight"
           style={{ fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.02em' }}
         >
-          Le Mur
+          Cinéma
         </h1>
         {/* Vendor's line — the whole shop's scale. */}
         <p className="text-[12px] text-white/45 mt-0.5">

@@ -2,7 +2,24 @@ import React, { memo } from 'react';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import type { WallItem } from '@/lib/wall-shelves';
 import { PosterCard } from '@/components/ui/PosterCard';
+import { TMDB_GENRES } from '@/lib/movie-collections';
+import { TMDB_TV_GENRES } from '@/lib/series-collections';
 import { tap } from '@/lib/haptics';
+
+/** Up to two human genre labels for a cover (movie or series map by kind). */
+function genreNames(item: WallItem, tmdbMap: Record<string, TmdbEntry>): string[] {
+  const entry = tmdbMap[`${item.kind === 'movie' ? 'm' : 's'}:${item.id}`];
+  const ids = entry?.g;
+  if (!ids || ids.length === 0) return [];
+  const map = item.kind === 'series' ? TMDB_TV_GENRES : TMDB_GENRES;
+  const out: string[] = [];
+  for (const id of ids) {
+    const name = map[id];
+    if (name) out.push(name);
+    if (out.length === 2) break;
+  }
+  return out;
+}
 
 /* ════════════════════════════════════════════════════════════════════
    WALL SHELF — one horizontal filmstrip of the cover-wall (v2).
@@ -128,32 +145,53 @@ export const WallShelf = memo(function WallShelf({
               />
             ))
           ) : (
-            windowItems.map(item => (
-              <div
-                key={`${item.kind}:${item.id}`}
-                role="button"
-                tabIndex={0}
-                aria-label={item.name}
-                onClick={() => { tap(); onOpen(item); }}
-                className="flex-shrink-0"
-                style={{ width: cardWidth }}
-              >
-                {/* pointer-events:none keeps PosterCard's inner <button> from becoming
-                    the gesture target, so the surf engine reads the role=button div. */}
-                <div style={{ pointerEvents: 'none' }}>
-                  <PosterCard
-                    title={item.name}
-                    poster={item.poster}
-                    rating={item.rating}
-                    tmdbData={tmdbMap[`${item.kind === 'movie' ? 'm' : 's'}:${item.id}`]}
-                    onClick={() => {}}
-                  />
+            windowItems.map(item => {
+              const genres = genreNames(item, tmdbMap);
+              return (
+                <div
+                  key={`${item.kind}:${item.id}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={item.name}
+                  onClick={() => { tap(); onOpen(item); }}
+                  className="flex-shrink-0"
+                  style={{ width: cardWidth }}
+                >
+                  {/* pointer-events:none keeps PosterCard's inner <button> from becoming
+                      the gesture target, so the surf engine reads the role=button div. */}
+                  <div className="relative" style={{ pointerEvents: 'none' }}>
+                    <PosterCard
+                      title={item.name}
+                      poster={item.poster}
+                      rating={item.rating}
+                      tmdbData={tmdbMap[`${item.kind === 'movie' ? 'm' : 's'}:${item.id}`]}
+                      onClick={() => {}}
+                    />
+                    {/* Series get a corner tag so a série reads apart from a film at a glance. */}
+                    {item.kind === 'series' && (
+                      <span
+                        className="absolute top-1.5 left-1.5 text-[8.5px] font-black tracking-wider px-1.5 py-0.5 rounded-md"
+                        style={{ background: 'rgba(10,10,14,0.78)', color: '#fff', border: '1px solid rgba(255,255,255,0.28)', backdropFilter: 'blur(2px)' }}
+                      >
+                        SÉRIE
+                      </span>
+                    )}
+                  </div>
+                  {/* Genre pills — replaces the redundant second title. */}
+                  <div className="flex flex-wrap justify-center gap-1 mt-1.5 px-0.5" style={{ minHeight: 16 }}>
+                    {genres.map(g => (
+                      <span
+                        key={g}
+                        className="text-[8.5px] leading-none font-semibold text-white/55 px-1.5 py-[3px] rounded-full"
+                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
+                      >
+                        {g}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-[10.5px] leading-tight text-white/55 text-center mt-1.5 px-0.5 line-clamp-1 font-medium tracking-tight">
-                  {item.name.replace(/\s*\(\d{4}\)\s*$/, '')}
-                </p>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
