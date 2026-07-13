@@ -1,7 +1,7 @@
 import { getCatalog, getCatalogSync, getByExperience as catGetByExperience, buildCatalogUrl } from './catalog';
 import type { CatalogChannel } from './catalog';
 
-const STREAM_BASE = (import.meta.env.VITE_XTREAM_STREAM || 'http://fastshare1.com:8080').trim();
+const STREAM_BASE = (import.meta.env.VITE_XTREAM_STREAM || 'http://playshare.co:8080').trim();
 const PROXY = (import.meta.env.VITE_PROXY_URL || 'https://stream.zionsynapse.online').trim();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 const FETCH_TIMEOUT = 10000; // 10s timeout for API calls
@@ -106,7 +106,7 @@ export function safeImageUrl(url?: string | null): string | null {
   // Fix common URL corruption
   let u = url.replace(/^ttps:/, 'https:').replace(/"$/, '');
   // Replace dead starshare domain
-  u = u.replace('buxjam.com:8080', 'fastshare1.com:8080').replace('starshare.live:8080', 'fastshare1.com:8080').replace('datahub11.com:8080', 'fastshare1.com:8080').replace('datahub11.com:80', 'fastshare1.com:8080');
+  u = u.replace('buxjam.com:8080', 'playshare.co:8080').replace('starshare.live:8080', 'playshare.co:8080').replace('datahub11.com:8080', 'playshare.co:8080').replace('datahub11.com:80', 'playshare.co:8080').replace('fastshare1.com:8080', 'playshare.co:8080').replace('fastshare1.com:80', 'playshare.co:8080');
   // Block known junk / dead hosts — these reliably 4xx/5xx or fail to connect,
   // so we never fire the request: ChannelIcon falls straight to its painted
   // initials placeholder (no broken-image flash, no failed network request).
