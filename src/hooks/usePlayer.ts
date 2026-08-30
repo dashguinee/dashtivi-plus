@@ -363,7 +363,7 @@ export function usePlayer() {
           // IS active (verified: 744523 present in every pool account) and that then
           // plays fine. 12s lets a valid slow-start stream resolve before we accuse the
           // package. (Z 2026-07-10 — Aziz-reported "No active package… but it plays".)
-          const timeout = (isVod || url.includes('?url=')) ? 15000 : 12000;
+          const timeout = (isVod || url.includes('?url=')) ? 15000 : 18000;   // live 12s→18s (Aziz 2026-08-30): new panel + re-encode (hd720) first frame can lag on a busy box; give a valid slow stream room before we ever accuse it.
           connectionTimeout = setTimeout(() => {
             if (!connectionResolved && !video.readyState && destroyRef.current) {
               // Zero data after the window = the stream is never coming. The common
@@ -378,7 +378,7 @@ export function usePlayer() {
                 isLoading: false,
                 isSwitching: false,
                 error: isLive
-                  ? 'No active package for this channel — please upgrade ⚡'
+                  ? 'Channel slow to load — tap Reconnect or choose another'
                   : 'Connection timed out — tap to retry',
               }));
             }
@@ -446,7 +446,7 @@ export function usePlayer() {
               if (idMatch) onStreamFail(parseInt(idMatch[1]));
               markDead(channel.id, 'Stream error');
               setState((prev) => ({ ...prev, error: isLive
-                ? 'No active package for this channel — please upgrade ⚡'
+                ? 'Channel unavailable right now — tap Reconnect or choose another'
                 : 'Stream unavailable — tap Reconnect', isLoading: false, isSwitching: false }));
             } else {
               clearTimeout(connectionTimeout);

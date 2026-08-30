@@ -1184,7 +1184,8 @@ export const VideoPlayer: React.FC<Props> = ({
               </div>
               <p className="text-sm text-white/40">{state.error || 'Unable to connect — tap to try again'}</p>
               <div className="flex items-center gap-2.5">
-                {!state.error.includes('package') && (
+                {/* Always offer Reconnect — the error is a connection issue, never a payment wall (Aziz 2026-08-30: kill the false "upgrade" panic). */}
+                {true && (
                   <button
                     onClick={() => { autoRetryRef.current = 0; state.channel && onRetry(state.channel); }}
                     className="flex items-center gap-2 px-5 py-3 bg-primary rounded-xl font-medium text-sm hover:bg-primary-light transition-colors active:scale-95"
