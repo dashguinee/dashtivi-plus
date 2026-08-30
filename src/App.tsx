@@ -18,7 +18,7 @@ import { useWatchHistory } from '@/hooks/useWatchHistory';
 import { getItem, setItem } from '@/lib/storage';
 import { setCurrentChannel } from '@/lib/playlist';
 import { SearchWidget } from '@/components/ui/SearchWidget';
-import { setActiveTier } from '@/lib/catalog';
+import { setActiveTier, getCatalog, catalogChannelToRuntime } from '@/lib/catalog';
 import { startPreload, preloadApiData } from '@/lib/preloader';
 import { initScrollHaptics } from '@/lib/haptics';
 import { playDashCinemaSound } from '@/lib/cinema-sound';
@@ -352,6 +352,29 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
   const [premiumGate, setPremiumGate] = useState(false);
   const [pendingChannel, setPendingChannel] = useState<Channel | null>(null);
   const [codeInput, setCodeInput] = useState('');
+
+  // Free-fallback channels for the Premium notice — "we don't want to block
+  // anyone" (Aziz). Loaded ONCE from the curated catalog: plays:'direct' = raw
+  // HLS gems playable by guests with NO creds (so they never hit isGatedStream).
+  // Mapped to the runtime Channel shape via the same catalogChannelToRuntime
+  // helper the pages use (HomePage.toChannel mirrors it for direct channels).
+  // Handed to PremiumNotice so a blocked guest gets a 7s countdown → auto-play a
+  // free channel, plus a few tappable free options on the same screen.
+  const [freeChannels, setFreeChannels] = useState<Channel[]>([]);
+  useEffect(() => {
+    let mounted = true;
+    getCatalog()
+      .then((cat) => {
+        if (!mounted) return;
+        const free: Channel[] = cat.channels
+          .filter((c) => c.plays === 'direct' && !!c.url)
+          .slice(0, 8)
+          .map((c) => catalogChannelToRuntime(c, null));
+        setFreeChannels(free);
+      })
+      .catch(() => { /* graceful: no free options → notice renders exactly as before */ });
+    return () => { mounted = false; };
+  }, []);
 
   // ── Movable mini-player position (shared) ──────────────────────────────
   // The minimized <video> and the MiniPlayer chrome card are two separate fixed
@@ -744,6 +767,8 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
               codeInput={codeInput}
               setCodeInput={setCodeInput}
               onSubmitCode={handleCodeSubmit}
+              freeChannels={freeChannels}
+              onPlayFree={(ch) => handlePlayChannel(ch)}
             />,
             playerPortalTarget
           )}
