@@ -490,13 +490,23 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
   }, []);
 
   const handleClosePlayer = useCallback(() => {
+    // CLOSE-ON-ERROR = FULL STOP (Aziz 2026-08-30 "make sure the close buttons work"): if nothing is actually
+    // playing (error / failed stream), don't recede a BROKEN stream into the MiniPlayer — that read as "close
+    // doesn't work" (a dead mini lingered). Fully stop instead. A live stream still recedes to mini as before.
+    if (player.state?.error && !player.state?.isPlaying) {
+      surfaces.pop(PLAYER_SURFACE_ID);
+      restoreWorldScroll();
+      player.stop();
+      unmuteAmbient();
+      return;
+    }
     // Don't unmute ambient — video still plays in MiniPlayer
     // Ambient only unmutes when video fully stops (handleStopPlayer)
     // Recede the player surface back into the world; restore exact scroll —
     // the page underneath never unmounted.
     surfaces.pop(PLAYER_SURFACE_ID);
     restoreWorldScroll();
-  }, [surfaces, restoreWorldScroll]);
+  }, [surfaces, restoreWorldScroll, player, unmuteAmbient]);
 
   // Layered back: when the player surface recedes for ANY reason — including a
   // system/browser BACK press (SurfaceStack pops the top surface on popstate) —
