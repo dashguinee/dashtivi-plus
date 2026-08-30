@@ -18,7 +18,7 @@
 const PROXY = (import.meta.env.VITE_PROXY_URL || 'https://stream.zionsynapse.online').trim();
 
 // Favor 720p (NOT source/4K) — members are on weak West-Africa networks.
-const DEFAULT_QUALITY = 'hd720';
+const DEFAULT_QUALITY = 'hd';   // BUFFERING FIX (Aziz 2026-08-30 "why is it buffering — it was smooth before"): 'hd720' forced a server re-encode (libx264→720p, ~8-11s spin-up + CPU load = the buffering). 'hd' = -c:v copy (remux only) → near-instant start, no CPU, smooth like before. Tradeoff: copy passes source bitrate (heavier on very slow links); flip back to 'hd720' if Guinea users report mid-stream buffering on data.
 
 // Direct (free HLS) channels get synthetic ids >= this base so the existing
 // isFreeChannel(streamId) check (streamId >= 900000 in xtream.ts) treats them
