@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { PlayerControls } from './PlayerControls';
 import { RefreshCw, AlertTriangle, ChevronLeft as ChevLeft, ChevronRight as ChevRight, SkipForward, SkipBack, Tv } from 'lucide-react';
@@ -14,7 +14,6 @@ import { tap } from '@/lib/haptics';
 import { setAmbientPlayerState, toggleAmbient, isAmbientEnabled } from '@/lib/ambient-audio';
 import { useLanguage } from '@/i18n';
 import { ChannelIcon } from '@/components/ui/ChannelIcon';
-import { UnifiedChannelBar } from './UnifiedChannelBar';
 import { EpgWidget } from './EpgWidget';
 import type { Channel, PlayerState } from '@/types';
 
@@ -1199,18 +1198,8 @@ export const VideoPlayer: React.FC<Props> = ({
       )}
 
       {/* Unified channel bar — adjacent / brand (live only), genre driven by categories bar above */}
-      {/* Aziz 2026-09-17: hide the discovery panel while the stream is loading/
-          reconnecting — it read as a "weird panel behind" the clean loading icon.
-          Stays the channel browser during real playback. */}
-      {!isVod && (
-        <UnifiedChannelBar
-          currentChannel={state.channel}
-          visible={(controlsVisible || state.isSwitching) && !(state.error && !state.isPlaying)}
-          isLive={isLiveStream}
-          activeGenre={activeGenre ?? undefined}
-          onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
-        />
-      )}
+      {/* UnifiedChannelBar retired — merged into ChannelCarousel above (the arc
+          conveyor now carries the category-filtered channels). One bar, not two. */}
 
 
       {/* Category dial — always visible, lives in the bottom shadow zone */}
@@ -1221,7 +1210,18 @@ export const VideoPlayer: React.FC<Props> = ({
         />
       )}
 
-      {/* ChannelCarousel removed — UnifiedChannelBar + CategoryDial own discovery */}
+      {/* THE channel bar — merged (Aziz 2026-09-17). The arc conveyor he loves, now
+          driven by the CategoryDial category switch below it: pick a category → the
+          strip shows that category's channels; "Now" → the full playlist. One bar,
+          one switch, no redundant middle panel. Shows on tap with the controls. */}
+      {!isVod && (
+        <ChannelCarousel
+          visible={controlsVisible || state.isSwitching}
+          isLive={isLiveStream}
+          activeGenre={activeGenre ?? undefined}
+          onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
+        />
+      )}
 
       {/* CC unavailable indicator — shown when subtitle fetch failed for a VOD */}
       {subsUnavailable && state.channel?.url?.includes('/vod?') && (
@@ -1906,14 +1906,25 @@ function CategoryDial({
 function ChannelCarousel({
   visible,
   isLive,
+  activeGenre,
   onSwitch,
 }: {
   visible: boolean;
   isLive: boolean;
+  activeGenre?: string;
   onSwitch: (channel: import('@/types').Channel) => void;
 }) {
-  const { channels, currentId } = usePlaylistState();
+  const { channels: allChannels, currentId } = usePlaylistState();
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Merged with the category switch (CategoryDial → activeGenre): the arc conveyor
+  // shows the SELECTED category's channels; no category ⇒ the full playlist. Never
+  // empty — a too-thin category falls back to all. (Aziz 2026-09-17: merge the bars.)
+  const channels = useMemo(() => {
+    if (!activeGenre) return allChannels;
+    const f = allChannels.filter(c => experienceForChannelId(c.id)?.toLowerCase() === activeGenre.toLowerCase());
+    return f.length >= 2 ? f : allChannels;
+  }, [allChannels, activeGenre]);
 
   // Auto-scroll to center the current channel
   useEffect(() => {

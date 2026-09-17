@@ -58,6 +58,12 @@ const WallSurface: React.FC<Props & { shelves: WallShelfDef[] }> = ({ credential
   // Covers visible in one screen → the size of a "binder page" flip.
   const [perPage, setPerPage] = useState(MIN_PAGE);
 
+  // Clamp the vertical shelf-scroll so the LAST shelves fill the screen instead of
+  // one shelf isolating at the top with a blank void below it (Aziz 2026-09-17:
+  // "keep scrolling down it just goes blank").
+  const stackTopRef = useRef<HTMLDivElement>(null);
+  const [maxScrollPx, setMaxScrollPx] = useState(0);
+
   // ── SEARCH — a contained overlay over the wall (its OWN scroll; touch-action
   //    auto; never touches the swipe-surf gestures). Reaches any of the 62k by
   //    name via searchVod + searchSeries; a tap opens the existing detail → play. ──
@@ -106,11 +112,16 @@ const WallSurface: React.FC<Props & { shelves: WallShelfDef[] }> = ({ credential
       const w = typeof window !== 'undefined' ? window.innerWidth : 390;
       const visible = Math.floor((w - 40) / CARD_STRIDE);
       setPerPage(Math.max(MIN_PAGE, visible));
+      // Scroll clamp: total content height − the height available below the header
+      // (down to the nav) → the last shelves fill the screen, never a blank tail.
+      const top = stackTopRef.current?.getBoundingClientRect().top ?? 200;
+      const availH = (typeof window !== 'undefined' ? window.innerHeight : 844) - top - 88;
+      setMaxScrollPx(Math.max(0, shelves.length * SHELF_SLOT - Math.max(SHELF_SLOT, availH)));
     };
     recompute();
     window.addEventListener('resize', recompute);
     return () => window.removeEventListener('resize', recompute);
-  }, []);
+  }, [shelves.length]);
 
   // ── Flip the active shelf by one binder page, within bounds. ──
   const flip = useCallback((dir: 1 | -1) => {
@@ -254,12 +265,16 @@ const WallSurface: React.FC<Props & { shelves: WallShelfDef[] }> = ({ credential
         </p>
       </div>
 
+      {/* zero-height marker at the stack's true (untransformed) top — measures the
+          height available for the scroll clamp above. */}
+      <div ref={stackTopRef} aria-hidden style={{ height: 0 }} />
       {/* Vertical shelf-stack — translateY snaps the active strip into place; the
-          neighbours peek above/below, dimmed + shrunk (the vendor's eye depth). */}
+          neighbours peek above/below, dimmed + shrunk (the vendor's eye depth). The
+          scroll is clamped to maxScrollPx so the last shelves fill the screen. */}
       <div
         className="section-glow"
         style={{
-          transform: `translateY(${-shelfIdx * SHELF_SLOT}px)`,
+          transform: `translateY(${-Math.min(shelfIdx * SHELF_SLOT, maxScrollPx)}px)`,
           transition: 'transform 0.5s cubic-bezier(0.16,1,0.3,1)',
           willChange: 'transform',
         }}
