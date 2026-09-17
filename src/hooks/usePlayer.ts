@@ -665,6 +665,7 @@ export function usePlayer() {
             const SOFT_CAP = 3;
             let downSteps = 0;
             let failedUpTier: FlowTier | null = null; // a step-up that re-stalled is locked out
+            let failedUpAt = 0;                        // …but only for FAILED_UP_TTL — a transient dip must not cap quality forever
 
             // Buffer-lead thresholds (seconds ahead of the playhead).
             const LEAD_HEALTHY = 8;   // ≥ this, sustained → stable: fade the indicator, allow step-up
@@ -813,27 +814,36 @@ export function usePlayer() {
               }
 
               // ── STABLE / RECOVER UP (quiet) ──
-              if (lead >= LEAD_HEALTHY) {
+              // THE LIVE CRACK: a live stream arrives at ~realtime, so the buffer lead
+              // structurally caps at ~2-4s — an 8s "healthy" lead is only reachable on
+              // VOD or a bursty upstream. Gating step-up on 8s meant live could step DOWN
+              // but never climb BACK — permanently stuck-low (Aziz had to jump to source
+              // by hand). So step up on a MODEST, STABLE (non-shrinking) lead that live
+              // can actually reach, and climb FAST when there's genuine big headroom
+              // (VOD / bursty). The 25s rollback + lockout keep it from yo-yoing; the
+              // lockout self-clears after FAILED_UP_TTL so a transient dip can't cap
+              // quality for the whole session.
+              const STEPUP_LEAD = 2.5;
+              const FAILED_UP_TTL = 90000;
+              if (failedUpTier && now - failedUpAt > FAILED_UP_TTL) failedUpTier = null;
+              const bigHeadroom = lead >= LEAD_HEALTHY;
+              const stableModest = lead >= STEPUP_LEAD && !trendShrinking();
+              if (bigHeadroom || stableModest) {
                 if (!stableSince) stableSince = now;
                 if (adapting && now - stableSince > 4000) setAdapting(false);
-                // Climb faster when the headroom is clearly there. A big lead (≥14s) is
-                // proof the pipe has room to spare → climb in 10s; ordinary healthy lead
-                // → 20s. This is how the big guys' ABR behaves — optimistic up-shift, fast
-                // step-down if the specific channel turns out too fat (predictive loop
-                // above). The 25s rollback + failedUpTier lockout keep it from yo-yoing.
-                const recoveryMs = lead >= LEAD_HEALTHY * 1.75 ? 10000 : RECOVERY_STABLE_MS;
+                const recoveryMs = bigHeadroom ? 10000 : RECOVERY_STABLE_MS;
                 if (currentTier !== 'source' && !inCooldown && now - stableSince > recoveryMs) {
                   const higher = tierUp(currentTier);
                   if (higher !== currentTier && higher !== failedUpTier) {
                     const preTier = currentTier;
                     const tryTier = higher;
                     switchTier(tryTier, 'recover-up');
-                    // If the step-up re-stalls within 25s, drop back + lock it out so
-                    // recovery feels smooth, never a yo-yo.
+                    // If the step-up can't hold (lead collapses within 25s), drop back +
+                    // lock it out (with a timestamp) so recovery settles, never yo-yos.
                     setTimeout(() => {
                       if (isStale()) return;
                       if (currentTier === tryTier && bufferedLead() < LEAD_CRITICAL) {
-                        failedUpTier = tryTier;
+                        failedUpTier = tryTier; failedUpAt = Date.now();
                         switchTier(preTier, 'recover-rollback');
                       }
                     }, 25000);
