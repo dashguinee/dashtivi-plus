@@ -23,6 +23,10 @@ import { useEffect } from 'react';
 export function useScrollAmbient() {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // Low-end: skip the ambient gradient + proximity/mutation observers entirely.
+    // Profiling showed this scroll-coupled work dominated Home scroll on throttled
+    // devices; the ambient glow is a nice-to-have, smoothness is not. (Aziz 2026-09-17)
+    if (document.documentElement.classList.contains('perf-lite')) return;
 
     // ── 1. Ambient gradient follows scroll ──
     const ambientEl = document.getElementById('scroll-ambient');

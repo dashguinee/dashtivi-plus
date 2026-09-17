@@ -34,7 +34,8 @@ export const CosmicBackground: React.FC = () => {
   // nothing to do. It now only runs while there is settling work to do, and re-arms
   // on scroll. Idle = zero rAF. Honors reduced-motion + tab visibility.
   useEffect(() => {
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      || document.documentElement.classList.contains('perf-lite');
     if (reduce) {
       // Static state — apply scroll-position transform once, no loop.
       if (glowRef.current) {
@@ -84,7 +85,8 @@ export const CosmicBackground: React.FC = () => {
     // Skip star canvas on mobile — too subtle to notice, saves GPU
     if (window.innerWidth < 768) return;
     // Reduced motion → render a single static frame, no loop at all.
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      || document.documentElement.classList.contains('perf-lite');
 
     const canvas = canvasRef.current;
     if (!canvas) return;
