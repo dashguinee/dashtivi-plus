@@ -57,11 +57,14 @@ export async function buildRecMovieShelves(): Promise<WallShelf[]> {
     const signals = readSignals();
     const affinity = buildAffinity(tmdbMap, signals);
 
-    // Cross-row de-dupe: a title used by a higher curated row is dropped from the
-    // ones below it, so no two stacked shelves lead with the same posters (on a
-    // cold-start account trending & dash-curated both rank by rating and would
-    // otherwise render an identical top-N — that reads as a bug, not curation).
+    // Cross-row distinctness: each curated row ranks over the pool MINUS the titles
+    // already claimed by a higher row, so no two stacked shelves lead with the same
+    // posters (on a cold-start account trending & dash-curated both rank by rating
+    // and would otherwise render an identical top-N — that reads as a bug, not
+    // curation). We shrink the POOL before each builder (not just the final items)
+    // so every row still comes back a full, distinct 25 by reaching deeper. (Z 2026-09-17)
     const used = new Set<number>();
+    const remaining = (): VodStream[] => (used.size ? movies.filter(m => !used.has(m.stream_id)) : movies);
     const toShelf = (row: RankedLike | null, accent: string): WallShelf | null => {
       if (!row || !row.items || row.items.length < 4) return null;
       const items: WallItem[] = [];
@@ -78,10 +81,10 @@ export async function buildRecMovieShelves(): Promise<WallShelf[]> {
     const out: WallShelf[] = [];
     const push = (row: RankedLike | null, accent: string) => { const s = toShelf(row, accent); if (s) out.push(s); };
 
-    push(recommendFor(movies, 'movie', tmdbMap, affinity, {}, signals) as RankedLike | null, ACC.forYou);
-    push(trendingNow(movies, 'movie', tmdbMap, { isTop10: true }) as RankedLike | null, ACC.trending);
-    push(dashCurated(movies, 'movie', tmdbMap, { gemSet: gemSet.size ? gemSet : undefined }) as RankedLike | null, ACC.curated);
-    push(hiddenGems(movies, 'movie', tmdbMap, { salt: 'wall' }) as RankedLike | null, ACC.gems);
+    push(recommendFor(remaining(), 'movie', tmdbMap, affinity, {}, signals) as RankedLike | null, ACC.forYou);
+    push(trendingNow(remaining(), 'movie', tmdbMap, { isTop10: true }) as RankedLike | null, ACC.trending);
+    push(dashCurated(remaining(), 'movie', tmdbMap, { gemSet: gemSet.size ? gemSet : undefined }) as RankedLike | null, ACC.curated);
+    push(hiddenGems(remaining(), 'movie', tmdbMap, { salt: 'wall' }) as RankedLike | null, ACC.gems);
     return out;
   } catch {
     return [];
