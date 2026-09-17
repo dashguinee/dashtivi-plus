@@ -26,6 +26,9 @@ export interface WallShelf {
   categoryIds: string[];
   /** Vendor's "🔥 Ce soir" accent — the freshest strip, flagged for the eye. */
   hot?: boolean;
+  /** Pre-loaded curated covers (rec-engine shelves). When present, categoryIds is
+   *  empty and the loader serves these directly — no paging. (Z 2026-09-17) */
+  items?: WallItem[];
 }
 
 /**

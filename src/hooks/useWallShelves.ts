@@ -55,11 +55,13 @@ async function fetchPage(shelf: WallShelf, cat: string, offset: number): Promise
 }
 
 export function useWallShelves(shelves: WallShelf[]): WallShelvesState {
-  const [pools, setPools] = useState<WallItem[][]>(() => shelves.map(() => []));
-  const [exhausted, setExhausted] = useState<boolean[]>(() => shelves.map(() => false));
+  // Rec-engine shelves carry pre-loaded `items` → seed them directly + mark exhausted
+  // (never paged). Category shelves start empty and page lazily. (Z 2026-09-17)
+  const [pools, setPools] = useState<WallItem[][]>(() => shelves.map(s => (s.items ? [...s.items] : [])));
+  const [exhausted, setExhausted] = useState<boolean[]>(() => shelves.map(s => !!s.items));
 
   const loaders = useRef<ShelfLoader[]>(
-    shelves.map(() => ({ catIndex: 0, offset: 0, seen: new Set<number>(), inFlight: false, exhausted: false }))
+    shelves.map(s => ({ catIndex: 0, offset: 0, seen: new Set<number>(), inFlight: false, exhausted: !!s.items }))
   );
 
   const loadMore = useCallback((shelfIdx: number) => {

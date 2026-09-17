@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import type { XtreamCredentials, VodStream, SeriesItem } from '@/lib/xtream';
 import { getTmdbMap, buildVodUrl, buildVodFallbackUrl } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
@@ -9,7 +9,8 @@ import { ContentDetailModal } from '@/components/ui/ContentDetailModal';
 import { SeriesDetailFlow } from '@/components/wall/SeriesDetailFlow';
 import { WallShelf } from '@/components/wall/WallShelf';
 import { SHELVES, CATALOG_TOTAL } from '@/lib/wall-shelves';
-import type { WallItem } from '@/lib/wall-shelves';
+import type { WallItem, WallShelf as WallShelfDef } from '@/lib/wall-shelves';
+import { buildRecMovieShelves } from '@/lib/wall-rec-shelves';
 
 /* ════════════════════════════════════════════════════════════════════
    LE MUR — the cinema cover-wall (v2, /wall).
@@ -46,11 +47,11 @@ function frCount(n: number): string {
   return n.toLocaleString('fr-FR');
 }
 
-export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
-  const { pools, exhausted, loadMore } = useWallShelves(SHELVES);
+const WallSurface: React.FC<Props & { shelves: WallShelfDef[] }> = ({ credentials, onPlay, shelves }) => {
+  const { pools, exhausted, loadMore } = useWallShelves(shelves);
   const [tmdbMap, setTmdbMap] = useState<Record<string, TmdbEntry>>({});
   const [shelfIdx, setShelfIdx] = useState(0);
-  const [cursors, setCursors] = useState<number[]>(() => SHELVES.map(() => 0));
+  const [cursors, setCursors] = useState<number[]>(() => shelves.map(() => 0));
   const [dragDx, setDragDx] = useState(0);
   const [detail, setDetail] = useState<WallItem | null>(null);
 
@@ -68,7 +69,7 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   // ── Prime every shelf's first page (counts + neighbour previews). ──
   useEffect(() => {
-    SHELVES.forEach((_, i) => loadMore(i));
+    shelves.forEach((_, i) => loadMore(i));
   }, [loadMore]);
 
   // ── Recompute the binder-page size from the viewport width. ──
@@ -96,7 +97,7 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
 
   // ── Move between shelves with a snap. ──
   const changeShelf = useCallback((dir: 1 | -1) => {
-    setShelfIdx(prev => Math.min(Math.max(0, prev + dir), SHELVES.length - 1));
+    setShelfIdx(prev => Math.min(Math.max(0, prev + dir), shelves.length - 1));
     setDragDx(0);
   }, []);
 
@@ -224,7 +225,7 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
           willChange: 'transform',
         }}
       >
-        {SHELVES.map((shelf, i) => (
+        {shelves.map((shelf, i) => (
           <div
             key={shelf.id}
             style={{
@@ -281,4 +282,32 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
       )}
     </div>
   );
+};
+
+/** Le Mur — gate on the recommendation-engine curated shelves (Pour Vous · Tendance ·
+ *  Dash · Pépites), prepend them ABOVE the category shelves, then render the surface.
+ *  A 4s fallback guarantees the wall always mounts even if the rec pass is slow or
+ *  empty (it falls back to the category shelves alone). (Z 2026-09-17) */
+export const CinemaWallPage: React.FC<Props> = (props) => {
+  const [recShelves, setRecShelves] = useState<WallShelfDef[] | null>(null);
+  useEffect(() => {
+    let alive = true;
+    buildRecMovieShelves()
+      .then(rs => { if (alive) setRecShelves(rs); })
+      .catch(() => { if (alive) setRecShelves([]); });
+    const t = setTimeout(() => { if (alive) setRecShelves(prev => (prev === null ? [] : prev)); }, 4000);
+    return () => { alive = false; clearTimeout(t); };
+  }, []);
+  const shelves = useMemo(
+    () => (recShelves && recShelves.length ? [...recShelves, ...SHELVES] : SHELVES),
+    [recShelves],
+  );
+  if (recShelves === null) {
+    return (
+      <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: '#07090e', color: 'rgba(255,255,255,.45)', fontSize: 13, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+        Cinéma…
+      </div>
+    );
+  }
+  return <WallSurface {...props} shelves={shelves} />;
 };
