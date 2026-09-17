@@ -720,6 +720,24 @@ export function usePlayer() {
               }
             }).catch(() => {});
 
+            // ── BULLETPROOF STARTUP: first-play cold-stall watchdog ──
+            // A 'source' (copy) seed on a weak cold pipe waits on the proxy's 600KB
+            // commit-gate → up to a ~3s black startup stall before anything corrects.
+            // If the copy seed hasn't RENDERED a frame within the window, step down to
+            // a transcoded tier (proxy commits those on the FIRST byte → no gate, no
+            // stall). A good pipe paints 'source' well under this window, so the
+            // watchdog never fires there — source stays instant with zero extra CPU.
+            if (currentTier === 'source') {
+              const seedTier = currentTier;
+              setTimeout(() => {
+                if (isStale() || !video) return;
+                const rendered = video.currentTime > 0.15 && video.readyState >= 3;
+                if (!rendered && currentTier === seedTier && downSteps === 0) {
+                  switchTier(tierDown(seedTier), 'cold-start');
+                }
+              }, 1600);
+            }
+
             // Backstop: a real stall (onwaiting) means prediction was too late — force
             // a step DOWN ignoring the soft cap. Predictive should make this rare.
             const origWaiting = video.onwaiting;

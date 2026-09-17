@@ -507,7 +507,11 @@ export function tierDown(t: FlowTier): FlowTier { const i = FLOW_TIERS.indexOf(t
 const BW_PROBE_KEY = 'tivi_bw_probe_bps';
 const PROBE_URL = '/curator.json';
 const PROBE_TARGET_BYTES = 256 * 1024; // stop a fast download here — enough to measure
-const PROBE_MAX_MS = 2500;             // hard cap so a slow pipe never delays anything
+const PROBE_MAX_MS = 1200;             // hard cap so a slow pipe never delays anything —
+                                       // short enough that a weak first-play network is
+                                       // detected + the seed corrected BEFORE the copy-gate
+                                       // startup stall bites (bulletproof startup). A fast
+                                       // pipe still resolves in ~200ms at 256KB.
 
 /** Map a measured throughput (bits/sec) to a Flow tier, using the same thresholds
  *  the tier ladder is built on. */
