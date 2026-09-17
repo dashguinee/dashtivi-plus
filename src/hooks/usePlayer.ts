@@ -673,7 +673,9 @@ export function usePlayer() {
 
             const SAMPLE_MS = 1000;
             const SWITCH_COOLDOWN_MS = 6000;  // after a swap, let the new buffer fill before deciding
-            const RECOVERY_STABLE_MS = 45000; // sustained-healthy before a quiet step UP
+            const RECOVERY_STABLE_MS = 20000; // sustained-healthy before a quiet step UP
+                                              // (Aziz 2026-09-17: 45s felt stuck-low; the
+                                              // rollback+lockout below guards the faster climb)
 
             let leadHistory: number[] = [];
             let lastSwitchAt = 0;
@@ -814,7 +816,13 @@ export function usePlayer() {
               if (lead >= LEAD_HEALTHY) {
                 if (!stableSince) stableSince = now;
                 if (adapting && now - stableSince > 4000) setAdapting(false);
-                if (currentTier !== 'source' && !inCooldown && now - stableSince > RECOVERY_STABLE_MS) {
+                // Climb faster when the headroom is clearly there. A big lead (≥14s) is
+                // proof the pipe has room to spare → climb in 10s; ordinary healthy lead
+                // → 20s. This is how the big guys' ABR behaves — optimistic up-shift, fast
+                // step-down if the specific channel turns out too fat (predictive loop
+                // above). The 25s rollback + failedUpTier lockout keep it from yo-yoing.
+                const recoveryMs = lead >= LEAD_HEALTHY * 1.75 ? 10000 : RECOVERY_STABLE_MS;
+                if (currentTier !== 'source' && !inCooldown && now - stableSince > recoveryMs) {
                   const higher = tierUp(currentTier);
                   if (higher !== currentTier && higher !== failedUpTier) {
                     const preTier = currentTier;

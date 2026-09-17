@@ -1140,14 +1140,9 @@ export const VideoPlayer: React.FC<Props> = ({
                   </>
                 );
               })()}
-              {(rcPhase === 'idle' || rcPhase === 'reconnecting') && (
-                <div className="text-center">
-                  <p className="text-[12px] text-white/45 font-light tracking-wide">Reconnecting</p>
-                  <div className="mt-2 mx-auto w-8 h-[2px] rounded-full overflow-hidden bg-white/5">
-                    <div className="h-full w-full bg-primary/40 rounded-full" style={{ animation: 'loading-bar 1.2s ease-in-out infinite' }} />
-                  </div>
-                </div>
-              )}
+              {/* Aziz 2026-09-17: the channel icon + colour-shifting pulse + name ARE the
+                  reconnect signal. The "Reconnecting" word + loading line read as an
+                  error/apology and make the app feel shy — removed. Silent, confident recovery. */}
               {rcPhase === 'nostream' && (
                 <p className="text-[12px] text-white/45 font-light tracking-wide">Sorry, no stream</p>
               )}
@@ -1204,10 +1199,13 @@ export const VideoPlayer: React.FC<Props> = ({
       )}
 
       {/* Unified channel bar — adjacent / brand (live only), genre driven by categories bar above */}
+      {/* Aziz 2026-09-17: hide the discovery panel while the stream is loading/
+          reconnecting — it read as a "weird panel behind" the clean loading icon.
+          Stays the channel browser during real playback. */}
       {!isVod && (
         <UnifiedChannelBar
           currentChannel={state.channel}
-          visible={controlsVisible || state.isSwitching}
+          visible={(controlsVisible || state.isSwitching) && !(state.error && !state.isPlaying)}
           isLive={isLiveStream}
           activeGenre={activeGenre ?? undefined}
           onSwitch={(ch) => { setCurrentChannel(ch.id); onRetry(ch); }}
