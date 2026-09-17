@@ -337,7 +337,38 @@ function BrandContent({ currentChannel, allChannels, onSwitch }: {
 
   const hasVariants = qualityVariants.length > 0;
   const hasFamily   = familyChannels.length > 0;
-  if (!hasVariants && !hasFamily) return <span className="text-[11px] text-white/30">No related channels</span>;
+
+  // Never leave the bar empty: fall back to same-category siblings, then to
+  // adjacent channels in the playlist. (Aziz 2026-09-17 — Ciné+ Emotion had no
+  // quality-variant/family match → empty bar; the row must ALWAYS show something.)
+  const fallbackChannels = useMemo(() => {
+    if (hasVariants || hasFamily) return [];
+    const myExp = experienceForChannelId(currentChannel.id);
+    let pool: Channel[] = myExp
+      ? allChannels.filter(ch => ch.id !== currentChannel.id && experienceForChannelId(ch.id) === myExp)
+      : [];
+    if (pool.length < 4) {
+      const idx = allChannels.findIndex(ch => ch.id === currentChannel.id);
+      if (idx !== -1) {
+        const seen = new Set(pool.map(p => p.id));
+        const near = [...allChannels.slice(Math.max(0, idx - 6), idx), ...allChannels.slice(idx + 1, idx + 7)]
+          .filter(ch => ch.id !== currentChannel.id && !seen.has(ch.id));
+        pool = [...pool, ...near];
+      }
+    }
+    return pool.slice(0, 16);
+  }, [allChannels, currentChannel.id, hasVariants, hasFamily]);
+
+  if (!hasVariants && !hasFamily) {
+    if (!fallbackChannels.length) return <span className="text-[11px] text-white/30">No related channels</span>;
+    const label = (experienceForChannelId(currentChannel.id) || 'More').toUpperCase();
+    return (
+      <>
+        <span className="text-[9px] text-white/30 uppercase tracking-wider font-medium flex-shrink-0 mr-0.5">{label}</span>
+        {fallbackChannels.map(ch => <ChannelCard key={ch.id} channel={ch} onClick={() => onSwitch(ch)} />)}
+      </>
+    );
+  }
 
   return (
     <>

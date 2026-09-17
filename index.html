@@ -22,10 +22,18 @@
          We keep layout, colours, gradients, images AND tap/nav transitions —
          only the PERPETUAL motion goes static + backdrop-blur drops (GPU relief).
          Device-gated below; mirrors the app's own prefers-reduced-motion. Aziz 2026-09-17 */
-      html.perf-lite *, html.perf-lite *::before, html.perf-lite *::after {
+      /* Kill only PERPETUAL decorative motion. Keep FUNCTIONAL feedback:
+         spinners (.animate-spin) + anything marked .perf-keep (channel-load
+         pulse, switch beam, Flow cue) — transient (load/switch/buffer), never
+         during scroll, so they cost nothing but signal "it's working". */
+      html.perf-lite *:not(.perf-keep):not(.animate-spin),
+      html.perf-lite *:not(.perf-keep):not(.animate-spin)::before,
+      html.perf-lite *:not(.perf-keep):not(.animate-spin)::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         animation-delay: 0ms !important;
+      }
+      html.perf-lite *, html.perf-lite *::before, html.perf-lite *::after {
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
       }

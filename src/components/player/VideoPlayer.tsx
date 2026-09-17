@@ -1032,7 +1032,7 @@ export const VideoPlayer: React.FC<Props> = ({
           <div className="absolute inset-0 z-[45] flex items-center justify-center pointer-events-none">
             {/* Thin beam at top */}
             <div className="absolute top-0 left-0 right-0 h-[2px]">
-              <div className="h-full"
+              <div className="h-full perf-keep"
                 style={{
                   background: 'linear-gradient(90deg, transparent, rgba(157,78,221,0.7), rgba(157,78,221,0.9), rgba(157,78,221,0.7), transparent)',
                   backgroundSize: '200% 100%',
@@ -1046,7 +1046,7 @@ export const VideoPlayer: React.FC<Props> = ({
             {showConnectCard && (
               <div className="relative flex flex-col items-center gap-3.5">
                 <div className="relative w-16 h-16">
-                  <div className="absolute inset-0 rounded-2xl" style={{ animation: 'connect-pulse 1.7s ease-in-out infinite' }} />
+                  <div className="absolute inset-0 rounded-2xl perf-keep" style={{ animation: 'connect-pulse 1.7s ease-in-out infinite' }} />
                   <div className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center"
                     style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(157,78,221,0.32)' }}>
                     {state.channel?.logo
@@ -1056,11 +1056,6 @@ export const VideoPlayer: React.FC<Props> = ({
                 </div>
                 <p className="text-[13px] text-white/85 font-medium tracking-wide max-w-xs text-center line-clamp-1 px-4">
                   {state.channel?.name || '…'}
-                </p>
-                {/* Only surfaces on genuinely slow connections — 4s delay means fast switches never see it. */}
-                <p className="text-[11px] text-white/40 text-center -mt-1.5"
-                   style={{ animation: 'fade-in 0.6s ease-out 4s both' }}>
-                  Low network? Turn on FLOW
                 </p>
               </div>
             )}
@@ -1075,10 +1070,9 @@ export const VideoPlayer: React.FC<Props> = ({
       {showBuffering && (
         <div className="absolute top-[64px] left-1/2 -translate-x-1/2 z-[35] pointer-events-none"
              style={{ animation: 'fade-in 0.3s ease-out both' }}>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+          <div className="flex items-center justify-center p-2 rounded-full"
                style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(157,78,221,0.2)' }}>
-            <div className="w-3 h-3 rounded-full border-[1.5px] border-white/20 border-t-primary-light animate-spin" />
-            <span className="text-[10px] text-white/55 font-medium tracking-wide">Buffering</span>
+            <div className="w-3.5 h-3.5 rounded-full border-[1.5px] border-white/20 border-t-primary-light animate-spin" />
           </div>
         </div>
       )}
@@ -1093,12 +1087,12 @@ export const VideoPlayer: React.FC<Props> = ({
           Suppressed while a switch/buffering pill already owns the top-center spot. */}
       {flowShow && !isVod && !state.isSwitching && !state.error && !showBuffering && (
         <div key={flowKey}
-             className="absolute top-[64px] left-1/2 -translate-x-1/2 z-[35] pointer-events-none"
+             className="absolute top-[64px] left-1/2 -translate-x-1/2 z-[35] pointer-events-none perf-keep"
              style={{ animation: 'flow-fade 30s ease-in-out forwards' }}
              onAnimationEnd={() => setFlowShow(false)}>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full"
                style={{ background: 'rgba(0,0,0,0.38)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(157,78,221,0.22)' }}>
-            <div className="w-1.5 h-1.5 rounded-full bg-primary-light" style={{ animation: 'flow-dot-pulse 1.6s ease-in-out infinite' }} />
+            <div className="w-1.5 h-1.5 rounded-full bg-primary-light perf-keep" style={{ animation: 'flow-dot-pulse 1.6s ease-in-out infinite' }} />
             <span className="text-[10px] text-primary-light/80 font-medium tracking-[0.14em] uppercase">{t('flowHolding')}</span>
           </div>
         </div>

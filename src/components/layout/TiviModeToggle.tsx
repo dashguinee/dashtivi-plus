@@ -11,7 +11,7 @@ import { VeeWheel } from '@/components/ui/VeeWheel';
  *              five district orbs arc above, frosted world behind, thumb picks a
  *              destination. The DNA's "summon from the thumb" pattern, alive.
  */
-const CYCLE = ['/movies', '/series', '/live', '/'];
+const CYCLE = ['/live', '/movies', '/series', '/'];
 
 function routeIndex(path: string): number {
   return CYCLE.findIndex((r) => (r === '/' ? path === '/' : path.startsWith(r)));
@@ -34,7 +34,7 @@ export function useVeeCycle() {
   }, [navigate, cur]);
 
   const isVeeActive = cur >= 0 && cur < 3;
-  const LABELS = ['Films', 'Séries', 'Live', 'Home'];
+  const LABELS = ['Live', 'Films', 'Séries', 'Home'];
   const base = cur >= 0 ? cur : idxRef.current;
   const nextLabel = LABELS[(base + 1) % CYCLE.length];
 
