@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import type { XtreamCredentials, VodStream, SeriesItem } from '@/lib/xtream';
-import { getTmdbMap, buildVodUrl, buildVodFallbackUrl } from '@/lib/xtream';
+import { getTmdbMap, buildVodUrl, buildVodFallbackUrl, searchVod, searchSeries, vodDbToStream, seriesDbToItem } from '@/lib/xtream';
 import type { TmdbEntry } from '@/lib/tmdb-map.generated';
 import type { Channel } from '@/types';
 import { useSwipeSurf } from '@/hooks/useSwipeSurf';
@@ -57,6 +57,34 @@ const WallSurface: React.FC<Props & { shelves: WallShelfDef[] }> = ({ credential
 
   // Covers visible in one screen → the size of a "binder page" flip.
   const [perPage, setPerPage] = useState(MIN_PAGE);
+
+  // ── SEARCH — a contained overlay over the wall (its OWN scroll; touch-action
+  //    auto; never touches the swipe-surf gestures). Reaches any of the 62k by
+  //    name via searchVod + searchSeries; a tap opens the existing detail → play. ──
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<WallItem[]>([]);
+  const [searching, setSearching] = useState(false);
+  const searchSeq = useRef(0);
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) { setResults([]); setSearching(false); return; }
+    setSearching(true);
+    const seq = ++searchSeq.current;
+    const t = setTimeout(async () => {
+      const [vods, sers] = await Promise.all([
+        searchVod(q, 30).catch(() => []),
+        searchSeries(q, 18).catch(() => []),
+      ]);
+      if (seq !== searchSeq.current) return; // a newer query superseded this one
+      const items: WallItem[] = [];
+      for (const v of vods) { const vs = vodDbToStream(v); items.push({ kind: 'movie', id: vs.stream_id, name: vs.name, poster: vs.stream_icon || '', rating: String(v.rating ?? ''), raw: vs }); }
+      for (const s of sers) { const si = seriesDbToItem(s); items.push({ kind: 'series', id: si.series_id, name: si.name, poster: si.cover || '', rating: si.rating || '', raw: si }); }
+      setResults(items);
+      setSearching(false);
+    }, 320);
+    return () => clearTimeout(t);
+  }, [query]);
 
   // Suppress the stray click a horizontal swipe fires after it lifts, so a flip
   // never also opens a cover's detail.
@@ -200,6 +228,17 @@ const WallSurface: React.FC<Props & { shelves: WallShelfDef[] }> = ({ credential
         }}
       />
 
+      {/* SEARCH entry — reach any of the 62k by name (opens the search overlay). */}
+      <button
+        onClick={(e) => { e.stopPropagation(); setSearchOpen(true); }}
+        onPointerDown={(e) => e.stopPropagation()}
+        aria-label="Rechercher"
+        className="fixed z-30 flex items-center justify-center rounded-full"
+        style={{ top: 'max(1rem, calc(0.6rem + env(safe-area-inset-top,0px)))', right: '1rem', width: 40, height: 40, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', WebkitBackdropFilter: 'blur(8px)', backdropFilter: 'blur(8px)' }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      </button>
+
       <div className="px-5 pb-5">
         <h1
           className="text-[24px] font-black text-white tracking-tight"
@@ -279,6 +318,39 @@ const WallSurface: React.FC<Props & { shelves: WallShelfDef[] }> = ({ credential
           onPlay={onPlay}
           onClose={() => setDetail(null)}
         />
+      )}
+
+      {/* SEARCH overlay — its OWN scroll (touch-action:auto), above the wall; a tap
+          hands the item to the existing detail → play path. Contained: never touches
+          the swipe-surf. (Z 2026-09-17) */}
+      {searchOpen && (
+        <div className="fixed inset-0 z-40 flex flex-col" style={{ background: 'rgba(7,9,14,0.97)', touchAction: 'auto', paddingTop: 'env(safe-area-inset-top,0px)' }}>
+          <div className="flex items-center gap-2 px-4 py-3">
+            <div className="flex items-center gap-2 flex-1 rounded-full px-3" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', height: 44 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher un film, une série…" className="flex-1 bg-transparent outline-none text-white text-[15px]" style={{ minWidth: 0 }} />
+              {query && <button onClick={() => setQuery('')} className="text-white/40 text-[18px] leading-none px-1" aria-label="Effacer">×</button>}
+            </div>
+            <button onClick={() => { setSearchOpen(false); setQuery(''); setResults([]); }} className="text-white/70 text-[14px] px-1">Fermer</button>
+          </div>
+          <div className="flex-1 overflow-y-auto px-4 pb-24" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {searching && <p className="text-white/40 text-[13px] py-6 text-center">Recherche…</p>}
+            {!searching && query.trim().length >= 2 && results.length === 0 && <p className="text-white/40 text-[13px] py-6 text-center">Aucun résultat pour « {query.trim()} »</p>}
+            {query.trim().length < 2 && <p className="text-white/30 text-[12px] py-6 text-center">Tape au moins 2 lettres — films &amp; séries dans tout le catalogue.</p>}
+            <div className="grid gap-3 pt-1" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))' }}>
+              {results.map((it) => (
+                <button key={it.kind + it.id} onClick={() => { setSearchOpen(false); setDetail(it); }} className="text-left">
+                  <div className="rounded-lg overflow-hidden" style={{ aspectRatio: '2 / 3', background: 'rgba(255,255,255,0.06)' }}>
+                    {it.poster
+                      ? <img src={it.poster} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                      : <div className="w-full h-full grid place-items-center text-white/25 text-[10px] px-1 text-center">{it.name}</div>}
+                  </div>
+                  <p className="text-white/70 text-[11px] mt-1 leading-tight" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{it.name}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
