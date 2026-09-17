@@ -48,6 +48,9 @@ export function usePlayer() {
   // Rendered blurred over the <video> to mask the black gap until the new stream paints.
   // null = no overlay. Cleared in onplaying when the new stream actually renders.
   const [switchSnapshot, setSwitchSnapshot] = useState<string | null>(null);
+  // true = the frozen frame is crossfading OUT (opacity→0) now that the new stream
+  // has painted. Kept mounted through the fade so it's a smooth crossfade, not a cut.
+  const [snapshotFading, setSnapshotFading] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const destroyRef = useRef<(() => void) | null>(null);
   const hlsRef = useRef<HlsInstance | null>(null);
@@ -57,6 +60,26 @@ export function usePlayer() {
   const snapshotTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined); // Safety: auto-clears frozen-frame overlay if stream never renders
   const liveStallTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined); // Live-only: fires a reconnect if a stalled live stream never resumes (upstream death)
   const playGeneration = useRef(0); // Guards against stale handlers from rapid channel switches
+
+  // Reveal the new stream by CROSSFADING the frozen frame out (opacity→0), not a hard
+  // cut. We wait for a real painted frame of the new tier (requestVideoFrameCallback)
+  // so there's never a black gap, then fade over ~350ms and unmount. Used on the
+  // successful onplaying reveal (a tier/channel switch should never show a jump).
+  const revealSnapshot = (video: HTMLVideoElement) => {
+    const startFade = () => {
+      setSnapshotFading(true);
+      if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
+      snapshotTimerRef.current = setTimeout(() => { setSwitchSnapshot(null); setSnapshotFading(false); }, 380);
+    };
+    const anyVid = video as unknown as { requestVideoFrameCallback?: (cb: () => void) => number };
+    if (typeof anyVid.requestVideoFrameCallback === 'function') {
+      try { anyVid.requestVideoFrameCallback(() => startFade()); } catch { startFade(); }
+      // Safety: if rVFC never fires (rare), fade anyway shortly after.
+      setTimeout(() => { if (!snapshotTimerRef.current) startFade(); }, 400);
+    } else {
+      setTimeout(startFade, 100); // fallback: give the new frame a beat to paint
+    }
+  };
   const userMutedRef = useRef(false); // Tracks explicit user mute — respected across channel switches
   const userPausedRef = useRef(false); // Tracks explicit user pause — so PiP keep-alive never fights a deliberate pause
   const wasPiPRef = useRef(false); // User intent: was in PiP — re-request after source swap
@@ -148,7 +171,7 @@ export function usePlayer() {
       if (isSwitch && video) {
         const snap = captureFrame(video);
         if (snap) {
-          setSwitchSnapshot(snap);
+          setSwitchSnapshot(snap); setSnapshotFading(false);
           // Safety net — never let the overlay linger past 12s if the stream stalls/errors
           if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
           snapshotTimerRef.current = setTimeout(() => setSwitchSnapshot(null), 12000);
@@ -513,9 +536,11 @@ export function usePlayer() {
           retryCount = 0;
           // Recovered — cancel the live-stall watchdog.
           if (liveStallTimerRef.current) { clearTimeout(liveStallTimerRef.current); liveStallTimerRef.current = undefined; }
-          // New stream is painting — fade out / remove the frozen-frame overlay
+          // New stream is painting — CROSSFADE the frozen frame out (waits for a real
+          // painted frame, then fades ~350ms) so a tier/channel switch never shows a
+          // hard cut. (Error/teardown paths still clear it instantly, below.)
           if (snapshotTimerRef.current) { clearTimeout(snapshotTimerRef.current); snapshotTimerRef.current = undefined; }
-          setSwitchSnapshot(null);
+          revealSnapshot(video);
           markAlive(channel.id);
           const idMatch = url.match(/[?&]id=(\d+)/);
           if (idMatch) onStreamSuccess(parseInt(idMatch[1]));
@@ -700,7 +725,7 @@ export function usePlayer() {
               // a black flash on an adaptive quality change — neither should we.
               const snap = captureFrame(video);
               if (snap) {
-                setSwitchSnapshot(snap);
+                setSwitchSnapshot(snap); setSnapshotFading(false);
                 if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
                 snapshotTimerRef.current = setTimeout(() => setSwitchSnapshot(null), 12000);
               }
@@ -1058,7 +1083,7 @@ export function usePlayer() {
       // new position renders. Direct (mp4) seek needs none; it just sets currentTime.
       const snap = captureFrame(video);
       if (snap) {
-        setSwitchSnapshot(snap);
+        setSwitchSnapshot(snap); setSnapshotFading(false);
         if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
         snapshotTimerRef.current = setTimeout(() => setSwitchSnapshot(null), 12000);
       }
@@ -1173,6 +1198,7 @@ export function usePlayer() {
     videoRef,
     containerRef,
     switchSnapshot,
+    snapshotFading,
     playChannel,
     togglePlay,
     toggleMute,
@@ -1185,5 +1211,5 @@ export function usePlayer() {
     stop,
     streamLimit,
     dismissStreamLimit,
-  }), [state, switchSnapshot, playChannel, togglePlay, toggleMute, setVolume, toggleFullscreen, portraitFullscreen, togglePiP, changeQuality, seek, stop, streamLimit, dismissStreamLimit]);
+  }), [state, switchSnapshot, snapshotFading, playChannel, togglePlay, toggleMute, setVolume, toggleFullscreen, portraitFullscreen, togglePiP, changeQuality, seek, stop, streamLimit, dismissStreamLimit]);
 }

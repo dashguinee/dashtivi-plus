@@ -826,10 +826,12 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
             src={player.switchSnapshot}
             alt=""
             aria-hidden="true"
-            className="fixed inset-0 z-50 w-full h-full object-cover bg-black pointer-events-none transition-opacity duration-500"
+            className="fixed inset-0 z-50 w-full h-full object-cover bg-black pointer-events-none"
             style={{
               filter: 'blur(14px) brightness(0.7)',
               transform: 'scale(1.06)',
+              opacity: player.snapshotFading ? 0 : 1,
+              transition: 'opacity 340ms ease-out',
             }}
           />
         )}
