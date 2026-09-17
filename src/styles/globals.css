@@ -173,6 +173,11 @@
     mask-image: linear-gradient(to right, transparent, black 4%, black 94%, transparent);
     -webkit-mask-image: linear-gradient(to right, transparent, black 4%, black 94%, transparent);
   }
+  /* PERF (Z 2026-09-17): on low-end (perf-lite) drop the edge-fade MASK on horizontal rails.
+     A mask-image on a SCROLLING container re-rasterizes the moving cards every frame — the
+     rail-scroll jank on weak GPUs (measured worst 73ms / 9 dropped frames at 5x throttle).
+     The fade is decorative; smooth scroll wins on the devices that actually need it. */
+  .perf-lite .scroll-fade { -webkit-mask-image: none !important; mask-image: none !important; }
 
   .gradient-mask-l {
     mask-image: linear-gradient(to left, black 85%, transparent 100%);
