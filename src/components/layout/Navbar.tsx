@@ -270,6 +270,7 @@ const NavbarImpl: React.FC = () => {
       {/* MOBILE BOTTOM NAV */}
       <div className="lg:hidden fixed bottom-0 left-0 w-full z-50 px-5 pb-4 pt-2 pointer-events-none safe-bottom"
         style={{
+          bottom: '3px',   // Aziz 2026-09-17: lift the island a hair (~3px) off the bottom edge (safe-bottom still adds the inset via padding)
           transform: 'translateZ(0)',
           opacity: 1,
         }}

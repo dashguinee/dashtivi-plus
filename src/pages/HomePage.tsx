@@ -10,6 +10,7 @@ import { FreeHlsShowcaseCard, type FreeHlsChannel } from '@/components/ui/FreeHl
 import { OyeAfricaCard, StationsCard } from '@/components/voyo';
 import { MoviesExploration } from '@/components/home/MoviesExploration';
 import { HeroDeck, type HeroSlide } from '@/components/home/HeroDeck';
+import { HollywoodVodRow } from '@/components/home/HollywoodVodRow';
 import { WorldCupBackdrop } from '@/components/home/WorldCupBackdrop';
 import { TriondaBall, WcFlagBeam } from '@/components/home/TriondaBall';
 import {
@@ -506,6 +507,14 @@ export const HomePage: React.FC<Props> = ({ credentials, onPlay }) => {
                       category: 'live',
                     })}
                   />
+                </div>
+              )}
+              {rpos === 2 && hollywoodFeature && (
+                /* Cinema gateway — a real Hollywood VOD (movies) row right under the
+                   live big-screen, so Home flows INTO Cinema, not just Live. Tap a
+                   cover to watch; the row's gate → the full wall (/wall). (Aziz 2026-09-17) */
+                <div className="mb-8 -mt-2">
+                  <HollywoodVodRow credentials={credentials} onPlay={onPlay} />
                 </div>
               )}
               {/* Breathing beat — an INTENTIONAL mental-reset after every 2
