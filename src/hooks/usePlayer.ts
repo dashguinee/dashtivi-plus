@@ -258,7 +258,11 @@ export function usePlayer() {
         const isHlsUrl = url.endsWith('.m3u8') || url.includes('.m3u8?');
 
         if (isLive || isVod) {
-          url = url.replace(/&q=(source|hd720|eco|low)/, '');
+          // Strip ANY pre-baked &q= (catalog URLs bake q=hd) so the adaptive seed /
+          // manual mode below is the SOLE q — a leading q=hd used to survive this
+          // strip and win URLSearchParams.get('q'), silently defeating Flow + the
+          // manual quality selector. (Z 2026-09-17)
+          url = url.replace(/&q=[^&]*/g, '');
           const mode = getStreamQuality();
           if (mode === 'auto' && isLive) {
             // Seed the tier BEFORE src assignment — prevents a double-load. Uses the
@@ -619,7 +623,9 @@ export function usePlayer() {
         // stabilises we climb back up quietly.
         if (isLive) {
           const userMode = getStreamQuality();
-          const sourceUrl = url.replace(/&q=(source|hd720|eco|low)/, '');
+          // Strip ANY &q= (incl. a baked q=hd) so tierUrl() re-applies exactly one —
+          // otherwise a surviving leading q defeats every predictive down-step. (Z 2026-09-17)
+          const sourceUrl = url.replace(/&q=[^&]*/g, '');
 
           if (userMode === 'auto') {
             const tierUrl = (t: FlowTier) => t === 'source' ? sourceUrl : sourceUrl + '&q=' + t;

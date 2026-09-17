@@ -1,7 +1,7 @@
 import { getCatalog, getCatalogSync, getByExperience as catGetByExperience, buildCatalogUrl } from './catalog';
 import type { CatalogChannel } from './catalog';
 
-const STREAM_BASE = (import.meta.env.VITE_XTREAM_STREAM || 'http://playshare.co:8080').trim();
+const STREAM_BASE = (import.meta.env.VITE_XTREAM_STREAM || 'http://toxicplay1.com:8080').trim();
 const PROXY = (import.meta.env.VITE_PROXY_URL || 'https://stream.zionsynapse.online').trim();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 const FETCH_TIMEOUT = 10000; // 10s timeout for API calls
@@ -523,14 +523,31 @@ export function tierForBps(bps: number): FlowTier {
  *  URL's &q= BEFORE src assignment (no double-load) without blocking on the async
  *  probe. The async probe (probeBandwidthBps) corrects it shortly after start. */
 export function seedTierSync(): FlowTier {
+  // 1. Strongest signal: a real throughput probe measured earlier this session.
   try {
     const cached = sessionStorage.getItem(BW_PROBE_KEY);
     if (cached) { const n = parseFloat(cached); if (n > 0) return tierForBps(n); }
   } catch {}
-  // No probe yet — start at hd720 (the proxy's own weak-network default). NOT
-  // 'source' (could overshoot a phone pipe → instant stall) and NOT 'low' (would
-  // needlessly start everyone at 360p). The probe + predictive loop adjust fast.
-  return 'hd720';
+  // 2. First play, no probe yet — take a hint from the OS's OWN Network Information
+  //    + device signals (real inputs, never a blind guess). Absence/uncertainty ⇒
+  //    'source' (copy = instant start, no transcode spin-up) so the common case stays
+  //    instant like today's baked q=hd; ONLY a known-weak signal starts lower. The
+  //    predictive Flow loop + async probe then adapt DOWN within seconds if the real
+  //    buffer trend demands it (previously impossible — a stale q=hd defeated it).
+  //    NB: we deliberately do NOT read connection.downlink (undefined on iOS → it
+  //    once mis-seeded everyone to 480p); effectiveType + saveData are reliable.
+  try {
+    const c = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+    if (c) {
+      if (c.saveData) return 'eco';                              // user opted into data-saving — respect it
+      if (c.effectiveType === 'slow-2g' || c.effectiveType === '2g') return 'low';
+      if (c.effectiveType === '3g') return 'eco';
+    }
+    // Very low-RAM device (≤2GB) can't comfortably decode a full-bitrate copy stream.
+    const dm = (navigator as unknown as { deviceMemory?: number }).deviceMemory;
+    if (typeof dm === 'number' && dm > 0 && dm <= 2) return 'eco';
+  } catch {}
+  return 'source';
 }
 
 /** Real throughput probe. Returns bits/sec, or null if it couldn't measure.
