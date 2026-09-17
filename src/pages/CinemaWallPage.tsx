@@ -177,7 +177,11 @@ export const CinemaWallPage: React.FC<Props> = ({ credentials, onPlay }) => {
     <div
       data-space="movies"
       className="min-h-screen overflow-hidden pb-32"
-      style={{ paddingTop: 'max(4.5rem, calc(4rem + env(safe-area-inset-top, 0px)))' }}
+      style={{
+        paddingTop: 'max(4.5rem, calc(4rem + env(safe-area-inset-top, 0px)))',
+        // touch-action:none → the browser can't hijack the touch for a native pan and cancel the pointer-event swipe (the wall has NO native scroll; all nav is useSwipeSurf flip/shelf gestures). 'auto' while a detail modal is open so it scrolls. Root fix for "can't navigate Cinema on mobile" (Z 2026-09-17).
+        touchAction: detail ? 'auto' : 'none',
+      }}
       onWheel={onWheel}
       {...surf}
     >

@@ -273,6 +273,22 @@ function ProfileCard({
 // MY PASS CARD — the real subscription (priority)
 // ==============================================
 
+// Circular progress arc for days remaining
+function DaysArc({ days, total, color }: { days: number; total: number; color: string }) {
+  const r = 28;
+  const circ = 2 * Math.PI * r;
+  const pct = Math.max(0, Math.min(1, days / Math.max(total, 1)));
+  const dash = pct * circ;
+  return (
+    <svg width="72" height="72" viewBox="0 0 72 72" className="-rotate-90">
+      <circle cx="36" cy="36" r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="5" />
+      <circle cx="36" cy="36" r={r} fill="none" stroke={color} strokeWidth="5"
+        strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+        style={{ transition: 'stroke-dasharray 0.6s ease' }} />
+    </svg>
+  );
+}
+
 function MyPassCard({
   customerName,
   tier,
@@ -288,6 +304,19 @@ function MyPassCard({
 }) {
   const [teaserState, setTeaserState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [teaserErr, setTeaserErr] = useState('');
+  const [hoursLeft, setHoursLeft] = useState<number | null>(null);
+
+  // Live countdown for TRIAL tier
+  useEffect(() => {
+    if ((tier || '').toLowerCase() !== 'trial' || !expires) return;
+    const tick = () => {
+      const h = (new Date(expires).getTime() - Date.now()) / 3600000;
+      setHoursLeft(Math.max(0, h));
+    };
+    tick();
+    const t = setInterval(tick, 60000);
+    return () => clearInterval(t);
+  }, [tier, expires]);
 
   const claimTeaser = async () => {
     if (!coreId) return;
@@ -383,18 +412,22 @@ function MyPassCard({
     );
   }
 
+  const isTrial = (tier || '').toLowerCase() === 'trial';
   const expiryDate = expires ? new Date(expires) : null;
   const validExpiry = expiryDate && !isNaN(expiryDate.getTime());
   const daysLeft = validExpiry
     ? Math.ceil((expiryDate!.getTime() - Date.now()) / 86400000)
     : null;
-
+  const daysTotal = 30; // nominal cycle for arc
   const expiryStr = validExpiry
     ? expiryDate!.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : '—';
+  const expired = daysLeft != null && daysLeft <= 0;
+  const urgent  = !expired && daysLeft != null && daysLeft <= 5;
 
-  const urgent = daysLeft != null && daysLeft <= 5;
-  const accent = urgent ? '#f59e0b' : '#10b981';
+  const arcColor = expired ? '#ef4444' : urgent ? '#f59e0b' : isTrial ? '#00C9A7' : '#9D4EDD';
+  const statusColor = expired ? '#ef4444' : urgent ? '#f59e0b' : '#22c55e';
+  const statusText  = expired ? 'Expired' : urgent ? 'Expiring soon' : isTrial ? 'Teaser Pass' : 'Active';
 
   const renewMsg = encodeURIComponent(
     `Hi DASH! I'd like to renew my Tivi+ subscription. ` +
@@ -404,61 +437,104 @@ function MyPassCard({
   );
 
   return (
-    <div className="px-6 pb-6">
+    <div className="px-4 pb-6">
       <div
-        className="relative rounded-3xl border border-white/[0.08] overflow-hidden p-6 animate-voyo-fade-in"
+        className="relative rounded-3xl overflow-hidden animate-voyo-fade-in"
         style={{
-          background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(139,92,246,0.08) 45%, rgba(212,160,83,0.12) 100%)',
+          background: 'linear-gradient(145deg, rgba(20,12,35,0.95) 0%, rgba(30,15,50,0.97) 100%)',
+          border: `1px solid ${arcColor}28`,
+          boxShadow: `0 0 40px ${arcColor}15, 0 8px 32px rgba(0,0,0,0.5)`,
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-400/[0.04] to-[#D4A053]/[0.04] blur-2xl" />
+        {/* Top grain texture */}
+        <div className="absolute inset-0 opacity-[0.03]"
+          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundSize: '200px' }} />
 
-        <div className="relative z-10">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-white/55 text-xs font-semibold uppercase tracking-wider mb-1">My Pass</p>
-              <p className="text-white font-bold text-xl leading-tight truncate">{greeting}</p>
+        {/* Subtle glow blob */}
+        <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full blur-3xl opacity-20"
+          style={{ background: arcColor }} />
+
+        <div className="relative z-10 p-5">
+          {/* Header row */}
+          <div className="flex items-start justify-between mb-5">
+            <div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <Tv size={11} style={{ color: arcColor }} />
+                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: arcColor }}>
+                  Tivi+ {label}
+                </span>
+              </div>
+              <p className="text-white font-bold text-xl leading-tight">{greeting}</p>
+              {coreId && <p className="text-white/25 text-[10px] font-mono mt-0.5">{coreId}</p>}
             </div>
-            <div
-              className="px-3 py-1.5 rounded-full flex items-center gap-1.5 flex-shrink-0"
-              style={{ background: 'rgba(157,78,221,0.18)', border: '1px solid rgba(157,78,221,0.35)' }}
-            >
-              <Tv size={13} className="text-purple-300" />
-              <span className="text-purple-200 text-xs font-bold">Tivi+ {label}</span>
+
+            {/* Days arc */}
+            <div className="relative shrink-0">
+              <DaysArc days={isTrial && hoursLeft != null ? hoursLeft / 24 : (daysLeft ?? 0)} total={isTrial ? 1 : daysTotal} color={arcColor} />
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                {isTrial && hoursLeft != null ? (
+                  <>
+                    <span className="text-base font-black" style={{ color: arcColor }}>{Math.floor(hoursLeft)}h</span>
+                    <span className="text-[8px] text-white/35">left</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-base font-black" style={{ color: daysLeft != null ? arcColor : 'rgba(255,255,255,0.5)' }}>
+                      {daysLeft != null ? Math.max(0, daysLeft) : '—'}
+                    </span>
+                    <span className="text-[8px] text-white/35">days</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="flex items-end justify-between gap-4 mt-5">
+          {/* Status + Expiry row */}
+          <div className="flex items-center justify-between py-3 border-t border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
             <div>
-              <p className="text-white/40 text-[11px] font-medium uppercase tracking-wider mb-1">Expires</p>
-              <p className="text-white font-semibold text-[15px]">{expiryStr}</p>
+              <p className="text-white/35 text-[10px] uppercase tracking-wider mb-0.5">Status</p>
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor, boxShadow: `0 0 4px ${statusColor}` }} />
+                <span className="text-sm font-bold" style={{ color: statusColor }}>{statusText}</span>
+              </div>
             </div>
             <div className="text-right">
-              <p className="text-white/40 text-[11px] font-medium uppercase tracking-wider mb-1">Days left</p>
-              <p className="font-bold text-2xl" style={{ color: daysLeft != null ? accent : 'rgba(255,255,255,0.85)' }}>
-                {daysLeft != null ? Math.max(0, daysLeft) : '—'}
-              </p>
+              <p className="text-white/35 text-[10px] uppercase tracking-wider mb-0.5">{expired ? 'Expired' : 'Valid until'}</p>
+              <p className="text-white/85 text-sm font-semibold">{expiryStr}</p>
             </div>
           </div>
 
-          {urgent && (
-            <div
-              className="mt-4 px-3 py-2 rounded-xl text-[12px] font-medium flex items-center gap-2"
-              style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', color: '#fcd34d' }}
-            >
-              <Clock size={14} />
-              {daysLeft != null && daysLeft <= 0 ? 'Pass expired. Renew to keep watching.' : 'Pass expires soon. Renew now.'}
+          {/* Last check indicator */}
+          <div className="flex items-center gap-1.5 mt-3 mb-4">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-400" style={{ boxShadow: '0 0 4px #22c55e' }} />
+            <span className="text-[10px] text-white/30">Account verified · DASH</span>
+            <BadgeCheck size={10} className="text-green-400 ml-0.5" />
+          </div>
+
+          {/* Urgent banner */}
+          {(urgent || expired) && (
+            <div className="mb-4 px-3 py-2 rounded-xl text-[12px] font-medium flex items-center gap-2"
+              style={{ background: `${arcColor}15`, border: `1px solid ${arcColor}35`, color: arcColor }}>
+              <Clock size={13} />
+              {expired ? 'Pass expired — renew to keep watching.' : `${daysLeft}d left — renew before it expires.`}
             </div>
           )}
 
+          {/* CTA */}
           <a
             href={`https://wa.me/${WA_NUMBER}?text=${renewMsg}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-5 w-full py-3.5 rounded-2xl font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.98] bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg shadow-purple-500/30"
+            className="w-full py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] text-white text-sm"
+            style={{
+              background: urgent || expired
+                ? 'linear-gradient(135deg, #f59e0b, #d97706)'
+                : `linear-gradient(135deg, ${arcColor}, #7c3aed)`,
+              boxShadow: `0 4px 20px ${arcColor}35`,
+            }}
           >
-            <CreditCard size={18} />
-            <span>{urgent ? 'Renew now' : 'Renew / Request'}</span>
+            <CreditCard size={16} />
+            <span>{expired ? 'Renew now' : urgent ? 'Renew before it expires' : 'Renew / Manage'}</span>
           </a>
         </div>
       </div>
@@ -856,26 +932,35 @@ function AddFriendModal({ userId, onClose, onAdded }: { userId: string; onClose:
 
 const PRICING = [
   {
-    id: 'starter',
-    name: 'Starter',
-    price: 'LE100',
+    id: 'first',
+    name: 'First Month',
+    price: 'LE 100',
     color: '#9D4EDD',
-    perks: 'Kids · Local · News · Basic Sports',
+    perks: 'Full access · All channels · World Cup · Movies · Series',
+    badge: 'Launch offer',
   },
   {
-    id: 'full',
-    name: 'Full',
-    price: 'LE245',
+    id: 'monthly',
+    name: 'Monthly',
+    price: 'LE 150',
     color: '#E50914',
     featured: true,
-    perks: 'World Cup · EPL · UCL · Movies · Series · Premium',
+    perks: 'Full access · All channels · World Cup · Movies · Series',
   },
   {
     id: 'weekly',
     name: 'Weekly',
-    price: 'LE50',
+    price: 'LE 70',
     color: '#00A8E1',
-    perks: '7-day pass · all Full channels',
+    perks: '7-day full access · All channels included',
+  },
+  {
+    id: 'yearly',
+    name: 'Yearly',
+    price: 'LE 1,750',
+    color: '#1DB954',
+    perks: '13 months · 1 month FREE · Best value',
+    badge: 'Save 1 month',
   },
 ];
 
@@ -892,12 +977,12 @@ function PricingCard({ plan }: { plan: typeof PRICING[number] }) {
         borderColor: plan.featured ? `${plan.color}55` : 'rgba(255,255,255,0.06)',
       }}
     >
-      {plan.featured && (
+      {(plan.featured || plan.badge) && (
         <div
           className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
           style={{ background: plan.color, color: '#fff' }}
         >
-          Most popular
+          {plan.badge || 'Most popular'}
         </div>
       )}
       <div className="p-5">
@@ -1133,7 +1218,10 @@ export function DaHubPage() {
           <div key="dash" className="space-y-8 animate-voyo-fade-in">
             {/* Pricing — real Tivi+ tiers */}
             <div>
-              <p className="text-white/45 text-xs font-semibold uppercase tracking-wider mb-4">Tivi+ Plans</p>
+              <div className="mb-4">
+                <p className="text-white/45 text-xs font-semibold uppercase tracking-wider">Tivi+ Plans</p>
+                <p className="text-white/25 text-[11px] mt-0.5">Full access on every plan · Movies · Series · Live TV · World Cup</p>
+              </div>
               <div className="space-y-3">
                 {PRICING.map((plan) => (
                   <PricingCard key={plan.id} plan={plan} />
