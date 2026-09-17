@@ -550,6 +550,12 @@ export function seedTierSync(): FlowTier {
     // Very low-RAM device (≤2GB) can't comfortably decode a full-bitrate copy stream.
     const dm = (navigator as unknown as { deviceMemory?: number }).deviceMemory;
     if (typeof dm === 'number' && dm > 0 && dm <= 2) return 'eco';
+    // Low-mid device (≤4GB — e.g. Honor X6e, the perf-lite tier): seed the transcoded 720p
+    // (2Mbps), not the raw copy. A fat channel (source 5–15Mbps) buffers on a constrained pipe
+    // before Flow can step down; hd720 is sustainable so the OPENING never buffers, and the
+    // async probe climbs to source within ~2.5s if the pipe actually holds. (Z 2026-09-17,
+    // Aziz "0 buffer": the seed was too high on constrained pipes.)
+    if (typeof dm === 'number' && dm > 0 && dm <= 4) return 'hd720';
   } catch {}
   return 'source';
 }

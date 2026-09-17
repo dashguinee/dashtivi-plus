@@ -57,14 +57,21 @@ export async function buildRecMovieShelves(): Promise<WallShelf[]> {
     const signals = readSignals();
     const affinity = buildAffinity(tmdbMap, signals);
 
+    // Cross-row de-dupe: a title used by a higher curated row is dropped from the
+    // ones below it, so no two stacked shelves lead with the same posters (on a
+    // cold-start account trending & dash-curated both rank by rating and would
+    // otherwise render an identical top-N — that reads as a bug, not curation).
+    const used = new Set<number>();
     const toShelf = (row: RankedLike | null, accent: string): WallShelf | null => {
       if (!row || !row.items || row.items.length < 4) return null;
       const items: WallItem[] = [];
       for (const ri of row.items) {
+        if (used.has(ri.id)) continue;
         const raw = byId.get(ri.id);
         if (raw) items.push({ kind: 'movie', id: ri.id, name: ri.name, poster: ri.poster, rating: String(ri.rating ?? ''), raw });
       }
       if (items.length < 4) return null;
+      for (const it of items) used.add(it.id);
       return { id: `rec-${row.id}`, label: row.name, accent, kind: 'movie', categoryIds: [], items };
     };
 
