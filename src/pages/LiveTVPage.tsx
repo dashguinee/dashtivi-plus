@@ -756,25 +756,29 @@ function ExperienceShowcase({
 
   const alive = streams.filter(s => isChannelPlayable(s.stream_id));
 
-  // Filter by subtab if active
-  let filtered = alive;
-  if (activeSubTab !== 'all' && subtypes) {
-    const sub = subtypes.find(s => s.id === activeSubTab);
-    if (sub) {
-      // Name-based filtering (primary — works with curated channels)
-      if (sub.nameFilter?.length || sub.nameExclude?.length) {
-        filtered = alive.filter(s => {
-          const n = (s.name || '').toLowerCase();
-          if (sub.nameExclude?.length && sub.nameExclude.some(k => n.includes(k.toLowerCase()))) return false;
-          if (sub.nameFilter?.length && !sub.nameFilter.some(k => n.includes(k.toLowerCase()))) return false;
-          return true;
-        });
-      } else if (sub.categoryIds?.length) {
-        // Category-based fallback (Xtream API channels)
-        const catSet = new Set(sub.categoryIds);
-        filtered = alive.filter(s => isFreeChannel(s.stream_id) || catSet.has(String(s.category_id)));
-      }
+  // Match a subtype → its channels (name-based primary, category fallback).
+  const subMatch = (sub: any) => {
+    if (sub.nameFilter?.length || sub.nameExclude?.length) {
+      return alive.filter(s => {
+        const n = (s.name || '').toLowerCase();
+        if (sub.nameExclude?.length && sub.nameExclude.some((k: string) => n.includes(k.toLowerCase()))) return false;
+        if (sub.nameFilter?.length && !sub.nameFilter.some((k: string) => n.includes(k.toLowerCase()))) return false;
+        return true;
+      });
     }
+    if (sub.categoryIds?.length) {
+      const catSet = new Set(sub.categoryIds);
+      return alive.filter(s => isFreeChannel(s.stream_id) || catSet.has(String(s.category_id)));
+    }
+    return alive;
+  };
+  // Only offer sub-tabs that actually have channels — never an empty category. (Aziz 2026-09-17)
+  const nonEmptySubtypes = (subtypes || []).filter(s => subMatch(s).length > 0);
+
+  let filtered = alive;
+  if (activeSubTab !== 'all') {
+    const sub = nonEmptySubtypes.find(s => s.id === activeSubTab);
+    if (sub) filtered = subMatch(sub);
   }
 
   const top = sortGemsFirst(filtered).slice(0, 8);
@@ -813,10 +817,10 @@ function ExperienceShowcase({
           </button>
         </div>
 
-        {/* Subtab pills — only if subtypes exist and more than 2 */}
-        {subtypes && subtypes.length > 2 && (
+        {/* Subtab pills — only non-empty subtypes, and only if more than 2 */}
+        {nonEmptySubtypes.length > 2 && (
           <div className="flex gap-1.5 overflow-x-auto scrollbar-hide mb-3">
-            {subtypes.slice(0, 8).map(sub => (
+            {nonEmptySubtypes.slice(0, 8).map(sub => (
               <button
                 key={sub.id}
                 onClick={() => setActiveSubTab(sub.id === activeSubTab ? 'all' : sub.id)}
@@ -915,23 +919,28 @@ const ThemeRow = React.memo(function ThemeRow({
   // Get sub-tabs for this theme (if any)
   const subtypes = THEME_SUBTYPES[theme.id] || [];
 
-  // Apply sub-tab filter
-  let filtered = alive;
-  if (subtypes.length > 0 && activeSubTab !== 'all') {
-    const subtype = subtypes.find(t => t.id === activeSubTab);
-    if (subtype) {
-      if (subtype.nameFilter?.length || subtype.nameExclude?.length) {
-        filtered = alive.filter(s => {
-          const n = (s.name || '').toLowerCase();
-          if (subtype.nameExclude?.length && subtype.nameExclude.some(k => n.includes(k.toLowerCase()))) return false;
-          if (subtype.nameFilter?.length && !subtype.nameFilter.some(k => n.includes(k.toLowerCase()))) return false;
-          return true;
-        });
-      } else if (subtype.categoryIds?.length) {
-        const catSet = new Set(subtype.categoryIds);
-        filtered = alive.filter(s => catSet.has(String(s.category_id)));
-      }
+  // Match a subtype → its channels; only offer sub-tabs that have channels. (Aziz 2026-09-17)
+  const subMatch = (sub: any) => {
+    if (sub.nameFilter?.length || sub.nameExclude?.length) {
+      return alive.filter(s => {
+        const n = (s.name || '').toLowerCase();
+        if (sub.nameExclude?.length && sub.nameExclude.some((k: string) => n.includes(k.toLowerCase()))) return false;
+        if (sub.nameFilter?.length && !sub.nameFilter.some((k: string) => n.includes(k.toLowerCase()))) return false;
+        return true;
+      });
     }
+    if (sub.categoryIds?.length) {
+      const catSet = new Set(sub.categoryIds);
+      return alive.filter(s => catSet.has(String(s.category_id)));
+    }
+    return alive;
+  };
+  const nonEmptySubtypes = subtypes.filter(s => subMatch(s).length > 0);
+
+  let filtered = alive;
+  if (activeSubTab !== 'all') {
+    const subtype = nonEmptySubtypes.find(t => t.id === activeSubTab);
+    if (subtype) filtered = subMatch(subtype);
   }
 
   // Group quality variants (beIN 1 4K + HD + SD → one card showing best)
@@ -995,10 +1004,10 @@ const ThemeRow = React.memo(function ThemeRow({
         )}
       </div>
 
-      {/* Child experience sub-tabs */}
-      {subtypes.length > 0 && (
+      {/* Child experience sub-tabs — only those with channels (never an empty category) */}
+      {nonEmptySubtypes.length > 1 && (
         <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 mb-3">
-          {subtypes.map((sub) => (
+          {nonEmptySubtypes.map((sub) => (
             <button
               key={sub.id}
               onClick={() => setActiveSubTab(sub.id)}

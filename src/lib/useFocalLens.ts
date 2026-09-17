@@ -48,7 +48,11 @@ export function useFocalLens<T extends HTMLElement = HTMLDivElement>(opts: LensO
     const container = ref.current;
     if (!container || typeof window === 'undefined') return;
 
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Low-end (perf-lite) OR reduced-motion → flat, democratic row. The fish-eye
+    // scale magnifies centre tiles into their neighbours (reads as "cards overlap"
+    // on a phone) and adds rAF cost — off on weak devices. (Aziz 2026-09-17)
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      || document.documentElement.classList.contains('perf-lite');
 
     let tiles: HTMLElement[] = [];
     const refreshTiles = () => {
