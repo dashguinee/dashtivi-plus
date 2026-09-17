@@ -16,6 +16,8 @@
       body { -webkit-user-select: none; user-select: none; }
       /* keep inputs/text areas selectable */
       input, textarea, [contenteditable] { -webkit-user-select: text; user-select: text; }
+      /* Full player open → lock the page behind it (no scroll-through to Home). */
+      html.player-open, html.player-open body { overflow: hidden !important; touch-action: none; }
 
       /* ── perf-lite: low-end devices (measured jank source: continuous CSS
          animations tax scroll — rails 13fps→46fps with them off under 5x CPU).

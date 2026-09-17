@@ -339,6 +339,12 @@ function AppContent({ guestMode, onRequestCode, onLogout }: { guestMode?: boolea
   const playerSurfaceUp = surfaces.has(PLAYER_SURFACE_ID);
   const playerPortalTarget = useSurfacePortalTarget(PLAYER_SURFACE_ID);
   const showFullPlayer = playerSurfaceUp;
+  // Lock the page behind the full player — no scroll-through to Home in portrait. (Aziz 2026-09-17)
+  useEffect(() => {
+    const el = document.documentElement;
+    if (showFullPlayer) el.classList.add('player-open'); else el.classList.remove('player-open');
+    return () => el.classList.remove('player-open');
+  }, [showFullPlayer]);
   // Exact scroll position of the world beneath the player, captured at rise and
   // restored at recede — so closing the player returns to precisely where you
   // were (the page never unmounted; this guards against the <video> taking
