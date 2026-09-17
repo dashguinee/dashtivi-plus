@@ -16,7 +16,44 @@
       body { -webkit-user-select: none; user-select: none; }
       /* keep inputs/text areas selectable */
       input, textarea, [contenteditable] { -webkit-user-select: text; user-select: text; }
+
+      /* ── perf-lite: low-end devices (measured jank source: continuous CSS
+         animations tax scroll — rails 13fps→46fps with them off under 5x CPU).
+         We keep layout, colours, gradients, images AND tap/nav transitions —
+         only the PERPETUAL motion goes static + backdrop-blur drops (GPU relief).
+         Device-gated below; mirrors the app's own prefers-reduced-motion. Aziz 2026-09-17 */
+      html.perf-lite *, html.perf-lite *::before, html.perf-lite *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        animation-delay: 0ms !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+      /* the scroll-triggered row-proximity dim fires opacity transitions mid-scroll
+         → neutralise it on low-end so rows stay full-bright with no per-frame work */
+      html.perf-lite [data-goggle],
+      html.perf-lite .row-tier-hero,
+      html.perf-lite .row-tier-featured,
+      html.perf-lite .row-tier-standard { opacity: 1 !important; transition: none !important; }
     </style>
+    <script>
+      /* Set perf-lite BEFORE first paint (no mid-session recalc). Auto on low-RAM /
+         data-saver / 2g; overridable with localStorage.tvPerf = 'lite' | 'full'
+         so the real device can A/B it. */
+      (function(){
+        try{
+          var d=document.documentElement, ls=null;
+          try{ ls=localStorage.getItem('tvPerf'); }catch(e){}
+          if(ls==='full') return;
+          var c=navigator.connection||{};
+          var lite = ls==='lite' ||
+            (typeof navigator.deviceMemory==='number' && navigator.deviceMemory<=4) ||
+            c.saveData===true ||
+            /(^|-)2g$/.test(c.effectiveType||'');
+          if(lite) d.classList.add('perf-lite');
+        }catch(e){}
+      })();
+    </script>
     <meta name="theme-color" content="#0A0A0A" />
     <meta name="description" content="DashTivi+ — Premium Streaming. Live TV, Movies, Series." />
     <meta name="mobile-web-app-capable" content="yes" />
